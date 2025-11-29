@@ -1,0 +1,16 @@
+.idea/
+tls/
+keys/
+bin/
+tools/bin
+tmp/
+cmd/cli/cmd
+
+.env
+app.env
+config.yaml
+
+cover.out
+coverage.out
+filtered.out
+cover.html

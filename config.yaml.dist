@@ -1,0 +1,27 @@
+app:
+  name: "Cerberus"
+http:
+  api: "localhost:4000"
+  debug: "localhost:4010"
+  readTimeout: "5s"
+  writeTimeout: "10s"
+  idleTimeout: "120s"
+  shutdownTimeout: "20s"
+db:
+  name: "housi_db"
+  user: "housi"
+  password: "secret123"
+  host: "localhost:5432"
+  maxOpenConnections: "25"
+  maxIdleConnections: "25"
+  connectionIdleTime: "30s"
+  disableTLS: true
+tempo:
+  host: "localhost:4317"
+  probability: "0.05"
+cors:
+  allowedOrigins: "*"
+  allowedMethods: "GET;POST;PUT;DELETE;OPTIONS;PATCH"
+  allowedHeaders: "*"
+  exposedHeaders: "*"
+  maxAge: "86400"
