@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/Housiadas/cerberus/internal/app/handlers"
+	"github.com/Housiadas/cerberus/internal/app/handler"
 	"github.com/Housiadas/cerberus/internal/common/dbtest"
 	cfg "github.com/Housiadas/cerberus/internal/config"
 	"github.com/Housiadas/cerberus/pkg/otel"
@@ -34,8 +34,8 @@ func StartTest(t *testing.T, testName string) (*Test, error) {
 
 	tracer := traceProvider.Tracer("Core Name")
 
-	// Initialize handlers
-	h := handlers.New(handlers.Config{
+	// Initialize handler
+	h := handler.New(handler.Config{
 		ServiceName: "Test Service Name",
 		Build:       "Test",
 		Cors:        cfg.CorsSettings{},

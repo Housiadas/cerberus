@@ -65,7 +65,7 @@ func (m *Middleware) Error(w http.ResponseWriter, err error, statusCode int) {
 }
 
 // ResponseRecorder a custom http.ResponseWriter to capture the response before it's sent to the client.
-// We are capturing the result of the handlers to the middleware
+// We are capturing the result of the handler to the middleware
 type ResponseRecorder struct {
 	http.ResponseWriter
 	statusCode int

@@ -1,4 +1,4 @@
-package commands
+package command
 
 import (
 	"context"
@@ -6,7 +6,7 @@ import (
 	"net/mail"
 	"time"
 
-	"github.com/Housiadas/cerberus/internal/app/repository/user_repo"
+	"github.com/Housiadas/cerberus/internal/app/repo/user_repo"
 	namePck "github.com/Housiadas/cerberus/internal/core/domain/name"
 	"github.com/Housiadas/cerberus/internal/core/domain/role"
 	"github.com/Housiadas/cerberus/internal/core/domain/user"

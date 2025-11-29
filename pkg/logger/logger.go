@@ -36,7 +36,7 @@ func NewWithEvents(w io.Writer, minLevel Level, serviceName string, traceIDFn Tr
 }
 
 // NewWithHandler returns a new log for application use with the underlying
-// handlers.
+// handler.
 func NewWithHandler(h slog.Handler) *Logger {
 	return &Logger{handler: h}
 }
@@ -124,11 +124,11 @@ func new(w io.Writer, minLevel Level, serviceName string, traceIDFn TraceIDFn, r
 		return a
 	}
 
-	// Construct the slog JSON handlers for use.
+	// Construct the slog JSON handler for use.
 	handler := slog.Handler(slog.NewJSONHandler(w, &slog.HandlerOptions{AddSource: true, Level: slog.Level(minLevel), ReplaceAttr: f}))
 
-	// If events are to be processed, wrap the JSON handlers around the custom
-	// log handlers.
+	// If events are to be processed, wrap the JSON handler around the custom
+	// log handler.
 	if events.Debug != nil || events.Info != nil || events.Warn != nil || events.Error != nil {
 		handler = newLogHandler(handler, events)
 	}
@@ -138,7 +138,7 @@ func new(w io.Writer, minLevel Level, serviceName string, traceIDFn TraceIDFn, r
 		{Key: "usecase", Value: slog.StringValue(serviceName)},
 	}
 
-	// Add those attributes and capture the final handlers.
+	// Add those attributes and capture the final handler.
 	handler = handler.WithAttrs(attrs)
 
 	return &Logger{

@@ -1,4 +1,4 @@
-package handlers
+package handler
 
 import (
 	"github.com/jmoiron/sqlx"
@@ -11,6 +11,7 @@ import (
 	"github.com/Housiadas/cerberus/internal/app/usecase/transaction_usecase"
 	"github.com/Housiadas/cerberus/internal/app/usecase/user_usecase"
 	"github.com/Housiadas/cerberus/internal/config"
+	"github.com/Housiadas/cerberus/internal/core/service/audit_core"
 	"github.com/Housiadas/cerberus/internal/core/service/product_core"
 	"github.com/Housiadas/cerberus/internal/core/service/user_core"
 	"github.com/Housiadas/cerberus/pkg/logger"
@@ -18,7 +19,7 @@ import (
 	"github.com/Housiadas/cerberus/pkg/web"
 )
 
-// Handler contains all the mandatory systems required by handlers.
+// Handler contains all the mandatory systems required by handler.
 type Handler struct {
 	ServiceName string
 	Build       string
@@ -53,7 +54,7 @@ type Core struct {
 	Product *product_core.Core
 }
 
-// Config represents the configuration for the handlers.
+// Config represents the configuration for the handler.
 type Config struct {
 	ServiceName string
 	Build       string

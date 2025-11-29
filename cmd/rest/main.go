@@ -11,10 +11,10 @@ import (
 	"syscall"
 
 	_ "github.com/Housiadas/cerberus/docs"
-	"github.com/Housiadas/cerberus/internal/app/handlers"
-	"github.com/Housiadas/cerberus/internal/app/repository/audit_repo"
-	"github.com/Housiadas/cerberus/internal/app/repository/product_repo"
-	"github.com/Housiadas/cerberus/internal/app/repository/user_repo"
+	"github.com/Housiadas/cerberus/internal/app/handler"
+	"github.com/Housiadas/cerberus/internal/app/repo/audit_repo"
+	"github.com/Housiadas/cerberus/internal/app/repo/product_repo"
+	"github.com/Housiadas/cerberus/internal/app/repo/user_repo"
 	ctxPck "github.com/Housiadas/cerberus/internal/common/context"
 	"github.com/Housiadas/cerberus/internal/config"
 	"github.com/Housiadas/cerberus/internal/core/service/audit_core"
@@ -167,8 +167,8 @@ func run(ctx context.Context, cfg config.Config, log *logger.Logger) error {
 	// -------------------------------------------------------------------------
 	log.Info(ctx, "startup", "status", "API grpc starting")
 
-	// Initialize handlers
-	h := handlers.New(handlers.Config{
+	// Initialize handler
+	h := handler.New(handler.Config{
 		ServiceName: cfg.App.Name,
 		Build:       build,
 		Cors:        cfg.Cors,

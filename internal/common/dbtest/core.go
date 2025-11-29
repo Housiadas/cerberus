@@ -3,9 +3,9 @@ package dbtest
 import (
 	"github.com/jmoiron/sqlx"
 
-	"github.com/Housiadas/cerberus/internal/app/repository/audit_repo"
-	"github.com/Housiadas/cerberus/internal/app/repository/product_repo"
-	"github.com/Housiadas/cerberus/internal/app/repository/user_repo"
+	"github.com/Housiadas/cerberus/internal/app/repo/audit_repo"
+	"github.com/Housiadas/cerberus/internal/app/repo/product_repo"
+	"github.com/Housiadas/cerberus/internal/app/repo/user_repo"
 	"github.com/Housiadas/cerberus/internal/core/service/audit_core"
 	"github.com/Housiadas/cerberus/internal/core/service/product_core"
 	"github.com/Housiadas/cerberus/internal/core/service/user_core"

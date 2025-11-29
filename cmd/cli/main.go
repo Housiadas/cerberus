@@ -9,7 +9,7 @@ import (
 
 	"github.com/spf13/viper"
 
-	"github.com/Housiadas/cerberus/internal/app/commands"
+	"github.com/Housiadas/cerberus/internal/app/command"
 	"github.com/Housiadas/cerberus/pkg/logger"
 )
 
@@ -17,7 +17,7 @@ var build = "develop"
 
 func main() {
 	if err := run(); err != nil {
-		if !errors.Is(err, commands.ErrHelp) {
+		if !errors.Is(err, command.ErrHelp) {
 			fmt.Println("msg", err)
 		}
 		os.Exit(1)
@@ -47,13 +47,13 @@ func run() error {
 	// -------------------------------------------------------------------------
 	// Initialize commands
 	// -------------------------------------------------------------------------
-	cmd := commands.New(c, log, build, "CMD")
+	cmd := command.New(c, log, build, "CMD")
 
 	return processCommands(os.Args, cmd)
 }
 
 // LoadConfig reads configuration from file or environment variables.
-func LoadConfig(path string) (cfg commands.Config, err error) {
+func LoadConfig(path string) (cfg command.Config, err error) {
 	viper.AddConfigPath(path)
 	viper.SetConfigFile("config.yaml")
 	viper.AutomaticEnv()
@@ -68,7 +68,7 @@ func LoadConfig(path string) (cfg commands.Config, err error) {
 }
 
 // processCommands handles the execution of the commands specified on the command line.
-func processCommands(args []string, cmd *commands.Command) error {
+func processCommands(args []string, cmd *command.Command) error {
 	switch args[1] {
 	case "useradd":
 		name := args[2]
@@ -82,7 +82,7 @@ func processCommands(args []string, cmd *commands.Command) error {
 		fmt.Println("seed:       add data to the database")
 		fmt.Println("useradd:    add a new user to the database")
 		fmt.Println("provide a command to get more help.")
-		return commands.ErrHelp
+		return command.ErrHelp
 	}
 
 	return nil

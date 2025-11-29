@@ -53,7 +53,7 @@ func (respond *Respond) Respond(handlerFunc HandlerFunc) http.HandlerFunc {
 			resp = respond.errorRecorder(ctx, statusCode, err)
 		}
 
-		// Send response back to a client
+		// Send a response back to a client
 		if err := respond.response(ctx, w, statusCode, resp); err != nil {
 			respond.Log.Error(ctx, "web-respond", "ERROR", err)
 		}

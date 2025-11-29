@@ -66,7 +66,7 @@ func (a *App) Liveness() Info {
 		GOMAXPROCS: runtime.GOMAXPROCS(0),
 	}
 
-	// This handlers provides a free timer loop.
+	// This handler provides a free timer loop.
 
 	return info
 }

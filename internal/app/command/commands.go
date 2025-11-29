@@ -1,6 +1,6 @@
 // Package commands contain the functionality for the set of commands
 // currently supported by the CLI tooling.
-package commands
+package command
 
 import (
 	"errors"
@@ -10,7 +10,7 @@ import (
 	"github.com/Housiadas/cerberus/pkg/pgsql"
 )
 
-// ErrHelp provides context that help was given.
+// ErrHelp provides the context that help was given.
 var ErrHelp = errors.New("help provided")
 
 type Config struct {
@@ -23,7 +23,6 @@ type Command struct {
 	DB      pgsql.Config
 	Log     *logger.Logger
 	Version config.Version
-	Auth    config.Auth
 	Kafka   config.Kafka
 }
 
