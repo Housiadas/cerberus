@@ -16,9 +16,6 @@ db:
   maxIdleConnections: "25"
   connectionIdleTime: "30s"
   disableTLS: true
-tempo:
-  host: "localhost:4317"
-  probability: "0.05"
 cors:
   allowedOrigins: "*"
   allowedMethods: "GET;POST;PUT;DELETE;OPTIONS;PATCH"
