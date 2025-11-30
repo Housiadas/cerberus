@@ -9,12 +9,12 @@ import (
 	"time"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 
 	"github.com/Housiadas/cerberus/internal/common/dbtest"
 	"github.com/Housiadas/cerberus/internal/common/unitest"
 	"github.com/Housiadas/cerberus/internal/core/domain/name"
-	"github.com/Housiadas/cerberus/internal/core/domain/role"
 	"github.com/Housiadas/cerberus/internal/core/domain/user"
 	"github.com/Housiadas/cerberus/internal/core/service/user_service"
 	"github.com/Housiadas/cerberus/pkg/page"
@@ -40,10 +40,11 @@ func Test_User(t *testing.T) {
 
 // =============================================================================
 
-func insertSeedData(busDomain dbtest.Core) (unitest.SeedData, error) {
+func insertSeedData(service dbtest.Service) (unitest.SeedData, error) {
 	ctx := context.Background()
 
-	usrs, err := user_service.TestSeedUsers(ctx, 2, role.Admin, busDomain.User)
+	userRoleID := uuid.New()
+	usrs, err := user_service.TestSeedUsers(ctx, 2, userRoleID, service.User)
 	if err != nil {
 		return unitest.SeedData{}, fmt.Errorf("seeding users : %w", err)
 	}
@@ -58,7 +59,8 @@ func insertSeedData(busDomain dbtest.Core) (unitest.SeedData, error) {
 
 	// -------------------------------------------------------------------------
 
-	usrs, err = user_service.TestSeedUsers(ctx, 2, role.User, busDomain.User)
+	adminRoleID := uuid.New()
+	usrs, err = user_service.TestSeedUsers(ctx, 2, adminRoleID, service.User)
 	if err != nil {
 		return unitest.SeedData{}, fmt.Errorf("seeding users : %w", err)
 	}
@@ -83,7 +85,7 @@ func insertSeedData(busDomain dbtest.Core) (unitest.SeedData, error) {
 
 // =============================================================================
 
-func query(busDomain dbtest.Core, sd unitest.SeedData) []unitest.Table {
+func query(service dbtest.Service, sd unitest.SeedData) []unitest.Table {
 	usrs := make([]user.User, 0, len(sd.Admins)+len(sd.Users))
 
 	for _, adm := range sd.Admins {
@@ -107,7 +109,7 @@ func query(busDomain dbtest.Core, sd unitest.SeedData) []unitest.Table {
 					Name: dbtest.NamePointer("Name"),
 				}
 
-				resp, err := busDomain.User.Query(ctx, filter, user.DefaultOrderBy, page.MustParse("1", "10"))
+				resp, err := service.User.Query(ctx, filter, user.DefaultOrderBy, page.MustParse("1", "10"))
 				if err != nil {
 					return err
 				}
@@ -139,7 +141,7 @@ func query(busDomain dbtest.Core, sd unitest.SeedData) []unitest.Table {
 			Name:    "byid",
 			ExpResp: sd.Users[0].User,
 			ExcFunc: func(ctx context.Context) any {
-				resp, err := busDomain.User.QueryByID(ctx, sd.Users[0].ID)
+				resp, err := service.User.QueryByID(ctx, sd.Users[0].ID)
 				if err != nil {
 					return err
 				}
@@ -170,16 +172,17 @@ func query(busDomain dbtest.Core, sd unitest.SeedData) []unitest.Table {
 	return table
 }
 
-func create(busDomain dbtest.Core) []unitest.Table {
+func create(service dbtest.Service) []unitest.Table {
 	email, _ := mail.ParseAddress("chris@housi.com")
 
+	roleID := uuid.New()
 	table := []unitest.Table{
 		{
 			Name: "basic",
 			ExpResp: user.User{
+				RoleID:     roleID,
 				Name:       name.MustParse("Chris Housi"),
 				Email:      *email,
-				RoleId:     []role.Role{role.Admin},
 				Department: name.MustParseNull("IT0"),
 				Enabled:    true,
 			},
@@ -187,12 +190,12 @@ func create(busDomain dbtest.Core) []unitest.Table {
 				nu := user.NewUser{
 					Name:       name.MustParse("Chris Housi"),
 					Email:      *email,
-					RoleId:     []role.Role{role.Admin},
+					RoleID:     roleID,
 					Department: name.MustParseNull("IT0"),
 					Password:   "123",
 				}
 
-				resp, err := busDomain.User.Create(ctx, nu)
+				resp, err := service.User.Create(ctx, nu)
 				if err != nil {
 					return err
 				}
@@ -224,26 +227,27 @@ func create(busDomain dbtest.Core) []unitest.Table {
 	return table
 }
 
-func update(busDomain dbtest.Core, sd unitest.SeedData) []unitest.Table {
+func update(busDomain dbtest.Service, sd unitest.SeedData) []unitest.Table {
 	email, _ := mail.ParseAddress("chris2@housi.com")
 
+	roleID := uuid.New()
 	table := []unitest.Table{
 		{
 			Name: "basic",
 			ExpResp: user.User{
 				ID:          sd.Users[0].ID,
+				RoleID:      roleID,
 				Name:        name.MustParse("Chris Housi 2"),
 				Email:       *email,
-				RoleId:      []role.Role{role.Admin},
 				Department:  name.MustParseNull("IT0"),
 				Enabled:     true,
 				DateCreated: sd.Users[0].DateCreated,
 			},
 			ExcFunc: func(ctx context.Context) any {
 				uu := user.UpdateUser{
+					RoleID:     roleID,
 					Name:       dbtest.NamePointer("Chris Housi 2"),
 					Email:      email,
-					RoleId:     []role.Role{role.Admin},
 					Department: dbtest.NameNullPointer("IT0"),
 					Password:   dbtest.StringPointer("1234"),
 				}
@@ -278,7 +282,7 @@ func update(busDomain dbtest.Core, sd unitest.SeedData) []unitest.Table {
 	return table
 }
 
-func deleteUser(busDomain dbtest.Core, sd unitest.SeedData) []unitest.Table {
+func deleteUser(busDomain dbtest.Service, sd unitest.SeedData) []unitest.Table {
 	table := []unitest.Table{
 		{
 			Name:    "user",

@@ -17,11 +17,11 @@ import (
 
 // App manages the set of cli layer api functions for the user core.
 type App struct {
-	userCore *user_service.Core
+	userCore *user_service.Service
 }
 
 // NewApp constructs a user cli API for use.
-func NewApp(userBus *user_service.Core) *App {
+func NewApp(userBus *user_service.Service) *App {
 	return &App{
 		userCore: userBus,
 	}

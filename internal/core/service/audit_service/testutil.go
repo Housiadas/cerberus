@@ -43,7 +43,7 @@ func TestSeedAudits(
 	actorID uuid.UUID,
 	objEntity entity.Entity,
 	action string,
-	api *Core,
+	api *Service,
 ) ([]audit.Audit, error) {
 	newAudits := TestNewAudits(n, actorID, objEntity, action)
 

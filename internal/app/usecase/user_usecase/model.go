@@ -59,8 +59,8 @@ func (app User) Encode() ([]byte, string, error) {
 }
 
 func toAppUser(bus user.User) User {
-	roles := make([]string, len(bus.RoleId))
-	for i, r := range bus.RoleId {
+	roles := make([]string, len(bus.RoleID))
+	for i, r := range bus.RoleID {
 		roles[i] = r.String()
 	}
 
@@ -144,7 +144,7 @@ func toBusNewUser(app NewUser) (user.NewUser, error) {
 	bus := user.NewUser{
 		Name:       nme,
 		Email:      *addr,
-		RoleId:     roles,
+		RoleID:     roles,
 		Department: department,
 		Password:   app.Password,
 	}
@@ -187,7 +187,7 @@ func toBusUpdateUserRole(app UpdateUserRole) (user.UpdateUser, error) {
 	}
 
 	bus := user.UpdateUser{
-		RoleId: roles,
+		RoleID: roles,
 	}
 
 	return bus, nil

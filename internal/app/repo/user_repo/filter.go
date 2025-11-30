@@ -12,8 +12,8 @@ func applyFilter(filter user.QueryFilter, data map[string]any, buf *bytes.Buffer
 	var wc []string
 
 	if filter.ID != nil {
-		data["user_id"] = *filter.ID
-		wc = append(wc, "user_id = :user_id")
+		data["id"] = *filter.ID
+		wc = append(wc, "id = :id")
 	}
 
 	if filter.Name != nil {

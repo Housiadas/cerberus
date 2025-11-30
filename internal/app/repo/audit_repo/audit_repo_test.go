@@ -36,7 +36,7 @@ func Test_Audit(t *testing.T) {
 
 // =============================================================================
 
-func insertSeedData(core dbtest.Core) (unitest.SeedData, error) {
+func insertSeedData(core dbtest.Service) (unitest.SeedData, error) {
 	ctx := context.Background()
 
 	usrs, err := user_service.TestSeedUsers(ctx, 1, role.Admin, core.User)
@@ -65,7 +65,7 @@ func insertSeedData(core dbtest.Core) (unitest.SeedData, error) {
 
 // =============================================================================
 
-func query(core dbtest.Core, sd unitest.SeedData) []unitest.Table {
+func query(core dbtest.Service, sd unitest.SeedData) []unitest.Table {
 	sort.Slice(sd.Admins[0].Audits, func(i, j int) bool {
 		return sd.Admins[0].Audits[i].ObjName.String() <= sd.Admins[0].Audits[j].ObjName.String()
 	})

@@ -101,7 +101,12 @@ func (s *Store) Delete(ctx context.Context, usr user.User) error {
 }
 
 // Query retrieves a list of existing users from the database.
-func (s *Store) Query(ctx context.Context, filter user.QueryFilter, orderBy order.By, page page.Page) ([]user.User, error) {
+func (s *Store) Query(
+	ctx context.Context,
+	filter user.QueryFilter,
+	orderBy order.By,
+	page page.Page,
+) ([]user.User, error) {
 	data := map[string]any{
 		"offset":        (page.Number() - 1) * page.RowsPerPage(),
 		"rows_per_page": page.RowsPerPage(),
@@ -145,7 +150,7 @@ func (s *Store) Count(ctx context.Context, filter user.QueryFilter) (int, error)
 // QueryByID gets the specified userDB from the database.
 func (s *Store) QueryByID(ctx context.Context, userID uuid.UUID) (user.User, error) {
 	data := struct {
-		ID string `db:"user_id"`
+		ID string `db:"id"`
 	}{
 		ID: userID.String(),
 	}

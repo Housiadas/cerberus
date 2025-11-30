@@ -49,8 +49,8 @@ type App struct {
 
 // Core represents the core internal layer.
 type Core struct {
-	Audit   *audit_service.Core
-	User    *user_service.Core
+	Audit   *audit_service.Service
+	User    *user_service.Service
 	Product *product_core.Core
 }
 
@@ -62,8 +62,8 @@ type Config struct {
 	DB          *sqlx.DB
 	Log         *logger.Logger
 	Tracer      trace.Tracer
-	AuditCore   *audit_service.Core
-	UserCore    *user_service.Core
+	AuditCore   *audit_service.Service
+	UserCore    *user_service.Service
 	ProductCore *product_core.Core
 }
 

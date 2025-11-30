@@ -1,18 +1,15 @@
-// Package role_repo contains database related CRUD functionality.
+// Package role_repo contains database-related CRUD functionality.
 package role_repo
 
 import (
 	"bytes"
 	"context"
 	_ "embed"
-	"errors"
 	"fmt"
-	"net/mail"
 
-	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 
-	"github.com/Housiadas/cerberus/internal/core/domain/user"
+	"github.com/Housiadas/cerberus/internal/core/domain/role"
 	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/Housiadas/cerberus/pkg/order"
 	"github.com/Housiadas/cerberus/pkg/page"
@@ -22,19 +19,13 @@ import (
 // queries
 var (
 	//go:embed query/role_create.sql
-	userCreateSql string
+	roleCreateSql string
 	//go:embed query/role_update.sql
-	userUpdateSql string
+	roleUpdateSql string
 	//go:embed query/role_delete.sql
-	userDeleteSql string
+	roleDeleteSql string
 	//go:embed query/role_query.sql
-	userQuerySql string
-	//go:embed query/user_query_by_id.sql
-	userQueryByIdSql string
-	//go:embed query/user_query_by_email.sql
-	userQueryByEmailSql string
-	//go:embed query/user_count.sql
-	userCountSql string
+	roleQuerySql string
 )
 
 // Store manages the set of APIs for userDB database access.
@@ -53,7 +44,7 @@ func NewStore(log *logger.Logger, db *sqlx.DB) *Store {
 
 // NewWithTx constructs a new Store value replacing the sqlx DB
 // value with a sqlx DB value that is currently inside a transaction.
-func (s *Store) NewWithTx(tx pgsql.CommitRollbacker) (user.Storer, error) {
+func (s *Store) NewWithTx(tx pgsql.CommitRollbacker) (role.Storer, error) {
 	ec, err := pgsql.GetExtContext(tx)
 	if err != nil {
 		return nil, err
@@ -67,47 +58,46 @@ func (s *Store) NewWithTx(tx pgsql.CommitRollbacker) (user.Storer, error) {
 	return &store, nil
 }
 
-// Create inserts a new userDB into the database.
-func (s *Store) Create(ctx context.Context, usr user.User) error {
-	if err := pgsql.NamedExecContext(ctx, s.log, s.db, userCreateSql, toUserDB(usr)); err != nil {
-		if errors.Is(err, pgsql.ErrDBDuplicatedEntry) {
-			return fmt.Errorf("namedexeccontext: %w", user.ErrUniqueEmail)
-		}
-		return fmt.Errorf("namedexeccontext: %w", err)
+// Create inserts a new roleDB into the database.
+func (s *Store) Create(ctx context.Context, rl role.Role) error {
+	if err := pgsql.NamedExecContext(ctx, s.log, s.db, roleCreateSql, toRoleDB(rl)); err != nil {
+		return fmt.Errorf("error role create in db: %w", err)
 	}
 
 	return nil
 }
 
-// Update replaces a userDB document in the database.
-func (s *Store) Update(ctx context.Context, usr user.User) error {
-	if err := pgsql.NamedExecContext(ctx, s.log, s.db, userUpdateSql, toUserDB(usr)); err != nil {
-		if errors.Is(err, pgsql.ErrDBDuplicatedEntry) {
-			return user.ErrUniqueEmail
-		}
-		return fmt.Errorf("namedexeccontext: %w", err)
+// Update replaces a roleDB document in the database.
+func (s *Store) Update(ctx context.Context, rl role.Role) error {
+	if err := pgsql.NamedExecContext(ctx, s.log, s.db, roleUpdateSql, toRoleDB(rl)); err != nil {
+		return fmt.Errorf("error role update in db: %w", err)
 	}
 
 	return nil
 }
 
-// Delete removes a userDB from the database.
-func (s *Store) Delete(ctx context.Context, usr user.User) error {
-	if err := pgsql.NamedExecContext(ctx, s.log, s.db, userDeleteSql, toUserDB(usr)); err != nil {
-		return fmt.Errorf("namedexeccontext: %w", err)
+// Delete removes a roleDB from the database.
+func (s *Store) Delete(ctx context.Context, rl role.Role) error {
+	if err := pgsql.NamedExecContext(ctx, s.log, s.db, roleDeleteSql, toRoleDB(rl)); err != nil {
+		return fmt.Errorf("error delete role in db: %w", err)
 	}
 
 	return nil
 }
 
-// Query retrieves a list of existing users from the database.
-func (s *Store) Query(ctx context.Context, filter user.QueryFilter, orderBy order.By, page page.Page) ([]user.User, error) {
+// Query retrieves a list of existing roles from the database.
+func (s *Store) Query(
+	ctx context.Context,
+	filter role.QueryFilter,
+	orderBy order.By,
+	page page.Page,
+) ([]role.Role, error) {
 	data := map[string]any{
 		"offset":        (page.Number() - 1) * page.RowsPerPage(),
 		"rows_per_page": page.RowsPerPage(),
 	}
 
-	buf := bytes.NewBufferString(userQuerySql)
+	buf := bytes.NewBufferString(roleQuerySql)
 	applyFilter(filter, data, buf)
 
 	orderByClause, err := orderByClause(orderBy)
@@ -118,64 +108,10 @@ func (s *Store) Query(ctx context.Context, filter user.QueryFilter, orderBy orde
 	buf.WriteString(orderByClause)
 	buf.WriteString(" OFFSET :offset ROWS FETCH NEXT :rows_per_page ROWS ONLY")
 
-	var dbUsrs []userDB
-	if err := pgsql.NamedQuerySlice(ctx, s.log, s.db, buf.String(), data, &dbUsrs); err != nil {
-		return nil, fmt.Errorf("namedqueryslice: %w", err)
+	var dbRoles []roleDB
+	if err := pgsql.NamedQuerySlice(ctx, s.log, s.db, buf.String(), data, &dbRoles); err != nil {
+		return nil, fmt.Errorf("error query role in db: %w", err)
 	}
 
-	return toUsersDomain(dbUsrs)
-}
-
-// Count returns the total number of users in the DB.
-func (s *Store) Count(ctx context.Context, filter user.QueryFilter) (int, error) {
-	data := map[string]any{}
-	buf := bytes.NewBufferString(userCountSql)
-	applyFilter(filter, data, buf)
-
-	var count struct {
-		Count int `db:"count"`
-	}
-	if err := pgsql.NamedQueryStruct(ctx, s.log, s.db, buf.String(), data, &count); err != nil {
-		return 0, fmt.Errorf("db: %w", err)
-	}
-
-	return count.Count, nil
-}
-
-// QueryByID gets the specified userDB from the database.
-func (s *Store) QueryByID(ctx context.Context, userID uuid.UUID) (user.User, error) {
-	data := struct {
-		ID string `db:"user_id"`
-	}{
-		ID: userID.String(),
-	}
-
-	var dbUsr userDB
-	if err := pgsql.NamedQueryStruct(ctx, s.log, s.db, userQueryByIdSql, data, &dbUsr); err != nil {
-		if errors.Is(err, pgsql.ErrDBNotFound) {
-			return user.User{}, fmt.Errorf("db: %w", user.ErrNotFound)
-		}
-		return user.User{}, fmt.Errorf("db: %w", err)
-	}
-
-	return toUserDomain(dbUsr)
-}
-
-// QueryByEmail gets the specified userDB from the database by email.
-func (s *Store) QueryByEmail(ctx context.Context, email mail.Address) (user.User, error) {
-	data := struct {
-		Email string `db:"email"`
-	}{
-		Email: email.Address,
-	}
-
-	var dbUsr userDB
-	if err := pgsql.NamedQueryStruct(ctx, s.log, s.db, userQueryByEmailSql, data, &dbUsr); err != nil {
-		if errors.Is(err, pgsql.ErrDBNotFound) {
-			return user.User{}, fmt.Errorf("db: %w", user.ErrNotFound)
-		}
-		return user.User{}, fmt.Errorf("db: %w", err)
-	}
-
-	return toUserDomain(dbUsr)
+	return toRolesDomain(dbRoles)
 }

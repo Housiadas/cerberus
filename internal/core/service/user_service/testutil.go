@@ -3,16 +3,16 @@ package user_service
 import (
 	"context"
 	"fmt"
+	"github.com/google/uuid"
 	"math/rand"
 	"net/mail"
 
 	"github.com/Housiadas/cerberus/internal/core/domain/name"
-	rolePck "github.com/Housiadas/cerberus/internal/core/domain/role"
 	"github.com/Housiadas/cerberus/internal/core/domain/user"
 )
 
 // TestNewUsers is a helper method for testing.
-func TestNewUsers(n int, role rolePck.Role) []user.NewUser {
+func TestNewUsers(n int, roleID uuid.UUID) []user.NewUser {
 	newUsrs := make([]user.NewUser, n)
 
 	idx := rand.Intn(10000)
@@ -20,9 +20,9 @@ func TestNewUsers(n int, role rolePck.Role) []user.NewUser {
 		idx++
 
 		nu := user.NewUser{
+			RoleID:     roleID,
 			Name:       name.MustParse(fmt.Sprintf("Name%d", idx)),
 			Email:      mail.Address{Address: fmt.Sprintf("Email%d@gmail.com", idx)},
-			RoleId:     []rolePck.Role{role},
 			Department: name.MustParseNull(fmt.Sprintf("Department%d", idx)),
 			Password:   fmt.Sprintf("Password%d", idx),
 		}
@@ -34,12 +34,12 @@ func TestNewUsers(n int, role rolePck.Role) []user.NewUser {
 }
 
 // TestSeedUsers is a helper method for testing.
-func TestSeedUsers(ctx context.Context, n int, role rolePck.Role, api *Core) ([]user.User, error) {
-	newUsrs := TestNewUsers(n, role)
+func TestSeedUsers(ctx context.Context, n int, roleID uuid.UUID, service *Service) ([]user.User, error) {
+	newUsrs := TestNewUsers(n, roleID)
 
 	usrs := make([]user.User, len(newUsrs))
 	for i, nu := range newUsrs {
-		usr, err := api.Create(ctx, nu)
+		usr, err := service.Create(ctx, nu)
 		if err != nil {
 			return nil, fmt.Errorf("seeding user: idx: %d : %w", i, err)
 		}

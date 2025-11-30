@@ -1,3 +1,3 @@
 DELETE
-FROM users
-WHERE user_id = :user_id
+FROM roles
+WHERE id = :id

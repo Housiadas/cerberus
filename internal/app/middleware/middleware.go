@@ -27,7 +27,7 @@ type Config struct {
 	Log     *logger.Logger
 	Tracer  trace.Tracer
 	Tx      *pgsql.DBBeginner
-	User    *user_service.Core
+	User    *user_service.Service
 	Product *product_core.Core
 }
 
@@ -39,7 +39,7 @@ type Middleware struct {
 }
 
 type Core struct {
-	User    *user_service.Core
+	User    *user_service.Service
 	Product *product_core.Core
 }
 

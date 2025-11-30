@@ -18,15 +18,15 @@ import (
 	"github.com/Housiadas/cerberus/pkg/pgsql"
 )
 
-// Core manages the set of APIs for user access.
-type Core struct {
+// Service manages the set of APIs for user access.
+type Service struct {
 	log    *logger.Logger
 	storer user.Storer
 }
 
-// NewCore constructs a user.User internal API for use.
-func NewCore(log *logger.Logger, storer user.Storer) *Core {
-	return &Core{
+// New constructs a user.User internal API for use.
+func New(log *logger.Logger, storer user.Storer) *Service {
+	return &Service{
 		log:    log,
 		storer: storer,
 	}
@@ -34,13 +34,13 @@ func NewCore(log *logger.Logger, storer user.Storer) *Core {
 
 // NewWithTx constructs a new internal value that will use the
 // specified transaction in any store-related calls.
-func (c *Core) NewWithTx(tx pgsql.CommitRollbacker) (*Core, error) {
+func (c *Service) NewWithTx(tx pgsql.CommitRollbacker) (*Service, error) {
 	storer, err := c.storer.NewWithTx(tx)
 	if err != nil {
 		return nil, err
 	}
 
-	bus := Core{
+	bus := Service{
 		log:    c.log,
 		storer: storer,
 	}
@@ -49,7 +49,7 @@ func (c *Core) NewWithTx(tx pgsql.CommitRollbacker) (*Core, error) {
 }
 
 // Create adds a new User to the system.
-func (c *Core) Create(ctx context.Context, nu user.NewUser) (user.User, error) {
+func (c *Service) Create(ctx context.Context, nu user.NewUser) (user.User, error) {
 	hash, err := bcrypt.GenerateFromPassword([]byte(nu.Password), bcrypt.DefaultCost)
 	if err != nil {
 		return user.User{}, fmt.Errorf("generatefrompassword: %w", err)
@@ -62,7 +62,7 @@ func (c *Core) Create(ctx context.Context, nu user.NewUser) (user.User, error) {
 		Name:         nu.Name,
 		Email:        nu.Email,
 		PasswordHash: hash,
-		RoleId:       nu.RoleId,
+		RoleID:       nu.RoleID,
 		Department:   nu.Department,
 		Enabled:      true,
 		DateCreated:  now,
@@ -77,7 +77,7 @@ func (c *Core) Create(ctx context.Context, nu user.NewUser) (user.User, error) {
 }
 
 // Update modifies information about a user.User.
-func (c *Core) Update(ctx context.Context, usr user.User, uu user.UpdateUser) (user.User, error) {
+func (c *Service) Update(ctx context.Context, usr user.User, uu user.UpdateUser) (user.User, error) {
 	if uu.Name != nil {
 		usr.Name = *uu.Name
 	}
@@ -86,8 +86,8 @@ func (c *Core) Update(ctx context.Context, usr user.User, uu user.UpdateUser) (u
 		usr.Email = *uu.Email
 	}
 
-	if uu.RoleId != nil {
-		usr.RoleId = uu.RoleId
+	if uu.RoleID != nil {
+		usr.RoleID = uu.RoleID
 	}
 
 	if uu.Password != nil {
@@ -115,7 +115,7 @@ func (c *Core) Update(ctx context.Context, usr user.User, uu user.UpdateUser) (u
 }
 
 // Delete removes the specified user.
-func (c *Core) Delete(ctx context.Context, usr user.User) error {
+func (c *Service) Delete(ctx context.Context, usr user.User) error {
 	if err := c.storer.Delete(ctx, usr); err != nil {
 		return fmt.Errorf("delete: %w", err)
 	}
@@ -124,7 +124,7 @@ func (c *Core) Delete(ctx context.Context, usr user.User) error {
 }
 
 // Query retrieves a list of existing users.
-func (c *Core) Query(ctx context.Context, filter user.QueryFilter, orderBy order.By, page page.Page) ([]user.User, error) {
+func (c *Service) Query(ctx context.Context, filter user.QueryFilter, orderBy order.By, page page.Page) ([]user.User, error) {
 	users, err := c.storer.Query(ctx, filter, orderBy, page)
 	if err != nil {
 		return nil, fmt.Errorf("query: %w", err)
@@ -134,12 +134,12 @@ func (c *Core) Query(ctx context.Context, filter user.QueryFilter, orderBy order
 }
 
 // Count returns the total number of users.
-func (c *Core) Count(ctx context.Context, filter user.QueryFilter) (int, error) {
+func (c *Service) Count(ctx context.Context, filter user.QueryFilter) (int, error) {
 	return c.storer.Count(ctx, filter)
 }
 
 // QueryByID finds the user by the specified ID.
-func (c *Core) QueryByID(ctx context.Context, userID uuid.UUID) (user.User, error) {
+func (c *Service) QueryByID(ctx context.Context, userID uuid.UUID) (user.User, error) {
 	usr, err := c.storer.QueryByID(ctx, userID)
 	if err != nil {
 		return user.User{}, fmt.Errorf("query: userID[%s]: %w", userID, err)
@@ -149,7 +149,7 @@ func (c *Core) QueryByID(ctx context.Context, userID uuid.UUID) (user.User, erro
 }
 
 // QueryByEmail finds the user by a specified user email.
-func (c *Core) QueryByEmail(ctx context.Context, email mail.Address) (user.User, error) {
+func (c *Service) QueryByEmail(ctx context.Context, email mail.Address) (user.User, error) {
 	usr, err := c.storer.QueryByEmail(ctx, email)
 	if err != nil {
 		return user.User{}, fmt.Errorf("query: email[%s]: %w", email, err)
@@ -161,7 +161,7 @@ func (c *Core) QueryByEmail(ctx context.Context, email mail.Address) (user.User,
 // Authenticate finds a user by their email and verifies their password. On
 // success, it returns a Claims User representing this user. The claims can be
 // used to generate a token for future authentication.
-func (c *Core) Authenticate(ctx context.Context, email mail.Address, password string) (user.User, error) {
+func (c *Service) Authenticate(ctx context.Context, email mail.Address, password string) (user.User, error) {
 	usr, err := c.QueryByEmail(ctx, email)
 	if err != nil {
 		return user.User{}, fmt.Errorf("query: email[%s]: %w", email, err)

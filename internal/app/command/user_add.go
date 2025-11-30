@@ -30,7 +30,7 @@ func (cmd *Command) UserAdd(name, email, password string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	userBus := user_service.NewCore(cmd.Log, user_repo.NewStore(cmd.Log, db))
+	userBus := user_service.New(cmd.Log, user_repo.NewStore(cmd.Log, db))
 
 	addr, err := mail.ParseAddress(email)
 	if err != nil {
@@ -41,7 +41,7 @@ func (cmd *Command) UserAdd(name, email, password string) error {
 		Name:     namePck.MustParse(name),
 		Email:    *addr,
 		Password: password,
-		RoleId:   []role.Role{role.Admin, role.User},
+		RoleID:   []role.Role{role.Admin, role.User},
 	}
 
 	usr, err := userBus.Create(ctx, nu)

@@ -18,7 +18,7 @@ func StartTest(t *testing.T, testName string) (*Test, error) {
 	// tracer
 	traceProvider, teardown, err := otel.InitTracing(otel.Config{
 		Log:         db.Log,
-		ServiceName: "Core Name",
+		ServiceName: "Service Name",
 		Host:        "Test host",
 		ExcludedRoutes: map[string]struct{}{
 			"/v1/liveness":  {},
@@ -32,7 +32,7 @@ func StartTest(t *testing.T, testName string) (*Test, error) {
 
 	defer teardown(context.Background())
 
-	tracer := traceProvider.Tracer("Core Name")
+	tracer := traceProvider.Tracer("Service Name")
 
 	// Initialize handler
 	h := handler.New(handler.Config{

@@ -8,10 +8,9 @@ import (
 )
 
 var orderByFields = map[string]string{
-	user.OrderByID:      "user_id",
+	user.OrderByID:      "id",
 	user.OrderByName:    "name",
 	user.OrderByEmail:   "email",
-	user.OrderByRoles:   "roles",
 	user.OrderByEnabled: "enabled",
 }
 

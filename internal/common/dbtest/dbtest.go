@@ -19,7 +19,7 @@ import (
 )
 
 const (
-	PostgresImage         = "postgres:15.4"
+	PostgresImage         = "postgres:17.5"
 	PostgresContainerName = "repository-container"
 
 	DBUser     = "housi"
@@ -28,13 +28,11 @@ const (
 	DBPort     = "5432"
 )
 
-var dbTestURL = "postgres://housi:secret123@localhost:5432/%s?sslmode=disable"
-
 // Database owns the state for running and shutting down tests.
 type Database struct {
 	DB   *sqlx.DB
 	Log  *logger.Logger
-	Core Core
+	Core Service
 }
 
 // New creates a new test database inside the database that was started
@@ -105,7 +103,7 @@ func New(t *testing.T, testName string) *Database {
 	// -------------------------------------------------------------------------
 	t.Logf("[TEST]: migrate Database UP %s\n", dbName)
 
-	err = migration(fmt.Sprintf(dbTestURL, dbName))
+	err = migration(fmt.Sprintf("postgres://%s:%s@localhost:%s/%s?sslmode=disable", DBUser, DBPassword, DBPort, dbName))
 	if err != nil {
 		t.Fatalf("[TEST]: Migrating error: %s", err)
 	}

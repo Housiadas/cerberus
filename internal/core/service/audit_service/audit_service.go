@@ -15,22 +15,22 @@ import (
 	"github.com/Housiadas/cerberus/pkg/page"
 )
 
-// Core manages the set of APIs for audit access.
-type Core struct {
+// Service manages the set of APIs for audit access.
+type Service struct {
 	log    *logger.Logger
 	storer audit.Storer
 }
 
-// NewCore constructs an audit business API for use.
-func NewCore(log *logger.Logger, storer audit.Storer) *Core {
-	return &Core{
+// New constructs an audit business API for use.
+func New(log *logger.Logger, storer audit.Storer) *Service {
+	return &Service{
 		log:    log,
 		storer: storer,
 	}
 }
 
 // Create adds a new audit record to the system.
-func (b *Core) Create(ctx context.Context, na audit.NewAudit) (audit.Audit, error) {
+func (b *Service) Create(ctx context.Context, na audit.NewAudit) (audit.Audit, error) {
 	ctx, span := otel.AddSpan(ctx, "business.auditbus.create")
 	defer span.End()
 
@@ -59,7 +59,7 @@ func (b *Core) Create(ctx context.Context, na audit.NewAudit) (audit.Audit, erro
 }
 
 // Query retrieves a list of existing audit records.
-func (b *Core) Query(ctx context.Context, filter audit.QueryFilter, orderBy order.By, page page.Page) ([]audit.Audit, error) {
+func (b *Service) Query(ctx context.Context, filter audit.QueryFilter, orderBy order.By, page page.Page) ([]audit.Audit, error) {
 	ctx, span := otel.AddSpan(ctx, "repo.audit.query")
 	defer span.End()
 
@@ -72,7 +72,7 @@ func (b *Core) Query(ctx context.Context, filter audit.QueryFilter, orderBy orde
 }
 
 // Count returns the total number of users.
-func (b *Core) Count(ctx context.Context, filter audit.QueryFilter) (int, error) {
+func (b *Service) Count(ctx context.Context, filter audit.QueryFilter) (int, error) {
 	ctx, span := otel.AddSpan(ctx, "business.auditbus.count")
 	defer span.End()
 

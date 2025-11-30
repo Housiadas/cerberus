@@ -3,27 +3,23 @@ package role_repo_test
 import (
 	"context"
 	"fmt"
-	"net/mail"
 	"sort"
 	"testing"
 	"time"
-
-	"github.com/google/go-cmp/cmp"
-	"golang.org/x/crypto/bcrypt"
 
 	"github.com/Housiadas/cerberus/internal/common/dbtest"
 	"github.com/Housiadas/cerberus/internal/common/unitest"
 	"github.com/Housiadas/cerberus/internal/core/domain/name"
 	"github.com/Housiadas/cerberus/internal/core/domain/role"
-	"github.com/Housiadas/cerberus/internal/core/domain/user"
-	"github.com/Housiadas/cerberus/internal/core/service/user_service"
+	"github.com/Housiadas/cerberus/internal/core/service/role_service"
 	"github.com/Housiadas/cerberus/pkg/page"
+	"github.com/google/go-cmp/cmp"
 )
 
-func Test_User(t *testing.T) {
+func Test_Role(t *testing.T) {
 	t.Parallel()
 
-	db := dbtest.New(t, "Test_User")
+	db := dbtest.New(t, "Test_Role")
 
 	sd, err := insertSeedData(db.Core)
 	if err != nil {
@@ -35,79 +31,55 @@ func Test_User(t *testing.T) {
 	unitest.Run(t, query(db.Core, sd), "query")
 	unitest.Run(t, create(db.Core), "create")
 	unitest.Run(t, update(db.Core, sd), "update")
-	unitest.Run(t, deleteUser(db.Core, sd), "delete")
+	unitest.Run(t, deleteRole(db.Core, sd), "delete")
 }
 
 // =============================================================================
 
-func insertSeedData(busDomain dbtest.Core) (unitest.SeedData, error) {
+func insertSeedData(service dbtest.Service) (unitest.SeedData, error) {
 	ctx := context.Background()
 
-	usrs, err := user_service.TestSeedUsers(ctx, 2, role.Admin, busDomain.User)
+	roles, err := role_service.TestSeedRoles(ctx, 2, service.Role)
 	if err != nil {
-		return unitest.SeedData{}, fmt.Errorf("seeding users : %w", err)
+		return unitest.SeedData{}, fmt.Errorf("seeding roles : %w", err)
 	}
 
-	tu1 := unitest.User{
-		User: usrs[0],
+	tu1 := unitest.Role{
+		Role: roles[0],
 	}
 
-	tu2 := unitest.User{
-		User: usrs[1],
+	tu2 := unitest.Role{
+		Role: roles[1],
 	}
-
-	// -------------------------------------------------------------------------
-
-	usrs, err = user_service.TestSeedUsers(ctx, 2, role.User, busDomain.User)
-	if err != nil {
-		return unitest.SeedData{}, fmt.Errorf("seeding users : %w", err)
-	}
-
-	tu3 := unitest.User{
-		User: usrs[0],
-	}
-
-	tu4 := unitest.User{
-		User: usrs[1],
-	}
-
-	// -------------------------------------------------------------------------
 
 	sd := unitest.SeedData{
-		Users:  []unitest.User{tu3, tu4},
-		Admins: []unitest.User{tu1, tu2},
+		Roles: []unitest.Role{tu1, tu2},
 	}
 
 	return sd, nil
 }
 
-// =============================================================================
+func query(service dbtest.Service, sd unitest.SeedData) []unitest.Table {
+	roles := make([]role.Role, 0, len(sd.Roles))
 
-func query(busDomain dbtest.Core, sd unitest.SeedData) []unitest.Table {
-	usrs := make([]user.User, 0, len(sd.Admins)+len(sd.Users))
-
-	for _, adm := range sd.Admins {
-		usrs = append(usrs, adm.User)
+	for _, rls := range sd.Roles {
+		roles = append(roles, rls.Role)
 	}
 
-	for _, usr := range sd.Users {
-		usrs = append(usrs, usr.User)
-	}
-
-	sort.Slice(usrs, func(i, j int) bool {
-		return usrs[i].ID.String() <= usrs[j].ID.String()
+	sort.Slice(roles, func(i, j int) bool {
+		return roles[i].ID.String() <= roles[j].ID.String()
 	})
 
 	table := []unitest.Table{
 		{
 			Name:    "all",
-			ExpResp: usrs,
+			ExpResp: roles,
 			ExcFunc: func(ctx context.Context) any {
-				filter := user.QueryFilter{
+				filter := role.QueryFilter{
 					Name: dbtest.NamePointer("Name"),
 				}
 
-				resp, err := busDomain.User.Query(ctx, filter, user.DefaultOrderBy, page.MustParse("1", "10"))
+				resp, err := service.Role.Query(ctx, filter, role.DefaultOrderBy, page.MustParse("1", "10"))
 				if err != nil {
 					return err
 				}
@@ -115,12 +87,12 @@ func query(busDomain dbtest.Core, sd unitest.SeedData) []unitest.Table {
 				return resp
 			},
 			CmpFunc: func(got any, exp any) string {
-				gotResp, exists := got.([]user.User)
+				gotResp, exists := got.([]role.Role)
 				if !exists {
 					return "error occurred"
 				}
 
-				expResp := exp.([]user.User)
+				expResp := exp.([]role.Role)
 
 				for i := range gotResp {
 					if gotResp[i].DateCreated.Format(time.RFC3339) == expResp[i].DateCreated.Format(time.RFC3339) {
@@ -135,64 +107,24 @@ func query(busDomain dbtest.Core, sd unitest.SeedData) []unitest.Table {
 				return cmp.Diff(gotResp, expResp)
 			},
 		},
-		{
-			Name:    "byid",
-			ExpResp: sd.Users[0].User,
-			ExcFunc: func(ctx context.Context) any {
-				resp, err := busDomain.User.QueryByID(ctx, sd.Users[0].ID)
-				if err != nil {
-					return err
-				}
-
-				return resp
-			},
-			CmpFunc: func(got any, exp any) string {
-				gotResp, exists := got.(user.User)
-				if !exists {
-					return "error occurred"
-				}
-
-				expResp := exp.(user.User)
-
-				if gotResp.DateCreated.Format(time.RFC3339) == expResp.DateCreated.Format(time.RFC3339) {
-					expResp.DateCreated = gotResp.DateCreated
-				}
-
-				if gotResp.DateUpdated.Format(time.RFC3339) == expResp.DateUpdated.Format(time.RFC3339) {
-					expResp.DateUpdated = gotResp.DateUpdated
-				}
-
-				return cmp.Diff(gotResp, expResp)
-			},
-		},
 	}
 
 	return table
 }
 
-func create(busDomain dbtest.Core) []unitest.Table {
-	email, _ := mail.ParseAddress("chris@housi.com")
-
+func create(service dbtest.Service) []unitest.Table {
 	table := []unitest.Table{
 		{
 			Name: "basic",
-			ExpResp: user.User{
-				Name:       name.MustParse("Chris Housi"),
-				Email:      *email,
-				RoleId:     []role.Role{role.Admin},
-				Department: name.MustParseNull("IT0"),
-				Enabled:    true,
+			ExpResp: role.Role{
+				Name: name.MustParse("Admin"),
 			},
 			ExcFunc: func(ctx context.Context) any {
-				nu := user.NewUser{
-					Name:       name.MustParse("Chris Housi"),
-					Email:      *email,
-					RoleId:     []role.Role{role.Admin},
-					Department: name.MustParseNull("IT0"),
-					Password:   "123",
+				nr := role.NewRole{
+					Name: name.MustParse("Admin"),
 				}
 
-				resp, err := busDomain.User.Create(ctx, nu)
+				resp, err := service.Role.Create(ctx, nr)
 				if err != nil {
 					return err
 				}
@@ -200,19 +132,14 @@ func create(busDomain dbtest.Core) []unitest.Table {
 				return resp
 			},
 			CmpFunc: func(got any, exp any) string {
-				gotResp, exists := got.(user.User)
+				gotResp, exists := got.(role.Role)
 				if !exists {
 					return "error occurred"
 				}
 
-				if err := bcrypt.CompareHashAndPassword(gotResp.PasswordHash, []byte("123")); err != nil {
-					return err.Error()
-				}
-
-				expResp := exp.(user.User)
+				expResp := exp.(role.Role)
 
 				expResp.ID = gotResp.ID
-				expResp.PasswordHash = gotResp.PasswordHash
 				expResp.DateCreated = gotResp.DateCreated
 				expResp.DateUpdated = gotResp.DateUpdated
 
@@ -224,31 +151,21 @@ func create(busDomain dbtest.Core) []unitest.Table {
 	return table
 }
 
-func update(busDomain dbtest.Core, sd unitest.SeedData) []unitest.Table {
-	email, _ := mail.ParseAddress("chris2@housi.com")
-
+func update(service dbtest.Service, sd unitest.SeedData) []unitest.Table {
 	table := []unitest.Table{
 		{
 			Name: "basic",
-			ExpResp: user.User{
-				ID:          sd.Users[0].ID,
+			ExpResp: role.Role{
+				ID:          sd.Roles[0].ID,
 				Name:        name.MustParse("Chris Housi 2"),
-				Email:       *email,
-				RoleId:      []role.Role{role.Admin},
-				Department:  name.MustParseNull("IT0"),
-				Enabled:     true,
-				DateCreated: sd.Users[0].DateCreated,
+				DateCreated: sd.Roles[0].DateCreated,
 			},
 			ExcFunc: func(ctx context.Context) any {
-				uu := user.UpdateUser{
-					Name:       dbtest.NamePointer("Chris Housi 2"),
-					Email:      email,
-					RoleId:     []role.Role{role.Admin},
-					Department: dbtest.NameNullPointer("IT0"),
-					Password:   dbtest.StringPointer("1234"),
+				urole := role.UpdateRole{
+					Name: dbtest.NamePointer("Chris Housi 2"),
 				}
 
-				resp, err := busDomain.User.Update(ctx, sd.Users[0].User, uu)
+				resp, err := service.Role.Update(ctx, sd.Roles[0].Role, urole)
 				if err != nil {
 					return err
 				}
@@ -256,18 +173,11 @@ func update(busDomain dbtest.Core, sd unitest.SeedData) []unitest.Table {
 				return resp
 			},
 			CmpFunc: func(got any, exp any) string {
-				gotResp, exists := got.(user.User)
+				gotResp, exists := got.(role.Role)
 				if !exists {
 					return "error occurred"
 				}
-
-				if err := bcrypt.CompareHashAndPassword(gotResp.PasswordHash, []byte("1234")); err != nil {
-					return err.Error()
-				}
-
-				expResp := exp.(user.User)
-
-				expResp.PasswordHash = gotResp.PasswordHash
+				expResp := exp.(role.Role)
 				expResp.DateUpdated = gotResp.DateUpdated
 
 				return cmp.Diff(gotResp, expResp)
@@ -278,27 +188,13 @@ func update(busDomain dbtest.Core, sd unitest.SeedData) []unitest.Table {
 	return table
 }
 
-func deleteUser(busDomain dbtest.Core, sd unitest.SeedData) []unitest.Table {
+func deleteRole(service dbtest.Service, sd unitest.SeedData) []unitest.Table {
 	table := []unitest.Table{
 		{
-			Name:    "user",
+			Name:    "role 1",
 			ExpResp: nil,
 			ExcFunc: func(ctx context.Context) any {
-				if err := busDomain.User.Delete(ctx, sd.Users[1].User); err != nil {
-					return err
-				}
-
-				return nil
-			},
-			CmpFunc: func(got any, exp any) string {
-				return cmp.Diff(got, exp)
-			},
-		},
-		{
-			Name:    "admin",
-			ExpResp: nil,
-			ExcFunc: func(ctx context.Context) any {
-				if err := busDomain.User.Delete(ctx, sd.Admins[1].User); err != nil {
+				if err := service.Role.Delete(ctx, sd.Roles[1].Role); err != nil {
 					return err
 				}
 

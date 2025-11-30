@@ -20,9 +20,9 @@ var (
 // User represents information about an individual user.
 type User struct {
 	ID           uuid.UUID
+	RoleID       uuid.UUID
 	Name         name.Name
 	Email        mail.Address
-	RoleId       uuid.UUID
 	PasswordHash []byte
 	Department   name.Null
 	Enabled      bool
@@ -32,18 +32,18 @@ type User struct {
 
 // NewUser contains information needed to create a new user.
 type NewUser struct {
+	RoleID     uuid.UUID
 	Name       name.Name
 	Email      mail.Address
-	RoleId     uuid.UUID
 	Department name.Null
 	Password   string
 }
 
 // UpdateUser contains information needed to update a user.
 type UpdateUser struct {
+	RoleID     uuid.UUID
 	Name       *name.Name
 	Email      *mail.Address
-	RoleId     uuid.UUID
 	Department *name.Null
 	Password   *string
 	Enabled    *bool

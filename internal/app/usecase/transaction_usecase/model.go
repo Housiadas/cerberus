@@ -113,7 +113,7 @@ func toBusNewUser(app NewUser) (user.NewUser, error) {
 	bus := user.NewUser{
 		Name:       nme,
 		Email:      *addr,
-		RoleId:     roles,
+		RoleID:     roles,
 		Department: department,
 		Password:   app.Password,
 	}

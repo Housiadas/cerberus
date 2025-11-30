@@ -9,16 +9,14 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/Housiadas/cerberus/internal/core/domain/name"
-	"github.com/Housiadas/cerberus/internal/core/domain/role"
 	"github.com/Housiadas/cerberus/internal/core/domain/user"
-	"github.com/Housiadas/cerberus/pkg/pgsql/dbarray"
 )
 
 type userDB struct {
-	ID           uuid.UUID      `db:"user_id"`
+	ID           uuid.UUID      `db:"id"`
+	RoleID       uuid.UUID      `db:"role_id"`
 	Name         string         `db:"name"`
 	Email        string         `db:"email"`
-	Roles        dbarray.String `db:"roles"`
 	PasswordHash []byte         `db:"password_hash"`
 	Department   sql.NullString `db:"department"`
 	Enabled      bool           `db:"enabled"`
@@ -29,9 +27,9 @@ type userDB struct {
 func toUserDB(usr user.User) userDB {
 	return userDB{
 		ID:           usr.ID,
+		RoleID:       usr.RoleID,
 		Name:         usr.Name.String(),
 		Email:        usr.Email.Address,
-		Roles:        role.ParseToString(usr.RoleId),
 		PasswordHash: usr.PasswordHash,
 		Department: sql.NullString{
 			String: usr.Department.String(),
@@ -48,11 +46,6 @@ func toUserDomain(db userDB) (user.User, error) {
 		Address: db.Email,
 	}
 
-	roles, err := role.ParseMany(db.Roles)
-	if err != nil {
-		return user.User{}, fmt.Errorf("parse: %w", err)
-	}
-
 	nme, err := name.Parse(db.Name)
 	if err != nil {
 		return user.User{}, fmt.Errorf("parse name: %w", err)
@@ -65,9 +58,9 @@ func toUserDomain(db userDB) (user.User, error) {
 
 	bus := user.User{
 		ID:           db.ID,
+		RoleID:       db.RoleID,
 		Name:         nme,
 		Email:        addr,
-		RoleId:       roles,
 		PasswordHash: db.PasswordHash,
 		Enabled:      db.Enabled,
 		Department:   department,

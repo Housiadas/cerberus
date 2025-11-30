@@ -14,15 +14,15 @@ import (
 	"github.com/google/uuid"
 )
 
-// Core manages the set of APIs for user access.
-type Core struct {
+// Service manages the set of APIs for user access.
+type Service struct {
 	log    *logger.Logger
 	storer role.Storer
 }
 
-// NewCore constructor
-func NewCore(log *logger.Logger, storer role.Storer) *Core {
-	return &Core{
+// New constructor
+func New(log *logger.Logger, storer role.Storer) *Service {
+	return &Service{
 		log:    log,
 		storer: storer,
 	}
@@ -30,13 +30,13 @@ func NewCore(log *logger.Logger, storer role.Storer) *Core {
 
 // NewWithTx constructs a new internal value that will use the
 // specified transaction in any store-related calls.
-func (c *Core) NewWithTx(tx pgsql.CommitRollbacker) (*Core, error) {
+func (c *Service) NewWithTx(tx pgsql.CommitRollbacker) (*Service, error) {
 	storer, err := c.storer.NewWithTx(tx)
 	if err != nil {
 		return nil, err
 	}
 
-	bus := Core{
+	bus := Service{
 		log:    c.log,
 		storer: storer,
 	}
@@ -45,7 +45,7 @@ func (c *Core) NewWithTx(tx pgsql.CommitRollbacker) (*Core, error) {
 }
 
 // Create adds a new role.Role to the system.
-func (c *Core) Create(ctx context.Context, nr role.NewRole) (role.Role, error) {
+func (c *Service) Create(ctx context.Context, nr role.NewRole) (role.Role, error) {
 	now := time.Now()
 	rol := role.Role{
 		ID:          uuid.UUID{},
@@ -62,7 +62,7 @@ func (c *Core) Create(ctx context.Context, nr role.NewRole) (role.Role, error) {
 }
 
 // Update modifies information about a role.Role
-func (c *Core) Update(ctx context.Context, rl role.Role, uprole role.UpdateRole) (role.Role, error) {
+func (c *Service) Update(ctx context.Context, rl role.Role, uprole role.UpdateRole) (role.Role, error) {
 	if uprole.Name != nil {
 		rl.Name = *uprole.Name
 	}
@@ -77,7 +77,7 @@ func (c *Core) Update(ctx context.Context, rl role.Role, uprole role.UpdateRole)
 }
 
 // Delete removes the specified role.Role
-func (c *Core) Delete(ctx context.Context, rl role.Role) error {
+func (c *Service) Delete(ctx context.Context, rl role.Role) error {
 	if err := c.storer.Delete(ctx, rl); err != nil {
 		return fmt.Errorf("role delete: %w", err)
 	}
@@ -86,7 +86,7 @@ func (c *Core) Delete(ctx context.Context, rl role.Role) error {
 }
 
 // Query retrieves a list of existing users.
-func (c *Core) Query(
+func (c *Service) Query(
 	ctx context.Context,
 	filter role.QueryFilter,
 	orderBy order.By,

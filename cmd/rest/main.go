@@ -137,12 +137,12 @@ func run(ctx context.Context, cfg config.Config, log *logger.Logger) error {
 	tracer := traceProvider.Tracer(cfg.App.Name)
 
 	// -------------------------------------------------------------------------
-	// Core Services
+	// Service Services
 	// -------------------------------------------------------------------------
 	log.Info(ctx, "startup", "status", "initializing internal layer")
 
-	auditCore := audit_service.NewCore(log, audit_repo.NewStore(log, db))
-	userCore := user_service.NewCore(log, user_repo.NewStore(log, db))
+	auditCore := audit_service.New(log, audit_repo.NewStore(log, db))
+	userCore := user_service.New(log, user_repo.NewStore(log, db))
 	productCore := product_core.NewCore(log, userCore, product_repo.NewStore(log, db))
 
 	// -------------------------------------------------------------------------

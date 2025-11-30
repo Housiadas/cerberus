@@ -37,23 +37,27 @@ func (h *Handler) Routes() *chi.Mux {
 			MaxAge:         h.Cors.MaxAge,
 		}))
 
+		// Roles
+		v1.Route("/roles", func(p chi.Router) {
+			p.Get("/", h.Web.Res.Respond(h.roleQuery))
+			p.Post("/", h.Web.Res.Respond(h.roleCreate))
+			p.Put("/{role_id}", h.Web.Res.Respond(h.roleUpdate))
+			p.Delete("/{role_id}", h.Web.Res.Respond(h.roleDelete))
+		})
+
+		// Permissions
+		v1.Route("/permissions", func(p chi.Router) {
+			// ...
+		})
+
 		// Users
 		v1.Route("/users", func(u chi.Router) {
 			u.Get("/", h.Web.Res.Respond(h.userQuery))
 			u.Post("/", h.Web.Res.Respond(h.userCreate))
 			u.Get("/{user_id}", h.Web.Res.Respond(h.userQueryByID))
 			u.Put("/{user_id}", h.Web.Res.Respond(h.userUpdate))
-			u.Put("/role/{user_id}", h.Web.Res.Respond(h.updateRole))
+			u.Put("/{user_id}/roles/{role_id}", h.Web.Res.Respond(h.updateRole))
 			u.Delete("/{user_id}", h.Web.Res.Respond(h.userDelete))
-		})
-
-		// Products
-		v1.Route("/products", func(p chi.Router) {
-			p.Get("/", h.Web.Res.Respond(h.productQuery))
-			p.Post("/", h.Web.Res.Respond(h.productCreate))
-			p.Get("/{product_id}", h.Web.Res.Respond(h.productQueryByID))
-			p.Put("/{product_id}", h.Web.Res.Respond(h.productUpdate))
-			p.Delete("/{product_id}", h.Web.Res.Respond(h.productDelete))
 		})
 
 		// Audits

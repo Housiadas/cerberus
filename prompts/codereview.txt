@@ -1,0 +1,4 @@
+- Review all the code in directories cmd/internal/pkg.
+- Look for any bugs.
+- Look for any code that can be written using better Go idioms.
+- Suggest changes in the code for my review.

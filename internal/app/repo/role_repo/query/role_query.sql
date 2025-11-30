@@ -1,10 +1,5 @@
-SELECT user_id,
+SELECT id,
        name,
-       email,
-       password_hash,
-       roles,
-       department,
-       enabled,
        date_created,
        date_updated
-FROM users
+FROM roles
