@@ -41,7 +41,7 @@ func (at *Test) Run(t *testing.T, table []Table, testName string) {
 				r = httptest.NewRequest(tt.Method, tt.URL, bytes.NewBuffer(d))
 			}
 
-			r.Header.Set("authorization", "Bearer "+tt.Token)
+			//r.Header.Set("authorization", "Bearer "+tt.Token)
 			at.Mux.ServeHTTP(w, r)
 
 			if w.Code != tt.StatusCode {

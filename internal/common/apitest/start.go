@@ -44,7 +44,6 @@ func StartTest(t *testing.T, testName string) (*Test, error) {
 		Tracer:      tracer,
 		AuditCore:   db.Core.Audit,
 		UserCore:    db.Core.User,
-		ProductCore: db.Core.Product,
 	})
 
 	return New(db, h.Routes()), nil

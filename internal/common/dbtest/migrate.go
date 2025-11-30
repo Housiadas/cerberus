@@ -2,6 +2,7 @@ package dbtest
 
 import (
 	"database/sql"
+	"fmt"
 	"path/filepath"
 	"runtime"
 
@@ -10,8 +11,11 @@ import (
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 )
 
-func migration(dbTestURL string) error {
-	db, err := sql.Open("postgres", dbTestURL)
+func migration(cfg Config, DBName string) error {
+	db, err := sql.Open(
+		"postgres",
+		fmt.Sprintf("postgres://%s:%s@localhost:%s/%s?sslmode=disable", cfg.DBUser, cfg.DBPassword, cfg.DBPort, DBName))
+
 	driver, err := postgres.WithInstance(db, &postgres.Config{})
 	m, err := migrate.NewWithDatabaseInstance(
 		getMigrationsDir(),

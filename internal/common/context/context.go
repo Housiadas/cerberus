@@ -6,7 +6,6 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/Housiadas/cerberus/internal/core/domain/product"
 	"github.com/Housiadas/cerberus/internal/core/domain/user"
 )
 
@@ -68,20 +67,6 @@ func GetUser(ctx context.Context) (user.User, error) {
 	v, ok := ctx.Value(userKey).(user.User)
 	if !ok {
 		return user.User{}, errors.New("user not found in context")
-	}
-
-	return v, nil
-}
-
-func SetProduct(ctx context.Context, prd product.Product) context.Context {
-	return context.WithValue(ctx, productKey, prd)
-}
-
-// GetProduct returns the product from the context.
-func GetProduct(ctx context.Context) (product.Product, error) {
-	v, ok := ctx.Value(productKey).(product.Product)
-	if !ok {
-		return product.Product{}, errors.New("product not found in context")
 	}
 
 	return v, nil

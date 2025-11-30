@@ -8,14 +8,17 @@ http:
   idleTimeout: "120s"
   shutdownTimeout: "20s"
 db:
-  name: "housi_db"
   user: "housi"
   password: "secret123"
+  name: "housi_db"
+  port: "5432"
   host: "localhost:5432"
   maxOpenConnections: "25"
   maxIdleConnections: "25"
   connectionIdleTime: "30s"
   disableTLS: true
+  postgresImage: "postgres:17.5"
+  postgresContainerName: "repository-container"
 cors:
   allowedOrigins: "*"
   allowedMethods: "GET;POST;PUT;DELETE;OPTIONS;PATCH"
