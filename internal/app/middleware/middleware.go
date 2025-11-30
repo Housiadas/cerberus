@@ -10,7 +10,6 @@ import (
 	"go.opentelemetry.io/otel/trace"
 	"golang.org/x/sync/singleflight"
 
-	"github.com/Housiadas/cerberus/internal/core/service/product_core"
 	"github.com/Housiadas/cerberus/internal/core/service/user_service"
 	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/Housiadas/cerberus/pkg/pgsql"
@@ -24,30 +23,27 @@ var (
 )
 
 type Config struct {
-	Log     *logger.Logger
-	Tracer  trace.Tracer
-	Tx      *pgsql.DBBeginner
-	User    *user_service.Service
-	Product *product_core.Core
+	Log    *logger.Logger
+	Tracer trace.Tracer
+	Tx     *pgsql.DBBeginner
+	User   *user_service.Service
 }
 
 type Middleware struct {
-	Core   Core
+	Core   Service
 	Log    *logger.Logger
 	Tracer trace.Tracer
 	Tx     *pgsql.DBBeginner
 }
 
-type Core struct {
-	User    *user_service.Service
-	Product *product_core.Core
+type Service struct {
+	User *user_service.Service
 }
 
 func New(cfg Config) *Middleware {
 	return &Middleware{
-		Core: Core{
-			User:    cfg.User,
-			Product: cfg.Product,
+		Core: Service{
+			User: cfg.User,
 		},
 		Log:    cfg.Log,
 		Tracer: cfg.Tracer,

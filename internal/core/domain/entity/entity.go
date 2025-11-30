@@ -4,8 +4,8 @@ import "fmt"
 
 // The set of roles that can be used.
 var (
-	User    = newEntity("USER")
-	Product = newEntity("PRODUCT")
+	User = newEntity("USER")
+	Role = newEntity("ROLE")
 )
 
 // Set of known entities.

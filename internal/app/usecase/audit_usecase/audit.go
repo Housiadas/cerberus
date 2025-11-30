@@ -6,19 +6,19 @@ import (
 
 	"github.com/Housiadas/cerberus/internal/common/validation"
 	"github.com/Housiadas/cerberus/internal/core/domain/user"
-	"github.com/Housiadas/cerberus/internal/core/service/product_core"
+	"github.com/Housiadas/cerberus/internal/core/service/audit_service"
 	"github.com/Housiadas/cerberus/pkg/errs"
 	"github.com/Housiadas/cerberus/pkg/order"
 	"github.com/Housiadas/cerberus/pkg/page"
 )
 
 type App struct {
-	AuditCore *audit_core.Core
+	AuditService *audit_service.Service
 }
 
-func NewApp(core *audit_core.Core) *App {
+func NewApp(service *audit_service.Service) *App {
 	return &App{
-		AuditCore: core,
+		AuditService: service,
 	}
 }
 
@@ -38,12 +38,12 @@ func (a *App) Query(ctx context.Context, qp AppQueryParams) (page.Result[Audit],
 		return page.Result[Audit]{}, validation.NewFieldErrors("order", err)
 	}
 
-	adts, err := a.AuditCore.Query(ctx, filter, orderBy, p)
+	adts, err := a.AuditService.Query(ctx, filter, orderBy, p)
 	if err != nil {
 		return page.Result[Audit]{}, errs.Newf(errs.Internal, "query: %s", err)
 	}
 
-	total, err := a.AuditCore.Count(ctx, filter)
+	total, err := a.AuditService.Count(ctx, filter)
 	if err != nil {
 		return page.Result[Audit]{}, errs.Newf(errs.Internal, "count: %s", err)
 	}

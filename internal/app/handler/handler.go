@@ -6,7 +6,6 @@ import (
 
 	"github.com/Housiadas/cerberus/internal/app/middleware"
 	"github.com/Housiadas/cerberus/internal/app/usecase/audit_usecase"
-	"github.com/Housiadas/cerberus/internal/app/usecase/product_usecase"
 	"github.com/Housiadas/cerberus/internal/app/usecase/system_usecase"
 	"github.com/Housiadas/cerberus/internal/app/usecase/user_usecase"
 	"github.com/Housiadas/cerberus/internal/config"
@@ -38,10 +37,9 @@ type Web struct {
 
 // App represents the application layer
 type App struct {
-	Audit   *audit_usecase.App
-	User    *user_usecase.App
-	Product *product_usecase.App
-	System  *system_usecase.App
+	Audit  *audit_usecase.App
+	User   *user_usecase.App
+	System *system_usecase.App
 }
 
 // Core represents the core internal layer.
@@ -52,14 +50,14 @@ type Core struct {
 
 // Config represents the configuration for the handler.
 type Config struct {
-	ServiceName string
-	Build       string
-	Cors        config.CorsSettings
-	DB          *sqlx.DB
-	Log         *logger.Logger
-	Tracer      trace.Tracer
-	AuditCore   *audit_service.Service
-	UserCore    *user_service.Service
+	ServiceName  string
+	Build        string
+	Cors         config.CorsSettings
+	DB           *sqlx.DB
+	Log          *logger.Logger
+	Tracer       trace.Tracer
+	AuditService *audit_service.Service
+	UserService  *user_service.Service
 }
 
 func New(cfg Config) *Handler {
@@ -75,18 +73,18 @@ func New(cfg Config) *Handler {
 				Log:    cfg.Log,
 				Tracer: cfg.Tracer,
 				Tx:     pgsql.NewBeginner(cfg.DB),
-				User:   cfg.UserCore,
+				User:   cfg.UserService,
 			}),
 			Res: web.NewRespond(cfg.Log),
 		},
 		App: App{
-			Audit:  audit_usecase.NewApp(cfg.AuditCore),
-			User:   user_usecase.NewApp(cfg.UserCore),
+			Audit:  audit_usecase.NewApp(cfg.AuditService),
+			User:   user_usecase.NewApp(cfg.UserService),
 			System: system_usecase.NewApp(cfg.Build, cfg.Log, cfg.DB),
 		},
 		Core: Core{
-			Audit: cfg.AuditCore,
-			User:  cfg.UserCore,
+			Audit: cfg.AuditService,
+			User:  cfg.UserService,
 		},
 	}
 }

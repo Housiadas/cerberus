@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"github.com/Housiadas/cerberus/internal/core/service/audit_service"
+	"github.com/google/uuid"
 	"sort"
 	"testing"
 	"time"
@@ -14,8 +16,6 @@ import (
 	"github.com/Housiadas/cerberus/internal/common/unitest"
 	"github.com/Housiadas/cerberus/internal/core/domain/audit"
 	"github.com/Housiadas/cerberus/internal/core/domain/entity"
-	"github.com/Housiadas/cerberus/internal/core/domain/role"
-	"github.com/Housiadas/cerberus/internal/core/service/product_core"
 	"github.com/Housiadas/cerberus/internal/core/service/user_service"
 	"github.com/Housiadas/cerberus/pkg/order"
 	"github.com/Housiadas/cerberus/pkg/page"
@@ -39,12 +39,13 @@ func Test_Audit(t *testing.T) {
 func insertSeedData(core dbtest.Service) (unitest.SeedData, error) {
 	ctx := context.Background()
 
-	usrs, err := user_service.TestSeedUsers(ctx, 1, role.Admin, core.User)
+	roleID := uuid.New()
+	usrs, err := user_service.TestSeedUsers(ctx, 1, roleID, core.User)
 	if err != nil {
 		return unitest.SeedData{}, fmt.Errorf("seeding users : %w", err)
 	}
 
-	audits, err := audit_core.TestSeedAudits(ctx, 2, usrs[0].ID, entity.User, "create", core.Audit)
+	audits, err := audit_service.TestSeedAudits(ctx, 2, usrs[0].ID, entity.User, "create", core.Audit)
 	if err != nil {
 		return unitest.SeedData{}, fmt.Errorf("seeding users : %w", err)
 	}

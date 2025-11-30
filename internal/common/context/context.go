@@ -17,7 +17,6 @@ const (
 	claimKey   ctxKey = "claimKey"
 	userIDKey  ctxKey = "userIDKey"
 	userKey    ctxKey = "userKey"
-	productKey ctxKey = "productKey"
 )
 
 func SetRequestID(ctx context.Context, reqId string) context.Context {
