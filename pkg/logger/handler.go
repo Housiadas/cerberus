@@ -32,7 +32,7 @@ func (h *logHandler) WithAttrs(attrs []slog.Attr) slog.Handler {
 }
 
 // WithGroup returns a new Handler with the given group appended to the receiver's
-// existing groups. The keys of all subsequent attributes, whether added by With
+// existing groups. The keys of all later attributes, whether added by With
 // or in a Record, should be qualified by the sequence of group names.
 func (h *logHandler) WithGroup(name string) slog.Handler {
 	return &logHandler{handler: h.handler.WithGroup(name), events: h.events}

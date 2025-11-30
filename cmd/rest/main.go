@@ -62,26 +62,20 @@ func main() {
 	// Initialize Logger
 	// -------------------------------------------------------------------------
 	var log *logger.Logger
-	events := logger.Events{
-		Error: func(ctx context.Context, r logger.Record) {
-			log.Info(ctx, "******* SEND ALERT *******")
-			// r.Attributes, contains all the necessary information for the alert
-		},
-	}
 	traceIDFn := func(ctx context.Context) string {
 		return otel.GetTraceID(ctx)
 	}
 	requestIDFn := func(ctx context.Context) string {
 		return ctxPck.GetRequestID(ctx)
 	}
-	log = logger.NewWithEvents(os.Stdout, logger.LevelInfo, "API", traceIDFn, requestIDFn, events)
+	log = logger.New(os.Stdout, logger.LevelInfo, "API", traceIDFn, requestIDFn)
 
 	// -------------------------------------------------------------------------
 	// Run the application
 	// -------------------------------------------------------------------------
 	ctx := context.Background()
 	if err := run(ctx, cfg, log); err != nil {
-		log.Error(ctx, "error during startup", "msg", err)
+		log.Error(ctx, "error during rest server startup", "msg", err)
 		os.Exit(1)
 	}
 }
@@ -95,7 +89,7 @@ func run(ctx context.Context, cfg config.Config, log *logger.Logger) error {
 	// -------------------------------------------------------------------------
 	// App Starting
 	// -------------------------------------------------------------------------
-	log.Info(ctx, "starting usecase", "version", cfg.Version.Build)
+	log.Info(ctx, "starting application", "version", cfg.Version.Build)
 	defer log.Info(ctx, "shutdown complete")
 
 	log.BuildInfo(ctx)
@@ -152,20 +146,20 @@ func run(ctx context.Context, cfg config.Config, log *logger.Logger) error {
 	productCore := product_core.NewCore(log, userCore, product_repo.NewStore(log, db))
 
 	// -------------------------------------------------------------------------
-	// Start Debug Http Core
+	// Start Debug Http Server
 	// -------------------------------------------------------------------------
 	go func() {
-		log.Info(ctx, "startup", "status", "Debug grpc starting", "host", cfg.Http.Debug)
+		log.Info(ctx, "startup", "status", "Debug server starting", "host", cfg.Http.Debug)
 
 		if err := http.ListenAndServe(cfg.Http.Debug, debug.Mux()); err != nil {
-			log.Error(ctx, "shutdown", "status", "debug v1 router closed", "host", cfg.Http.Debug, "msg", err)
+			log.Error(ctx, "shutdown", "status", "debug router closed", "host", cfg.Http.Debug, "msg", err)
 		}
 	}()
 
 	// -------------------------------------------------------------------------
 	// Start API Http Server
 	// -------------------------------------------------------------------------
-	log.Info(ctx, "startup", "status", "API grpc starting")
+	log.Info(ctx, "startup", "status", "Rest server starting")
 
 	// Initialize handler
 	h := handler.New(handler.Config{
@@ -194,14 +188,14 @@ func run(ctx context.Context, cfg config.Config, log *logger.Logger) error {
 	signal.Notify(shutdown, syscall.SIGINT, syscall.SIGTERM)
 
 	go func() {
-		log.Info(ctx, "startup", "status", "API grpc started", "host", api.Addr)
+		log.Info(ctx, "startup", "status", "Rest server started", "host", api.Addr)
 		serverErrors <- api.ListenAndServe()
 	}()
 
 	// Shutdown
 	select {
 	case err := <-serverErrors:
-		return fmt.Errorf("grpc error: %w", err)
+		return fmt.Errorf("rest server error: %w", err)
 
 	case sig := <-shutdown:
 		log.Info(ctx, "shutdown", "status", "shutdown started", "signal", sig)
