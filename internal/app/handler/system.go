@@ -14,7 +14,7 @@ import (
 // stack it will interpret that as a non-trusted error.
 //
 // Readiness godoc
-// @Summary      App Readiness
+// @Summary      UseCase Readiness
 // @Description  Check application's readiness
 // @Tags		 System
 // @Accept       json
@@ -23,7 +23,7 @@ import (
 // @Failure      500  {object}  errs.Error
 // @Router       /readiness [get]
 func (h *Handler) readiness(ctx context.Context, _ http.ResponseWriter, _ *http.Request) web.Encoder {
-	if err := h.App.System.Readiness(ctx); err != nil {
+	if err := h.UseCase.System.Readiness(ctx); err != nil {
 		return errs.Newf(errs.Internal, "database not ready")
 	}
 
@@ -40,7 +40,7 @@ func (h *Handler) readiness(ctx context.Context, _ http.ResponseWriter, _ *http.
 // need to be set within your Pod/Deployment manifest.
 //
 // Liveness godoc
-// @Summary      App Liveness
+// @Summary      UseCase Liveness
 // @Description  Returns application's status info if the usecase is alive
 // @Tags		 System
 // @Accept       json
@@ -48,7 +48,7 @@ func (h *Handler) readiness(ctx context.Context, _ http.ResponseWriter, _ *http.
 // @Success      200  {object}  system_usecase.Info
 // @Router       /liveness [get]
 func (h *Handler) liveness(_ context.Context, _ http.ResponseWriter, _ *http.Request) web.Encoder {
-	info := h.App.System.Liveness()
+	info := h.UseCase.System.Liveness()
 
 	return info
 }

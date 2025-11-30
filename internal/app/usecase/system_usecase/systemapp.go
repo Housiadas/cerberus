@@ -14,16 +14,16 @@ import (
 	"github.com/Housiadas/cerberus/pkg/pgsql"
 )
 
-// App manages the set of cli layer api functions for the check core.
-type App struct {
+// UseCase manages the set of cli layer api functions for the check core.
+type UseCase struct {
 	build string
 	log   *logger.Logger
 	db    *sqlx.DB
 }
 
 // NewApp constructs a check cli API for use.
-func NewApp(build string, log *logger.Logger, db *sqlx.DB) *App {
-	return &App{
+func NewApp(build string, log *logger.Logger, db *sqlx.DB) *UseCase {
+	return &UseCase{
 		build: build,
 		log:   log,
 		db:    db,
@@ -33,7 +33,7 @@ func NewApp(build string, log *logger.Logger, db *sqlx.DB) *App {
 // Readiness checks if the database is ready and if not will return a 500 status.
 // Do not respond by just returning an error because further up in the call
 // stack it will interpret that as a non-trusted error.
-func (a *App) Readiness(ctx context.Context) error {
+func (a *UseCase) Readiness(ctx context.Context) error {
 	ctx, cancel := context.WithTimeout(ctx, time.Second)
 	defer cancel()
 
@@ -49,7 +49,7 @@ func (a *App) Readiness(ctx context.Context) error {
 // cli is deployed to a Kubernetes cluster, it will also return pod, node, and
 // namespace details via the Downward API. The Kubernetes environment variables
 // need to be set within your Pod/Deployment manifest.
-func (a *App) Liveness() Info {
+func (a *UseCase) Liveness() Info {
 	host, err := os.Hostname()
 	if err != nil {
 		host = "unavailable"

@@ -5,7 +5,10 @@ import (
 	"bytes"
 	"context"
 	_ "embed"
+	"errors"
 	"fmt"
+	"github.com/Housiadas/cerberus/internal/core/domain/user"
+	"github.com/google/uuid"
 
 	"github.com/jmoiron/sqlx"
 
@@ -26,6 +29,10 @@ var (
 	roleDeleteSql string
 	//go:embed query/role_query.sql
 	roleQuerySql string
+	//go:embed query/role_query_by_id.sql
+	roleQueryByIdSql string
+	//go:embed query/role_count.sql
+	roleCountSql string
 )
 
 // Store manages the set of APIs for userDB database access.
@@ -85,6 +92,25 @@ func (s *Store) Delete(ctx context.Context, rl role.Role) error {
 	return nil
 }
 
+// QueryByID gets the specified userDB from the database.
+func (s *Store) QueryByID(ctx context.Context, roleID uuid.UUID) (role.Role, error) {
+	data := struct {
+		ID string `db:"id"`
+	}{
+		ID: roleID.String(),
+	}
+
+	var dbRole roleDB
+	if err := pgsql.NamedQueryStruct(ctx, s.log, s.db, roleQueryByIdSql, data, &dbRole); err != nil {
+		if errors.Is(err, pgsql.ErrDBNotFound) {
+			return role.Role{}, fmt.Errorf("db: %w", user.ErrNotFound)
+		}
+		return role.Role{}, fmt.Errorf("db: %w", err)
+	}
+
+	return toRoleDomain(dbRole)
+}
+
 // Query retrieves a list of existing roles from the database.
 func (s *Store) Query(
 	ctx context.Context,
@@ -114,4 +140,20 @@ func (s *Store) Query(
 	}
 
 	return toRolesDomain(dbRoles)
+}
+
+// Count returns the total number of users in the DB.
+func (s *Store) Count(ctx context.Context, filter role.QueryFilter) (int, error) {
+	data := map[string]any{}
+	buf := bytes.NewBufferString(roleCountSql)
+	applyFilter(filter, data, buf)
+
+	var count struct {
+		Count int `db:"count"`
+	}
+	if err := pgsql.NamedQueryStruct(ctx, s.log, s.db, buf.String(), data, &count); err != nil {
+		return 0, fmt.Errorf("db: %w", err)
+	}
+
+	return count.Count, nil
 }

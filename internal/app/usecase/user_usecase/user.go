@@ -15,20 +15,20 @@ import (
 	"github.com/Housiadas/cerberus/pkg/page"
 )
 
-// App manages the set of cli layer api functions for the user core.
-type App struct {
+// UseCase manages the set of cli layer api functions for the user core.
+type UseCase struct {
 	userCore *user_service.Service
 }
 
 // NewApp constructs a user cli API for use.
-func NewApp(userBus *user_service.Service) *App {
-	return &App{
+func NewApp(userBus *user_service.Service) *UseCase {
+	return &UseCase{
 		userCore: userBus,
 	}
 }
 
 // Create adds a new user to the system.
-func (a *App) Create(ctx context.Context, app NewUser) (User, error) {
+func (a *UseCase) Create(ctx context.Context, app NewUser) (User, error) {
 	nc, err := toBusNewUser(app)
 	if err != nil {
 		return User{}, errs.New(errs.InvalidArgument, err)
@@ -46,7 +46,7 @@ func (a *App) Create(ctx context.Context, app NewUser) (User, error) {
 }
 
 // Update updates an existing user.
-func (a *App) Update(ctx context.Context, app UpdateUser) (User, error) {
+func (a *UseCase) Update(ctx context.Context, app UpdateUser) (User, error) {
 	uu, err := toBusUpdateUser(app)
 	if err != nil {
 		return User{}, errs.New(errs.InvalidArgument, err)
@@ -66,7 +66,7 @@ func (a *App) Update(ctx context.Context, app UpdateUser) (User, error) {
 }
 
 // UpdateRole updates an existing user's role.
-func (a *App) UpdateRole(ctx context.Context, app UpdateUserRole) (User, error) {
+func (a *UseCase) UpdateRole(ctx context.Context, app UpdateUserRole) (User, error) {
 	uu, err := toBusUpdateUserRole(app)
 	if err != nil {
 		return User{}, errs.New(errs.InvalidArgument, err)
@@ -86,7 +86,7 @@ func (a *App) UpdateRole(ctx context.Context, app UpdateUserRole) (User, error) 
 }
 
 // Delete removes a user from the system.
-func (a *App) Delete(ctx context.Context) error {
+func (a *UseCase) Delete(ctx context.Context) error {
 	usr, err := ctxPck.GetUser(ctx)
 	if err != nil {
 		return errs.Newf(errs.Internal, "userID missing in context: %s", err)
@@ -100,7 +100,7 @@ func (a *App) Delete(ctx context.Context) error {
 }
 
 // Query returns a list of users with paging.
-func (a *App) Query(ctx context.Context, qp AppQueryParams) (page.Result[User], error) {
+func (a *UseCase) Query(ctx context.Context, qp AppQueryParams) (page.Result[User], error) {
 	p, err := page.Parse(qp.Page, qp.Rows)
 	if err != nil {
 		return page.Result[User]{}, validation.NewFieldErrors("page", err)
@@ -130,7 +130,7 @@ func (a *App) Query(ctx context.Context, qp AppQueryParams) (page.Result[User], 
 }
 
 // QueryByID returns a user by its Ia.
-func (a *App) QueryByID(ctx context.Context) (User, error) {
+func (a *UseCase) QueryByID(ctx context.Context) (User, error) {
 	usr, err := ctxPck.GetUser(ctx)
 	if err != nil {
 		return User{}, errs.Newf(errs.Internal, "querybyid: %s", err)
@@ -140,7 +140,7 @@ func (a *App) QueryByID(ctx context.Context) (User, error) {
 }
 
 // Authenticate provides an API to authenticate the user.
-func (a *App) Authenticate(ctx context.Context, authUser AuthenticateUser) (User, error) {
+func (a *UseCase) Authenticate(ctx context.Context, authUser AuthenticateUser) (User, error) {
 	addr, err := mail.ParseAddress(authUser.Email)
 	if err != nil {
 		return User{}, validation.NewFieldErrors("email", err)

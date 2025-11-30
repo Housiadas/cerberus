@@ -6,6 +6,7 @@ import (
 
 	"github.com/Housiadas/cerberus/internal/app/middleware"
 	"github.com/Housiadas/cerberus/internal/app/usecase/audit_usecase"
+	"github.com/Housiadas/cerberus/internal/app/usecase/role_usecase"
 	"github.com/Housiadas/cerberus/internal/app/usecase/system_usecase"
 	"github.com/Housiadas/cerberus/internal/app/usecase/user_usecase"
 	"github.com/Housiadas/cerberus/internal/config"
@@ -25,7 +26,7 @@ type Handler struct {
 	Log         *logger.Logger
 	Tracer      trace.Tracer
 	Web         Web
-	App         App
+	UseCase     UseCase
 	Core        Core
 }
 
@@ -35,11 +36,12 @@ type Web struct {
 	Res        *web.Respond
 }
 
-// App represents the application layer
-type App struct {
-	Audit  *audit_usecase.App
-	User   *user_usecase.App
-	System *system_usecase.App
+// UseCase represents the application layer
+type UseCase struct {
+	Audit  *audit_usecase.UseCase
+	User   *user_usecase.UseCase
+	Role   *role_usecase.UserCase
+	System *system_usecase.UseCase
 }
 
 // Core represents the core internal layer.
@@ -77,7 +79,7 @@ func New(cfg Config) *Handler {
 			}),
 			Res: web.NewRespond(cfg.Log),
 		},
-		App: App{
+		UseCase: UseCase{
 			Audit:  audit_usecase.NewApp(cfg.AuditService),
 			User:   user_usecase.NewApp(cfg.UserService),
 			System: system_usecase.NewApp(cfg.Build, cfg.Log, cfg.DB),

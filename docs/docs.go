@@ -35,7 +35,7 @@ const docTemplate = `{
                 "tags": [
                     "System"
                 ],
-                "summary": "App Liveness",
+                "summary": "UseCase Liveness",
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -58,7 +58,7 @@ const docTemplate = `{
                 "tags": [
                     "System"
                 ],
-                "summary": "App Readiness",
+                "summary": "UseCase Readiness",
                 "responses": {
                     "200": {
                         "description": "OK",

@@ -3,4 +3,5 @@ SELECT
     name,
     date_created,
     date_updated
-FROM roles
+FROM users
+WHERE id = :id

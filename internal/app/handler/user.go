@@ -25,7 +25,7 @@ func (h *Handler) userCreate(ctx context.Context, _ http.ResponseWriter, r *http
 		return errs.New(errs.InvalidArgument, err)
 	}
 
-	usr, err := h.App.User.Create(ctx, app)
+	usr, err := h.UseCase.User.Create(ctx, app)
 	if err != nil {
 		return errs.NewError(err)
 	}
@@ -49,7 +49,7 @@ func (h *Handler) userUpdate(ctx context.Context, _ http.ResponseWriter, r *http
 		return errs.New(errs.InvalidArgument, err)
 	}
 
-	usr, err := h.App.User.Update(ctx, app)
+	usr, err := h.UseCase.User.Update(ctx, app)
 	if err != nil {
 		return errs.NewError(err)
 	}
@@ -73,7 +73,7 @@ func (h *Handler) updateRole(ctx context.Context, _ http.ResponseWriter, r *http
 		return errs.New(errs.InvalidArgument, err)
 	}
 
-	usr, err := h.App.User.UpdateRole(ctx, app)
+	usr, err := h.UseCase.User.UpdateRole(ctx, app)
 	if err != nil {
 		return errs.NewError(err)
 	}
@@ -91,7 +91,7 @@ func (h *Handler) updateRole(ctx context.Context, _ http.ResponseWriter, r *http
 // @Failure      500  {object}  errs.Error
 // @Router       /user/{user_id} [delete]
 func (h *Handler) userDelete(ctx context.Context, _ http.ResponseWriter, _ *http.Request) web.Encoder {
-	if err := h.App.User.Delete(ctx); err != nil {
+	if err := h.UseCase.User.Delete(ctx); err != nil {
 		return errs.NewError(err)
 	}
 
@@ -110,7 +110,7 @@ func (h *Handler) userDelete(ctx context.Context, _ http.ResponseWriter, _ *http
 func (h *Handler) userQuery(ctx context.Context, _ http.ResponseWriter, r *http.Request) web.Encoder {
 	qp := userParseQueryParams(r)
 
-	usr, err := h.App.User.Query(ctx, qp)
+	usr, err := h.UseCase.User.Query(ctx, qp)
 	if err != nil {
 		return errs.NewError(err)
 	}
@@ -128,7 +128,7 @@ func (h *Handler) userQuery(ctx context.Context, _ http.ResponseWriter, r *http.
 // @Failure      500  {object}  errs.Error
 // @Router       /user/{user_id} [get]
 func (h *Handler) userQueryByID(ctx context.Context, _ http.ResponseWriter, _ *http.Request) web.Encoder {
-	usr, err := h.App.User.QueryByID(ctx)
+	usr, err := h.UseCase.User.QueryByID(ctx)
 	if err != nil {
 		return errs.NewError(err)
 	}

@@ -2,32 +2,46 @@ package handler
 
 import (
 	"context"
-	"github.com/Housiadas/cerberus/internal/app/usecase/user_usecase"
+	"net/http"
+
+	"github.com/Housiadas/cerberus/internal/app/usecase/role_usecase"
 	"github.com/Housiadas/cerberus/pkg/errs"
 	"github.com/Housiadas/cerberus/pkg/web"
-	"net/http"
 )
 
-// Role godoc
-// @Summary      Crete Role
-// @Description  Create a new role
-// @Tags 		 Role
-// @Accept       json
-// @Produce      json
-// @Param        request body user_usecase.NewUser true "User data"
-// @Success      200  {object}  user_usecase.User
-// @Failure      500  {object}  errs.Error
-// @Router       /user [post]
 func (h *Handler) roleCreate(ctx context.Context, _ http.ResponseWriter, r *http.Request) web.Encoder {
-	var app user_usecase.NewUser
-	if err := web.Decode(r, &app); err != nil {
+	var ucRole role_usecase.NewRole
+	if err := web.Decode(r, &ucRole); err != nil {
 		return errs.New(errs.InvalidArgument, err)
 	}
 
-	usr, err := h.App.User.Create(ctx, app)
+	usr, err := h.UseCase.Role.Create(ctx, ucRole)
 	if err != nil {
 		return errs.NewError(err)
 	}
 
 	return usr
+}
+
+func (h *Handler) roleQuery(ctx context.Context, _ http.ResponseWriter, r *http.Request) web.Encoder {
+	qp := roleParseQueryParams(r)
+
+	usr, err := h.UseCase.Role.Query(ctx, qp)
+	if err != nil {
+		return errs.NewError(err)
+	}
+
+	return usr
+}
+
+func roleParseQueryParams(r *http.Request) role_usecase.AppQueryParams {
+	values := r.URL.Query()
+
+	return role_usecase.AppQueryParams{
+		ID:      values.Get("role_id"),
+		Name:    values.Get("name"),
+		Page:    values.Get("page"),
+		Rows:    values.Get("rows"),
+		OrderBy: values.Get("orderBy"),
+	}
 }

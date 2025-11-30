@@ -12,17 +12,17 @@ import (
 	"github.com/Housiadas/cerberus/pkg/page"
 )
 
-type App struct {
+type UseCase struct {
 	AuditService *audit_service.Service
 }
 
-func NewApp(service *audit_service.Service) *App {
-	return &App{
+func NewApp(service *audit_service.Service) *UseCase {
+	return &UseCase{
 		AuditService: service,
 	}
 }
 
-func (a *App) Query(ctx context.Context, qp AppQueryParams) (page.Result[Audit], error) {
+func (a *UseCase) Query(ctx context.Context, qp AppQueryParams) (page.Result[Audit], error) {
 	p, err := page.Parse(qp.Page, qp.Rows)
 	if err != nil {
 		return page.Result[Audit]{}, validation.NewFieldErrors("page", err)

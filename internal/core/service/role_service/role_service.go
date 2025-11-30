@@ -85,6 +85,21 @@ func (c *Service) Delete(ctx context.Context, rl role.Role) error {
 	return nil
 }
 
+// Count returns the total number of users.
+func (c *Service) Count(ctx context.Context, filter role.QueryFilter) (int, error) {
+	return c.storer.Count(ctx, filter)
+}
+
+// QueryByID finds the user by the specified ID.
+func (c *Service) QueryByID(ctx context.Context, roleID uuid.UUID) (role.Role, error) {
+	rl, err := c.storer.QueryByID(ctx, roleID)
+	if err != nil {
+		return role.Role{}, fmt.Errorf("query: roleID[%s]: %w", roleID, err)
+	}
+
+	return rl, nil
+}
+
 // Query retrieves a list of existing users.
 func (c *Service) Query(
 	ctx context.Context,

@@ -85,7 +85,7 @@ func run(ctx context.Context, cfg config.Config, log *logger.Logger) error {
 	log.Info(ctx, "startup", "GOMAXPROCS", runtime.GOMAXPROCS(0))
 
 	// -------------------------------------------------------------------------
-	// App Starting
+	// UseCase Starting
 	// -------------------------------------------------------------------------
 	log.Info(ctx, "starting application", "version", cfg.Version.Build)
 	defer log.Info(ctx, "shutdown complete")

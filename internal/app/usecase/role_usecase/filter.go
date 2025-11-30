@@ -1,11 +1,11 @@
-package user_usecase
+package role_usecase
 
 import (
 	"github.com/google/uuid"
 
 	"github.com/Housiadas/cerberus/internal/common/validation"
 	"github.com/Housiadas/cerberus/internal/core/domain/name"
-	"github.com/Housiadas/cerberus/internal/core/domain/user"
+	"github.com/Housiadas/cerberus/internal/core/domain/role"
 )
 
 type AppQueryParams struct {
@@ -16,9 +16,9 @@ type AppQueryParams struct {
 	Name    string
 }
 
-func parseFilter(qp AppQueryParams) (user.QueryFilter, error) {
+func parseFilter(qp AppQueryParams) (role.QueryFilter, error) {
 	var fieldErrors validation.FieldErrors
-	var filter user.QueryFilter
+	var filter role.QueryFilter
 
 	if qp.ID != "" {
 		id, err := uuid.Parse(qp.ID)
@@ -41,7 +41,7 @@ func parseFilter(qp AppQueryParams) (user.QueryFilter, error) {
 	}
 
 	if fieldErrors != nil {
-		return user.QueryFilter{}, fieldErrors.ToError()
+		return role.QueryFilter{}, fieldErrors.ToError()
 	}
 
 	return filter, nil
