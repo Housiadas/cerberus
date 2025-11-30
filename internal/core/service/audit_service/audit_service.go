@@ -1,4 +1,4 @@
-package audit_core
+package audit_service
 
 import (
 	"context"

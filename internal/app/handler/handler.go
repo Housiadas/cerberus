@@ -11,9 +11,9 @@ import (
 	"github.com/Housiadas/cerberus/internal/app/usecase/transaction_usecase"
 	"github.com/Housiadas/cerberus/internal/app/usecase/user_usecase"
 	"github.com/Housiadas/cerberus/internal/config"
-	"github.com/Housiadas/cerberus/internal/core/service/audit_core"
+	"github.com/Housiadas/cerberus/internal/core/service/audit_service"
 	"github.com/Housiadas/cerberus/internal/core/service/product_core"
-	"github.com/Housiadas/cerberus/internal/core/service/user_core"
+	"github.com/Housiadas/cerberus/internal/core/service/user_service"
 	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/Housiadas/cerberus/pkg/pgsql"
 	"github.com/Housiadas/cerberus/pkg/web"
@@ -49,8 +49,8 @@ type App struct {
 
 // Core represents the core internal layer.
 type Core struct {
-	Audit   *audit_core.Core
-	User    *user_core.Core
+	Audit   *audit_service.Core
+	User    *user_service.Core
 	Product *product_core.Core
 }
 
@@ -62,8 +62,8 @@ type Config struct {
 	DB          *sqlx.DB
 	Log         *logger.Logger
 	Tracer      trace.Tracer
-	AuditCore   *audit_core.Core
-	UserCore    *user_core.Core
+	AuditCore   *audit_service.Core
+	UserCore    *user_service.Core
 	ProductCore *product_core.Core
 }
 

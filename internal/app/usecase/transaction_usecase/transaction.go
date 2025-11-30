@@ -7,19 +7,19 @@ import (
 
 	"github.com/Housiadas/cerberus/internal/core/domain/user"
 	"github.com/Housiadas/cerberus/internal/core/service/product_core"
-	"github.com/Housiadas/cerberus/internal/core/service/user_core"
+	"github.com/Housiadas/cerberus/internal/core/service/user_service"
 	"github.com/Housiadas/cerberus/pkg/errs"
 	"github.com/Housiadas/cerberus/pkg/pgsql"
 )
 
 // App manages the set of cli layer http functions for the tran core.
 type App struct {
-	userBus    *user_core.Core
+	userBus    *user_service.Core
 	productBus *product_core.Core
 }
 
 // NewApp constructs a tran cli API for use.
-func NewApp(userBus *user_core.Core, productBus *product_core.Core) *App {
+func NewApp(userBus *user_service.Core, productBus *product_core.Core) *App {
 	return &App{
 		userBus:    userBus,
 		productBus: productBus,

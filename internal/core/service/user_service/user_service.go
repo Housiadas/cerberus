@@ -1,5 +1,5 @@
-// Package usercore provides internal access to user core.
-package user_core
+// Package user_service provides internal access to user core.
+package user_service
 
 import (
 	"context"
@@ -62,7 +62,7 @@ func (c *Core) Create(ctx context.Context, nu user.NewUser) (user.User, error) {
 		Name:         nu.Name,
 		Email:        nu.Email,
 		PasswordHash: hash,
-		Roles:        nu.Roles,
+		RoleId:       nu.RoleId,
 		Department:   nu.Department,
 		Enabled:      true,
 		DateCreated:  now,
@@ -86,8 +86,8 @@ func (c *Core) Update(ctx context.Context, usr user.User, uu user.UpdateUser) (u
 		usr.Email = *uu.Email
 	}
 
-	if uu.Roles != nil {
-		usr.Roles = uu.Roles
+	if uu.RoleId != nil {
+		usr.RoleId = uu.RoleId
 	}
 
 	if uu.Password != nil {

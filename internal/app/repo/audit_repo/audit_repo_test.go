@@ -16,7 +16,7 @@ import (
 	"github.com/Housiadas/cerberus/internal/core/domain/entity"
 	"github.com/Housiadas/cerberus/internal/core/domain/role"
 	"github.com/Housiadas/cerberus/internal/core/service/product_core"
-	"github.com/Housiadas/cerberus/internal/core/service/user_core"
+	"github.com/Housiadas/cerberus/internal/core/service/user_service"
 	"github.com/Housiadas/cerberus/pkg/order"
 	"github.com/Housiadas/cerberus/pkg/page"
 )
@@ -39,7 +39,7 @@ func Test_Audit(t *testing.T) {
 func insertSeedData(core dbtest.Core) (unitest.SeedData, error) {
 	ctx := context.Background()
 
-	usrs, err := user_core.TestSeedUsers(ctx, 1, role.Admin, core.User)
+	usrs, err := user_service.TestSeedUsers(ctx, 1, role.Admin, core.User)
 	if err != nil {
 		return unitest.SeedData{}, fmt.Errorf("seeding users : %w", err)
 	}

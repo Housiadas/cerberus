@@ -8,7 +8,6 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/Housiadas/cerberus/internal/core/domain/name"
-	"github.com/Housiadas/cerberus/internal/core/domain/role"
 )
 
 // Set of error variables for CRUD operations.
@@ -23,7 +22,7 @@ type User struct {
 	ID           uuid.UUID
 	Name         name.Name
 	Email        mail.Address
-	Roles        []role.Role
+	RoleId       uuid.UUID
 	PasswordHash []byte
 	Department   name.Null
 	Enabled      bool
@@ -35,7 +34,7 @@ type User struct {
 type NewUser struct {
 	Name       name.Name
 	Email      mail.Address
-	Roles      []role.Role
+	RoleId     uuid.UUID
 	Department name.Null
 	Password   string
 }
@@ -44,7 +43,7 @@ type NewUser struct {
 type UpdateUser struct {
 	Name       *name.Name
 	Email      *mail.Address
-	Roles      []role.Role
+	RoleId     uuid.UUID
 	Department *name.Null
 	Password   *string
 	Enabled    *bool

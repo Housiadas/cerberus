@@ -9,7 +9,7 @@ import (
 	ctxPck "github.com/Housiadas/cerberus/internal/common/context"
 	"github.com/Housiadas/cerberus/internal/common/validation"
 	"github.com/Housiadas/cerberus/internal/core/domain/user"
-	"github.com/Housiadas/cerberus/internal/core/service/user_core"
+	"github.com/Housiadas/cerberus/internal/core/service/user_service"
 	"github.com/Housiadas/cerberus/pkg/errs"
 	"github.com/Housiadas/cerberus/pkg/order"
 	"github.com/Housiadas/cerberus/pkg/page"
@@ -17,11 +17,11 @@ import (
 
 // App manages the set of cli layer api functions for the user core.
 type App struct {
-	userCore *user_core.Core
+	userCore *user_service.Core
 }
 
 // NewApp constructs a user cli API for use.
-func NewApp(userBus *user_core.Core) *App {
+func NewApp(userBus *user_service.Core) *App {
 	return &App{
 		userCore: userBus,
 	}

@@ -31,7 +31,7 @@ func toUserDB(usr user.User) userDB {
 		ID:           usr.ID,
 		Name:         usr.Name.String(),
 		Email:        usr.Email.Address,
-		Roles:        role.ParseToString(usr.Roles),
+		Roles:        role.ParseToString(usr.RoleId),
 		PasswordHash: usr.PasswordHash,
 		Department: sql.NullString{
 			String: usr.Department.String(),
@@ -67,7 +67,7 @@ func toUserDomain(db userDB) (user.User, error) {
 		ID:           db.ID,
 		Name:         nme,
 		Email:        addr,
-		Roles:        roles,
+		RoleId:       roles,
 		PasswordHash: db.PasswordHash,
 		Enabled:      db.Enabled,
 		Department:   department,

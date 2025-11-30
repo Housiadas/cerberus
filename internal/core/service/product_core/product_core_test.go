@@ -1,1 +1,0 @@
-package product_core_test

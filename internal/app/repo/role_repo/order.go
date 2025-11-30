@@ -1,18 +1,14 @@
-package product_repo
+package role_repo
 
 import (
 	"fmt"
 
-	"github.com/Housiadas/cerberus/internal/core/domain/product"
+	"github.com/Housiadas/cerberus/internal/core/domain/user"
 	"github.com/Housiadas/cerberus/pkg/order"
 )
 
 var orderByFields = map[string]string{
-	product.OrderByProductID: "product_id",
-	product.OrderByUserID:    "user_id",
-	product.OrderByName:      "name",
-	product.OrderByCost:      "cost",
-	product.OrderByQuantity:  "quantity",
+	user.OrderByName: "name",
 }
 
 func orderByClause(orderBy order.By) (string, error) {

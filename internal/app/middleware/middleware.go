@@ -11,7 +11,7 @@ import (
 	"golang.org/x/sync/singleflight"
 
 	"github.com/Housiadas/cerberus/internal/core/service/product_core"
-	"github.com/Housiadas/cerberus/internal/core/service/user_core"
+	"github.com/Housiadas/cerberus/internal/core/service/user_service"
 	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/Housiadas/cerberus/pkg/pgsql"
 )
@@ -27,7 +27,7 @@ type Config struct {
 	Log     *logger.Logger
 	Tracer  trace.Tracer
 	Tx      *pgsql.DBBeginner
-	User    *user_core.Core
+	User    *user_service.Core
 	Product *product_core.Core
 }
 
@@ -39,7 +39,7 @@ type Middleware struct {
 }
 
 type Core struct {
-	User    *user_core.Core
+	User    *user_service.Core
 	Product *product_core.Core
 }
 

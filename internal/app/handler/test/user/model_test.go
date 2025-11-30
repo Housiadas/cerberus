@@ -13,7 +13,7 @@ func toAppUser(bus user.User) user_usecase.User {
 		ID:           bus.ID.String(),
 		Name:         bus.Name.String(),
 		Email:        bus.Email.Address,
-		Roles:        role.ParseToString(bus.Roles),
+		Roles:        role.ParseToString(bus.RoleId),
 		PasswordHash: nil, // This field is not marshalled.
 		Department:   bus.Department.String(),
 		Enabled:      bus.Enabled,

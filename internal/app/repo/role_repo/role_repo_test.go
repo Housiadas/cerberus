@@ -1,29 +1,29 @@
-package product_repo_test
+package role_repo_test
 
 import (
 	"context"
 	"fmt"
+	"net/mail"
 	"sort"
 	"testing"
 	"time"
 
+	"github.com/google/go-cmp/cmp"
+	"golang.org/x/crypto/bcrypt"
+
 	"github.com/Housiadas/cerberus/internal/common/dbtest"
 	"github.com/Housiadas/cerberus/internal/common/unitest"
-	"github.com/Housiadas/cerberus/internal/core/domain/money"
 	"github.com/Housiadas/cerberus/internal/core/domain/name"
-	"github.com/Housiadas/cerberus/internal/core/domain/product"
-	"github.com/Housiadas/cerberus/internal/core/domain/quantity"
 	"github.com/Housiadas/cerberus/internal/core/domain/role"
-	"github.com/Housiadas/cerberus/internal/core/service/product_core"
-	"github.com/Housiadas/cerberus/internal/core/service/user_core"
+	"github.com/Housiadas/cerberus/internal/core/domain/user"
+	"github.com/Housiadas/cerberus/internal/core/service/user_service"
 	"github.com/Housiadas/cerberus/pkg/page"
-	"github.com/google/go-cmp/cmp"
 )
 
-func Test_Product(t *testing.T) {
+func Test_User(t *testing.T) {
 	t.Parallel()
 
-	db := dbtest.New(t, "Test_Product")
+	db := dbtest.New(t, "Test_User")
 
 	sd, err := insertSeedData(db.Core)
 	if err != nil {
@@ -33,9 +33,9 @@ func Test_Product(t *testing.T) {
 	// -------------------------------------------------------------------------
 
 	unitest.Run(t, query(db.Core, sd), "query")
-	unitest.Run(t, create(db.Core, sd), "create")
+	unitest.Run(t, create(db.Core), "create")
 	unitest.Run(t, update(db.Core, sd), "update")
-	unitest.Run(t, deleteUser(db.Core, sd), "deleteUser")
+	unitest.Run(t, deleteUser(db.Core, sd), "delete")
 }
 
 // =============================================================================
@@ -43,43 +43,39 @@ func Test_Product(t *testing.T) {
 func insertSeedData(busDomain dbtest.Core) (unitest.SeedData, error) {
 	ctx := context.Background()
 
-	usrs, err := user_core.TestSeedUsers(ctx, 1, role.User, busDomain.User)
+	usrs, err := user_service.TestSeedUsers(ctx, 2, role.Admin, busDomain.User)
 	if err != nil {
 		return unitest.SeedData{}, fmt.Errorf("seeding users : %w", err)
 	}
 
-	prds, err := product_core.TestGenerateSeedProducts(ctx, 2, busDomain.Product, usrs[0].ID)
-	if err != nil {
-		return unitest.SeedData{}, fmt.Errorf("seeding products : %w", err)
+	tu1 := unitest.User{
+		User: usrs[0],
 	}
 
-	tu1 := unitest.User{
-		User:     usrs[0],
-		Products: prds,
+	tu2 := unitest.User{
+		User: usrs[1],
 	}
 
 	// -------------------------------------------------------------------------
 
-	usrs, err = user_core.TestSeedUsers(ctx, 1, role.Admin, busDomain.User)
+	usrs, err = user_service.TestSeedUsers(ctx, 2, role.User, busDomain.User)
 	if err != nil {
 		return unitest.SeedData{}, fmt.Errorf("seeding users : %w", err)
 	}
 
-	prds, err = product_core.TestGenerateSeedProducts(ctx, 2, busDomain.Product, usrs[0].ID)
-	if err != nil {
-		return unitest.SeedData{}, fmt.Errorf("seeding products : %w", err)
+	tu3 := unitest.User{
+		User: usrs[0],
 	}
 
-	tu2 := unitest.User{
-		User:     usrs[0],
-		Products: prds,
+	tu4 := unitest.User{
+		User: usrs[1],
 	}
 
 	// -------------------------------------------------------------------------
 
 	sd := unitest.SeedData{
-		Admins: []unitest.User{tu2},
-		Users:  []unitest.User{tu1},
+		Users:  []unitest.User{tu3, tu4},
+		Admins: []unitest.User{tu1, tu2},
 	}
 
 	return sd, nil
@@ -88,24 +84,30 @@ func insertSeedData(busDomain dbtest.Core) (unitest.SeedData, error) {
 // =============================================================================
 
 func query(busDomain dbtest.Core, sd unitest.SeedData) []unitest.Table {
-	prds := make([]product.Product, 0, len(sd.Admins[0].Products)+len(sd.Users[0].Products))
-	prds = append(prds, sd.Admins[0].Products...)
-	prds = append(prds, sd.Users[0].Products...)
+	usrs := make([]user.User, 0, len(sd.Admins)+len(sd.Users))
 
-	sort.Slice(prds, func(i, j int) bool {
-		return prds[i].ID.String() <= prds[j].ID.String()
+	for _, adm := range sd.Admins {
+		usrs = append(usrs, adm.User)
+	}
+
+	for _, usr := range sd.Users {
+		usrs = append(usrs, usr.User)
+	}
+
+	sort.Slice(usrs, func(i, j int) bool {
+		return usrs[i].ID.String() <= usrs[j].ID.String()
 	})
 
 	table := []unitest.Table{
 		{
 			Name:    "all",
-			ExpResp: prds,
+			ExpResp: usrs,
 			ExcFunc: func(ctx context.Context) any {
-				filter := product.QueryFilter{
+				filter := user.QueryFilter{
 					Name: dbtest.NamePointer("Name"),
 				}
 
-				resp, err := busDomain.Product.Query(ctx, filter, product.DefaultOrderBy, page.MustParse("1", "10"))
+				resp, err := busDomain.User.Query(ctx, filter, user.DefaultOrderBy, page.MustParse("1", "10"))
 				if err != nil {
 					return err
 				}
@@ -113,12 +115,12 @@ func query(busDomain dbtest.Core, sd unitest.SeedData) []unitest.Table {
 				return resp
 			},
 			CmpFunc: func(got any, exp any) string {
-				gotResp, exists := got.([]product.Product)
+				gotResp, exists := got.([]user.User)
 				if !exists {
 					return "error occurred"
 				}
 
-				expResp := exp.([]product.Product)
+				expResp := exp.([]user.User)
 
 				for i := range gotResp {
 					if gotResp[i].DateCreated.Format(time.RFC3339) == expResp[i].DateCreated.Format(time.RFC3339) {
@@ -135,9 +137,9 @@ func query(busDomain dbtest.Core, sd unitest.SeedData) []unitest.Table {
 		},
 		{
 			Name:    "byid",
-			ExpResp: sd.Users[0].Products[0],
+			ExpResp: sd.Users[0].User,
 			ExcFunc: func(ctx context.Context) any {
-				resp, err := busDomain.Product.QueryByID(ctx, sd.Users[0].Products[0].ID)
+				resp, err := busDomain.User.QueryByID(ctx, sd.Users[0].ID)
 				if err != nil {
 					return err
 				}
@@ -145,12 +147,12 @@ func query(busDomain dbtest.Core, sd unitest.SeedData) []unitest.Table {
 				return resp
 			},
 			CmpFunc: func(got any, exp any) string {
-				gotResp, exists := got.(product.Product)
+				gotResp, exists := got.(user.User)
 				if !exists {
 					return "error occurred"
 				}
 
-				expResp := exp.(product.Product)
+				expResp := exp.(user.User)
 
 				if gotResp.DateCreated.Format(time.RFC3339) == expResp.DateCreated.Format(time.RFC3339) {
 					expResp.DateCreated = gotResp.DateCreated
@@ -168,25 +170,29 @@ func query(busDomain dbtest.Core, sd unitest.SeedData) []unitest.Table {
 	return table
 }
 
-func create(busDomain dbtest.Core, sd unitest.SeedData) []unitest.Table {
+func create(busDomain dbtest.Core) []unitest.Table {
+	email, _ := mail.ParseAddress("chris@housi.com")
+
 	table := []unitest.Table{
 		{
 			Name: "basic",
-			ExpResp: product.Product{
-				UserID:   sd.Users[0].ID,
-				Name:     name.MustParse("Guitar"),
-				Cost:     money.MustParse(10.34),
-				Quantity: quantity.MustParse(10),
+			ExpResp: user.User{
+				Name:       name.MustParse("Chris Housi"),
+				Email:      *email,
+				RoleId:     []role.Role{role.Admin},
+				Department: name.MustParseNull("IT0"),
+				Enabled:    true,
 			},
 			ExcFunc: func(ctx context.Context) any {
-				np := product.NewProduct{
-					UserID:   sd.Users[0].ID,
-					Name:     name.MustParse("Guitar"),
-					Cost:     money.MustParse(10.34),
-					Quantity: quantity.MustParse(10),
+				nu := user.NewUser{
+					Name:       name.MustParse("Chris Housi"),
+					Email:      *email,
+					RoleId:     []role.Role{role.Admin},
+					Department: name.MustParseNull("IT0"),
+					Password:   "123",
 				}
 
-				resp, err := busDomain.Product.Create(ctx, np)
+				resp, err := busDomain.User.Create(ctx, nu)
 				if err != nil {
 					return err
 				}
@@ -194,14 +200,19 @@ func create(busDomain dbtest.Core, sd unitest.SeedData) []unitest.Table {
 				return resp
 			},
 			CmpFunc: func(got any, exp any) string {
-				gotResp, exists := got.(product.Product)
+				gotResp, exists := got.(user.User)
 				if !exists {
 					return "error occurred"
 				}
 
-				expResp := exp.(product.Product)
+				if err := bcrypt.CompareHashAndPassword(gotResp.PasswordHash, []byte("123")); err != nil {
+					return err.Error()
+				}
+
+				expResp := exp.(user.User)
 
 				expResp.ID = gotResp.ID
+				expResp.PasswordHash = gotResp.PasswordHash
 				expResp.DateCreated = gotResp.DateCreated
 				expResp.DateUpdated = gotResp.DateUpdated
 
@@ -214,26 +225,30 @@ func create(busDomain dbtest.Core, sd unitest.SeedData) []unitest.Table {
 }
 
 func update(busDomain dbtest.Core, sd unitest.SeedData) []unitest.Table {
+	email, _ := mail.ParseAddress("chris2@housi.com")
+
 	table := []unitest.Table{
 		{
 			Name: "basic",
-			ExpResp: product.Product{
-				ID:          sd.Users[0].Products[0].ID,
-				UserID:      sd.Users[0].ID,
-				Name:        name.MustParse("Guitar"),
-				Cost:        money.MustParse(10.34),
-				Quantity:    quantity.MustParse(10),
-				DateCreated: sd.Users[0].Products[0].DateCreated,
-				DateUpdated: sd.Users[0].Products[0].DateCreated,
+			ExpResp: user.User{
+				ID:          sd.Users[0].ID,
+				Name:        name.MustParse("Chris Housi 2"),
+				Email:       *email,
+				RoleId:      []role.Role{role.Admin},
+				Department:  name.MustParseNull("IT0"),
+				Enabled:     true,
+				DateCreated: sd.Users[0].DateCreated,
 			},
 			ExcFunc: func(ctx context.Context) any {
-				up := product.UpdateProduct{
-					Name:     dbtest.NamePointer("Guitar"),
-					Cost:     dbtest.MoneyPointer(10.34),
-					Quantity: dbtest.QuantityPointer(10),
+				uu := user.UpdateUser{
+					Name:       dbtest.NamePointer("Chris Housi 2"),
+					Email:      email,
+					RoleId:     []role.Role{role.Admin},
+					Department: dbtest.NameNullPointer("IT0"),
+					Password:   dbtest.StringPointer("1234"),
 				}
 
-				resp, err := busDomain.Product.Update(ctx, sd.Users[0].Products[0], up)
+				resp, err := busDomain.User.Update(ctx, sd.Users[0].User, uu)
 				if err != nil {
 					return err
 				}
@@ -241,13 +256,18 @@ func update(busDomain dbtest.Core, sd unitest.SeedData) []unitest.Table {
 				return resp
 			},
 			CmpFunc: func(got any, exp any) string {
-				gotResp, exists := got.(product.Product)
+				gotResp, exists := got.(user.User)
 				if !exists {
 					return "error occurred"
 				}
 
-				expResp := exp.(product.Product)
+				if err := bcrypt.CompareHashAndPassword(gotResp.PasswordHash, []byte("1234")); err != nil {
+					return err.Error()
+				}
 
+				expResp := exp.(user.User)
+
+				expResp.PasswordHash = gotResp.PasswordHash
 				expResp.DateUpdated = gotResp.DateUpdated
 
 				return cmp.Diff(gotResp, expResp)
@@ -264,7 +284,7 @@ func deleteUser(busDomain dbtest.Core, sd unitest.SeedData) []unitest.Table {
 			Name:    "user",
 			ExpResp: nil,
 			ExcFunc: func(ctx context.Context) any {
-				if err := busDomain.Product.Delete(ctx, sd.Users[0].Products[1]); err != nil {
+				if err := busDomain.User.Delete(ctx, sd.Users[1].User); err != nil {
 					return err
 				}
 
@@ -278,7 +298,7 @@ func deleteUser(busDomain dbtest.Core, sd unitest.SeedData) []unitest.Table {
 			Name:    "admin",
 			ExpResp: nil,
 			ExcFunc: func(ctx context.Context) any {
-				if err := busDomain.Product.Delete(ctx, sd.Admins[0].Products[1]); err != nil {
+				if err := busDomain.User.Delete(ctx, sd.Admins[1].User); err != nil {
 					return err
 				}
 

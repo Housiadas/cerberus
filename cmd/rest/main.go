@@ -17,9 +17,9 @@ import (
 	"github.com/Housiadas/cerberus/internal/app/repo/user_repo"
 	ctxPck "github.com/Housiadas/cerberus/internal/common/context"
 	"github.com/Housiadas/cerberus/internal/config"
-	"github.com/Housiadas/cerberus/internal/core/service/audit_core"
+	"github.com/Housiadas/cerberus/internal/core/service/audit_service"
 	"github.com/Housiadas/cerberus/internal/core/service/product_core"
-	"github.com/Housiadas/cerberus/internal/core/service/user_core"
+	"github.com/Housiadas/cerberus/internal/core/service/user_service"
 	"github.com/Housiadas/cerberus/pkg/debug"
 	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/Housiadas/cerberus/pkg/otel"
@@ -141,8 +141,8 @@ func run(ctx context.Context, cfg config.Config, log *logger.Logger) error {
 	// -------------------------------------------------------------------------
 	log.Info(ctx, "startup", "status", "initializing internal layer")
 
-	auditCore := audit_core.NewCore(log, audit_repo.NewStore(log, db))
-	userCore := user_core.NewCore(log, user_repo.NewStore(log, db))
+	auditCore := audit_service.NewCore(log, audit_repo.NewStore(log, db))
+	userCore := user_service.NewCore(log, user_repo.NewStore(log, db))
 	productCore := product_core.NewCore(log, userCore, product_repo.NewStore(log, db))
 
 	// -------------------------------------------------------------------------

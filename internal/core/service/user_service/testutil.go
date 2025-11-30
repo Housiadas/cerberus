@@ -1,4 +1,4 @@
-package user_core
+package user_service
 
 import (
 	"context"
@@ -22,7 +22,7 @@ func TestNewUsers(n int, role rolePck.Role) []user.NewUser {
 		nu := user.NewUser{
 			Name:       name.MustParse(fmt.Sprintf("Name%d", idx)),
 			Email:      mail.Address{Address: fmt.Sprintf("Email%d@gmail.com", idx)},
-			Roles:      []rolePck.Role{role},
+			RoleId:     []rolePck.Role{role},
 			Department: name.MustParseNull(fmt.Sprintf("Department%d", idx)),
 			Password:   fmt.Sprintf("Password%d", idx),
 		}
