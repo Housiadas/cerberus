@@ -3,9 +3,9 @@ SELECT
     u.id    AS user_id,
     u.name  AS user_name,
     u.email AS user_email,
-    r.id  AS role_id,
+    r.id    AS role_id,
     r.name  AS role_name,
-    p.id  AS permission_id,
+    p.id    AS permission_id,
     p.name  AS permission_name
 FROM users AS u
 JOIN user_roles AS ur ON ur.user_id = u.id

@@ -56,7 +56,6 @@ func (h *Handler) Routes() *chi.Mux {
 			u.Post("/", h.Web.Res.Respond(h.userCreate))
 			u.Get("/{user_id}", h.Web.Res.Respond(h.userQueryByID))
 			u.Put("/{user_id}", h.Web.Res.Respond(h.userUpdate))
-			u.Put("/{user_id}/roles/{role_id}", h.Web.Res.Respond(h.updateRole))
 			u.Delete("/{user_id}", h.Web.Res.Respond(h.userDelete))
 		})
 

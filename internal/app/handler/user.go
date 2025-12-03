@@ -58,30 +58,6 @@ func (h *Handler) userUpdate(ctx context.Context, _ http.ResponseWriter, r *http
 }
 
 // User godoc
-// @Summary      Update User's role
-// @Description  Update user's role
-// @Tags 		 User
-// @Accept       json
-// @Produce      json
-// @Param        request body user_usecase.UpdateUserRole true "User data"
-// @Success      200  {object}  user_usecase.User
-// @Failure      500  {object}  errs.Error
-// @Router       /user/role/{user_id} [put]
-func (h *Handler) updateRole(ctx context.Context, _ http.ResponseWriter, r *http.Request) web.Encoder {
-	var app user_usecase.UpdateUserRole
-	if err := web.Decode(r, &app); err != nil {
-		return errs.New(errs.InvalidArgument, err)
-	}
-
-	usr, err := h.UseCase.User.UpdateRole(ctx, app)
-	if err != nil {
-		return errs.NewError(err)
-	}
-
-	return usr
-}
-
-// User godoc
 // @Summary      Delete a user
 // @Description  Delete a user
 // @Tags 		 User

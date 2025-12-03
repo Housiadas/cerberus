@@ -1,5 +1,8 @@
 Based on a provided database model, create the following:
-- Create a new repo module in app/repo
-- Create a new use case in app/usecase.
+- Create a new repo package in app/repo
+- Create a new usecase in app/usecase.
 - Create a new domain in core/domain
 - Create a new service in core/service for the domain
+- Create the sql in the query folder
+
+Use as example the roles domain.

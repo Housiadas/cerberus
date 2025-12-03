@@ -65,26 +65,6 @@ func (a *UseCase) Update(ctx context.Context, app UpdateUser) (User, error) {
 	return toAppUser(updUsr), nil
 }
 
-// UpdateRole updates an existing user's role.
-func (a *UseCase) UpdateRole(ctx context.Context, app UpdateUserRole) (User, error) {
-	uu, err := toBusUpdateUserRole(app)
-	if err != nil {
-		return User{}, errs.New(errs.InvalidArgument, err)
-	}
-
-	usr, err := ctxPck.GetUser(ctx)
-	if err != nil {
-		return User{}, errs.Newf(errs.Internal, "user missing in context: %s", err)
-	}
-
-	updUsr, err := a.userCore.Update(ctx, usr, uu)
-	if err != nil {
-		return User{}, errs.Newf(errs.Internal, "updaterole: userID[%s] uu[%+v]: %s", usr.ID, uu, err)
-	}
-
-	return toAppUser(updUsr), nil
-}
-
 // Delete removes a user from the system.
 func (a *UseCase) Delete(ctx context.Context) error {
 	usr, err := ctxPck.GetUser(ctx)

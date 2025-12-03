@@ -62,7 +62,6 @@ func (c *Service) Create(ctx context.Context, nu user.NewUser) (user.User, error
 		Name:         nu.Name,
 		Email:        nu.Email,
 		PasswordHash: hash,
-		RoleID:       nu.RoleID,
 		Department:   nu.Department,
 		Enabled:      true,
 		DateCreated:  now,
@@ -84,10 +83,6 @@ func (c *Service) Update(ctx context.Context, usr user.User, uu user.UpdateUser)
 
 	if uu.Email != nil {
 		usr.Email = *uu.Email
-	}
-
-	if uu.RoleID != nil {
-		usr.RoleID = uu.RoleID
 	}
 
 	if uu.Password != nil {

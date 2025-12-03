@@ -8,7 +8,6 @@ import (
 
 	"github.com/Housiadas/cerberus/internal/common/validation"
 	"github.com/Housiadas/cerberus/internal/core/domain/name"
-	"github.com/Housiadas/cerberus/internal/core/domain/role"
 	"github.com/Housiadas/cerberus/internal/core/domain/user"
 	"github.com/Housiadas/cerberus/pkg/errs"
 	"github.com/Housiadas/cerberus/pkg/page"
@@ -59,16 +58,10 @@ func (app User) Encode() ([]byte, string, error) {
 }
 
 func toAppUser(bus user.User) User {
-	roles := make([]string, len(bus.RoleID))
-	for i, r := range bus.RoleID {
-		roles[i] = r.String()
-	}
-
 	return User{
 		ID:           bus.ID.String(),
 		Name:         bus.Name.String(),
 		Email:        bus.Email.Address,
-		Roles:        roles,
 		PasswordHash: bus.PasswordHash,
 		Department:   bus.Department.String(),
 		Enabled:      bus.Enabled,
@@ -121,11 +114,6 @@ func (app *NewUser) Validate() error {
 }
 
 func toBusNewUser(app NewUser) (user.NewUser, error) {
-	roles, err := role.ParseMany(app.Roles)
-	if err != nil {
-		return user.NewUser{}, fmt.Errorf("parse: %w", err)
-	}
-
 	addr, err := mail.ParseAddress(app.Email)
 	if err != nil {
 		return user.NewUser{}, fmt.Errorf("parse: %w", err)
@@ -144,7 +132,6 @@ func toBusNewUser(app NewUser) (user.NewUser, error) {
 	bus := user.NewUser{
 		Name:       nme,
 		Email:      *addr,
-		RoleID:     roles,
 		Department: department,
 		Password:   app.Password,
 	}
@@ -172,28 +159,6 @@ func (app *UpdateUserRole) Validate() error {
 
 	return nil
 }
-
-func toBusUpdateUserRole(app UpdateUserRole) (user.UpdateUser, error) {
-	var roles []role.Role
-	if app.Roles != nil {
-		roles = make([]role.Role, len(app.Roles))
-		for i, roleStr := range app.Roles {
-			r, err := role.Parse(roleStr)
-			if err != nil {
-				return user.UpdateUser{}, fmt.Errorf("parse: %w", err)
-			}
-			roles[i] = r
-		}
-	}
-
-	bus := user.UpdateUser{
-		RoleID: roles,
-	}
-
-	return bus, nil
-}
-
-// =============================================================================
 
 // UpdateUser defines the data needed to update a user.
 type UpdateUser struct {
