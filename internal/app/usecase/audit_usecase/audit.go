@@ -1,4 +1,4 @@
-// Package audit_usecase maintains the app layer api for the audit domain.
+// Package audit_usecase maintains the use case layer api the model
 package audit_usecase
 
 import (

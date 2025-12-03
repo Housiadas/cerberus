@@ -1,4 +1,4 @@
-// Package user_usecase maintains the cli layer api for the user core.
+// Package user_usecase maintains the use case layer api the model
 package user_usecase
 
 import (

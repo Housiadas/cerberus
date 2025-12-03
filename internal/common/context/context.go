@@ -9,10 +9,6 @@ type ctxKey string
 const (
 	requestID  ctxKey = "requestID"
 	apiVersion ctxKey = "apiVersion"
-	userIDKey  ctxKey = "userIDKey"
-	userKey    ctxKey = "userKey"
-	roleIDKey  ctxKey = "roleIDKey"
-	roleKey    ctxKey = "roleKey"
 )
 
 func SetRequestID(ctx context.Context, reqId string) context.Context {

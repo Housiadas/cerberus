@@ -3,9 +3,15 @@ package context
 import (
 	"context"
 	"errors"
+
 	"github.com/google/uuid"
 
 	"github.com/Housiadas/cerberus/internal/core/domain/user"
+)
+
+const (
+	userIDKey ctxKey = "userIDKey"
+	userKey   ctxKey = "userKey"
 )
 
 func SetUserID(ctx context.Context, userID uuid.UUID) context.Context {
