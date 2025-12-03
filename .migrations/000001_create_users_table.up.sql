@@ -12,6 +12,7 @@ CREATE TABLE users
     date_updated  TIMESTAMP   NOT NULL,
 
     FOREIGN KEY (role_id) REFERENCES roles (id) ON DELETE CASCADE,
-
     PRIMARY KEY (id)
 );
+
+CREATE INDEX IF NOT EXISTS users_email_idx ON users ("email");
