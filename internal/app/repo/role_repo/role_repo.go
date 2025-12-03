@@ -7,9 +7,8 @@ import (
 	_ "embed"
 	"errors"
 	"fmt"
-	"github.com/Housiadas/cerberus/internal/core/domain/user"
-	"github.com/google/uuid"
 
+	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 
 	"github.com/Housiadas/cerberus/internal/core/domain/role"
@@ -103,7 +102,7 @@ func (s *Store) QueryByID(ctx context.Context, roleID uuid.UUID) (role.Role, err
 	var dbRole roleDB
 	if err := pgsql.NamedQueryStruct(ctx, s.log, s.db, roleQueryByIdSql, data, &dbRole); err != nil {
 		if errors.Is(err, pgsql.ErrDBNotFound) {
-			return role.Role{}, fmt.Errorf("db: %w", user.ErrNotFound)
+			return role.Role{}, fmt.Errorf("db: %w", role.ErrNotFound)
 		}
 		return role.Role{}, fmt.Errorf("db: %w", err)
 	}

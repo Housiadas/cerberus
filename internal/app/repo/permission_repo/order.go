@@ -1,14 +1,14 @@
-package role_repo
+package permission_repo
 
 import (
 	"fmt"
 
-	"github.com/Housiadas/cerberus/internal/core/domain/role"
+	"github.com/Housiadas/cerberus/internal/core/domain/permission"
 	"github.com/Housiadas/cerberus/pkg/order"
 )
 
 var orderByFields = map[string]string{
-	role.OrderByName: "name",
+	permission.OrderByName: "name",
 }
 
 func orderByClause(orderBy order.By) (string, error) {

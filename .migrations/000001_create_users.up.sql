@@ -11,6 +11,7 @@ CREATE TABLE users
     date_created  TIMESTAMP   NOT NULL,
     date_updated  TIMESTAMP   NOT NULL,
 
+    FOREIGN KEY (role_id) REFERENCES roles (id) ON DELETE CASCADE,
+
     PRIMARY KEY (id)
-    FOREIGN KEY (role_id) REFERENCES roles (id) ON DELETE CASCADE
 );

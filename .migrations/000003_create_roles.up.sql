@@ -1,10 +1,10 @@
 -- Description: Create table roles
 CREATE TABLE roles
 (
-    id            UUID        NOT NULL,
-    name          VARCHAR(50) NOT NULL,
-    date_created  TIMESTAMP   NOT NULL,
-    date_updated  TIMESTAMP   NOT NULL,
+    id            UUID         NOT NULL,
+    name          VARCHAR(100) NOT NULL,
+    date_created  TIMESTAMP    NOT NULL,
+    date_updated  TIMESTAMP    NOT NULL,
 
     PRIMARY KEY (id)
 );
