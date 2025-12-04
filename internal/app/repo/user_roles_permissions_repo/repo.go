@@ -34,7 +34,7 @@ type Store struct {
 }
 
 // NewStore constructs the api for data access.
-func NewStore(log *logger.Logger, db *sqlx.DB) *Store {
+func NewStore(log *logger.Logger, db *sqlx.DB) urp.Storer {
 	return &Store{
 		log: log,
 		db:  db,

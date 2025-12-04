@@ -27,7 +27,6 @@ type userDB struct {
 func toUserDB(usr user.User) userDB {
 	return userDB{
 		ID:           usr.ID,
-		RoleID:       usr.RoleID,
 		Name:         usr.Name.String(),
 		Email:        usr.Email.Address,
 		PasswordHash: usr.PasswordHash,
@@ -58,7 +57,6 @@ func toUserDomain(db userDB) (user.User, error) {
 
 	bus := user.User{
 		ID:           db.ID,
-		RoleID:       db.RoleID,
 		Name:         nme,
 		Email:        addr,
 		PasswordHash: db.PasswordHash,
