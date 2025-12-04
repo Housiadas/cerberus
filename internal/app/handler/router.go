@@ -20,14 +20,14 @@ func (h *Handler) Routes() *chi.Mux {
 		mid.Otel(),
 		middleware.SetHeader("Content-Type", "application/json"),
 		middleware.GetHead,
+		cors.Handler(cors.Options{
+			AllowedOrigins: h.Cors.AllowedOrigins,
+			AllowedMethods: h.Cors.AllowedMethods,
+			AllowedHeaders: h.Cors.AllowedHeaders,
+			ExposedHeaders: h.Cors.ExposedHeaders,
+			MaxAge:         h.Cors.MaxAge,
+		}),
 	)
-	apiRouter.Use(cors.Handler(cors.Options{
-		AllowedOrigins: h.Cors.AllowedOrigins,
-		AllowedMethods: h.Cors.AllowedMethods,
-		AllowedHeaders: h.Cors.AllowedHeaders,
-		ExposedHeaders: h.Cors.ExposedHeaders,
-		MaxAge:         h.Cors.MaxAge,
-	}))
 
 	// v1 routes
 	apiRouter.Route("/v1", func(v1 chi.Router) {
@@ -43,14 +43,17 @@ func (h *Handler) Routes() *chi.Mux {
 			u.Get("/{user_id}", h.Web.Res.Respond(h.userQueryByID))
 			u.Put("/{user_id}", h.Web.Res.Respond(h.userUpdate))
 			u.Delete("/{user_id}", h.Web.Res.Respond(h.userDelete))
+			u.Post("/{user_id}/role", h.Web.Res.Respond(h.userRoleCreate))
+			u.Delete("/{user_id}/role", h.Web.Res.Respond(h.userRoleDelete))
 		})
 
 		// Roles
-		v1.Route("/roles", func(p chi.Router) {
-			p.Get("/", h.Web.Res.Respond(h.roleQuery))
-			p.Post("/", h.Web.Res.Respond(h.roleCreate))
-			p.Put("/{role_id}", h.Web.Res.Respond(h.roleUpdate))
-			p.Delete("/{role_id}", h.Web.Res.Respond(h.roleDelete))
+		v1.Route("/roles", func(r chi.Router) {
+			r.Get("/", h.Web.Res.Respond(h.roleQuery))
+			r.Post("/", h.Web.Res.Respond(h.roleCreate))
+			r.Put("/{role_id}", h.Web.Res.Respond(h.roleUpdate))
+			r.Delete("/{role_id}", h.Web.Res.Respond(h.roleDelete))
+			r.Post("/{role_id}/permission", h.Web.Res.Respond(h.rolePermissionCreate))
 		})
 
 		// Permissions

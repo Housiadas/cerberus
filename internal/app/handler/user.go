@@ -112,6 +112,28 @@ func (h *Handler) userQueryByID(ctx context.Context, _ http.ResponseWriter, _ *h
 	return usr
 }
 
+func (h *Handler) userRoleCreate(ctx context.Context, _ http.ResponseWriter, r *http.Request) web.Encoder {
+	var app user_usecase.NewUser
+	if err := web.Decode(r, &app); err != nil {
+		return errs.New(errs.InvalidArgument, err)
+	}
+
+	usr, err := h.UseCase.User.Create(ctx, app)
+	if err != nil {
+		return errs.NewError(err)
+	}
+
+	return usr
+}
+
+func (h *Handler) userRoleDelete(ctx context.Context, _ http.ResponseWriter, r *http.Request) web.Encoder {
+	if err := h.UseCase.User.Delete(ctx); err != nil {
+		return errs.NewError(err)
+	}
+
+	return nil
+}
+
 func userParseQueryParams(r *http.Request) user_usecase.AppQueryParams {
 	values := r.URL.Query()
 
