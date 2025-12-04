@@ -11,7 +11,6 @@ import (
 // Routes returns applications router
 func (h *Handler) Routes() *chi.Mux {
 	mid := h.Web.Middleware
-	tran := mid.BeginCommitRollback()
 
 	apiRouter := chi.NewRouter()
 	apiRouter.Use(
@@ -22,6 +21,13 @@ func (h *Handler) Routes() *chi.Mux {
 		middleware.SetHeader("Content-Type", "application/json"),
 		middleware.GetHead,
 	)
+	apiRouter.Use(cors.Handler(cors.Options{
+		AllowedOrigins: h.Cors.AllowedOrigins,
+		AllowedMethods: h.Cors.AllowedMethods,
+		AllowedHeaders: h.Cors.AllowedHeaders,
+		ExposedHeaders: h.Cors.ExposedHeaders,
+		MaxAge:         h.Cors.MaxAge,
+	}))
 
 	// v1 routes
 	apiRouter.Route("/v1", func(v1 chi.Router) {
@@ -29,13 +35,15 @@ func (h *Handler) Routes() *chi.Mux {
 			mid.ApiVersion("v1"),
 			otelchi.Middleware(h.ServiceName, otelchi.WithChiRoutes(v1)),
 		)
-		v1.Use(cors.Handler(cors.Options{
-			AllowedOrigins: h.Cors.AllowedOrigins,
-			AllowedMethods: h.Cors.AllowedMethods,
-			AllowedHeaders: h.Cors.AllowedHeaders,
-			ExposedHeaders: h.Cors.ExposedHeaders,
-			MaxAge:         h.Cors.MaxAge,
-		}))
+
+		// Users
+		v1.Route("/users", func(u chi.Router) {
+			u.Get("/", h.Web.Res.Respond(h.userQuery))
+			u.Post("/", h.Web.Res.Respond(h.userCreate))
+			u.Get("/{user_id}", h.Web.Res.Respond(h.userQueryByID))
+			u.Put("/{user_id}", h.Web.Res.Respond(h.userUpdate))
+			u.Delete("/{user_id}", h.Web.Res.Respond(h.userDelete))
+		})
 
 		// Roles
 		v1.Route("/roles", func(p chi.Router) {
@@ -47,25 +55,16 @@ func (h *Handler) Routes() *chi.Mux {
 
 		// Permissions
 		v1.Route("/permissions", func(p chi.Router) {
-			// ...
-		})
-
-		// Users
-		v1.Route("/users", func(u chi.Router) {
-			u.Get("/", h.Web.Res.Respond(h.userQuery))
-			u.Post("/", h.Web.Res.Respond(h.userCreate))
-			u.Get("/{user_id}", h.Web.Res.Respond(h.userQueryByID))
-			u.Put("/{user_id}", h.Web.Res.Respond(h.userUpdate))
-			u.Delete("/{user_id}", h.Web.Res.Respond(h.userDelete))
+			p.Get("/", h.Web.Res.Respond(h.permissionQuery))
+			p.Post("/", h.Web.Res.Respond(h.permissionCreate))
+			p.Put("/{permission_id}", h.Web.Res.Respond(h.permissionUpdate))
+			p.Delete("/{permission_id}", h.Web.Res.Respond(h.permissionDelete))
 		})
 
 		// Audits
 		v1.Route("/audits", func(a chi.Router) {
 			a.Get("/", h.Web.Res.Respond(h.auditQuery))
 		})
-
-		// Transaction example
-		v1.With(tran).Post("/transaction", h.Web.Res.Respond(h.transaction))
 	})
 
 	// System Routes

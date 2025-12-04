@@ -20,8 +20,8 @@ type UseCase struct {
 	userCore *user_service.Service
 }
 
-// NewApp constructs a user cli API for use.
-func NewApp(userBus *user_service.Service) *UseCase {
+// NewUseCase constructs a user cli API for use.
+func NewUseCase(userBus *user_service.Service) *UseCase {
 	return &UseCase{
 		userCore: userBus,
 	}

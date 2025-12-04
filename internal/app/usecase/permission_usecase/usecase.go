@@ -12,20 +12,20 @@ import (
 	"github.com/Housiadas/cerberus/pkg/page"
 )
 
-// UserCase manages the set of cli layer api functions for the permission core.
-type UserCase struct {
+// UseCase manages the set of cli layer api functions for the permission core.
+type UseCase struct {
 	permissionService *permission_service.Service
 }
 
 // NewUseCase constructs a permission cli API for use.
-func NewUseCase(permissionService *permission_service.Service) *UserCase {
-	return &UserCase{
+func NewUseCase(permissionService *permission_service.Service) *UseCase {
+	return &UseCase{
 		permissionService: permissionService,
 	}
 }
 
 // Create adds a new permission to the system.
-func (uc *UserCase) Create(ctx context.Context, nperm NewPermission) (Permission, error) {
+func (uc *UseCase) Create(ctx context.Context, nperm NewPermission) (Permission, error) {
 	np, err := toBusNewPermission(nperm)
 	if err != nil {
 		return Permission{}, errs.New(errs.InvalidArgument, err)
@@ -40,7 +40,7 @@ func (uc *UserCase) Create(ctx context.Context, nperm NewPermission) (Permission
 }
 
 // Update updates an existing permission.
-func (uc *UserCase) Update(ctx context.Context, app UpdatePermission) (Permission, error) {
+func (uc *UseCase) Update(ctx context.Context, app UpdatePermission) (Permission, error) {
 	up, err := toBusUpdatePermission(app)
 	if err != nil {
 		return Permission{}, errs.New(errs.InvalidArgument, err)
@@ -65,7 +65,7 @@ func (uc *UserCase) Update(ctx context.Context, app UpdatePermission) (Permissio
 }
 
 // Delete removes a permission from the system.
-func (uc *UserCase) Delete(ctx context.Context) error {
+func (uc *UseCase) Delete(ctx context.Context) error {
 	p, err := ctxPck.GetPermission(ctx)
 	if err != nil {
 		return errs.Newf(errs.Internal, "permission missing in context: %s", err)
@@ -79,7 +79,7 @@ func (uc *UserCase) Delete(ctx context.Context) error {
 }
 
 // QueryByID returns a permission by its ID
-func (uc *UserCase) QueryByID(ctx context.Context) (Permission, error) {
+func (uc *UseCase) QueryByID(ctx context.Context) (Permission, error) {
 	permissionID, err := ctxPck.GetPermissionID(ctx)
 	if err != nil {
 		return Permission{}, errs.Newf(errs.Internal, "permissionID not in ctx: %s", err)
@@ -94,7 +94,7 @@ func (uc *UserCase) QueryByID(ctx context.Context) (Permission, error) {
 }
 
 // Query returns a list of permissions with paging.
-func (uc *UserCase) Query(ctx context.Context, qp AppQueryParams) (page.Result[Permission], error) {
+func (uc *UseCase) Query(ctx context.Context, qp AppQueryParams) (page.Result[Permission], error) {
 	p, err := page.Parse(qp.Page, qp.Rows)
 	if err != nil {
 		return page.Result[Permission]{}, validation.NewFieldErrors("page", err)

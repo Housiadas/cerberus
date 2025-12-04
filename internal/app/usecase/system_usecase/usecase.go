@@ -21,8 +21,8 @@ type UseCase struct {
 	db    *sqlx.DB
 }
 
-// NewApp constructs a check cli API for use.
-func NewApp(build string, log *logger.Logger, db *sqlx.DB) *UseCase {
+// NewUseCase constructs a check cli API for use.
+func NewUseCase(build string, log *logger.Logger, db *sqlx.DB) *UseCase {
 	return &UseCase{
 		build: build,
 		log:   log,

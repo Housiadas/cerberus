@@ -16,7 +16,7 @@ type UseCase struct {
 	AuditService *audit_service.Service
 }
 
-func NewApp(service *audit_service.Service) *UseCase {
+func NewUseCase(service *audit_service.Service) *UseCase {
 	return &UseCase{
 		AuditService: service,
 	}

@@ -12,20 +12,20 @@ import (
 	"github.com/Housiadas/cerberus/pkg/page"
 )
 
-// UserCase manages the set of cli layer api functions for the user core.
-type UserCase struct {
+// UseCase manages the set of cli layer api functions for the user core.
+type UseCase struct {
 	roleService *role_service.Service
 }
 
 // NewUseCase constructs a user cli API for use.
-func NewUseCase(roleService *role_service.Service) *UserCase {
-	return &UserCase{
+func NewUseCase(roleService *role_service.Service) *UseCase {
+	return &UseCase{
 		roleService: roleService,
 	}
 }
 
 // Create adds a new role to the system.
-func (uc *UserCase) Create(ctx context.Context, nrole NewRole) (Role, error) {
+func (uc *UseCase) Create(ctx context.Context, nrole NewRole) (Role, error) {
 	nc, err := toBusNewRole(nrole)
 	if err != nil {
 		return Role{}, errs.New(errs.InvalidArgument, err)
@@ -40,7 +40,7 @@ func (uc *UserCase) Create(ctx context.Context, nrole NewRole) (Role, error) {
 }
 
 // Update updates an existing role.
-func (uc *UserCase) Update(ctx context.Context, app UpdateRole) (Role, error) {
+func (uc *UseCase) Update(ctx context.Context, app UpdateRole) (Role, error) {
 	uu, err := toBusUpdateUser(app)
 	if err != nil {
 		return Role{}, errs.New(errs.InvalidArgument, err)
@@ -65,7 +65,7 @@ func (uc *UserCase) Update(ctx context.Context, app UpdateRole) (Role, error) {
 }
 
 // Delete removes a role from the system.
-func (uc *UserCase) Delete(ctx context.Context) error {
+func (uc *UseCase) Delete(ctx context.Context) error {
 	rl, err := ctxPck.GetRole(ctx)
 	if err != nil {
 		return errs.Newf(errs.Internal, "userID missing in context: %s", err)
@@ -79,7 +79,7 @@ func (uc *UserCase) Delete(ctx context.Context) error {
 }
 
 // QueryByID returns a role by its ID
-func (uc *UserCase) QueryByID(ctx context.Context) (Role, error) {
+func (uc *UseCase) QueryByID(ctx context.Context) (Role, error) {
 	roleID, err := ctxPck.GetRoleID(ctx)
 	if err != nil {
 		return Role{}, errs.Newf(errs.Internal, "roleID not in ctx: %s", err)
@@ -94,7 +94,7 @@ func (uc *UserCase) QueryByID(ctx context.Context) (Role, error) {
 }
 
 // Query returns a list of roles with paging.
-func (uc *UserCase) Query(ctx context.Context, qp AppQueryParams) (page.Result[Role], error) {
+func (uc *UseCase) Query(ctx context.Context, qp AppQueryParams) (page.Result[Role], error) {
 	p, err := page.Parse(qp.Page, qp.Rows)
 	if err != nil {
 		return page.Result[Role]{}, validation.NewFieldErrors("page", err)

@@ -22,7 +22,7 @@ type Role struct {
 	DateUpdated string `json:"dateUpdated"`
 }
 
-type RolePageResults struct {
+type RolePageResult struct {
 	Data     []Role        `json:"data"`
 	Metadata page.Metadata `json:"metadata"`
 }

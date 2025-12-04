@@ -5,7 +5,7 @@ import (
 	"context"
 
 	"github.com/Housiadas/cerberus/internal/common/validation"
-	srv "github.com/Housiadas/cerberus/internal/core/service/user_roles_permissions_service"
+	"github.com/Housiadas/cerberus/internal/core/service/user_roles_permissions_service"
 	"github.com/Housiadas/cerberus/pkg/errs"
 	"github.com/Housiadas/cerberus/pkg/order"
 	"github.com/Housiadas/cerberus/pkg/page"
@@ -13,12 +13,14 @@ import (
 
 // UseCase manages the set of cli layer api functions for the view.
 type UseCase struct {
-	service *srv.Service
+	service *user_roles_permissions_service.Service
 }
 
 // NewUseCase constructs the API for use.
-func NewUseCase(service *srv.Service) *UseCase {
-	return &UseCase{service: service}
+func NewUseCase(service *user_roles_permissions_service.Service) *UseCase {
+	return &UseCase{
+		service: service,
+	}
 }
 
 // Query returns a list of rows with paging.
