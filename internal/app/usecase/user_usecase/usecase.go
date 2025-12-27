@@ -13,6 +13,7 @@ import (
 	"github.com/Housiadas/cerberus/pkg/errs"
 	"github.com/Housiadas/cerberus/pkg/order"
 	"github.com/Housiadas/cerberus/pkg/page"
+	"github.com/google/uuid"
 )
 
 // UseCase manages the set of cli layer api functions for the user core.
@@ -110,10 +111,10 @@ func (a *UseCase) Query(ctx context.Context, qp AppQueryParams) (page.Result[Use
 }
 
 // QueryByID returns a user by its Ia.
-func (a *UseCase) QueryByID(ctx context.Context) (User, error) {
-	usr, err := ctxPck.GetUser(ctx)
+func (a *UseCase) QueryByID(ctx context.Context, userID uuid.UUID) (User, error) {
+	usr, err := a.userCore.QueryByID(ctx, userID)
 	if err != nil {
-		return User{}, errs.Newf(errs.Internal, "querybyid: %s", err)
+		return User{}, errs.Newf(errs.Internal, "query_by_id: %s", err)
 	}
 
 	return toAppUser(usr), nil

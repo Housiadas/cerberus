@@ -18,6 +18,7 @@ func (h *Handler) Routes() *chi.Mux {
 		mid.RequestID,
 		mid.Logger(),
 		mid.Otel(),
+		mid.Metrics(),
 		middleware.SetHeader("Content-Type", "application/json"),
 		middleware.GetHead,
 		cors.Handler(cors.Options{
@@ -35,6 +36,11 @@ func (h *Handler) Routes() *chi.Mux {
 			mid.ApiVersion("v1"),
 			otelchi.Middleware(h.ServiceName, otelchi.WithChiRoutes(v1)),
 		)
+
+		// Auth
+		v1.Route("/auth", func(a chi.Router) {
+			a.Post("/login", h.Web.Res.Respond(h.authLogin))
+		})
 
 		// Users
 		v1.Route("/users", func(u chi.Router) {

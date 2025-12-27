@@ -7,6 +7,7 @@ import (
 	"github.com/Housiadas/cerberus/internal/app/usecase/user_usecase"
 	"github.com/Housiadas/cerberus/pkg/errs"
 	"github.com/Housiadas/cerberus/pkg/web"
+	"github.com/google/uuid"
 )
 
 // User godoc
@@ -103,8 +104,18 @@ func (h *Handler) userQuery(ctx context.Context, _ http.ResponseWriter, r *http.
 // @Success      200  {object}  user_usecase.User
 // @Failure      500  {object}  errs.Error
 // @Router       /user/{user_id} [get]
-func (h *Handler) userQueryByID(ctx context.Context, _ http.ResponseWriter, _ *http.Request) web.Encoder {
-	usr, err := h.UseCase.User.QueryByID(ctx)
+func (h *Handler) userQueryByID(ctx context.Context, _ http.ResponseWriter, r *http.Request) web.Encoder {
+	id := web.Param(r, "user_id")
+	var userID uuid.UUID
+	if id != "" {
+		var err error
+		userID, err = uuid.Parse(id)
+		if err != nil {
+			return errs.New(errs.Unauthenticated, ErrInvalidID)
+		}
+	}
+
+	usr, err := h.UseCase.User.QueryByID(ctx, userID)
 	if err != nil {
 		return errs.NewError(err)
 	}

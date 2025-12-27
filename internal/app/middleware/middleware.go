@@ -13,6 +13,7 @@ import (
 	"github.com/Housiadas/cerberus/internal/core/service/user_service"
 	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/Housiadas/cerberus/pkg/pgsql"
+	"github.com/Housiadas/cerberus/pkg/web"
 )
 
 var (
@@ -77,4 +78,13 @@ func (rec *ResponseRecorder) WriteHeader(code int) {
 func (rec *ResponseRecorder) Write(b []byte) (int, error) {
 	rec.body.Write(b)
 	return rec.ResponseWriter.Write(b)
+}
+
+func checkIsError(e web.Encoder) error {
+	err, hasError := e.(error)
+	if hasError {
+		return err
+	}
+
+	return nil
 }

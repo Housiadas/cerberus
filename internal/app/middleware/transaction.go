@@ -9,8 +9,8 @@ import (
 	"github.com/Housiadas/cerberus/pkg/pgsql"
 )
 
-// BeginCommitRollback starts a transaction for the core call.
-func (m *Middleware) BeginCommitRollback() func(next http.Handler) http.Handler {
+// BeginTransaction starts a transaction for the core call.
+func (m *Middleware) BeginTransaction() func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			ctx := r.Context()
@@ -46,7 +46,7 @@ func (m *Middleware) BeginCommitRollback() func(next http.Handler) http.Handler 
 
 			// Access the recorded response
 			// Check if we can commit transaction
-			if rec.statusCode >= 400 {
+			if rec.statusCode >= http.StatusBadRequest {
 				m.Log.Info(ctx, "TRANSACTION FAILED, WILL ROLLBACK")
 				return
 			}

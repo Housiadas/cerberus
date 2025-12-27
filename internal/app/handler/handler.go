@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"github.com/Housiadas/cerberus/internal/app/usecase/auth_usecase"
 	"github.com/jmoiron/sqlx"
 	"go.opentelemetry.io/otel/trace"
 
@@ -43,6 +44,7 @@ type Web struct {
 // UseCase represents the use case layer
 type UseCase struct {
 	Audit                *audit_usecase.UseCase
+	Auth                 *auth_usecase.Usecase
 	User                 *user_usecase.UseCase
 	Role                 *role_usecase.UseCase
 	Permission           *permission_usecase.UseCase
@@ -66,6 +68,7 @@ type Config struct {
 }
 
 func New(cfg Config) *Handler {
+	userUseCase := user_usecase.NewUseCase(cfg.UserService)
 	return &Handler{
 		ServiceName: cfg.ServiceName,
 		Build:       cfg.Build,
@@ -83,8 +86,13 @@ func New(cfg Config) *Handler {
 			Res: web.NewRespond(cfg.Log),
 		},
 		UseCase: UseCase{
-			Audit:                audit_usecase.NewUseCase(cfg.AuditService),
-			User:                 user_usecase.NewUseCase(cfg.UserService),
+			Audit: audit_usecase.NewUseCase(cfg.AuditService),
+			Auth: auth_usecase.NewUseCase(auth_usecase.Config{
+				Issuer:      cfg.ServiceName,
+				Log:         cfg.Log,
+				UserUsecase: userUseCase,
+			}),
+			User:                 userUseCase,
 			Role:                 role_usecase.NewUseCase(cfg.RoleService),
 			Permission:           permission_usecase.NewUseCase(cfg.PermissionService),
 			UserRolesPermissions: user_roles_permissions_usecase.NewUseCase(cfg.UserRolesPermissionsService),

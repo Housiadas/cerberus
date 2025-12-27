@@ -163,7 +163,7 @@ func (c *Service) Authenticate(ctx context.Context, email mail.Address, password
 	}
 
 	if err := bcrypt.CompareHashAndPassword(usr.PasswordHash, []byte(password)); err != nil {
-		return user.User{}, fmt.Errorf("comparehashandpassword: %w", user.ErrAuthenticationFailure)
+		return user.User{}, fmt.Errorf("compare_hash_and_password: %w", user.ErrAuthenticationFailure)
 	}
 
 	return usr, nil
