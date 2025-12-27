@@ -10,6 +10,7 @@ import (
 	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/Housiadas/cerberus/pkg/order"
 	"github.com/Housiadas/cerberus/pkg/page"
+	"github.com/google/uuid"
 )
 
 // Service manages the set of APIs for user access.
@@ -70,4 +71,9 @@ func (c *Service) Query(
 // Count returns the total number of users.
 func (c *Service) Count(ctx context.Context, filter user_roles.QueryFilter) (int, error) {
 	return c.storer.Count(ctx, filter)
+}
+
+// GetUserRoleNames returns the roles of a user.
+func (c *Service) GetUserRoleNames(ctx context.Context, userID uuid.UUID) ([]string, error) {
+	return c.storer.GetUserRoleNames(ctx, userID)
 }

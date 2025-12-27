@@ -2,6 +2,8 @@ package handler
 
 import (
 	"github.com/Housiadas/cerberus/internal/app/usecase/auth_usecase"
+	"github.com/Housiadas/cerberus/internal/app/usecase/user_roles_usecase"
+	"github.com/Housiadas/cerberus/internal/core/service/user_roles_service"
 	"github.com/jmoiron/sqlx"
 	"go.opentelemetry.io/otel/trace"
 
@@ -63,6 +65,7 @@ type Config struct {
 	AuditService                *audit_service.Service
 	UserService                 *user_service.Service
 	RoleService                 *role_service.Service
+	UserRolesService            *user_roles_service.Service
 	PermissionService           *permission_service.Service
 	UserRolesPermissionsService *user_roles_permissions_service.Service
 }
@@ -88,9 +91,10 @@ func New(cfg Config) *Handler {
 		UseCase: UseCase{
 			Audit: audit_usecase.NewUseCase(cfg.AuditService),
 			Auth: auth_usecase.NewUseCase(auth_usecase.Config{
-				Issuer:      cfg.ServiceName,
-				Log:         cfg.Log,
-				UserUsecase: userUseCase,
+				Issuer:           cfg.ServiceName,
+				Log:              cfg.Log,
+				UserUsecase:      userUseCase,
+				UserRolesUsecase: user_roles_usecase.NewUseCase(cfg.UserRolesService),
 			}),
 			User:                 userUseCase,
 			Role:                 role_usecase.NewUseCase(cfg.RoleService),

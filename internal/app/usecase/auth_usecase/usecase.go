@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Housiadas/cerberus/internal/app/usecase/user_roles_usecase"
 	"github.com/Housiadas/cerberus/pkg/errs"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
@@ -21,31 +22,34 @@ var staticSecret []byte // todo: fetch secret from vault
 
 // Config represents information required to initialize auth.
 type Config struct {
-	Issuer      string
-	Log         *logger.Logger
-	UserUsecase *user_usecase.UseCase
+	Issuer           string
+	Log              *logger.Logger
+	UserUsecase      *user_usecase.UseCase
+	UserRolesUsecase *user_roles_usecase.UseCase
 }
 
 // Usecase is used to authenticate clients. It can generate a token for a
 // set of user claims and recreate the claims by parsing the token.
 type Usecase struct {
-	issuer      string
-	secret      []byte
-	parser      *jwt.Parser
-	method      jwt.SigningMethod
-	log         *logger.Logger
-	userUsecase *user_usecase.UseCase
+	issuer           string
+	secret           []byte
+	parser           *jwt.Parser
+	method           jwt.SigningMethod
+	log              *logger.Logger
+	userUsecase      *user_usecase.UseCase
+	userRolesUsecase *user_roles_usecase.UseCase
 }
 
 // NewUseCase creates a Usecase to support authentication/authorization.
 func NewUseCase(cfg Config) *Usecase {
 	return &Usecase{
-		log:         cfg.Log,
-		issuer:      cfg.Issuer,
-		userUsecase: cfg.UserUsecase,
-		secret:      staticSecret,
-		method:      jwt.GetSigningMethod(jwt.SigningMethodRS256.Name),
-		parser:      jwt.NewParser(jwt.WithValidMethods([]string{jwt.SigningMethodRS256.Name})),
+		log:              cfg.Log,
+		issuer:           cfg.Issuer,
+		userUsecase:      cfg.UserUsecase,
+		userRolesUsecase: cfg.UserRolesUsecase,
+		secret:           staticSecret,
+		method:           jwt.GetSigningMethod(jwt.SigningMethodRS256.Name),
+		parser:           jwt.NewParser(jwt.WithValidMethods([]string{jwt.SigningMethodRS256.Name})),
 	}
 }
 
@@ -59,9 +63,16 @@ func (u *Usecase) Login(ctx context.Context, authLogin AuthLogin) (Token, error)
 		Email:    authLogin.Email,
 		Password: authLogin.Password,
 	}
+
 	usr, err := u.userUsecase.Authenticate(ctx, authUsr)
 	if err != nil {
 		return Token{}, errs.New(errs.Unauthenticated, err)
+	}
+
+	// get user roles name
+	roles, err := u.userRolesUsecase.GetUserRolesNames(ctx, usr.ID)
+	if err != nil {
+		return Token{}, errs.New(errs.NotFound, err)
 	}
 
 	// Generating a token requires defining a set of claims. In this applications
@@ -82,7 +93,7 @@ func (u *Usecase) Login(ctx context.Context, authLogin AuthLogin) (Token, error)
 			ExpiresAt: jwt.NewNumericDate(time.Now().UTC().Add(8 * time.Hour)),
 			IssuedAt:  jwt.NewNumericDate(time.Now().UTC()),
 		},
-		Roles: []string{"admin", "user"}, // todo: fetch roles from db
+		Roles: roles,
 	}
 	token, err := u.GenerateToken(claims)
 	if err != nil {

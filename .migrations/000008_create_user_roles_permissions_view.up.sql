@@ -1,4 +1,4 @@
-CREATE OR REPLACE VIEW user_roles_permissions AS
+CREATE OR REPLACE VIEW vw_user_roles_permissions AS
 SELECT
     u.id    AS user_id,
     u.name  AS user_name,

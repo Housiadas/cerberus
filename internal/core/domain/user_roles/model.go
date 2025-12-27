@@ -2,9 +2,14 @@
 package user_roles
 
 import (
+	"errors"
 	"time"
 
 	"github.com/google/uuid"
+)
+
+var (
+	ErrNotFound = errors.New("user roles not found")
 )
 
 // UserRole represents a single assignment of a role to a user.

@@ -37,3 +37,20 @@ func toDomains(dbs []userRolesDB) []ur.UserRole {
 	}
 	return out
 }
+
+// =============================================================================
+type userRolesViewDB struct {
+	UserID    uuid.UUID `db:"user_id"`
+	UserName  string    `db:"user_name"`
+	UserEmail string    `db:"user_email"`
+	RoleID    uuid.UUID `db:"role_id"`
+	RoleName  string    `db:"role_name"`
+}
+
+func toUserRoleNames(userRolesView []userRolesViewDB) []string {
+	out := make([]string, 0, len(userRolesView))
+	for _, urv := range userRolesView {
+		out = append(out, urv.RoleName)
+	}
+	return out
+}

@@ -1,2 +1,2 @@
 SELECT COUNT(1) AS count
-FROM user_roles_permissions
+FROM vw_user_roles_permissions

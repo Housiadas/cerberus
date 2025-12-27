@@ -92,11 +92,11 @@ var (
 	Internal = ErrCode{value: 14}
 
 	// Unavailable indicates the usecase is currently unavailable.
-	// This is a most likely a transient condition and may be corrected
+	// This is most likely a transient condition and may be corrected
 	// by retrying with a backoff. Note that it is not always safe to retry
 	// non-idempotent operations.
 	//
-	// See litmus test above for deciding between FailedPrecondition,
+	// See the litmus test above for deciding between FailedPrecondition,
 	// Aborted, and Unavailable.
 	Unavailable = ErrCode{value: 15}
 
