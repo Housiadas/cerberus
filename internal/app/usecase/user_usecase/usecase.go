@@ -6,7 +6,6 @@ import (
 	"errors"
 	"net/mail"
 
-	ctxPck "github.com/Housiadas/cerberus/internal/common/context"
 	"github.com/Housiadas/cerberus/internal/common/validation"
 	"github.com/Housiadas/cerberus/internal/core/domain/user"
 	"github.com/Housiadas/cerberus/internal/core/service/user_service"
@@ -47,34 +46,44 @@ func (a *UseCase) Create(ctx context.Context, app NewUser) (User, error) {
 }
 
 // Update updates an existing user.
-func (a *UseCase) Update(ctx context.Context, app UpdateUser) (User, error) {
-	uu, err := toBusUpdateUser(app)
+func (a *UseCase) Update(ctx context.Context, res UpdateUser, userID string) (User, error) {
+	uu, err := toBusUpdateUser(res)
 	if err != nil {
 		return User{}, errs.New(errs.InvalidArgument, err)
 	}
 
-	usr, err := ctxPck.GetUser(ctx)
+	userUUID, err := uuid.Parse(userID)
 	if err != nil {
-		return User{}, errs.Newf(errs.Internal, "user missing in context: %s", err)
+		return User{}, errs.Newf(errs.InvalidArgument, "could not parse uuid: %s", err)
 	}
 
-	updUsr, err := a.userCore.Update(ctx, usr, uu)
+	currentUsr, err := a.userCore.QueryByID(ctx, userUUID)
 	if err != nil {
-		return User{}, errs.Newf(errs.Internal, "update: userID[%s] uu[%+v]: %s", usr.ID, uu, err)
+		return User{}, errs.Newf(errs.Internal, "query by id: userID[%s] uu[%+v]: %s", userUUID, uu, err)
+	}
+
+	updUsr, err := a.userCore.Update(ctx, currentUsr, uu)
+	if err != nil {
+		return User{}, errs.Newf(errs.Internal, "update: userID[%s] uu[%+v]: %s", userUUID, uu, err)
 	}
 
 	return toAppUser(updUsr), nil
 }
 
 // Delete removes a user from the system.
-func (a *UseCase) Delete(ctx context.Context) error {
-	usr, err := ctxPck.GetUser(ctx)
+func (a *UseCase) Delete(ctx context.Context, userID string) error {
+	userUUID, err := uuid.Parse(userID)
 	if err != nil {
-		return errs.Newf(errs.Internal, "userID missing in context: %s", err)
+		return errs.Newf(errs.InvalidArgument, "could not parse uuid: %s", err)
 	}
 
-	if err := a.userCore.Delete(ctx, usr); err != nil {
-		return errs.Newf(errs.Internal, "delete: userID[%s]: %s", usr.ID, err)
+	currentUsr, err := a.userCore.QueryByID(ctx, userUUID)
+	if err != nil {
+		return errs.Newf(errs.Internal, "query by id: userID[%s] uu[%+v]: %s", userUUID, currentUsr, err)
+	}
+
+	if err := a.userCore.Delete(ctx, currentUsr); err != nil {
+		return errs.Newf(errs.Internal, "delete: userID[%s]: %s", userUUID, err)
 	}
 
 	return nil
@@ -111,8 +120,13 @@ func (a *UseCase) Query(ctx context.Context, qp AppQueryParams) (page.Result[Use
 }
 
 // QueryByID returns a user by its Ia.
-func (a *UseCase) QueryByID(ctx context.Context, userID uuid.UUID) (User, error) {
-	usr, err := a.userCore.QueryByID(ctx, userID)
+func (a *UseCase) QueryByID(ctx context.Context, userID string) (User, error) {
+	userUUID, err := uuid.Parse(userID)
+	if err != nil {
+		return User{}, errs.Newf(errs.InvalidArgument, "could not parse uuid: %s", err)
+	}
+
+	usr, err := a.userCore.QueryByID(ctx, userUUID)
 	if err != nil {
 		return User{}, errs.Newf(errs.Internal, "query_by_id: %s", err)
 	}

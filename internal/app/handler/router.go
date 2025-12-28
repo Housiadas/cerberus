@@ -11,6 +11,7 @@ import (
 // Routes returns applications router
 func (h *Handler) Routes() *chi.Mux {
 	mid := h.Web.Middleware
+	authenticate := mid.AuthenticateBearer
 
 	apiRouter := chi.NewRouter()
 	apiRouter.Use(
@@ -43,7 +44,7 @@ func (h *Handler) Routes() *chi.Mux {
 		})
 
 		// Users
-		v1.Route("/users", func(u chi.Router) {
+		v1.With(authenticate()).Route("/users", func(u chi.Router) {
 			u.Get("/", h.Web.Res.Respond(h.userQuery))
 			u.Post("/", h.Web.Res.Respond(h.userCreate))
 			u.Get("/{user_id}", h.Web.Res.Respond(h.userQueryByID))
@@ -54,7 +55,7 @@ func (h *Handler) Routes() *chi.Mux {
 		})
 
 		// Roles
-		v1.Route("/roles", func(r chi.Router) {
+		v1.With(authenticate()).Route("/roles", func(r chi.Router) {
 			r.Get("/", h.Web.Res.Respond(h.roleQuery))
 			r.Post("/", h.Web.Res.Respond(h.roleCreate))
 			r.Put("/{role_id}", h.Web.Res.Respond(h.roleUpdate))
@@ -63,7 +64,7 @@ func (h *Handler) Routes() *chi.Mux {
 		})
 
 		// Permissions
-		v1.Route("/permissions", func(p chi.Router) {
+		v1.With(authenticate()).Route("/permissions", func(p chi.Router) {
 			p.Get("/", h.Web.Res.Respond(h.permissionQuery))
 			p.Post("/", h.Web.Res.Respond(h.permissionCreate))
 			p.Put("/{permission_id}", h.Web.Res.Respond(h.permissionUpdate))
@@ -71,7 +72,7 @@ func (h *Handler) Routes() *chi.Mux {
 		})
 
 		// Audits
-		v1.Route("/audits", func(a chi.Router) {
+		v1.With(authenticate()).Route("/audits", func(a chi.Router) {
 			a.Get("/", h.Web.Res.Respond(h.auditQuery))
 		})
 	})

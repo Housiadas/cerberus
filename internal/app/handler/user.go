@@ -7,7 +7,6 @@ import (
 	"github.com/Housiadas/cerberus/internal/app/usecase/user_usecase"
 	"github.com/Housiadas/cerberus/pkg/errs"
 	"github.com/Housiadas/cerberus/pkg/web"
-	"github.com/google/uuid"
 )
 
 // User godoc
@@ -45,17 +44,18 @@ func (h *Handler) userCreate(ctx context.Context, _ http.ResponseWriter, r *http
 // @Failure      500  {object}  errs.Error
 // @Router       /user/{user_id} [put]
 func (h *Handler) userUpdate(ctx context.Context, _ http.ResponseWriter, r *http.Request) web.Encoder {
-	var app user_usecase.UpdateUser
-	if err := web.Decode(r, &app); err != nil {
+	var res user_usecase.UpdateUser
+	if err := web.Decode(r, &res); err != nil {
 		return errs.New(errs.InvalidArgument, err)
 	}
 
-	usr, err := h.UseCase.User.Update(ctx, app)
+	userID := web.Param(r, "user_id")
+	updUser, err := h.UseCase.User.Update(ctx, res, userID)
 	if err != nil {
 		return errs.NewError(err)
 	}
 
-	return usr
+	return updUser
 }
 
 // User godoc
@@ -67,8 +67,9 @@ func (h *Handler) userUpdate(ctx context.Context, _ http.ResponseWriter, r *http
 // @Success      204
 // @Failure      500  {object}  errs.Error
 // @Router       /user/{user_id} [delete]
-func (h *Handler) userDelete(ctx context.Context, _ http.ResponseWriter, _ *http.Request) web.Encoder {
-	if err := h.UseCase.User.Delete(ctx); err != nil {
+func (h *Handler) userDelete(ctx context.Context, _ http.ResponseWriter, r *http.Request) web.Encoder {
+	userID := web.Param(r, "user_id")
+	if err := h.UseCase.User.Delete(ctx, userID); err != nil {
 		return errs.NewError(err)
 	}
 
@@ -105,16 +106,7 @@ func (h *Handler) userQuery(ctx context.Context, _ http.ResponseWriter, r *http.
 // @Failure      500  {object}  errs.Error
 // @Router       /user/{user_id} [get]
 func (h *Handler) userQueryByID(ctx context.Context, _ http.ResponseWriter, r *http.Request) web.Encoder {
-	id := web.Param(r, "user_id")
-	var userID uuid.UUID
-	if id != "" {
-		var err error
-		userID, err = uuid.Parse(id)
-		if err != nil {
-			return errs.New(errs.Unauthenticated, ErrInvalidID)
-		}
-	}
-
+	userID := web.Param(r, "user_id")
 	usr, err := h.UseCase.User.QueryByID(ctx, userID)
 	if err != nil {
 		return errs.NewError(err)
@@ -138,7 +130,8 @@ func (h *Handler) userRoleCreate(ctx context.Context, _ http.ResponseWriter, r *
 }
 
 func (h *Handler) userRoleDelete(ctx context.Context, _ http.ResponseWriter, r *http.Request) web.Encoder {
-	if err := h.UseCase.User.Delete(ctx); err != nil {
+	userID := web.Param(r, "user_id")
+	if err := h.UseCase.User.Delete(ctx, userID); err != nil {
 		return errs.NewError(err)
 	}
 

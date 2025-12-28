@@ -4,12 +4,12 @@ package role_usecase
 import (
 	"context"
 
-	ctxPck "github.com/Housiadas/cerberus/internal/common/context"
 	"github.com/Housiadas/cerberus/internal/common/validation"
 	"github.com/Housiadas/cerberus/internal/core/service/role_service"
 	"github.com/Housiadas/cerberus/pkg/errs"
 	"github.com/Housiadas/cerberus/pkg/order"
 	"github.com/Housiadas/cerberus/pkg/page"
+	"github.com/google/uuid"
 )
 
 // UseCase manages the set of cli layer api functions for the user core.
@@ -40,18 +40,18 @@ func (uc *UseCase) Create(ctx context.Context, nrole NewRole) (Role, error) {
 }
 
 // Update updates an existing role.
-func (uc *UseCase) Update(ctx context.Context, app UpdateRole) (Role, error) {
-	uu, err := toBusUpdateUser(app)
+func (uc *UseCase) Update(ctx context.Context, res UpdateRole, roleID string) (Role, error) {
+	uu, err := toBusUpdateUser(res)
 	if err != nil {
 		return Role{}, errs.New(errs.InvalidArgument, err)
 	}
 
-	roleID, err := ctxPck.GetRoleID(ctx)
+	roleUUID, err := uuid.Parse(roleID)
 	if err != nil {
-		return Role{}, errs.Newf(errs.Internal, "roleID not in ctx: %s", err)
+		return Role{}, errs.Newf(errs.InvalidArgument, "could not parse uuid: %s", err)
 	}
 
-	role, err := uc.roleService.QueryByID(ctx, roleID)
+	role, err := uc.roleService.QueryByID(ctx, roleUUID)
 	if err != nil {
 		return Role{}, errs.Newf(errs.Internal, "role query by id: %s", err)
 	}
@@ -65,10 +65,15 @@ func (uc *UseCase) Update(ctx context.Context, app UpdateRole) (Role, error) {
 }
 
 // Delete removes a role from the system.
-func (uc *UseCase) Delete(ctx context.Context) error {
-	rl, err := ctxPck.GetRole(ctx)
+func (uc *UseCase) Delete(ctx context.Context, roleID string) error {
+	roleUUID, err := uuid.Parse(roleID)
 	if err != nil {
-		return errs.Newf(errs.Internal, "userID missing in context: %s", err)
+		return errs.Newf(errs.InvalidArgument, "could not parse uuid: %s", err)
+	}
+
+	rl, err := uc.roleService.QueryByID(ctx, roleUUID)
+	if err != nil {
+		return errs.Newf(errs.Internal, "role query by id: %s", err)
 	}
 
 	if err := uc.roleService.Delete(ctx, rl); err != nil {
@@ -79,13 +84,13 @@ func (uc *UseCase) Delete(ctx context.Context) error {
 }
 
 // QueryByID returns a role by its ID
-func (uc *UseCase) QueryByID(ctx context.Context) (Role, error) {
-	roleID, err := ctxPck.GetRoleID(ctx)
+func (uc *UseCase) QueryByID(ctx context.Context, roleID string) (Role, error) {
+	roleUUID, err := uuid.Parse(roleID)
 	if err != nil {
-		return Role{}, errs.Newf(errs.Internal, "roleID not in ctx: %s", err)
+		return Role{}, errs.Newf(errs.InvalidArgument, "could not parse uuid: %s", err)
 	}
 
-	role, err := uc.roleService.QueryByID(ctx, roleID)
+	role, err := uc.roleService.QueryByID(ctx, roleUUID)
 	if err != nil {
 		return Role{}, errs.Newf(errs.Internal, "role query by id: %s", err)
 	}

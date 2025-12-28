@@ -6,12 +6,13 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/google/uuid"
+
 	"github.com/Housiadas/cerberus/internal/core/domain/role"
 	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/Housiadas/cerberus/pkg/order"
 	"github.com/Housiadas/cerberus/pkg/page"
 	"github.com/Housiadas/cerberus/pkg/pgsql"
-	"github.com/google/uuid"
 )
 
 // Service manages the set of APIs for user access.

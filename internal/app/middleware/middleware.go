@@ -1,4 +1,4 @@
-// Package middleware provides cli level middleware support.
+// Package middleware provides level middleware support.
 package middleware
 
 import (
@@ -10,7 +10,8 @@ import (
 	"go.opentelemetry.io/otel/trace"
 	"golang.org/x/sync/singleflight"
 
-	"github.com/Housiadas/cerberus/internal/core/service/user_service"
+	"github.com/Housiadas/cerberus/internal/app/usecase/auth_usecase"
+	"github.com/Housiadas/cerberus/internal/app/usecase/user_usecase"
 	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/Housiadas/cerberus/pkg/pgsql"
 	"github.com/Housiadas/cerberus/pkg/web"
@@ -24,27 +25,30 @@ var (
 )
 
 type Config struct {
-	Log    *logger.Logger
-	Tracer trace.Tracer
-	Tx     *pgsql.DBBeginner
-	User   *user_service.Service
+	Log         *logger.Logger
+	Tracer      trace.Tracer
+	Tx          *pgsql.DBBeginner
+	AuthUseCase *auth_usecase.UseCase
+	UserUseCase *user_usecase.UseCase
 }
 
 type Middleware struct {
-	Core   Service
-	Log    *logger.Logger
-	Tracer trace.Tracer
-	Tx     *pgsql.DBBeginner
+	Tracer  trace.Tracer
+	Log     *logger.Logger
+	Tx      *pgsql.DBBeginner
+	UseCase UseCase
 }
 
-type Service struct {
-	User *user_service.Service
+type UseCase struct {
+	Auth *auth_usecase.UseCase
+	User *user_usecase.UseCase
 }
 
 func New(cfg Config) *Middleware {
 	return &Middleware{
-		Core: Service{
-			User: cfg.User,
+		UseCase: UseCase{
+			Auth: cfg.AuthUseCase,
+			User: cfg.UserUseCase,
 		},
 		Log:    cfg.Log,
 		Tracer: cfg.Tracer,
@@ -64,9 +68,9 @@ func (m *Middleware) Error(w http.ResponseWriter, err error, statusCode int) {
 // ResponseRecorder a custom http.ResponseWriter to capture the response before it's sent to the client.
 // We are capturing the result of the handler to the middleware
 type ResponseRecorder struct {
-	http.ResponseWriter
 	statusCode int
 	body       bytes.Buffer
+	http.ResponseWriter
 }
 
 func (rec *ResponseRecorder) WriteHeader(code int) {

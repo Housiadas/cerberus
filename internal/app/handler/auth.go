@@ -11,7 +11,7 @@ import (
 
 // Auth godoc
 // @Summary Auth login
-// @Description Verify user's credentials
+// @Description AuthenticateBearer user's credentials
 // @Tags	Auth
 // @Accept json
 // @Produce json

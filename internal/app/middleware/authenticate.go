@@ -1,0 +1,76 @@
+package middleware
+
+import (
+	"encoding/base64"
+	"net/http"
+	"strings"
+
+	"github.com/Housiadas/cerberus/internal/app/usecase/user_usecase"
+	ctxPck "github.com/Housiadas/cerberus/internal/common/context"
+	"github.com/Housiadas/cerberus/pkg/errs"
+)
+
+// AuthenticateBearer is a middleware function that checks authentication,
+// validates user credentials, and attach user data to the request context.
+func (m *Middleware) AuthenticateBearer() func(next http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			ctx := r.Context()
+			token := r.Header.Get("Authorization")
+
+			resp, err := m.UseCase.Auth.Authenticate(ctx, token)
+			if err != nil {
+				m.Error(w, err, http.StatusUnauthorized)
+			}
+
+			ctx = ctxPck.SetClaims(ctx, resp)
+
+			next.ServeHTTP(w, r.WithContext(ctx))
+		})
+	}
+}
+
+// AuthenticateBasic processes basic authentication logic.
+func (m *Middleware) AuthenticateBasic() func(next http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			ctx := r.Context()
+			authorizationHeader := r.Header.Get("authorization")
+			email, pass, ok := parseBasicAuth(authorizationHeader)
+			if !ok {
+				err := errs.Newf(errs.Unauthenticated, "invalid Basic auth")
+				m.Error(w, err, http.StatusUnauthorized)
+			}
+
+			authUsr := user_usecase.AuthenticateUser{
+				Email:    email,
+				Password: pass,
+			}
+			_, err := m.UseCase.User.Authenticate(ctx, authUsr)
+			if err != nil {
+				m.Error(w, err, http.StatusUnauthorized)
+			}
+
+			next.ServeHTTP(w, r.WithContext(ctx))
+		})
+	}
+}
+
+func parseBasicAuth(auth string) (string, string, bool) {
+	parts := strings.Split(auth, " ")
+	if len(parts) != 2 || parts[0] != "Basic" {
+		return "", "", false
+	}
+
+	c, err := base64.StdEncoding.DecodeString(parts[1])
+	if err != nil {
+		return "", "", false
+	}
+
+	username, password, ok := strings.Cut(string(c), ":")
+	if !ok {
+		return "", "", false
+	}
+
+	return username, password, true
+}

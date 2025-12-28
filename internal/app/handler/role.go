@@ -78,12 +78,13 @@ func (h *Handler) roleQuery(ctx context.Context, _ http.ResponseWriter, r *http.
 // @Failure      500  {object}  errs.Error
 // @Router       /role/{role_id} [put]
 func (h *Handler) roleUpdate(ctx context.Context, w http.ResponseWriter, r *http.Request) web.Encoder {
-	var app role_usecase.UpdateRole
-	if err := web.Decode(r, &app); err != nil {
+	var res role_usecase.UpdateRole
+	if err := web.Decode(r, &res); err != nil {
 		return errs.New(errs.InvalidArgument, err)
 	}
 
-	role, err := h.UseCase.Role.Update(ctx, app)
+	roleID := web.Param(r, "role_id")
+	role, err := h.UseCase.Role.Update(ctx, res, roleID)
 	if err != nil {
 		return errs.NewError(err)
 	}
@@ -101,7 +102,8 @@ func (h *Handler) roleUpdate(ctx context.Context, w http.ResponseWriter, r *http
 // @Failure      500  {object}  errs.Error
 // @Router       /role/{role_id} [delete]
 func (h *Handler) roleDelete(ctx context.Context, w http.ResponseWriter, r *http.Request) web.Encoder {
-	if err := h.UseCase.Role.Delete(ctx); err != nil {
+	roleID := web.Param(r, "role_id")
+	if err := h.UseCase.Role.Delete(ctx, roleID); err != nil {
 		return errs.NewError(err)
 	}
 

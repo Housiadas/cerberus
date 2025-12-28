@@ -46,7 +46,7 @@ type Web struct {
 // UseCase represents the use case layer
 type UseCase struct {
 	Audit                *audit_usecase.UseCase
-	Auth                 *auth_usecase.Usecase
+	Auth                 *auth_usecase.UseCase
 	User                 *user_usecase.UseCase
 	Role                 *role_usecase.UseCase
 	Permission           *permission_usecase.UseCase
@@ -72,6 +72,13 @@ type Config struct {
 
 func New(cfg Config) *Handler {
 	userUseCase := user_usecase.NewUseCase(cfg.UserService)
+	authUseCase := auth_usecase.NewUseCase(auth_usecase.Config{
+		Issuer:           cfg.ServiceName,
+		Log:              cfg.Log,
+		UserUsecase:      userUseCase,
+		UserRolesUsecase: user_roles_usecase.NewUseCase(cfg.UserRolesService),
+	})
+
 	return &Handler{
 		ServiceName: cfg.ServiceName,
 		Build:       cfg.Build,
@@ -81,21 +88,17 @@ func New(cfg Config) *Handler {
 		Tracer:      cfg.Tracer,
 		Web: Web{
 			Middleware: middleware.New(middleware.Config{
-				Log:    cfg.Log,
-				Tracer: cfg.Tracer,
-				Tx:     pgsql.NewBeginner(cfg.DB),
-				User:   cfg.UserService,
+				Log:         cfg.Log,
+				Tracer:      cfg.Tracer,
+				Tx:          pgsql.NewBeginner(cfg.DB),
+				UserUseCase: userUseCase,
+				AuthUseCase: authUseCase,
 			}),
 			Res: web.NewRespond(cfg.Log),
 		},
 		UseCase: UseCase{
-			Audit: audit_usecase.NewUseCase(cfg.AuditService),
-			Auth: auth_usecase.NewUseCase(auth_usecase.Config{
-				Issuer:           cfg.ServiceName,
-				Log:              cfg.Log,
-				UserUsecase:      userUseCase,
-				UserRolesUsecase: user_roles_usecase.NewUseCase(cfg.UserRolesService),
-			}),
+			Audit:                audit_usecase.NewUseCase(cfg.AuditService),
+			Auth:                 authUseCase,
 			User:                 userUseCase,
 			Role:                 role_usecase.NewUseCase(cfg.RoleService),
 			Permission:           permission_usecase.NewUseCase(cfg.PermissionService),

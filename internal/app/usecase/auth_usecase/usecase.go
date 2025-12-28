@@ -9,12 +9,10 @@ import (
 	"time"
 
 	"github.com/Housiadas/cerberus/internal/app/usecase/user_roles_usecase"
-	"github.com/Housiadas/cerberus/pkg/errs"
-	"github.com/golang-jwt/jwt/v5"
-	"github.com/google/uuid"
-
 	"github.com/Housiadas/cerberus/internal/app/usecase/user_usecase"
+	"github.com/Housiadas/cerberus/pkg/errs"
 	"github.com/Housiadas/cerberus/pkg/logger"
+	"github.com/golang-jwt/jwt/v5"
 )
 
 //go:embed secret.pem
@@ -28,9 +26,9 @@ type Config struct {
 	UserRolesUsecase *user_roles_usecase.UseCase
 }
 
-// Usecase is used to authenticate clients. It can generate a token for a
+// UseCase is used to authenticate clients. It can generate a token for a
 // set of user claims and recreate the claims by parsing the token.
-type Usecase struct {
+type UseCase struct {
 	issuer           string
 	secret           []byte
 	parser           *jwt.Parser
@@ -40,9 +38,9 @@ type Usecase struct {
 	userRolesUsecase *user_roles_usecase.UseCase
 }
 
-// NewUseCase creates a Usecase to support authentication/authorization.
-func NewUseCase(cfg Config) *Usecase {
-	return &Usecase{
+// NewUseCase creates a UseCase to support authentication/authorization.
+func NewUseCase(cfg Config) *UseCase {
+	return &UseCase{
 		log:              cfg.Log,
 		issuer:           cfg.Issuer,
 		userUsecase:      cfg.UserUsecase,
@@ -54,11 +52,11 @@ func NewUseCase(cfg Config) *Usecase {
 }
 
 // Issuer provides the configured issuer used to authenticate tokens.
-func (u *Usecase) Issuer() string {
+func (u *UseCase) Issuer() string {
 	return u.issuer
 }
 
-func (u *Usecase) Login(ctx context.Context, authLogin AuthLogin) (Token, error) {
+func (u *UseCase) Login(ctx context.Context, authLogin AuthLogin) (Token, error) {
 	authUsr := user_usecase.AuthenticateUser{
 		Email:    authLogin.Email,
 		Password: authLogin.Password,
@@ -105,8 +103,8 @@ func (u *Usecase) Login(ctx context.Context, authLogin AuthLogin) (Token, error)
 	}, nil
 }
 
-// Verify processes the token to validate the sender's token is valid.
-func (u *Usecase) Verify(ctx context.Context, bearerToken string) (Claims, error) {
+// Authenticate processes the token to validate the sender's token is valid.
+func (u *UseCase) Authenticate(ctx context.Context, bearerToken string) (Claims, error) {
 	if !strings.HasPrefix(bearerToken, "Bearer ") {
 		return Claims{}, errors.New("expected authorization header format: Bearer <token>")
 	}
@@ -133,7 +131,7 @@ func (u *Usecase) Verify(ctx context.Context, bearerToken string) (Claims, error
 }
 
 // GenerateToken generates a signed JWT token string representing the user Claims.
-func (u *Usecase) GenerateToken(claims Claims) (string, error) {
+func (u *UseCase) GenerateToken(claims Claims) (string, error) {
 	token := jwt.NewWithClaims(u.method, claims)
 
 	str, err := token.SignedString(u.secret)
@@ -145,13 +143,8 @@ func (u *Usecase) GenerateToken(claims Claims) (string, error) {
 }
 
 // isUserEnabled hits the database and checks the user is not disabled.
-func (u *Usecase) isUserEnabled(ctx context.Context, claims Claims) error {
-	userID, err := uuid.Parse(claims.Subject)
-	if err != nil {
-		return fmt.Errorf("parsing user ID %q from claims: %w", claims.Subject, err)
-	}
-
-	usr, err := u.userUsecase.QueryByID(ctx, userID)
+func (u *UseCase) isUserEnabled(ctx context.Context, claims Claims) error {
+	usr, err := u.userUsecase.QueryByID(ctx, claims.Subject)
 	if err != nil {
 		return fmt.Errorf("query user: %w", err)
 	}

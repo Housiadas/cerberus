@@ -4,12 +4,12 @@ package permission_usecase
 import (
 	"context"
 
-	ctxPck "github.com/Housiadas/cerberus/internal/common/context"
 	"github.com/Housiadas/cerberus/internal/common/validation"
 	"github.com/Housiadas/cerberus/internal/core/service/permission_service"
 	"github.com/Housiadas/cerberus/pkg/errs"
 	"github.com/Housiadas/cerberus/pkg/order"
 	"github.com/Housiadas/cerberus/pkg/page"
+	"github.com/google/uuid"
 )
 
 // UseCase manages the set of cli layer api functions for the permission core.
@@ -40,18 +40,18 @@ func (uc *UseCase) Create(ctx context.Context, nperm NewPermission) (Permission,
 }
 
 // Update updates an existing permission.
-func (uc *UseCase) Update(ctx context.Context, app UpdatePermission) (Permission, error) {
-	up, err := toBusUpdatePermission(app)
+func (uc *UseCase) Update(ctx context.Context, res UpdatePermission, permissionID string) (Permission, error) {
+	up, err := toBusUpdatePermission(res)
 	if err != nil {
 		return Permission{}, errs.New(errs.InvalidArgument, err)
 	}
 
-	permissionID, err := ctxPck.GetPermissionID(ctx)
+	permissionUUID, err := uuid.Parse(permissionID)
 	if err != nil {
-		return Permission{}, errs.Newf(errs.Internal, "permissionID not in ctx: %s", err)
+		return Permission{}, errs.Newf(errs.InvalidArgument, "could not parse uuid: %s", err)
 	}
 
-	perm, err := uc.permissionService.QueryByID(ctx, permissionID)
+	perm, err := uc.permissionService.QueryByID(ctx, permissionUUID)
 	if err != nil {
 		return Permission{}, errs.Newf(errs.Internal, "permission query by id: %s", err)
 	}
@@ -65,27 +65,32 @@ func (uc *UseCase) Update(ctx context.Context, app UpdatePermission) (Permission
 }
 
 // Delete removes a permission from the system.
-func (uc *UseCase) Delete(ctx context.Context) error {
-	p, err := ctxPck.GetPermission(ctx)
+func (uc *UseCase) Delete(ctx context.Context, permissionID string) error {
+	permissionUUID, err := uuid.Parse(permissionID)
 	if err != nil {
-		return errs.Newf(errs.Internal, "permission missing in context: %s", err)
+		return errs.Newf(errs.InvalidArgument, "could not parse uuid: %s", err)
 	}
 
-	if err := uc.permissionService.Delete(ctx, p); err != nil {
-		return errs.Newf(errs.Internal, "delete: permissionID[%s]: %s", p.ID, err)
+	perm, err := uc.permissionService.QueryByID(ctx, permissionUUID)
+	if err != nil {
+		return errs.Newf(errs.Internal, "permission query by id: %s", err)
+	}
+
+	if err := uc.permissionService.Delete(ctx, perm); err != nil {
+		return errs.Newf(errs.Internal, "delete: permissionID[%s]: %s", permissionUUID, err)
 	}
 
 	return nil
 }
 
 // QueryByID returns a permission by its ID
-func (uc *UseCase) QueryByID(ctx context.Context) (Permission, error) {
-	permissionID, err := ctxPck.GetPermissionID(ctx)
+func (uc *UseCase) QueryByID(ctx context.Context, permissionID string) (Permission, error) {
+	permissionUUID, err := uuid.Parse(permissionID)
 	if err != nil {
-		return Permission{}, errs.Newf(errs.Internal, "permissionID not in ctx: %s", err)
+		return Permission{}, errs.Newf(errs.InvalidArgument, "could not parse uuid: %s", err)
 	}
 
-	perm, err := uc.permissionService.QueryByID(ctx, permissionID)
+	perm, err := uc.permissionService.QueryByID(ctx, permissionUUID)
 	if err != nil {
 		return Permission{}, errs.Newf(errs.Internal, "permission query by id: %s", err)
 	}

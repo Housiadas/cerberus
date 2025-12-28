@@ -98,12 +98,12 @@ func (respond *Respond) errorRecorder(ctx context.Context, statusCode int, err e
 		appErr = errs.Newf(errs.Internal, "Internal Server Error")
 	}
 
-	// If not, critical error does not record it
-	if statusCode < 500 {
+	// If not, the critical error does not record it
+	if statusCode < http.StatusInternalServerError {
 		return appErr
 	}
 
-	_, span := otel.AddSpan(ctx, "cli.response.error")
+	_, span := otel.AddSpan(ctx, "web.response.error")
 	span.RecordError(err)
 	defer span.End()
 

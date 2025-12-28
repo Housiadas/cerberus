@@ -69,7 +69,8 @@ func (h *Handler) permissionUpdate(ctx context.Context, w http.ResponseWriter, r
 		return errs.New(errs.InvalidArgument, err)
 	}
 
-	permission, err := h.UseCase.Permission.Update(ctx, app)
+	permissionID := web.Param(r, "permission_id")
+	permission, err := h.UseCase.Permission.Update(ctx, app, permissionID)
 	if err != nil {
 		return errs.NewError(err)
 	}
@@ -87,7 +88,8 @@ func (h *Handler) permissionUpdate(ctx context.Context, w http.ResponseWriter, r
 // @Failure      500  {object}  errs.Error
 // @Router       /permission/{permission_id} [delete]
 func (h *Handler) permissionDelete(ctx context.Context, w http.ResponseWriter, r *http.Request) web.Encoder {
-	if err := h.UseCase.Permission.Delete(ctx); err != nil {
+	permissionID := web.Param(r, "permission_id")
+	if err := h.UseCase.Permission.Delete(ctx, permissionID); err != nil {
 		return errs.NewError(err)
 	}
 
