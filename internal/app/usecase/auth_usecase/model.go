@@ -5,16 +5,7 @@ import (
 
 	"github.com/Housiadas/cerberus/internal/common/validation"
 	"github.com/Housiadas/cerberus/pkg/errs"
-	"github.com/golang-jwt/jwt/v5"
 )
-
-// Claims represent the authorization claims transmitted via a JWT.
-type Claims struct {
-	jwt.RegisteredClaims
-	Roles []string `json:"roles"`
-}
-
-// =================================================================
 
 // AuthLogin defines the data needed to authenticate a user.
 type AuthLogin struct {
@@ -37,21 +28,39 @@ func (l *AuthLogin) Validate() error {
 	return nil
 }
 
+// Decode implements the decoder interface.
+func (l *AuthLogin) Decode(data []byte) error {
+	return json.Unmarshal(data, l)
+}
+
+// =================================================================
+
+type AuthRefreshToken struct {
+	Token string `json:"refresh_token"`
+}
+
+// Encode implements the encoder interface.
+func (r *AuthRefreshToken) Encode() ([]byte, string, error) {
+	data, err := json.Marshal(r)
+	return data, "application/json", err
+}
+
+// Decode implements the decoder interface.
+func (r *AuthRefreshToken) Decode(data []byte) error {
+	return json.Unmarshal(data, r)
+}
+
 // =================================================================
 
 // Token represents the user token when requested.
 type Token struct {
-	Token string `json:"token"`
+	AccessToken  string `json:"access_token"`
+	RefreshToken string `json:"refresh_token"`
+	ExpiresIn    int64  `json:"expires_in"`
 }
 
 // Encode implements the encoder interface.
 func (t Token) Encode() ([]byte, string, error) {
 	data, err := json.Marshal(t)
 	return data, "application/json", err
-}
-
-func toToken(v string) Token {
-	return Token{
-		Token: v,
-	}
 }

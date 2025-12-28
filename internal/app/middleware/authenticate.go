@@ -2,9 +2,11 @@ package middleware
 
 import (
 	"encoding/base64"
+	"errors"
 	"net/http"
 	"strings"
 
+	"github.com/Housiadas/cerberus/internal/app/usecase/auth_usecase"
 	"github.com/Housiadas/cerberus/internal/app/usecase/user_usecase"
 	ctxPck "github.com/Housiadas/cerberus/internal/common/context"
 	"github.com/Housiadas/cerberus/pkg/errs"
@@ -16,15 +18,19 @@ func (m *Middleware) AuthenticateBearer() func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			ctx := r.Context()
-			token := r.Header.Get("Authorization")
+			bearerToken := r.Header.Get("Authorization")
+			if !strings.HasPrefix(bearerToken, "Bearer ") {
+				err := errors.New("expected authorization header format: Bearer <token>")
+				m.Error(w, err, http.StatusUnauthorized)
+			}
 
-			resp, err := m.UseCase.Auth.Authenticate(ctx, token)
+			jwtUnverified := bearerToken[7:]
+			resp, err := m.UseCase.Auth.Authenticate(ctx, jwtUnverified, auth_usecase.AccessToken)
 			if err != nil {
 				m.Error(w, err, http.StatusUnauthorized)
 			}
 
 			ctx = ctxPck.SetClaims(ctx, resp)
-
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}
