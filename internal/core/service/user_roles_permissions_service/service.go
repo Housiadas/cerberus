@@ -43,6 +43,6 @@ func (s *Service) Count(ctx context.Context, filter user_roles_permissions.Query
 }
 
 // HasPermission checks if the user has the specified permission.
-func (s *Service) HasPermission(ctx context.Context, userID uuid.UUID, permissionID uuid.UUID) (bool, error) {
-	return s.storer.HasPermission(ctx, userID, permissionID)
+func (s *Service) HasPermission(ctx context.Context, userID uuid.UUID, permissionName string) (bool, error) {
+	return s.storer.HasPermission(ctx, userID, permissionName)
 }

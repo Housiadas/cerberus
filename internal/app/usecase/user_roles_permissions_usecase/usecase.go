@@ -9,6 +9,7 @@ import (
 	"github.com/Housiadas/cerberus/pkg/errs"
 	"github.com/Housiadas/cerberus/pkg/order"
 	"github.com/Housiadas/cerberus/pkg/page"
+	"github.com/google/uuid"
 )
 
 // UseCase manages the set of cli layer api functions for the view.
@@ -51,4 +52,17 @@ func (uc *UseCase) Query(ctx context.Context, qp AppQueryParams) (page.Result[Us
 	}
 
 	return page.NewResult(toManyUserRolesPermissions(rows), total, p), nil
+}
+
+func (uc *UseCase) HasPermission(ctx context.Context, userID, permissionName string) (bool, error) {
+	userUUID, err := uuid.Parse(userID)
+	if err != nil {
+		return false, errs.Newf(errs.InvalidArgument, "could not parse uuid: %s", err)
+	}
+	hasPermission, err := uc.service.HasPermission(ctx, userUUID, permissionName)
+	if err != nil {
+		return false, errs.Newf(errs.Internal, "has_permission: %s", err)
+	}
+
+	return hasPermission, nil
 }

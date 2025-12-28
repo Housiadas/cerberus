@@ -2,7 +2,7 @@
 CREATE TABLE permissions
 (
     id            UUID         NOT NULL,
-    name          VARCHAR(100) NOT NULL,
+    name          VARCHAR(100) UNIQUE NOT NULL,
     date_created  TIMESTAMP    NOT NULL,
     date_updated  TIMESTAMP    NOT NULL,
 

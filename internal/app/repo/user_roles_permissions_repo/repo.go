@@ -10,6 +10,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 
+	"github.com/Housiadas/cerberus/internal/core/domain/name"
 	urp "github.com/Housiadas/cerberus/internal/core/domain/user_roles_permissions"
 	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/Housiadas/cerberus/pkg/order"
@@ -87,15 +88,22 @@ func (s *Store) Count(ctx context.Context, filter urp.QueryFilter) (int, error) 
 }
 
 // HasPermission returns true if the user has the specified permission.
-func (s *Store) HasPermission(ctx context.Context, userID, permissionID uuid.UUID) (bool, error) {
+func (s *Store) HasPermission(ctx context.Context, userID uuid.UUID, permissionName string) (bool, error) {
 	data := map[string]any{
-		"user_id":       userID,
-		"permission_id": permissionID,
+		"user_id":         userID,
+		"permission_name": permissionName,
 	}
+
+	pName, err := name.Parse(permissionName)
+	if err != nil {
+		return false, fmt.Errorf("parse name: %w", err)
+	}
+
 	filter := urp.QueryFilter{
-		UserID:       &userID,
-		PermissionID: &permissionID,
+		UserID:         &userID,
+		PermissionName: &pName,
 	}
+
 	buf := bytes.NewBufferString(userRolesPermissionsQuerySql)
 	applyFilter(filter, data, buf)
 

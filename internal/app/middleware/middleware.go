@@ -11,6 +11,7 @@ import (
 	"golang.org/x/sync/singleflight"
 
 	"github.com/Housiadas/cerberus/internal/app/usecase/auth_usecase"
+	"github.com/Housiadas/cerberus/internal/app/usecase/user_roles_permissions_usecase"
 	"github.com/Housiadas/cerberus/internal/app/usecase/user_usecase"
 	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/Housiadas/cerberus/pkg/pgsql"
@@ -25,11 +26,12 @@ var (
 )
 
 type Config struct {
-	Log         *logger.Logger
-	Tracer      trace.Tracer
-	Tx          *pgsql.DBBeginner
-	AuthUseCase *auth_usecase.UseCase
-	UserUseCase *user_usecase.UseCase
+	Log                  *logger.Logger
+	Tracer               trace.Tracer
+	Tx                   *pgsql.DBBeginner
+	AuthUseCase          *auth_usecase.UseCase
+	UserUseCase          *user_usecase.UseCase
+	UserRolesPermissions *user_roles_permissions_usecase.UseCase
 }
 
 type Middleware struct {
@@ -40,15 +42,17 @@ type Middleware struct {
 }
 
 type UseCase struct {
-	Auth *auth_usecase.UseCase
-	User *user_usecase.UseCase
+	Auth                 *auth_usecase.UseCase
+	User                 *user_usecase.UseCase
+	UserRolesPermissions *user_roles_permissions_usecase.UseCase
 }
 
 func New(cfg Config) *Middleware {
 	return &Middleware{
 		UseCase: UseCase{
-			Auth: cfg.AuthUseCase,
-			User: cfg.UserUseCase,
+			Auth:                 cfg.AuthUseCase,
+			User:                 cfg.UserUseCase,
+			UserRolesPermissions: cfg.UserRolesPermissions,
 		},
 		Log:    cfg.Log,
 		Tracer: cfg.Tracer,

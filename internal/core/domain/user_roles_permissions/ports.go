@@ -12,5 +12,5 @@ import (
 type Storer interface {
 	Query(ctx context.Context, filter QueryFilter, orderBy order.By, page page.Page) ([]UserRolesPermissions, error)
 	Count(ctx context.Context, filter QueryFilter) (int, error)
-	HasPermission(ctx context.Context, userID uuid.UUID, permissionID uuid.UUID) (bool, error)
+	HasPermission(ctx context.Context, userID uuid.UUID, permissionName string) (bool, error)
 }

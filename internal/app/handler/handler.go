@@ -78,6 +78,7 @@ func New(cfg Config) *Handler {
 		UserUsecase:      userUseCase,
 		UserRolesUsecase: user_roles_usecase.NewUseCase(cfg.UserRolesService),
 	})
+	userRolesPermissionsUseCase := user_roles_permissions_usecase.NewUseCase(cfg.UserRolesPermissionsService)
 
 	return &Handler{
 		ServiceName: cfg.ServiceName,
@@ -88,11 +89,12 @@ func New(cfg Config) *Handler {
 		Tracer:      cfg.Tracer,
 		Web: Web{
 			Middleware: middleware.New(middleware.Config{
-				Log:         cfg.Log,
-				Tracer:      cfg.Tracer,
-				Tx:          pgsql.NewBeginner(cfg.DB),
-				UserUseCase: userUseCase,
-				AuthUseCase: authUseCase,
+				Log:                  cfg.Log,
+				Tracer:               cfg.Tracer,
+				Tx:                   pgsql.NewBeginner(cfg.DB),
+				UserUseCase:          userUseCase,
+				AuthUseCase:          authUseCase,
+				UserRolesPermissions: userRolesPermissionsUseCase,
 			}),
 			Res: web.NewRespond(cfg.Log),
 		},
@@ -102,7 +104,7 @@ func New(cfg Config) *Handler {
 			User:                 userUseCase,
 			Role:                 role_usecase.NewUseCase(cfg.RoleService),
 			Permission:           permission_usecase.NewUseCase(cfg.PermissionService),
-			UserRolesPermissions: user_roles_permissions_usecase.NewUseCase(cfg.UserRolesPermissionsService),
+			UserRolesPermissions: userRolesPermissionsUseCase,
 			System:               system_usecase.NewUseCase(cfg.Build, cfg.Log, cfg.DB),
 		},
 	}
