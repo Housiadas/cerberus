@@ -42,14 +42,14 @@ func Test_API_User_Update_200(t *testing.T) {
 			},
 			GotResp: &user_usecase.User{},
 			ExpResp: &user_usecase.User{
-				ID:          sd.Users[0].ID.String(),
-				Name:        "Jack Housi",
-				Email:       "chris@housi2.com",
-				Roles:       []string{"USER"},
-				Department:  "IT0",
-				Enabled:     true,
-				DateCreated: sd.Users[0].DateCreated.Format(time.RFC3339),
-				DateUpdated: sd.Users[0].DateUpdated.Format(time.RFC3339),
+				ID:         sd.Users[0].ID.String(),
+				Name:       "Jack Housi",
+				Email:      "chris@housi2.com",
+				Roles:      []string{"USER"},
+				Department: "IT0",
+				Enabled:    true,
+				CreatedAt:  sd.Users[0].CreatedAt.Format(time.RFC3339),
+				UpdatedAt:  sd.Users[0].UpdatedAt.Format(time.RFC3339),
 			},
 			CmpFunc: func(got any, exp any) string {
 				gotResp, exists := got.(*user_usecase.User)
@@ -58,7 +58,7 @@ func Test_API_User_Update_200(t *testing.T) {
 				}
 
 				expResp := exp.(*user_usecase.User)
-				gotResp.DateUpdated = expResp.DateUpdated
+				gotResp.UpdatedAt = expResp.UpdatedAt
 
 				return cmp.Diff(gotResp, expResp)
 			},
@@ -73,14 +73,14 @@ func Test_API_User_Update_200(t *testing.T) {
 			},
 			GotResp: &user_usecase.User{},
 			ExpResp: &user_usecase.User{
-				ID:          sd.Admins[0].ID.String(),
-				Name:        sd.Admins[0].Name.String(),
-				Email:       sd.Admins[0].Email.Address,
-				Roles:       []string{"USER"},
-				Department:  sd.Admins[0].Department.String(),
-				Enabled:     true,
-				DateCreated: sd.Admins[0].DateCreated.Format(time.RFC3339),
-				DateUpdated: sd.Admins[0].DateUpdated.Format(time.RFC3339),
+				ID:         sd.Admins[0].ID.String(),
+				Name:       sd.Admins[0].Name.String(),
+				Email:      sd.Admins[0].Email.Address,
+				Roles:      []string{"USER"},
+				Department: sd.Admins[0].Department.String(),
+				Enabled:    true,
+				CreatedAt:  sd.Admins[0].CreatedAt.Format(time.RFC3339),
+				UpdatedAt:  sd.Admins[0].UpdatedAt.Format(time.RFC3339),
 			},
 			CmpFunc: func(got any, exp any) string {
 				gotResp, exists := got.(*user_usecase.User)
@@ -89,7 +89,7 @@ func Test_API_User_Update_200(t *testing.T) {
 				}
 
 				expResp := exp.(*user_usecase.User)
-				gotResp.DateUpdated = expResp.DateUpdated
+				gotResp.UpdatedAt = expResp.UpdatedAt
 
 				return cmp.Diff(gotResp, expResp)
 			},

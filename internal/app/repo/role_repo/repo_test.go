@@ -95,12 +95,12 @@ func query(service dbtest.Service, sd unitest.SeedData) []unitest.Table {
 				expResp := exp.([]role.Role)
 
 				for i := range gotResp {
-					if gotResp[i].DateCreated.Format(time.RFC3339) == expResp[i].DateCreated.Format(time.RFC3339) {
-						expResp[i].DateCreated = gotResp[i].DateCreated
+					if gotResp[i].CreatedAt.Format(time.RFC3339) == expResp[i].CreatedAt.Format(time.RFC3339) {
+						expResp[i].CreatedAt = gotResp[i].CreatedAt
 					}
 
-					if gotResp[i].DateUpdated.Format(time.RFC3339) == expResp[i].DateUpdated.Format(time.RFC3339) {
-						expResp[i].DateUpdated = gotResp[i].DateUpdated
+					if gotResp[i].UpdatedAt.Format(time.RFC3339) == expResp[i].UpdatedAt.Format(time.RFC3339) {
+						expResp[i].UpdatedAt = gotResp[i].UpdatedAt
 					}
 				}
 
@@ -140,8 +140,8 @@ func create(service dbtest.Service) []unitest.Table {
 				expResp := exp.(role.Role)
 
 				expResp.ID = gotResp.ID
-				expResp.DateCreated = gotResp.DateCreated
-				expResp.DateUpdated = gotResp.DateUpdated
+				expResp.CreatedAt = gotResp.CreatedAt
+				expResp.UpdatedAt = gotResp.UpdatedAt
 
 				return cmp.Diff(gotResp, expResp)
 			},
@@ -156,9 +156,9 @@ func update(service dbtest.Service, sd unitest.SeedData) []unitest.Table {
 		{
 			Name: "basic",
 			ExpResp: role.Role{
-				ID:          sd.Roles[0].ID,
-				Name:        name.MustParse("Chris Housi 2"),
-				DateCreated: sd.Roles[0].DateCreated,
+				ID:        sd.Roles[0].ID,
+				Name:      name.MustParse("Chris Housi 2"),
+				CreatedAt: sd.Roles[0].CreatedAt,
 			},
 			ExcFunc: func(ctx context.Context) any {
 				urole := role.UpdateRole{
@@ -178,7 +178,7 @@ func update(service dbtest.Service, sd unitest.SeedData) []unitest.Table {
 					return "error occurred"
 				}
 				expResp := exp.(role.Role)
-				expResp.DateUpdated = gotResp.DateUpdated
+				expResp.UpdatedAt = gotResp.UpdatedAt
 
 				return cmp.Diff(gotResp, expResp)
 			},

@@ -3,8 +3,8 @@ CREATE TABLE permissions
 (
     id            UUID         NOT NULL,
     name          VARCHAR(100) UNIQUE NOT NULL,
-    date_created  TIMESTAMP    NOT NULL,
-    date_updated  TIMESTAMP    NOT NULL,
+    created_at    TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at    TIMESTAMP   NOT NULL,
 
     PRIMARY KEY (id)
 );

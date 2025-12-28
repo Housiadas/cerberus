@@ -6,7 +6,7 @@ SELECT
     password_hash,
     department,
     enabled,
-    date_created,
-    date_updated
+    created_at,
+    updated_at
 FROM users
 WHERE user_id = :user_id

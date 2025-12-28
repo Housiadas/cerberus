@@ -45,10 +45,10 @@ func (s *Service) NewWithTx(tx pgsql.CommitRollbacker) (*Service, error) {
 func (s *Service) Create(ctx context.Context, np permission.NewPermission) (permission.Permission, error) {
 	now := time.Now()
 	p := permission.Permission{
-		ID:          uuid.UUID{},
-		Name:        np.Name,
-		DateCreated: now,
-		DateUpdated: now,
+		ID:        uuid.UUID{},
+		Name:      np.Name,
+		CreatedAt: now,
+		UpdatedAt: now,
 	}
 
 	if err := s.storer.Create(ctx, p); err != nil {
@@ -68,7 +68,7 @@ func (s *Service) Update(
 		p.Name = *up.Name
 	}
 
-	p.DateUpdated = time.Now()
+	p.UpdatedAt = time.Now()
 
 	if err := s.storer.Update(ctx, p); err != nil {
 		return permission.Permission{}, fmt.Errorf("permission update: %w", err)

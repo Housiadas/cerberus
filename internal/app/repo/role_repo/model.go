@@ -11,18 +11,18 @@ import (
 )
 
 type roleDB struct {
-	ID          uuid.UUID `db:"user_id"`
-	Name        string    `db:"name"`
-	DateCreated time.Time `db:"date_created"`
-	DateUpdated time.Time `db:"date_updated"`
+	ID        uuid.UUID `db:"user_id"`
+	Name      string    `db:"name"`
+	CreatedAt time.Time `db:"created_at"`
+	UpdatedAt time.Time `db:"updated_at"`
 }
 
 func toRoleDB(rl role.Role) roleDB {
 	return roleDB{
-		ID:          rl.ID,
-		Name:        rl.Name.String(),
-		DateCreated: rl.DateCreated.UTC(),
-		DateUpdated: rl.DateUpdated.UTC(),
+		ID:        rl.ID,
+		Name:      rl.Name.String(),
+		CreatedAt: rl.CreatedAt.UTC(),
+		UpdatedAt: rl.UpdatedAt.UTC(),
 	}
 }
 
@@ -33,10 +33,10 @@ func toRoleDomain(db roleDB) (role.Role, error) {
 	}
 
 	bus := role.Role{
-		ID:          db.ID,
-		Name:        nme,
-		DateCreated: db.DateCreated.In(time.Local),
-		DateUpdated: db.DateUpdated.In(time.Local),
+		ID:        db.ID,
+		Name:      nme,
+		CreatedAt: db.CreatedAt.In(time.Local),
+		UpdatedAt: db.UpdatedAt.In(time.Local),
 	}
 
 	return bus, nil

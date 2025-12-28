@@ -14,9 +14,9 @@ var (
 
 // UserRole represents a single assignment of a role to a user.
 type UserRole struct {
-	UserID      uuid.UUID
-	RoleID      uuid.UUID
-	DateCreated time.Time
+	UserID    uuid.UUID
+	RoleID    uuid.UUID
+	CreatedAt time.Time
 }
 
 type NewUserRole struct {

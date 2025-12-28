@@ -1,5 +1,5 @@
 SELECT
     user_id,
     role_id,
-    date_created
+    created_at
 FROM user_roles

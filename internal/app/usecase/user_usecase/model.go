@@ -46,8 +46,8 @@ type User struct {
 	PasswordHash []byte `json:"-"`
 	Department   string `json:"department"`
 	Enabled      bool   `json:"enabled"`
-	DateCreated  string `json:"dateCreated"`
-	DateUpdated  string `json:"dateUpdated"`
+	CreatedAt    string `json:"CreatedAt"`
+	UpdatedAt    string `json:"UpdatedAt"`
 }
 
 // Encode implements the encoder interface.
@@ -64,8 +64,8 @@ func toAppUser(bus user.User) User {
 		PasswordHash: bus.PasswordHash,
 		Department:   bus.Department.String(),
 		Enabled:      bus.Enabled,
-		DateCreated:  bus.DateCreated.Format(time.RFC3339),
-		DateUpdated:  bus.DateUpdated.Format(time.RFC3339),
+		CreatedAt:    bus.CreatedAt.Format(time.RFC3339),
+		UpdatedAt:    bus.UpdatedAt.Format(time.RFC3339),
 	}
 }
 

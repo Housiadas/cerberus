@@ -17,7 +17,6 @@ import (
 var (
 	// Use strong, random secrets in production (store in env vars)
 	accessTokenSecret  = []byte("your-256-bit-access-secret")
-	refreshTokenSecret = []byte("your-256-bit-refresh-secret")
 	accessTokenExpiry  = 15 * time.Minute
 	refreshTokenExpiry = 7 * 24 * time.Hour
 )
@@ -34,7 +33,7 @@ type Config struct {
 // set of user claims and recreate the claims by parsing the token.
 type UseCase struct {
 	issuer           string
-	Secrets          Secrets
+	secret           []byte
 	parser           *jwt.Parser
 	method           jwt.SigningMethod
 	log              *logger.Logger
@@ -49,11 +48,6 @@ type Claims struct {
 	Roles   []string `json:"roles"`
 }
 
-type Secrets struct {
-	AccessTokenSecret  []byte
-	RefreshTokenSecret []byte
-}
-
 // NewUseCase creates a UseCase to support authentication/authorization.
 func NewUseCase(cfg Config) *UseCase {
 	return &UseCase{
@@ -61,12 +55,9 @@ func NewUseCase(cfg Config) *UseCase {
 		issuer:           cfg.Issuer,
 		userUsecase:      cfg.UserUsecase,
 		userRolesUsecase: cfg.UserRolesUsecase,
-		Secrets: Secrets{
-			AccessTokenSecret:  accessTokenSecret,
-			RefreshTokenSecret: refreshTokenSecret,
-		},
-		method: jwt.GetSigningMethod(jwt.SigningMethodHS256.Name),
-		parser: jwt.NewParser(jwt.WithValidMethods([]string{jwt.SigningMethodHS256.Name})),
+		secret:           accessTokenSecret,
+		method:           jwt.GetSigningMethod(jwt.SigningMethodHS256.Name),
+		parser:           jwt.NewParser(jwt.WithValidMethods([]string{jwt.SigningMethodHS256.Name})),
 	}
 }
 

@@ -11,18 +11,18 @@ import (
 )
 
 type permissionDB struct {
-	ID          uuid.UUID `db:"id"`
-	Name        string    `db:"name"`
-	DateCreated time.Time `db:"date_created"`
-	DateUpdated time.Time `db:"date_updated"`
+	ID        uuid.UUID `db:"id"`
+	Name      string    `db:"name"`
+	CreatedAt time.Time `db:"created_at"`
+	UpdatedAt time.Time `db:"updated_at"`
 }
 
 func toPermissionDB(p permission.Permission) permissionDB {
 	return permissionDB{
-		ID:          p.ID,
-		Name:        p.Name.String(),
-		DateCreated: p.DateCreated.UTC(),
-		DateUpdated: p.DateUpdated.UTC(),
+		ID:        p.ID,
+		Name:      p.Name.String(),
+		CreatedAt: p.CreatedAt.UTC(),
+		UpdatedAt: p.UpdatedAt.UTC(),
 	}
 }
 
@@ -33,10 +33,10 @@ func toPermissionDomain(db permissionDB) (permission.Permission, error) {
 	}
 
 	bus := permission.Permission{
-		ID:          db.ID,
-		Name:        nme,
-		DateCreated: db.DateCreated.In(time.Local),
-		DateUpdated: db.DateUpdated.In(time.Local),
+		ID:        db.ID,
+		Name:      nme,
+		CreatedAt: db.CreatedAt.In(time.Local),
+		UpdatedAt: db.UpdatedAt.In(time.Local),
 	}
 
 	return bus, nil

@@ -49,10 +49,10 @@ func (c *Service) NewWithTx(tx pgsql.CommitRollbacker) (*Service, error) {
 func (c *Service) Create(ctx context.Context, nr role.NewRole) (role.Role, error) {
 	now := time.Now()
 	rol := role.Role{
-		ID:          uuid.UUID{},
-		Name:        nr.Name,
-		DateCreated: now,
-		DateUpdated: now,
+		ID:        uuid.UUID{},
+		Name:      nr.Name,
+		CreatedAt: now,
+		UpdatedAt: now,
 	}
 
 	if err := c.storer.Create(ctx, rol); err != nil {
@@ -68,7 +68,7 @@ func (c *Service) Update(ctx context.Context, rl role.Role, uprole role.UpdateRo
 		rl.Name = *uprole.Name
 	}
 
-	rl.DateUpdated = time.Now()
+	rl.UpdatedAt = time.Now()
 
 	if err := c.storer.Update(ctx, rl); err != nil {
 		return role.Role{}, fmt.Errorf("role update: %w", err)

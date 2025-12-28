@@ -16,10 +16,10 @@ var (
 
 // Permission represents information about an individual permission of our system.
 type Permission struct {
-	ID          uuid.UUID
-	Name        name.Name
-	DateCreated time.Time
-	DateUpdated time.Time
+	ID        uuid.UUID
+	Name      name.Name
+	CreatedAt time.Time
+	UpdatedAt time.Time
 }
 
 type NewPermission struct {

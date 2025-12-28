@@ -16,10 +16,10 @@ import (
 
 // Role represents information about an individual user.
 type Role struct {
-	ID          string `json:"id"`
-	Name        string `json:"name"`
-	DateCreated string `json:"dateCreated"`
-	DateUpdated string `json:"dateUpdated"`
+	ID        string `json:"id"`
+	Name      string `json:"name"`
+	CreatedAt string `json:"CreatedAt"`
+	UpdatedAt string `json:"UpdatedAt"`
 }
 
 type RolePageResult struct {
@@ -35,10 +35,10 @@ func (r Role) Encode() ([]byte, string, error) {
 
 func toAppRole(r role.Role) Role {
 	return Role{
-		ID:          r.ID.String(),
-		Name:        r.Name.String(),
-		DateCreated: r.DateCreated.Format(time.RFC3339),
-		DateUpdated: r.DateUpdated.Format(time.RFC3339),
+		ID:        r.ID.String(),
+		Name:      r.Name.String(),
+		CreatedAt: r.CreatedAt.Format(time.RFC3339),
+		UpdatedAt: r.UpdatedAt.Format(time.RFC3339),
 	}
 }
 

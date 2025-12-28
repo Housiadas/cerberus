@@ -1,3 +1,3 @@
 INSERT INTO permissions
-(id, name, date_created, date_updated)
-VALUES (:id, :name, :date_created, :date_updated)
+(id, name, created_at, updated_at)
+VALUES (:id, :name, :created_at, :updated_at)

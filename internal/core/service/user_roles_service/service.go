@@ -32,9 +32,9 @@ func (c *Service) Create(ctx context.Context, nur user_roles.NewUserRole) (user_
 	now := time.Now()
 
 	userRole := user_roles.UserRole{
-		UserID:      nur.UserID,
-		RoleID:      nur.RoleID,
-		DateCreated: now,
+		UserID:    nur.UserID,
+		RoleID:    nur.RoleID,
+		CreatedAt: now,
 	}
 
 	if err := c.storer.Create(ctx, userRole); err != nil {

@@ -7,10 +7,11 @@ CREATE TABLE users
     password_hash TEXT        NOT NULL,
     department    TEXT        NULL,
     enabled       BOOLEAN     NOT NULL,
-    date_created  TIMESTAMP   NOT NULL,
-    date_updated  TIMESTAMP   NOT NULL,
+    created_at    TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at    TIMESTAMP   NOT NULL,
+    last_login    TIMESTAMP
 
     PRIMARY KEY (id)
 );
 
-CREATE INDEX IF NOT EXISTS users_email_idx ON users ("email");
+CREATE INDEX users_email_idx ON users("email");

@@ -52,7 +52,7 @@ func (c *Service) NewWithTx(tx pgsql.CommitRollbacker) (*Service, error) {
 func (c *Service) Create(ctx context.Context, nu user.NewUser) (user.User, error) {
 	hash, err := bcrypt.GenerateFromPassword([]byte(nu.Password), bcrypt.DefaultCost)
 	if err != nil {
-		return user.User{}, fmt.Errorf("generatefrompassword: %w", err)
+		return user.User{}, fmt.Errorf("generate_from_password: %w", err)
 	}
 
 	now := time.Now()
@@ -64,8 +64,8 @@ func (c *Service) Create(ctx context.Context, nu user.NewUser) (user.User, error
 		PasswordHash: hash,
 		Department:   nu.Department,
 		Enabled:      true,
-		DateCreated:  now,
-		DateUpdated:  now,
+		CreatedAt:    now,
+		UpdatedAt:    now,
 	}
 
 	if err := c.storer.Create(ctx, usr); err != nil {
@@ -100,7 +100,7 @@ func (c *Service) Update(ctx context.Context, usr user.User, uu user.UpdateUser)
 	if uu.Enabled != nil {
 		usr.Enabled = *uu.Enabled
 	}
-	usr.DateUpdated = time.Now()
+	usr.UpdatedAt = time.Now()
 
 	if err := c.storer.Update(ctx, usr); err != nil {
 		return user.User{}, fmt.Errorf("update: %w", err)

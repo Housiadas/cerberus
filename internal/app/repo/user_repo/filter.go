@@ -27,13 +27,13 @@ func applyFilter(filter user.QueryFilter, data map[string]any, buf *bytes.Buffer
 	}
 
 	if filter.StartCreatedDate != nil {
-		data["start_date_created"] = filter.StartCreatedDate.UTC()
-		wc = append(wc, "date_created >= :start_date_created")
+		data["start_created_at"] = filter.StartCreatedDate.UTC()
+		wc = append(wc, "created_at >= :start_created_at")
 	}
 
 	if filter.EndCreatedDate != nil {
-		data["end_date_created"] = filter.EndCreatedDate.UTC()
-		wc = append(wc, "date_created <= :end_date_created")
+		data["end_created_at"] = filter.EndCreatedDate.UTC()
+		wc = append(wc, "created_at <= :end_created_at")
 	}
 
 	if len(wc) > 0 {

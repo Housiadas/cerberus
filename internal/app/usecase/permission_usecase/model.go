@@ -14,10 +14,10 @@ import (
 
 // Permission represents information about an individual permission.
 type Permission struct {
-	ID          string `json:"id"`
-	Name        string `json:"name"`
-	DateCreated string `json:"dateCreated"`
-	DateUpdated string `json:"dateUpdated"`
+	ID        string `json:"id"`
+	Name      string `json:"name"`
+	CreatedAt string `json:"CreatedAt"`
+	UpdatedAt string `json:"UpdatedAt"`
 }
 
 type PermissionPageResults struct {
@@ -33,10 +33,10 @@ func (p Permission) Encode() ([]byte, string, error) {
 
 func toAppPermission(p permission.Permission) Permission {
 	return Permission{
-		ID:          p.ID.String(),
-		Name:        p.Name.String(),
-		DateCreated: p.DateCreated.Format(time.RFC3339),
-		DateUpdated: p.DateUpdated.Format(time.RFC3339),
+		ID:        p.ID.String(),
+		Name:      p.Name.String(),
+		CreatedAt: p.CreatedAt.Format(time.RFC3339),
+		UpdatedAt: p.UpdatedAt.Format(time.RFC3339),
 	}
 }
 

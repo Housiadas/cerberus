@@ -55,8 +55,8 @@ func Test_API_User_Create_200(t *testing.T) {
 				expResp := exp.(*user_usecase.User)
 
 				expResp.ID = gotResp.ID
-				expResp.DateCreated = gotResp.DateCreated
-				expResp.DateUpdated = gotResp.DateUpdated
+				expResp.CreatedAt = gotResp.CreatedAt
+				expResp.UpdatedAt = gotResp.UpdatedAt
 
 				return cmp.Diff(gotResp, expResp)
 			},

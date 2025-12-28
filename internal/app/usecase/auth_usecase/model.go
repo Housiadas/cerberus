@@ -7,20 +7,20 @@ import (
 	"github.com/Housiadas/cerberus/pkg/errs"
 )
 
-// AuthLogin defines the data needed to authenticate a user.
-type AuthLogin struct {
+// LoginReq defines the data needed to authenticate a user.
+type LoginReq struct {
 	Email    string `json:"email" validate:"email"`
 	Password string `json:"password"`
 }
 
 // Encode implements the encoder interface.
-func (l *AuthLogin) Encode() ([]byte, string, error) {
+func (l *LoginReq) Encode() ([]byte, string, error) {
 	data, err := json.Marshal(l)
 	return data, "application/json", err
 }
 
 // Validate checks the data in the model is considered clean.
-func (l *AuthLogin) Validate() error {
+func (l *LoginReq) Validate() error {
 	if err := validation.Check(l); err != nil {
 		return errs.Newf(errs.InvalidArgument, "validation: %s", err)
 	}
@@ -29,24 +29,41 @@ func (l *AuthLogin) Validate() error {
 }
 
 // Decode implements the decoder interface.
-func (l *AuthLogin) Decode(data []byte) error {
+func (l *LoginReq) Decode(data []byte) error {
 	return json.Unmarshal(data, l)
 }
 
 // =================================================================
 
-type AuthRefreshToken struct {
+type RefreshTokenReq struct {
 	Token string `json:"refresh_token"`
 }
 
 // Encode implements the encoder interface.
-func (r *AuthRefreshToken) Encode() ([]byte, string, error) {
+func (r *RefreshTokenReq) Encode() ([]byte, string, error) {
 	data, err := json.Marshal(r)
 	return data, "application/json", err
 }
 
 // Decode implements the decoder interface.
-func (r *AuthRefreshToken) Decode(data []byte) error {
+func (r *RefreshTokenReq) Decode(data []byte) error {
+	return json.Unmarshal(data, r)
+}
+
+// =================================================================
+
+type LogoutReq struct {
+	Token string `json:"refresh_token"`
+}
+
+// Encode implements the encoder interface.
+func (r *LogoutReq) Encode() ([]byte, string, error) {
+	data, err := json.Marshal(r)
+	return data, "application/json", err
+}
+
+// Decode implements the decoder interface.
+func (r *LogoutReq) Decode(data []byte) error {
 	return json.Unmarshal(data, r)
 }
 

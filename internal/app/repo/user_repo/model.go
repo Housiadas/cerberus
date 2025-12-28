@@ -20,8 +20,8 @@ type userDB struct {
 	PasswordHash []byte         `db:"password_hash"`
 	Department   sql.NullString `db:"department"`
 	Enabled      bool           `db:"enabled"`
-	DateCreated  time.Time      `db:"date_created"`
-	DateUpdated  time.Time      `db:"date_updated"`
+	CreatedAt    time.Time      `db:"created_at"`
+	UpdatedAt    time.Time      `db:"updated_at"`
 }
 
 func toUserDB(usr user.User) userDB {
@@ -34,9 +34,9 @@ func toUserDB(usr user.User) userDB {
 			String: usr.Department.String(),
 			Valid:  usr.Department.Valid(),
 		},
-		Enabled:     usr.Enabled,
-		DateCreated: usr.DateCreated.UTC(),
-		DateUpdated: usr.DateUpdated.UTC(),
+		Enabled:   usr.Enabled,
+		CreatedAt: usr.CreatedAt.UTC(),
+		UpdatedAt: usr.UpdatedAt.UTC(),
 	}
 }
 
@@ -62,8 +62,8 @@ func toUserDomain(db userDB) (user.User, error) {
 		PasswordHash: db.PasswordHash,
 		Enabled:      db.Enabled,
 		Department:   department,
-		DateCreated:  db.DateCreated.In(time.Local),
-		DateUpdated:  db.DateUpdated.In(time.Local),
+		CreatedAt:    db.CreatedAt.In(time.Local),
+		UpdatedAt:    db.UpdatedAt.In(time.Local),
 	}
 
 	return bus, nil

@@ -15,10 +15,10 @@ var (
 
 // Role represents information about an individual role of our system.
 type Role struct {
-	ID          uuid.UUID
-	Name        name.Name
-	DateCreated time.Time
-	DateUpdated time.Time
+	ID        uuid.UUID
+	Name      name.Name
+	CreatedAt time.Time
+	UpdatedAt time.Time
 }
 
 type NewRole struct {

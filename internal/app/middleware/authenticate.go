@@ -25,7 +25,7 @@ func (m *Middleware) AuthenticateBearer() func(next http.Handler) http.Handler {
 			}
 
 			jwtUnverified := bearerToken[7:]
-			resp, err := m.UseCase.Auth.Authenticate(ctx, jwtUnverified, auth_usecase.AccessToken)
+			resp, err := m.UseCase.Auth.Validate(ctx, jwtUnverified, auth_usecase.AccessToken)
 			if err != nil {
 				m.Error(w, err, http.StatusUnauthorized)
 			}

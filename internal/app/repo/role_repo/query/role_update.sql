@@ -1,5 +1,5 @@
 UPDATE
     roles
 SET "name"          = :name,
-    "date_updated"  = :date_updated
+    "updated_at"  = :updated_at
 WHERE id = :id

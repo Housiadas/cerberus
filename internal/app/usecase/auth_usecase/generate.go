@@ -9,12 +9,16 @@ import (
 	"github.com/google/uuid"
 )
 
-// Generate generates a signed JWT token string representing the user Claims.
-func (u *UseCase) Generate(ctx context.Context, userID string) (Token, error) {
+type accessToken struct {
+	token     string
+	expiresIn int64
+}
+
+func (u *UseCase) generateAccessToken(ctx context.Context, userID string) (accessToken, error) {
 	// get user roles name
 	roles, err := u.userRolesUsecase.GetUserRolesNames(ctx, userID)
 	if err != nil {
-		return Token{}, fmt.Errorf("roles not found: %w", err)
+		return accessToken{}, fmt.Errorf("roles not found: %w", err)
 	}
 
 	// Generating a token requires defining a set of claims
@@ -27,7 +31,7 @@ func (u *UseCase) Generate(ctx context.Context, userID string) (Token, error) {
 	// jti (JWT ID): Unique identifier; can be used to prevent the JWT from being replayed (allows a token to be used only once)
 	now := time.Now()
 
-	// Generate Access Token
+	// GenerateAccessToken Access Token
 	accessTokenID := uuid.New().String()
 	accessClaims := Claims{
 		RegisteredClaims: jwt.RegisteredClaims{
@@ -42,43 +46,19 @@ func (u *UseCase) Generate(ctx context.Context, userID string) (Token, error) {
 		Roles:   roles,
 	}
 
-	accessToken := jwt.NewWithClaims(u.method, accessClaims)
-	accessTokenString, err := accessToken.SignedString(accessTokenSecret)
+	aToken := jwt.NewWithClaims(u.method, accessClaims)
+	accessTokenString, err := aToken.SignedString(accessTokenSecret)
 	if err != nil {
-		return Token{}, fmt.Errorf("failed to sign access token: %w", err)
+		return accessToken{}, fmt.Errorf("failed to sign access token: %w", err)
 	}
 
-	// Generate Refresh Token
-	refreshTokenID := uuid.New().String()
-	refreshClaims := Claims{
-		TokenID: refreshTokenID,
-		RegisteredClaims: jwt.RegisteredClaims{
-			Subject:   userID,
-			Issuer:    u.Issuer(),
-			IssuedAt:  jwt.NewNumericDate(now),
-			NotBefore: jwt.NewNumericDate(now),
-			ExpiresAt: jwt.NewNumericDate(now.UTC().Add(refreshTokenExpiry)),
-			Audience:  []string{u.Issuer()},
-		},
-		Roles: roles,
-	}
-
-	refreshToken := jwt.NewWithClaims(jwt.SigningMethodHS256, refreshClaims)
-	refreshTokenString, err := refreshToken.SignedString(refreshTokenSecret)
+	expirationDate, err := aToken.Claims.GetExpirationTime()
 	if err != nil {
-		return Token{}, fmt.Errorf("failed to sign refresh token: %w", err)
+		return accessToken{}, fmt.Errorf("get expiration time: %w", err)
 	}
 
-	// todo: Store refresh token in database
-
-	expirationDate, err := accessToken.Claims.GetExpirationTime()
-	if err != nil {
-		return Token{}, fmt.Errorf("get expiration time: %w", err)
-	}
-
-	return Token{
-		AccessToken:  accessTokenString,
-		RefreshToken: refreshTokenString,
-		ExpiresIn:    expirationDate.Unix(),
+	return accessToken{
+		token:     accessTokenString,
+		expiresIn: expirationDate.Unix(),
 	}, nil
 }

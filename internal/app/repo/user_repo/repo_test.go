@@ -125,12 +125,12 @@ func query(service dbtest.Service, sd unitest.SeedData) []unitest.Table {
 				expResp := exp.([]user.User)
 
 				for i := range gotResp {
-					if gotResp[i].DateCreated.Format(time.RFC3339) == expResp[i].DateCreated.Format(time.RFC3339) {
-						expResp[i].DateCreated = gotResp[i].DateCreated
+					if gotResp[i].CreatedAt.Format(time.RFC3339) == expResp[i].CreatedAt.Format(time.RFC3339) {
+						expResp[i].CreatedAt = gotResp[i].CreatedAt
 					}
 
-					if gotResp[i].DateUpdated.Format(time.RFC3339) == expResp[i].DateUpdated.Format(time.RFC3339) {
-						expResp[i].DateUpdated = gotResp[i].DateUpdated
+					if gotResp[i].UpdatedAt.Format(time.RFC3339) == expResp[i].UpdatedAt.Format(time.RFC3339) {
+						expResp[i].UpdatedAt = gotResp[i].UpdatedAt
 					}
 				}
 
@@ -156,12 +156,12 @@ func query(service dbtest.Service, sd unitest.SeedData) []unitest.Table {
 
 				expResp := exp.(user.User)
 
-				if gotResp.DateCreated.Format(time.RFC3339) == expResp.DateCreated.Format(time.RFC3339) {
-					expResp.DateCreated = gotResp.DateCreated
+				if gotResp.CreatedAt.Format(time.RFC3339) == expResp.CreatedAt.Format(time.RFC3339) {
+					expResp.CreatedAt = gotResp.CreatedAt
 				}
 
-				if gotResp.DateUpdated.Format(time.RFC3339) == expResp.DateUpdated.Format(time.RFC3339) {
-					expResp.DateUpdated = gotResp.DateUpdated
+				if gotResp.UpdatedAt.Format(time.RFC3339) == expResp.UpdatedAt.Format(time.RFC3339) {
+					expResp.UpdatedAt = gotResp.UpdatedAt
 				}
 
 				return cmp.Diff(gotResp, expResp)
@@ -216,8 +216,8 @@ func create(service dbtest.Service) []unitest.Table {
 
 				expResp.ID = gotResp.ID
 				expResp.PasswordHash = gotResp.PasswordHash
-				expResp.DateCreated = gotResp.DateCreated
-				expResp.DateUpdated = gotResp.DateUpdated
+				expResp.CreatedAt = gotResp.CreatedAt
+				expResp.UpdatedAt = gotResp.UpdatedAt
 
 				return cmp.Diff(gotResp, expResp)
 			},
@@ -235,13 +235,13 @@ func update(busDomain dbtest.Service, sd unitest.SeedData) []unitest.Table {
 		{
 			Name: "basic",
 			ExpResp: user.User{
-				ID:          sd.Users[0].ID,
-				RoleID:      roleID,
-				Name:        name.MustParse("Chris Housi 2"),
-				Email:       *email,
-				Department:  name.MustParseNull("IT0"),
-				Enabled:     true,
-				DateCreated: sd.Users[0].DateCreated,
+				ID:         sd.Users[0].ID,
+				RoleID:     roleID,
+				Name:       name.MustParse("Chris Housi 2"),
+				Email:      *email,
+				Department: name.MustParseNull("IT0"),
+				Enabled:    true,
+				CreatedAt:  sd.Users[0].CreatedAt,
 			},
 			ExcFunc: func(ctx context.Context) any {
 				uu := user.UpdateUser{
@@ -272,7 +272,7 @@ func update(busDomain dbtest.Service, sd unitest.SeedData) []unitest.Table {
 				expResp := exp.(user.User)
 
 				expResp.PasswordHash = gotResp.PasswordHash
-				expResp.DateUpdated = gotResp.DateUpdated
+				expResp.UpdatedAt = gotResp.UpdatedAt
 
 				return cmp.Diff(gotResp, expResp)
 			},

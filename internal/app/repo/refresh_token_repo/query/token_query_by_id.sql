@@ -8,5 +8,5 @@ SELECT
     enabled,
     created_at,
     updated_at
-FROM users
-WHERE email = :email
+FROM refresh_tokens
+WHERE user_id = :user_id
