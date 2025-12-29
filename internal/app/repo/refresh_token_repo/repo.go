@@ -7,11 +7,10 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/Housiadas/cerberus/pkg/errs"
-	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 
 	"github.com/Housiadas/cerberus/internal/core/domain/refresh_token"
+	"github.com/Housiadas/cerberus/pkg/errs"
 	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/Housiadas/cerberus/pkg/pgsql"
 )
@@ -22,8 +21,10 @@ var (
 	tokenCreateSql string
 	//go:embed query/token_delete.sql
 	tokenDeleteSql string
-	//go:embed query/token_query_by_id.sql
-	tokenQueryByIdSql string
+	//go:embed query/token_revoke.sql
+	tokenRevokeSql string
+	//go:embed query/token_query_by_token.sql
+	tokenQueryByTokenSql string
 )
 
 type Store struct {
@@ -54,18 +55,25 @@ func (s *Store) Delete(ctx context.Context, token refresh_token.RefreshToken) er
 	return nil
 }
 
-// QueryByID gets the specified userDB from the database.
-func (s *Store) QueryByID(ctx context.Context, tokenID uuid.UUID) (refresh_token.RefreshToken, error) {
+func (s *Store) Revoke(ctx context.Context, token refresh_token.RefreshToken) error {
+	if err := pgsql.NamedExecContext(ctx, s.log, s.db, tokenRevokeSql, toTokenDB(token)); err != nil {
+		return fmt.Errorf("named_exec_context: %w", err)
+	}
+
+	return nil
+}
+
+func (s *Store) QueryByToken(ctx context.Context, token string) (refresh_token.RefreshToken, error) {
 	data := struct {
-		ID string `db:"id"`
+		Token string `db:"token"`
 	}{
-		ID: tokenID.String(),
+		Token: token,
 	}
 
 	var dbTkn tokenDB
-	if err := pgsql.NamedQueryStruct(ctx, s.log, s.db, tokenQueryByIdSql, data, &dbTkn); err != nil {
+	if err := pgsql.NamedQueryStruct(ctx, s.log, s.db, tokenQueryByTokenSql, data, &dbTkn); err != nil {
 		if errors.Is(err, pgsql.ErrDBNotFound) {
-			return refresh_token.RefreshToken{}, errs.Newf(errs.NotFound, "user not found")
+			return refresh_token.RefreshToken{}, errs.Newf(errs.NotFound, "refresh token not found")
 		}
 		return refresh_token.RefreshToken{}, fmt.Errorf("db: %w", err)
 	}

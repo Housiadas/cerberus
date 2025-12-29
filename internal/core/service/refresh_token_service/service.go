@@ -27,7 +27,7 @@ func New(log *logger.Logger, storer refresh_token.Storer) *Service {
 }
 
 // Create adds a new refresh token to the system.
-func (c *Service) Create(ctx context.Context, userID uuid.UUID, ttl time.Duration) (refresh_token.RefreshToken, error) {
+func (c *Service) Create(ctx context.Context, userID uuid.UUID, refreshTokenTTL time.Duration) (refresh_token.RefreshToken, error) {
 	now := time.Now()
 	tokenID := uuid.New()
 	tkn := refresh_token.RefreshToken{
@@ -35,7 +35,7 @@ func (c *Service) Create(ctx context.Context, userID uuid.UUID, ttl time.Duratio
 		UserID:    userID,
 		Token:     tokenID.String(),
 		CreatedAt: now,
-		ExpiresAt: now.UTC().Add(ttl),
+		ExpiresAt: now.UTC().Add(refreshTokenTTL),
 		Revoked:   false,
 	}
 
@@ -46,7 +46,7 @@ func (c *Service) Create(ctx context.Context, userID uuid.UUID, ttl time.Duratio
 	return tkn, nil
 }
 
-// Delete removes the specified user.
+// Delete removes the specified refresh_token.
 func (c *Service) Delete(ctx context.Context, tkn refresh_token.RefreshToken) error {
 	if err := c.storer.Delete(ctx, tkn); err != nil {
 		return fmt.Errorf("delete: %w", err)
@@ -55,11 +55,19 @@ func (c *Service) Delete(ctx context.Context, tkn refresh_token.RefreshToken) er
 	return nil
 }
 
-// QueryByID finds the user by the specified ID.
-func (c *Service) QueryByID(ctx context.Context, tokenID uuid.UUID) (refresh_token.RefreshToken, error) {
-	tkn, err := c.storer.QueryByID(ctx, tokenID)
+// Revoke revokes the specified refresh_token.
+func (c *Service) Revoke(ctx context.Context, tkn refresh_token.RefreshToken) error {
+	if err := c.storer.Revoke(ctx, tkn); err != nil {
+		return fmt.Errorf("delete: %w", err)
+	}
+
+	return nil
+}
+
+func (c *Service) QueryByToken(ctx context.Context, token string) (refresh_token.RefreshToken, error) {
+	tkn, err := c.storer.QueryByToken(ctx, token)
 	if err != nil {
-		return refresh_token.RefreshToken{}, fmt.Errorf("query: userID[%s]: %w", tokenID, err)
+		return refresh_token.RefreshToken{}, fmt.Errorf("query by token: %w", err)
 	}
 
 	return tkn, nil

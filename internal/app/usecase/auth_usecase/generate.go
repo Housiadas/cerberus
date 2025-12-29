@@ -30,8 +30,6 @@ func (u *UseCase) generateAccessToken(ctx context.Context, userID string) (acces
 	// iat (issued at time): Time at which the JWT was issued; can be used to determine age of the JWT
 	// jti (JWT ID): Unique identifier; can be used to prevent the JWT from being replayed (allows a token to be used only once)
 	now := time.Now()
-
-	// GenerateAccessToken Access Token
 	accessTokenID := uuid.New().String()
 	accessClaims := Claims{
 		RegisteredClaims: jwt.RegisteredClaims{
@@ -39,7 +37,7 @@ func (u *UseCase) generateAccessToken(ctx context.Context, userID string) (acces
 			Issuer:    u.Issuer(),
 			IssuedAt:  jwt.NewNumericDate(now),
 			NotBefore: jwt.NewNumericDate(now),
-			ExpiresAt: jwt.NewNumericDate(now.UTC().Add(accessTokenExpiry)),
+			ExpiresAt: jwt.NewNumericDate(now.UTC().Add(accessTokenTTL)),
 			Audience:  []string{u.Issuer()},
 		},
 		TokenID: accessTokenID,

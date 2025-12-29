@@ -6,6 +6,7 @@ import (
 
 	"github.com/google/uuid"
 
+	"github.com/Housiadas/cerberus/internal/core/domain/refresh_token"
 	"github.com/Housiadas/cerberus/internal/core/service/refresh_token_service"
 	"github.com/Housiadas/cerberus/pkg/errs"
 )
@@ -22,17 +23,34 @@ func NewUseCase(refreshTokenService *refresh_token_service.Service) *UseCase {
 	}
 }
 
-// Create adds a new role to the system.
 func (uc *UseCase) Create(ctx context.Context, userID string, refreshTokenTTL time.Duration) (RefreshToken, error) {
 	userUUID, err := uuid.Parse(userID)
 	if err != nil {
 		return RefreshToken{}, errs.Newf(errs.InvalidArgument, "could not parse uuid: %s", err)
 	}
 
-	rol, err := uc.refreshTokenService.Create(ctx, userUUID, refreshTokenTTL)
+	tkn, err := uc.refreshTokenService.Create(ctx, userUUID, refreshTokenTTL)
 	if err != nil {
-		return RefreshToken{}, errs.Newf(errs.Internal, "create: rol[%+v]: %s", rol, err)
+		return RefreshToken{}, errs.Newf(errs.Internal, "create: refresh_token[%+v]: %s", tkn, err)
 	}
 
-	return toAppToken(rol), nil
+	return toAppToken(tkn), nil
+}
+
+func (uc *UseCase) QueryByToken(ctx context.Context, token string) (RefreshToken, error) {
+	tkn, err := uc.refreshTokenService.QueryByToken(ctx, token)
+	if err != nil {
+		return RefreshToken{}, errs.Newf(errs.Internal, "query by token: [%+v]: %s", tkn, err)
+	}
+
+	return toAppToken(tkn), nil
+}
+
+func (uc *UseCase) Revoke(ctx context.Context, tkn refresh_token.RefreshToken) error {
+	err := uc.refreshTokenService.Revoke(ctx, tkn)
+	if err != nil {
+		return errs.Newf(errs.Internal, "revoke issue: [%+v]: %s", tkn, err)
+	}
+
+	return nil
 }

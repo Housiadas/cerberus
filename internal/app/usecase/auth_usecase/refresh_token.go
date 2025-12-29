@@ -3,43 +3,45 @@ package auth_usecase
 import (
 	"context"
 	"fmt"
-
-	"github.com/Housiadas/cerberus/pkg/errs"
+	"time"
 )
 
-func (u *UseCase) createRefreshToken(_ context.Context, userID string) (string, error) {
-	return "", nil
-}
-
 func (u *UseCase) RefreshAccessToken(ctx context.Context, authRefresh RefreshTokenReq) (Token, error) {
-	// Validate refresh token
-	claims, err := u.Validate(ctx, authRefresh.Token)
+	// Retrieve the refresh token
+	rToken, err := u.refreshTokenUsecase.QueryByToken(ctx, authRefresh.Token)
 	if err != nil {
-		return Token{}, errs.New(errs.Unauthenticated, err)
+		return Token{}, ErrInvalidToken
 	}
 
-	// Check if a refresh token exists in store
-	// Check if the refresh token exists in store
-	//if !refreshTokenStore[claims.TokenID] {
-	//	return Token{}, fmt.Errorf("refresh token not exists: %w", err)
-	//}
+	// Check if the token is valid
+	if rToken.Revoked {
+		return Token{}, ErrInvalidToken
+	}
 
-	// Revoke old refresh token
+	// Check if the token has expired
+	expiresAt, err := time.Parse(time.RFC3339, rToken.ExpiresAt)
+	if err != nil {
+		return Token{}, fmt.Errorf("parse time: %w", err)
+	}
+	if time.Now().UTC().After(expiresAt) {
+		return Token{}, ErrExpiredToken
+	}
+
+	// Get the user
+	usr, err := u.userUsecase.QueryByID(ctx, rToken.UserID)
+	if err != nil {
+		return Token{}, fmt.Errorf("user not found: %w", err)
+	}
 
 	// Generate a new token pair
-	aToken, err := u.generateAccessToken(ctx, claims.Subject)
+	aToken, err := u.generateAccessToken(ctx, usr.ID)
 	if err != nil {
 		return Token{}, fmt.Errorf("generate access token: %w", err)
 	}
 
-	rToken, err := u.createRefreshToken(ctx, claims.Subject)
-	if err != nil {
-		return Token{}, fmt.Errorf("create refresh token: %w", err)
-	}
-
 	return Token{
 		AccessToken:  aToken.token,
-		RefreshToken: rToken,
+		RefreshToken: rToken.Token,
 		ExpiresIn:    aToken.expiresIn,
 	}, nil
 }

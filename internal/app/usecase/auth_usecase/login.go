@@ -20,19 +20,21 @@ func (u *UseCase) Login(ctx context.Context, authLogin LoginReq) (Token, error) 
 		return Token{}, errs.New(errs.Unauthenticated, err)
 	}
 
+	// Generate JWT access token
 	aToken, err := u.generateAccessToken(ctx, usr.ID)
 	if err != nil {
 		return Token{}, fmt.Errorf("generate access token: %w", err)
 	}
 
-	rToken, err := u.generateRefreshToken(ctx, usr.ID)
+	// Create a refresh token
+	tkn, err := u.refreshTokenUsecase.Create(ctx, usr.ID, refreshTokenTTL)
 	if err != nil {
-		return Token{}, fmt.Errorf("generate refresh token: %w", err)
+		return Token{}, fmt.Errorf("create refresh token: %w", err)
 	}
 
 	return Token{
 		AccessToken:  aToken.token,
-		RefreshToken: rToken.token,
+		RefreshToken: tkn.Token,
 		ExpiresIn:    aToken.expiresIn,
 	}, nil
 }
