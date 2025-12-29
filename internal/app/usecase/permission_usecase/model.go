@@ -8,8 +8,8 @@ import (
 	"github.com/Housiadas/cerberus/internal/common/validation"
 	"github.com/Housiadas/cerberus/internal/core/domain/name"
 	"github.com/Housiadas/cerberus/internal/core/domain/permission"
-	"github.com/Housiadas/cerberus/pkg/errs"
-	"github.com/Housiadas/cerberus/pkg/page"
+	"github.com/Housiadas/cerberus/pkg/web"
+	"github.com/Housiadas/cerberus/pkg/web/errs"
 )
 
 // Permission represents information about an individual permission.
@@ -21,8 +21,8 @@ type Permission struct {
 }
 
 type PermissionPageResults struct {
-	Data     []Permission  `json:"data"`
-	Metadata page.Metadata `json:"metadata"`
+	Data     []Permission `json:"data"`
+	Metadata web.Metadata `json:"metadata"`
 }
 
 // Encode implements the encoder interface.

@@ -4,8 +4,8 @@ import (
 	"net/http"
 	"runtime/debug"
 
-	"github.com/Housiadas/cerberus/pkg/errs"
 	"github.com/Housiadas/cerberus/pkg/metrics"
+	"github.com/Housiadas/cerberus/pkg/web/errs"
 )
 
 // Recoverer recovers from panics and converts the panic to an error,

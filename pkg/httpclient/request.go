@@ -9,9 +9,9 @@ import (
 	"net/url"
 	"path"
 
+	"github.com/Housiadas/cerberus/pkg/web/errs"
 	"go.opentelemetry.io/otel/attribute"
 
-	"github.com/Housiadas/cerberus/pkg/errs"
 	"github.com/Housiadas/cerberus/pkg/otel"
 )
 

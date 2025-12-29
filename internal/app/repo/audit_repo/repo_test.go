@@ -4,11 +4,13 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"github.com/Housiadas/cerberus/internal/core/service/audit_service"
-	"github.com/google/uuid"
 	"sort"
 	"testing"
 	"time"
+
+	"github.com/Housiadas/cerberus/internal/core/service/audit_service"
+	"github.com/Housiadas/cerberus/pkg/web"
+	"github.com/google/uuid"
 
 	"github.com/google/go-cmp/cmp"
 
@@ -18,7 +20,6 @@ import (
 	"github.com/Housiadas/cerberus/internal/core/domain/entity"
 	"github.com/Housiadas/cerberus/internal/core/service/user_service"
 	"github.com/Housiadas/cerberus/pkg/order"
-	"github.com/Housiadas/cerberus/pkg/page"
 )
 
 func Test_Audit(t *testing.T) {
@@ -82,7 +83,7 @@ func query(core dbtest.Service, sd unitest.SeedData) []unitest.Table {
 
 				orderBy := order.NewBy(audit.OrderByObjName, order.ASC)
 
-				resp, err := core.Audit.Query(ctx, filter, orderBy, page.MustParse("1", "10"))
+				resp, err := core.Audit.Query(ctx, filter, orderBy, web.MustParse("1", "10"))
 				if err != nil {
 					return err
 				}

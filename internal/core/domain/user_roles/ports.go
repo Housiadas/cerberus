@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/Housiadas/cerberus/pkg/order"
-	"github.com/Housiadas/cerberus/pkg/page"
+	"github.com/Housiadas/cerberus/pkg/web"
 	"github.com/google/uuid"
 )
 
@@ -13,6 +13,6 @@ type Storer interface {
 	Create(ctx context.Context, ur UserRole) error
 	Delete(ctx context.Context, ur UserRole) error
 	Count(ctx context.Context, filter QueryFilter) (int, error)
-	Query(ctx context.Context, filter QueryFilter, orderBy order.By, page page.Page) ([]UserRole, error)
+	Query(ctx context.Context, filter QueryFilter, orderBy order.By, page web.Page) ([]UserRole, error)
 	GetUserRoleNames(ctx context.Context, userID uuid.UUID) ([]string, error)
 }

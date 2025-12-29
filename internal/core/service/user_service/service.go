@@ -8,13 +8,13 @@ import (
 	"net/mail"
 	"time"
 
+	"github.com/Housiadas/cerberus/pkg/web"
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 
 	"github.com/Housiadas/cerberus/internal/core/domain/user"
 	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/Housiadas/cerberus/pkg/order"
-	"github.com/Housiadas/cerberus/pkg/page"
 	"github.com/Housiadas/cerberus/pkg/pgsql"
 )
 
@@ -119,7 +119,7 @@ func (c *Service) Delete(ctx context.Context, usr user.User) error {
 }
 
 // Query retrieves a list of existing users.
-func (c *Service) Query(ctx context.Context, filter user.QueryFilter, orderBy order.By, page page.Page) ([]user.User, error) {
+func (c *Service) Query(ctx context.Context, filter user.QueryFilter, orderBy order.By, page web.Page) ([]user.User, error) {
 	users, err := c.storer.Query(ctx, filter, orderBy, page)
 	if err != nil {
 		return nil, fmt.Errorf("query: %w", err)

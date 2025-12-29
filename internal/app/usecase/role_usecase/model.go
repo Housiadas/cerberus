@@ -8,8 +8,8 @@ import (
 	"github.com/Housiadas/cerberus/internal/common/validation"
 	"github.com/Housiadas/cerberus/internal/core/domain/name"
 	"github.com/Housiadas/cerberus/internal/core/domain/role"
-	"github.com/Housiadas/cerberus/pkg/errs"
-	"github.com/Housiadas/cerberus/pkg/page"
+	"github.com/Housiadas/cerberus/pkg/web"
+	"github.com/Housiadas/cerberus/pkg/web/errs"
 )
 
 // =============================================================================
@@ -23,8 +23,8 @@ type Role struct {
 }
 
 type RolePageResult struct {
-	Data     []Role        `json:"data"`
-	Metadata page.Metadata `json:"metadata"`
+	Data     []Role       `json:"data"`
+	Metadata web.Metadata `json:"metadata"`
 }
 
 // Encode implements the encoder interface.

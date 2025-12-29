@@ -10,8 +10,8 @@ import (
 
 	"github.com/Housiadas/cerberus/internal/app/usecase/audit_usecase"
 	"github.com/Housiadas/cerberus/internal/common/apitest"
-	"github.com/Housiadas/cerberus/pkg/errs"
-	"github.com/Housiadas/cerberus/pkg/page"
+	"github.com/Housiadas/cerberus/pkg/web"
+	"github.com/Housiadas/cerberus/pkg/web/errs"
 )
 
 func Test_API_Audit_Query_200(t *testing.T) {
@@ -37,9 +37,9 @@ func Test_API_Audit_Query_200(t *testing.T) {
 			URL:        "/api/v1/audits?page=1&rows=10&orderBy=obj_name,ASC&obj_name=ObjName",
 			StatusCode: http.StatusOK,
 			Method:     http.MethodGet,
-			GotResp:    &page.Result[audit_usecase.Audit]{},
-			ExpResp: &page.Result[audit_usecase.Audit]{
-				Metadata: page.Metadata{
+			GotResp:    &web.Result[audit_usecase.Audit]{},
+			ExpResp: &web.Result[audit_usecase.Audit]{
+				Metadata: web.Metadata{
 					FirstPage:   1,
 					CurrentPage: 1,
 					LastPage:    1,
@@ -49,12 +49,12 @@ func Test_API_Audit_Query_200(t *testing.T) {
 				Data: toAppAudits(sd.Admins[0].Audits),
 			},
 			CmpFunc: func(got any, exp any) string {
-				gotResp, exists := got.(*page.Result[audit_usecase.Audit])
+				gotResp, exists := got.(*web.Result[audit_usecase.Audit])
 				if !exists {
 					return "error occurred"
 				}
 
-				expResp := exp.(*page.Result[audit_usecase.Audit])
+				expResp := exp.(*web.Result[audit_usecase.Audit])
 
 				for i := range gotResp.Data {
 					if gotResp.Data[i].Timestamp == expResp.Data[i].Timestamp {

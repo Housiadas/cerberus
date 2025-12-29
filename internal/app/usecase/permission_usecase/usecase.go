@@ -6,9 +6,9 @@ import (
 
 	"github.com/Housiadas/cerberus/internal/common/validation"
 	"github.com/Housiadas/cerberus/internal/core/service/permission_service"
-	"github.com/Housiadas/cerberus/pkg/errs"
 	"github.com/Housiadas/cerberus/pkg/order"
-	"github.com/Housiadas/cerberus/pkg/page"
+	"github.com/Housiadas/cerberus/pkg/web"
+	"github.com/Housiadas/cerberus/pkg/web/errs"
 	"github.com/google/uuid"
 )
 
@@ -99,31 +99,31 @@ func (uc *UseCase) QueryByID(ctx context.Context, permissionID string) (Permissi
 }
 
 // Query returns a list of permissions with paging.
-func (uc *UseCase) Query(ctx context.Context, qp AppQueryParams) (page.Result[Permission], error) {
-	p, err := page.Parse(qp.Page, qp.Rows)
+func (uc *UseCase) Query(ctx context.Context, qp AppQueryParams) (web.Result[Permission], error) {
+	p, err := web.Parse(qp.Page, qp.Rows)
 	if err != nil {
-		return page.Result[Permission]{}, validation.ErrorfieldErrors("page", err)
+		return web.Result[Permission]{}, validation.ErrorfieldErrors("page", err)
 	}
 
 	filter, err := parseFilter(qp)
 	if err != nil {
-		return page.Result[Permission]{}, err
+		return web.Result[Permission]{}, err
 	}
 
 	orderBy, err := order.Parse(orderByFields, qp.OrderBy, defaultOrderBy)
 	if err != nil {
-		return page.Result[Permission]{}, validation.ErrorfieldErrors("order", err)
+		return web.Result[Permission]{}, validation.ErrorfieldErrors("order", err)
 	}
 
 	perms, err := uc.permissionService.Query(ctx, filter, orderBy, p)
 	if err != nil {
-		return page.Result[Permission]{}, errs.Errorf(errs.Internal, "query: %s", err)
+		return web.Result[Permission]{}, errs.Errorf(errs.Internal, "query: %s", err)
 	}
 
 	total, err := uc.permissionService.Count(ctx, filter)
 	if err != nil {
-		return page.Result[Permission]{}, errs.Errorf(errs.Internal, "count: %s", err)
+		return web.Result[Permission]{}, errs.Errorf(errs.Internal, "count: %s", err)
 	}
 
-	return page.NewResult(toAppPermissions(perms), total, p), nil
+	return web.NewResult(toAppPermissions(perms), total, p), nil
 }

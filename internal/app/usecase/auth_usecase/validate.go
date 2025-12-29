@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/Housiadas/cerberus/pkg/errs"
+	"github.com/Housiadas/cerberus/pkg/web/errs"
 	"github.com/golang-jwt/jwt/v5"
 )
 

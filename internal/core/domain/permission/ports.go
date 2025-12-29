@@ -4,8 +4,8 @@ import (
 	"context"
 
 	"github.com/Housiadas/cerberus/pkg/order"
-	"github.com/Housiadas/cerberus/pkg/page"
 	"github.com/Housiadas/cerberus/pkg/pgsql"
+	"github.com/Housiadas/cerberus/pkg/web"
 	"github.com/google/uuid"
 )
 
@@ -16,6 +16,6 @@ type Storer interface {
 	Update(ctx context.Context, p Permission) error
 	Delete(ctx context.Context, p Permission) error
 	Count(ctx context.Context, filter QueryFilter) (int, error)
-	Query(ctx context.Context, filter QueryFilter, orderBy order.By, page page.Page) ([]Permission, error)
+	Query(ctx context.Context, filter QueryFilter, orderBy order.By, page web.Page) ([]Permission, error)
 	QueryByID(ctx context.Context, permissionID uuid.UUID) (Permission, error)
 }

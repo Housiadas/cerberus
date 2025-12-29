@@ -5,8 +5,8 @@ import (
 	"net/http"
 
 	auditUsacase "github.com/Housiadas/cerberus/internal/app/usecase/audit_usecase"
-	"github.com/Housiadas/cerberus/pkg/errs"
 	"github.com/Housiadas/cerberus/pkg/web"
+	"github.com/Housiadas/cerberus/pkg/web/errs"
 )
 
 func (h *Handler) auditQuery(ctx context.Context, _ http.ResponseWriter, r *http.Request) web.Encoder {

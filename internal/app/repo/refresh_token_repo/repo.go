@@ -7,10 +7,10 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/Housiadas/cerberus/pkg/web/errs"
 	"github.com/jmoiron/sqlx"
 
 	"github.com/Housiadas/cerberus/internal/core/domain/refresh_token"
-	"github.com/Housiadas/cerberus/pkg/errs"
 	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/Housiadas/cerberus/pkg/pgsql"
 )

@@ -5,8 +5,8 @@ import (
 	"net/http"
 
 	"github.com/Housiadas/cerberus/internal/app/usecase/system_usecase"
-	"github.com/Housiadas/cerberus/pkg/errs"
 	"github.com/Housiadas/cerberus/pkg/web"
+	"github.com/Housiadas/cerberus/pkg/web/errs"
 )
 
 // readiness checks if the database is ready and if not will return a 500 status.

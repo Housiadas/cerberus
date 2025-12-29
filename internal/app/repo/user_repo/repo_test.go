@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/Housiadas/cerberus/pkg/web"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
@@ -17,7 +18,6 @@ import (
 	"github.com/Housiadas/cerberus/internal/core/domain/name"
 	"github.com/Housiadas/cerberus/internal/core/domain/user"
 	"github.com/Housiadas/cerberus/internal/core/service/user_service"
-	"github.com/Housiadas/cerberus/pkg/page"
 )
 
 func Test_User(t *testing.T) {
@@ -109,7 +109,7 @@ func query(service dbtest.Service, sd unitest.SeedData) []unitest.Table {
 					Name: dbtest.NamePointer("Name"),
 				}
 
-				resp, err := service.User.Query(ctx, filter, user.DefaultOrderBy, page.MustParse("1", "10"))
+				resp, err := service.User.Query(ctx, filter, user.DefaultOrderBy, web.MustParse("1", "10"))
 				if err != nil {
 					return err
 				}

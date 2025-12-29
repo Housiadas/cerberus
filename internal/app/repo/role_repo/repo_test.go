@@ -12,7 +12,7 @@ import (
 	"github.com/Housiadas/cerberus/internal/core/domain/name"
 	"github.com/Housiadas/cerberus/internal/core/domain/role"
 	"github.com/Housiadas/cerberus/internal/core/service/role_service"
-	"github.com/Housiadas/cerberus/pkg/page"
+	"github.com/Housiadas/cerberus/pkg/web"
 	"github.com/google/go-cmp/cmp"
 )
 
@@ -79,7 +79,7 @@ func query(service dbtest.Service, sd unitest.SeedData) []unitest.Table {
 					Name: dbtest.NamePointer("Name"),
 				}
 
-				resp, err := service.Role.Query(ctx, filter, role.DefaultOrderBy, page.MustParse("1", "10"))
+				resp, err := service.Role.Query(ctx, filter, role.DefaultOrderBy, web.MustParse("1", "10"))
 				if err != nil {
 					return err
 				}

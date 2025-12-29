@@ -6,13 +6,13 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/Housiadas/cerberus/pkg/web"
 	"github.com/google/uuid"
 
 	"github.com/Housiadas/cerberus/internal/core/domain/audit"
 	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/Housiadas/cerberus/pkg/order"
 	"github.com/Housiadas/cerberus/pkg/otel"
-	"github.com/Housiadas/cerberus/pkg/page"
 )
 
 // Service manages the set of APIs for audit access.
@@ -59,7 +59,7 @@ func (b *Service) Create(ctx context.Context, na audit.NewAudit) (audit.Audit, e
 }
 
 // Query retrieves a list of existing audit records.
-func (b *Service) Query(ctx context.Context, filter audit.QueryFilter, orderBy order.By, page page.Page) ([]audit.Audit, error) {
+func (b *Service) Query(ctx context.Context, filter audit.QueryFilter, orderBy order.By, page web.Page) ([]audit.Audit, error) {
 	ctx, span := otel.AddSpan(ctx, "repo.audit.query")
 	defer span.End()
 

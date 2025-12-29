@@ -6,9 +6,9 @@ import (
 
 	"github.com/Housiadas/cerberus/internal/common/validation"
 	"github.com/Housiadas/cerberus/internal/core/service/user_roles_service"
-	"github.com/Housiadas/cerberus/pkg/errs"
 	"github.com/Housiadas/cerberus/pkg/order"
-	"github.com/Housiadas/cerberus/pkg/page"
+	"github.com/Housiadas/cerberus/pkg/web"
+	"github.com/Housiadas/cerberus/pkg/web/errs"
 	"github.com/google/uuid"
 )
 
@@ -25,33 +25,33 @@ func NewUseCase(service *user_roles_service.Service) *UseCase {
 }
 
 // Query returns a list of rows with paging.
-func (uc *UseCase) Query(ctx context.Context, qp AppQueryParams) (page.Result[UserRole], error) {
-	p, err := page.Parse(qp.Page, qp.Rows)
+func (uc *UseCase) Query(ctx context.Context, qp AppQueryParams) (web.Result[UserRole], error) {
+	p, err := web.Parse(qp.Page, qp.Rows)
 	if err != nil {
-		return page.Result[UserRole]{}, validation.ErrorfieldErrors("page", err)
+		return web.Result[UserRole]{}, validation.ErrorfieldErrors("page", err)
 	}
 
 	filter, err := parseFilter(qp)
 	if err != nil {
-		return page.Result[UserRole]{}, err
+		return web.Result[UserRole]{}, err
 	}
 
 	ob, err := order.Parse(orderByFields, qp.OrderBy, defaultOrderBy)
 	if err != nil {
-		return page.Result[UserRole]{}, validation.ErrorfieldErrors("order", err)
+		return web.Result[UserRole]{}, validation.ErrorfieldErrors("order", err)
 	}
 
 	rows, err := uc.service.Query(ctx, filter, ob, p)
 	if err != nil {
-		return page.Result[UserRole]{}, errs.Errorf(errs.Internal, "query: %s", err)
+		return web.Result[UserRole]{}, errs.Errorf(errs.Internal, "query: %s", err)
 	}
 
 	total, err := uc.service.Count(ctx, filter)
 	if err != nil {
-		return page.Result[UserRole]{}, errs.Errorf(errs.Internal, "count: %s", err)
+		return web.Result[UserRole]{}, errs.Errorf(errs.Internal, "count: %s", err)
 	}
 
-	return page.NewResult(toManyUserRolesPermissions(rows), total, p), nil
+	return web.NewResult(toManyUserRolesPermissions(rows), total, p), nil
 }
 
 func (uc *UseCase) GetUserRolesNames(ctx context.Context, userID string) ([]string, error) {

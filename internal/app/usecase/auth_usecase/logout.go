@@ -3,7 +3,7 @@ package auth_usecase
 import (
 	"context"
 
-	"github.com/Housiadas/cerberus/pkg/errs"
+	"github.com/Housiadas/cerberus/pkg/web/errs"
 )
 
 func (u *UseCase) Logout(ctx context.Context, userID string, req LogoutReq) error {

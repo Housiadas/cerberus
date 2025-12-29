@@ -9,9 +9,9 @@ import (
 	"github.com/Housiadas/cerberus/internal/common/validation"
 	"github.com/Housiadas/cerberus/internal/core/domain/user"
 	"github.com/Housiadas/cerberus/internal/core/service/user_service"
-	"github.com/Housiadas/cerberus/pkg/errs"
 	"github.com/Housiadas/cerberus/pkg/order"
-	"github.com/Housiadas/cerberus/pkg/page"
+	"github.com/Housiadas/cerberus/pkg/web"
+	"github.com/Housiadas/cerberus/pkg/web/errs"
 	"github.com/google/uuid"
 )
 
@@ -90,33 +90,33 @@ func (a *UseCase) Delete(ctx context.Context, userID string) error {
 }
 
 // Query returns a list of users with paging.
-func (a *UseCase) Query(ctx context.Context, qp AppQueryParams) (page.Result[User], error) {
-	p, err := page.Parse(qp.Page, qp.Rows)
+func (a *UseCase) Query(ctx context.Context, qp AppQueryParams) (web.Result[User], error) {
+	p, err := web.Parse(qp.Page, qp.Rows)
 	if err != nil {
-		return page.Result[User]{}, validation.ErrorfieldErrors("page", err)
+		return web.Result[User]{}, validation.ErrorfieldErrors("page", err)
 	}
 
 	filter, err := parseFilter(qp)
 	if err != nil {
-		return page.Result[User]{}, err
+		return web.Result[User]{}, err
 	}
 
 	orderBy, err := order.Parse(orderByFields, qp.OrderBy, defaultOrderBy)
 	if err != nil {
-		return page.Result[User]{}, validation.ErrorfieldErrors("order", err)
+		return web.Result[User]{}, validation.ErrorfieldErrors("order", err)
 	}
 
 	usrs, err := a.userCore.Query(ctx, filter, orderBy, p)
 	if err != nil {
-		return page.Result[User]{}, errs.Errorf(errs.Internal, "query: %s", err)
+		return web.Result[User]{}, errs.Errorf(errs.Internal, "query: %s", err)
 	}
 
 	total, err := a.userCore.Count(ctx, filter)
 	if err != nil {
-		return page.Result[User]{}, errs.Errorf(errs.Internal, "count: %s", err)
+		return web.Result[User]{}, errs.Errorf(errs.Internal, "count: %s", err)
 	}
 
-	return page.NewResult(toAppUsers(usrs), total, p), nil
+	return web.NewResult(toAppUsers(usrs), total, p), nil
 }
 
 // QueryByID returns a user by its Ia.

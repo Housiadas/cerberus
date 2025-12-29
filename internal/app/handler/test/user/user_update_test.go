@@ -6,12 +6,12 @@ import (
 	"testing"
 	"time"
 
+	"github.com/Housiadas/cerberus/pkg/web/errs"
 	"github.com/google/go-cmp/cmp"
 
 	"github.com/Housiadas/cerberus/internal/app/usecase/user_usecase"
 	"github.com/Housiadas/cerberus/internal/common/apitest"
 	"github.com/Housiadas/cerberus/internal/common/dbtest"
-	"github.com/Housiadas/cerberus/pkg/errs"
 )
 
 func Test_API_User_Update_200(t *testing.T) {

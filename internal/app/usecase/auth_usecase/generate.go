@@ -7,7 +7,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 
-	"github.com/Housiadas/cerberus/pkg/errs"
+	"github.com/Housiadas/cerberus/pkg/web/errs"
 )
 
 type accessToken struct {

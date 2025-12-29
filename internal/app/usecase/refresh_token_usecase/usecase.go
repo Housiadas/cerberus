@@ -4,10 +4,10 @@ import (
 	"context"
 	"time"
 
+	"github.com/Housiadas/cerberus/pkg/web/errs"
 	"github.com/google/uuid"
 
 	"github.com/Housiadas/cerberus/internal/core/service/refresh_token_service"
-	"github.com/Housiadas/cerberus/pkg/errs"
 )
 
 // UseCase manages the set of cli layer api functions for the user core.

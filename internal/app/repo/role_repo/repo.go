@@ -8,13 +8,13 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/Housiadas/cerberus/pkg/web"
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 
 	"github.com/Housiadas/cerberus/internal/core/domain/role"
 	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/Housiadas/cerberus/pkg/order"
-	"github.com/Housiadas/cerberus/pkg/page"
 	"github.com/Housiadas/cerberus/pkg/pgsql"
 )
 
@@ -115,7 +115,7 @@ func (s *Store) Query(
 	ctx context.Context,
 	filter role.QueryFilter,
 	orderBy order.By,
-	page page.Page,
+	page web.Page,
 ) ([]role.Role, error) {
 	data := map[string]any{
 		"offset":        (page.Number() - 1) * page.RowsPerPage(),

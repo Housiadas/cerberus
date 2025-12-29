@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 
 	"github.com/Housiadas/cerberus/internal/common/validation"
-	"github.com/Housiadas/cerberus/pkg/errs"
+	"github.com/Housiadas/cerberus/pkg/web/errs"
 )
 
 // LoginReq defines the data needed to authenticate a user.

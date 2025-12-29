@@ -1,6 +1,8 @@
 package errs
 
-import "fmt"
+import (
+	"fmt"
+)
 
 // ErrCode represents an error code in the system.
 type ErrCode struct {

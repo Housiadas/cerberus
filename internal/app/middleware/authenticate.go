@@ -8,7 +8,7 @@ import (
 
 	"github.com/Housiadas/cerberus/internal/app/usecase/user_usecase"
 	ctxPck "github.com/Housiadas/cerberus/internal/common/context"
-	"github.com/Housiadas/cerberus/pkg/errs"
+	"github.com/Housiadas/cerberus/pkg/web/errs"
 )
 
 // AuthenticateBearer is a middleware function that checks authentication,
