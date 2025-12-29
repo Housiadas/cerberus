@@ -30,7 +30,7 @@ func (app *AuthenticateUser) Encode() ([]byte, string, error) {
 // Validate checks the data in the model is considered clean.
 func (app *AuthenticateUser) Validate() error {
 	if err := validation.Check(app); err != nil {
-		return errs.Newf(errs.InvalidArgument, "validation: %s", err)
+		return errs.Errorf(errs.InvalidArgument, "validation: %s", err)
 	}
 
 	return nil
@@ -153,7 +153,7 @@ func (app *UpdateUserRole) Decode(data []byte) error {
 // Validate checks the data in the model is considered clean.
 func (app *UpdateUserRole) Validate() error {
 	if err := validation.Check(app); err != nil {
-		return errs.Newf(errs.InvalidArgument, "validation: %s", err)
+		return errs.Errorf(errs.InvalidArgument, "validation: %s", err)
 	}
 
 	return nil
@@ -177,7 +177,7 @@ func (app *UpdateUser) Decode(data []byte) error {
 // Validate checks the data in the model is considered clean.
 func (app *UpdateUser) Validate() error {
 	if err := validation.Check(app); err != nil {
-		return errs.Newf(errs.InvalidArgument, "validation: %s", err)
+		return errs.Errorf(errs.InvalidArgument, "validation: %s", err)
 	}
 
 	return nil

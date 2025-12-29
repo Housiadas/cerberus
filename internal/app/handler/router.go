@@ -42,7 +42,9 @@ func (h *Handler) Routes() *chi.Mux {
 		v1.Route("/auth", func(a chi.Router) {
 			a.Post("/login", h.Web.Res.Respond(h.authLogin))
 			a.Post("/register", h.Web.Res.Respond(h.authRegister))
-			a.With(authenticate()).Post("/refresh", h.Web.Res.Respond(h.authRefresh))
+			a.Post("/refresh", h.Web.Res.Respond(h.authRefresh))
+			// logout - authenticated route
+			a.With(authenticate()).Post("/logout", h.Web.Res.Respond(h.authLogout))
 		})
 
 		// Users

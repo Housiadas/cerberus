@@ -5,6 +5,8 @@ import (
 	"time"
 
 	"github.com/Housiadas/cerberus/internal/core/domain/refresh_token"
+	"github.com/Housiadas/cerberus/pkg/errs"
+	"github.com/google/uuid"
 )
 
 // =============================================================================
@@ -43,4 +45,32 @@ func toAppTokens(tkns []refresh_token.RefreshToken) []RefreshToken {
 	}
 
 	return appRoles
+}
+
+func toCoreToken(r RefreshToken) (refresh_token.RefreshToken, error) {
+	id, err := uuid.Parse(r.ID)
+	if err != nil {
+		return refresh_token.RefreshToken{}, errs.Errorf(errs.Internal, "id parse: %s", err)
+	}
+	userID, err := uuid.Parse(r.UserID)
+	if err != nil {
+		return refresh_token.RefreshToken{}, errs.Errorf(errs.Internal, "user_id parse: %s", err)
+	}
+	expiresAt, err := time.Parse(time.RFC3339, r.ExpiresAt)
+	if err != nil {
+		return refresh_token.RefreshToken{}, errs.Errorf(errs.Internal, "expires_at parse: %s", err)
+	}
+	createdAt, err := time.Parse(time.RFC3339, r.CreatedAt)
+	if err != nil {
+		return refresh_token.RefreshToken{}, errs.Errorf(errs.Internal, "created_at parse: %s", err)
+	}
+
+	return refresh_token.RefreshToken{
+		ID:        id,
+		UserID:    userID,
+		Token:     r.Token,
+		ExpiresAt: expiresAt,
+		CreatedAt: createdAt,
+		Revoked:   r.Revoked,
+	}, nil
 }

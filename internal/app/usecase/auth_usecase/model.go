@@ -22,7 +22,7 @@ func (l *LoginReq) Encode() ([]byte, string, error) {
 // Validate checks the data in the model is considered clean.
 func (l *LoginReq) Validate() error {
 	if err := validation.Check(l); err != nil {
-		return errs.Newf(errs.InvalidArgument, "validation: %s", err)
+		return errs.Errorf(errs.InvalidArgument, "validation: %s", err)
 	}
 
 	return nil

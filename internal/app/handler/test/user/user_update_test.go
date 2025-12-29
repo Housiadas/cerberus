@@ -123,7 +123,7 @@ func Test_API_User_Update_400(t *testing.T) {
 				PasswordConfirm: dbtest.StringPointer("jack"),
 			},
 			GotResp: &errs.Error{},
-			ExpResp: errs.Newf(errs.InvalidArgument, "validation: [{\"field\":\"email\",\"error\":\"email must be a valid email address\"},{\"field\":\"passwordConfirm\",\"error\":\"passwordConfirm must be equal to Password\"}]"),
+			ExpResp: errs.Errorf(errs.InvalidArgument, "validation: [{\"field\":\"email\",\"error\":\"email must be a valid email address\"},{\"field\":\"passwordConfirm\",\"error\":\"passwordConfirm must be equal to Password\"}]"),
 			CmpFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},
@@ -137,7 +137,7 @@ func Test_API_User_Update_400(t *testing.T) {
 				Roles: []string{"BAD ROLE"},
 			},
 			GotResp: &errs.Error{},
-			ExpResp: errs.Newf(errs.InvalidArgument, "parse: invalid role \"BAD ROLE\""),
+			ExpResp: errs.Errorf(errs.InvalidArgument, "parse: invalid role \"BAD ROLE\""),
 			CmpFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},

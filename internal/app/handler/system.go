@@ -24,11 +24,11 @@ import (
 // @Router       /readiness [get]
 func (h *Handler) readiness(ctx context.Context, _ http.ResponseWriter, _ *http.Request) web.Encoder {
 	if err := h.UseCase.System.Readiness(ctx); err != nil {
-		return errs.Newf(errs.Internal, "database not ready")
+		return errs.Errorf(errs.Internal, "database not ready")
 	}
 
 	data := system_usecase.Status{
-		Status: "OK",
+		Status: "None",
 	}
 
 	return data

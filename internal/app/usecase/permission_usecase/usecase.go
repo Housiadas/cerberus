@@ -33,7 +33,7 @@ func (uc *UseCase) Create(ctx context.Context, nperm NewPermission) (Permission,
 
 	perm, err := uc.permissionService.Create(ctx, np)
 	if err != nil {
-		return Permission{}, errs.Newf(errs.Internal, "create: perm[%+v]: %s", perm, err)
+		return Permission{}, errs.Errorf(errs.Internal, "create: perm[%+v]: %s", perm, err)
 	}
 
 	return toAppPermission(perm), nil
@@ -48,17 +48,17 @@ func (uc *UseCase) Update(ctx context.Context, res UpdatePermission, permissionI
 
 	permissionUUID, err := uuid.Parse(permissionID)
 	if err != nil {
-		return Permission{}, errs.Newf(errs.InvalidArgument, "could not parse uuid: %s", err)
+		return Permission{}, errs.Errorf(errs.InvalidArgument, "could not parse uuid: %s", err)
 	}
 
 	perm, err := uc.permissionService.QueryByID(ctx, permissionUUID)
 	if err != nil {
-		return Permission{}, errs.Newf(errs.Internal, "permission query by id: %s", err)
+		return Permission{}, errs.Errorf(errs.Internal, "permission query by id: %s", err)
 	}
 
 	updPerm, err := uc.permissionService.Update(ctx, perm, up)
 	if err != nil {
-		return Permission{}, errs.Newf(errs.Internal, "update: permissionID[%s] up[%+v]: %s", permissionID, up, err)
+		return Permission{}, errs.Errorf(errs.Internal, "update: permissionID[%s] up[%+v]: %s", permissionID, up, err)
 	}
 
 	return toAppPermission(updPerm), nil
@@ -68,16 +68,16 @@ func (uc *UseCase) Update(ctx context.Context, res UpdatePermission, permissionI
 func (uc *UseCase) Delete(ctx context.Context, permissionID string) error {
 	permissionUUID, err := uuid.Parse(permissionID)
 	if err != nil {
-		return errs.Newf(errs.InvalidArgument, "could not parse uuid: %s", err)
+		return errs.Errorf(errs.InvalidArgument, "could not parse uuid: %s", err)
 	}
 
 	perm, err := uc.permissionService.QueryByID(ctx, permissionUUID)
 	if err != nil {
-		return errs.Newf(errs.Internal, "permission query by id: %s", err)
+		return errs.Errorf(errs.Internal, "permission query by id: %s", err)
 	}
 
 	if err := uc.permissionService.Delete(ctx, perm); err != nil {
-		return errs.Newf(errs.Internal, "delete: permissionID[%s]: %s", permissionUUID, err)
+		return errs.Errorf(errs.Internal, "delete: permissionID[%s]: %s", permissionUUID, err)
 	}
 
 	return nil
@@ -87,12 +87,12 @@ func (uc *UseCase) Delete(ctx context.Context, permissionID string) error {
 func (uc *UseCase) QueryByID(ctx context.Context, permissionID string) (Permission, error) {
 	permissionUUID, err := uuid.Parse(permissionID)
 	if err != nil {
-		return Permission{}, errs.Newf(errs.InvalidArgument, "could not parse uuid: %s", err)
+		return Permission{}, errs.Errorf(errs.InvalidArgument, "could not parse uuid: %s", err)
 	}
 
 	perm, err := uc.permissionService.QueryByID(ctx, permissionUUID)
 	if err != nil {
-		return Permission{}, errs.Newf(errs.Internal, "permission query by id: %s", err)
+		return Permission{}, errs.Errorf(errs.Internal, "permission query by id: %s", err)
 	}
 
 	return toAppPermission(perm), nil
@@ -102,7 +102,7 @@ func (uc *UseCase) QueryByID(ctx context.Context, permissionID string) (Permissi
 func (uc *UseCase) Query(ctx context.Context, qp AppQueryParams) (page.Result[Permission], error) {
 	p, err := page.Parse(qp.Page, qp.Rows)
 	if err != nil {
-		return page.Result[Permission]{}, validation.NewFieldErrors("page", err)
+		return page.Result[Permission]{}, validation.ErrorfieldErrors("page", err)
 	}
 
 	filter, err := parseFilter(qp)
@@ -112,17 +112,17 @@ func (uc *UseCase) Query(ctx context.Context, qp AppQueryParams) (page.Result[Pe
 
 	orderBy, err := order.Parse(orderByFields, qp.OrderBy, defaultOrderBy)
 	if err != nil {
-		return page.Result[Permission]{}, validation.NewFieldErrors("order", err)
+		return page.Result[Permission]{}, validation.ErrorfieldErrors("order", err)
 	}
 
 	perms, err := uc.permissionService.Query(ctx, filter, orderBy, p)
 	if err != nil {
-		return page.Result[Permission]{}, errs.Newf(errs.Internal, "query: %s", err)
+		return page.Result[Permission]{}, errs.Errorf(errs.Internal, "query: %s", err)
 	}
 
 	total, err := uc.permissionService.Count(ctx, filter)
 	if err != nil {
-		return page.Result[Permission]{}, errs.Newf(errs.Internal, "count: %s", err)
+		return page.Result[Permission]{}, errs.Errorf(errs.Internal, "count: %s", err)
 	}
 
 	return page.NewResult(toAppPermissions(perms), total, p), nil

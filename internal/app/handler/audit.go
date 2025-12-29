@@ -14,7 +14,7 @@ func (h *Handler) auditQuery(ctx context.Context, _ http.ResponseWriter, r *http
 
 	audits, err := h.UseCase.Audit.Query(ctx, qp)
 	if err != nil {
-		return errs.NewError(err)
+		return errs.AsErr(err)
 	}
 
 	return audits

@@ -20,7 +20,7 @@ func (m *Middleware) Recoverer() func(next http.Handler) http.Handler {
 				if rec := recover(); rec != nil {
 					metrics.AddPanics(ctx)
 					trace := debug.Stack()
-					err := errs.Newf(errs.InternalOnlyLog, "PANIC [%v] TRACE[%s]", rec, string(trace))
+					err := errs.Errorf(errs.InternalOnlyLog, "PANIC [%v] TRACE[%s]", rec, string(trace))
 					m.Log.Error(ctx, "panic mid", err)
 					m.Error(w, err, http.StatusInternalServerError)
 				}

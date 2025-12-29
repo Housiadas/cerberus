@@ -16,8 +16,8 @@ type FieldError struct {
 // FieldErrors represents a collection of field errors.
 type FieldErrors []FieldError
 
-// NewFieldErrors creates a field error.
-func NewFieldErrors(field string, err error) *errs.Error {
+// ErrorfieldErrors creates a field error.
+func ErrorfieldErrors(field string, err error) *errs.Error {
 	fe := FieldErrors{
 		{
 			Field: field,

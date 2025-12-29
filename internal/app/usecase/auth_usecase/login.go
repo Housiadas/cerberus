@@ -2,10 +2,8 @@ package auth_usecase
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/Housiadas/cerberus/internal/app/usecase/user_usecase"
-	"github.com/Housiadas/cerberus/pkg/errs"
 )
 
 func (u *UseCase) Login(ctx context.Context, authLogin LoginReq) (Token, error) {
@@ -17,19 +15,19 @@ func (u *UseCase) Login(ctx context.Context, authLogin LoginReq) (Token, error) 
 	// Verify email and password
 	usr, err := u.userUsecase.Authenticate(ctx, authUsr)
 	if err != nil {
-		return Token{}, errs.New(errs.Unauthenticated, err)
+		return Token{}, err
 	}
 
 	// Generate JWT access token
 	aToken, err := u.generateAccessToken(ctx, usr.ID)
 	if err != nil {
-		return Token{}, fmt.Errorf("generate access token: %w", err)
+		return Token{}, err
 	}
 
 	// Create a refresh token
 	tkn, err := u.refreshTokenUsecase.Create(ctx, usr.ID, refreshTokenTTL)
 	if err != nil {
-		return Token{}, fmt.Errorf("create refresh token: %w", err)
+		return Token{}, err
 	}
 
 	return Token{

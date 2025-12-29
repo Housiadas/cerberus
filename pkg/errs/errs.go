@@ -1,4 +1,4 @@
-// Package errs provides usecase and support related to web error functionality.
+// Package errs provides types and support related to web error functionality.
 package errs
 
 import (
@@ -16,7 +16,7 @@ type Error struct {
 	FileName string  `json:"-"`
 }
 
-// New constructs an error based on an cli error.
+// New constructs an error based on an error.
 func New(code ErrCode, err error) *Error {
 	pc, filename, line, _ := runtime.Caller(1)
 
@@ -28,8 +28,8 @@ func New(code ErrCode, err error) *Error {
 	}
 }
 
-// Newf constructs an error based on an error message.
-func Newf(code ErrCode, format string, v ...any) *Error {
+// Errorf constructs an error based on an error message.
+func Errorf(code ErrCode, format string, v ...any) *Error {
 	pc, filename, line, _ := runtime.Caller(1)
 
 	return &Error{
@@ -40,9 +40,9 @@ func Newf(code ErrCode, format string, v ...any) *Error {
 	}
 }
 
-// NewError checks for an Error in the error interface value. If it doesn't
-// exist, will create one from the error.
-func NewError(err error) *Error {
+// AsErr checks for an Error in the error interface value. If it doesn't
+// exist, it will create one from the error.
+func AsErr(err error) *Error {
 	var errsErr *Error
 	if errors.As(err, &errsErr) {
 		return errsErr

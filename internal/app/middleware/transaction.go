@@ -19,7 +19,7 @@ func (m *Middleware) BeginTransaction() func(next http.Handler) http.Handler {
 			m.Log.Info(ctx, "BEGIN TRANSACTION")
 			tx, err := m.Tx.Begin()
 			if err != nil {
-				err := errs.Newf(errs.Internal, "BEGIN TRANSACTION: %s", err)
+				err := errs.Errorf(errs.Internal, "BEGIN TRANSACTION: %s", err)
 				m.Log.Error(ctx, "transaction middleware", err)
 				m.Error(w, err, http.StatusInternalServerError)
 				return
@@ -53,7 +53,7 @@ func (m *Middleware) BeginTransaction() func(next http.Handler) http.Handler {
 
 			m.Log.Info(ctx, "COMMIT TRANSACTION")
 			if err := tx.Commit(); err != nil {
-				err := errs.Newf(errs.Internal, "COMMIT TRANSACTION: %s", err)
+				err := errs.Errorf(errs.Internal, "COMMIT TRANSACTION: %s", err)
 				m.Log.Error(ctx, "transaction middleware", err)
 				m.Error(w, err, http.StatusInternalServerError)
 				return

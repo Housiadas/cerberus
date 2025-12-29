@@ -83,12 +83,10 @@ func (u *UseCase) CheckExpiredToken(claims Claims) error {
 func (u *UseCase) isUserEnabled(ctx context.Context, claims Claims) error {
 	usr, err := u.userUsecase.QueryByID(ctx, claims.Subject)
 	if err != nil {
-		return fmt.Errorf("query user: %w", err)
+		return err
 	}
-
 	if !usr.Enabled {
 		return ErrUserDisabled
 	}
-
 	return nil
 }

@@ -6,6 +6,7 @@ import (
 
 	"github.com/Housiadas/cerberus/internal/app/usecase/auth_usecase"
 	"github.com/Housiadas/cerberus/internal/app/usecase/user_usecase"
+	ctxPck "github.com/Housiadas/cerberus/internal/common/context"
 	"github.com/Housiadas/cerberus/pkg/errs"
 	"github.com/Housiadas/cerberus/pkg/web"
 )
@@ -28,7 +29,7 @@ func (h *Handler) authLogin(ctx context.Context, _ http.ResponseWriter, r *http.
 
 	token, err := h.UseCase.Auth.Login(ctx, req)
 	if err != nil {
-		return errs.NewError(err)
+		return errs.AsErr(err)
 	}
 
 	return token
@@ -52,7 +53,7 @@ func (h *Handler) authRegister(ctx context.Context, _ http.ResponseWriter, r *ht
 
 	usr, err := h.UseCase.User.Create(ctx, req)
 	if err != nil {
-		return errs.NewError(err)
+		return errs.AsErr(err)
 	}
 
 	return usr
@@ -73,12 +74,13 @@ func (h *Handler) authLogout(ctx context.Context, _ http.ResponseWriter, r *http
 		return errs.New(errs.InvalidArgument, err)
 	}
 
-	token, err := h.UseCase.Auth.Logout(ctx, req)
+	claims := ctxPck.GetClaims(ctx)
+	err := h.UseCase.Auth.Logout(ctx, claims.Subject, req)
 	if err != nil {
-		return errs.NewError(err)
+		return errs.AsErr(err)
 	}
 
-	return token
+	return nil
 }
 
 // Auth godoc
@@ -99,7 +101,7 @@ func (h *Handler) authRefresh(ctx context.Context, _ http.ResponseWriter, r *htt
 
 	token, err := h.UseCase.Auth.RefreshAccessToken(ctx, req)
 	if err != nil {
-		return errs.NewError(err)
+		return errs.AsErr(err)
 	}
 
 	return token

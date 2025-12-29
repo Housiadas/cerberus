@@ -99,7 +99,7 @@ func (app *UpdateRole) Decode(data []byte) error {
 // Validate checks the data in the model is considered clean.
 func (app *UpdateRole) Validate() error {
 	if err := validation.Check(app); err != nil {
-		return errs.Newf(errs.InvalidArgument, "validation: %s", err)
+		return errs.Errorf(errs.InvalidArgument, "validation: %s", err)
 	}
 
 	return nil

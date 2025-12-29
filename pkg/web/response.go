@@ -95,7 +95,7 @@ func (respond *Respond) errorRecorder(ctx context.Context, statusCode int, err e
 	var appErr *errs.Error
 	ok := errors.As(err, &appErr)
 	if !ok {
-		appErr = errs.Newf(errs.Internal, "Internal Server Error")
+		appErr = errs.Errorf(errs.Internal, "Internal Server Error")
 	}
 
 	// If not, the critical error does not record it
@@ -114,7 +114,7 @@ func (respond *Respond) errorRecorder(ctx context.Context, statusCode int, err e
 	)
 
 	if appErr.Code == errs.InternalOnlyLog {
-		appErr = errs.Newf(errs.Internal, "Internal Server Error")
+		appErr = errs.Errorf(errs.Internal, "Internal Server Error")
 	}
 
 	// Send the error back so it can be used as the response.

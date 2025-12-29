@@ -6,7 +6,6 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/Housiadas/cerberus/internal/core/domain/refresh_token"
 	"github.com/Housiadas/cerberus/internal/core/service/refresh_token_service"
 	"github.com/Housiadas/cerberus/pkg/errs"
 )
@@ -26,12 +25,12 @@ func NewUseCase(refreshTokenService *refresh_token_service.Service) *UseCase {
 func (uc *UseCase) Create(ctx context.Context, userID string, refreshTokenTTL time.Duration) (RefreshToken, error) {
 	userUUID, err := uuid.Parse(userID)
 	if err != nil {
-		return RefreshToken{}, errs.Newf(errs.InvalidArgument, "could not parse uuid: %s", err)
+		return RefreshToken{}, errs.Errorf(errs.InvalidArgument, "could not parse uuid: %s", err)
 	}
 
 	tkn, err := uc.refreshTokenService.Create(ctx, userUUID, refreshTokenTTL)
 	if err != nil {
-		return RefreshToken{}, errs.Newf(errs.Internal, "create: refresh_token[%+v]: %s", tkn, err)
+		return RefreshToken{}, errs.Errorf(errs.Internal, "create: refresh_token[%+v]: %s", tkn, err)
 	}
 
 	return toAppToken(tkn), nil
@@ -40,16 +39,21 @@ func (uc *UseCase) Create(ctx context.Context, userID string, refreshTokenTTL ti
 func (uc *UseCase) QueryByToken(ctx context.Context, token string) (RefreshToken, error) {
 	tkn, err := uc.refreshTokenService.QueryByToken(ctx, token)
 	if err != nil {
-		return RefreshToken{}, errs.Newf(errs.Internal, "query by token: [%+v]: %s", tkn, err)
+		return RefreshToken{}, errs.Errorf(errs.Internal, "query by token: [%+v]: %s", tkn, err)
 	}
 
 	return toAppToken(tkn), nil
 }
 
-func (uc *UseCase) Revoke(ctx context.Context, tkn refresh_token.RefreshToken) error {
-	err := uc.refreshTokenService.Revoke(ctx, tkn)
+func (uc *UseCase) Revoke(ctx context.Context, tkn RefreshToken) error {
+	coreTkn, err := toCoreToken(tkn)
 	if err != nil {
-		return errs.Newf(errs.Internal, "revoke issue: [%+v]: %s", tkn, err)
+		return err
+	}
+
+	err = uc.refreshTokenService.Revoke(ctx, coreTkn)
+	if err != nil {
+		return errs.Errorf(errs.Internal, "revoke issue: [%+v]: %s", tkn, err)
 	}
 
 	return nil

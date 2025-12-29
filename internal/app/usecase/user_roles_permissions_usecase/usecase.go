@@ -28,7 +28,7 @@ func NewUseCase(service *user_roles_permissions_service.Service) *UseCase {
 func (uc *UseCase) Query(ctx context.Context, qp AppQueryParams) (page.Result[UserRolesPermissions], error) {
 	p, err := page.Parse(qp.Page, qp.Rows)
 	if err != nil {
-		return page.Result[UserRolesPermissions]{}, validation.NewFieldErrors("page", err)
+		return page.Result[UserRolesPermissions]{}, validation.ErrorfieldErrors("page", err)
 	}
 
 	filter, err := parseFilter(qp)
@@ -38,17 +38,17 @@ func (uc *UseCase) Query(ctx context.Context, qp AppQueryParams) (page.Result[Us
 
 	ob, err := order.Parse(orderByFields, qp.OrderBy, defaultOrderBy)
 	if err != nil {
-		return page.Result[UserRolesPermissions]{}, validation.NewFieldErrors("order", err)
+		return page.Result[UserRolesPermissions]{}, validation.ErrorfieldErrors("order", err)
 	}
 
 	rows, err := uc.service.Query(ctx, filter, ob, p)
 	if err != nil {
-		return page.Result[UserRolesPermissions]{}, errs.Newf(errs.Internal, "query: %s", err)
+		return page.Result[UserRolesPermissions]{}, errs.Errorf(errs.Internal, "query: %s", err)
 	}
 
 	total, err := uc.service.Count(ctx, filter)
 	if err != nil {
-		return page.Result[UserRolesPermissions]{}, errs.Newf(errs.Internal, "count: %s", err)
+		return page.Result[UserRolesPermissions]{}, errs.Errorf(errs.Internal, "count: %s", err)
 	}
 
 	return page.NewResult(toManyUserRolesPermissions(rows), total, p), nil
@@ -57,11 +57,11 @@ func (uc *UseCase) Query(ctx context.Context, qp AppQueryParams) (page.Result[Us
 func (uc *UseCase) HasPermission(ctx context.Context, userID, permissionName string) (bool, error) {
 	userUUID, err := uuid.Parse(userID)
 	if err != nil {
-		return false, errs.Newf(errs.InvalidArgument, "could not parse uuid: %s", err)
+		return false, errs.Errorf(errs.InvalidArgument, "could not parse uuid: %s", err)
 	}
 	hasPermission, err := uc.service.HasPermission(ctx, userUUID, permissionName)
 	if err != nil {
-		return false, errs.Newf(errs.Internal, "has_permission: %s", err)
+		return false, errs.Errorf(errs.Internal, "has_permission: %s", err)
 	}
 
 	return hasPermission, nil

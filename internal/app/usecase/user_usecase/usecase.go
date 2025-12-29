@@ -39,7 +39,7 @@ func (a *UseCase) Create(ctx context.Context, app NewUser) (User, error) {
 		if errors.Is(err, user.ErrUniqueEmail) {
 			return User{}, errs.New(errs.Aborted, user.ErrUniqueEmail)
 		}
-		return User{}, errs.Newf(errs.Internal, "create: usr[%+v]: %s", usr, err)
+		return User{}, errs.Errorf(errs.Internal, "create: usr[%+v]: %s", usr, err)
 	}
 
 	return toAppUser(usr), nil
@@ -54,17 +54,17 @@ func (a *UseCase) Update(ctx context.Context, res UpdateUser, userID string) (Us
 
 	userUUID, err := uuid.Parse(userID)
 	if err != nil {
-		return User{}, errs.Newf(errs.InvalidArgument, "could not parse uuid: %s", err)
+		return User{}, errs.Errorf(errs.InvalidArgument, "could not parse uuid: %s", err)
 	}
 
 	currentUsr, err := a.userCore.QueryByID(ctx, userUUID)
 	if err != nil {
-		return User{}, errs.Newf(errs.Internal, "query by id: userID[%s] uu[%+v]: %s", userUUID, uu, err)
+		return User{}, errs.Errorf(errs.Internal, "query by id: userID[%s] uu[%+v]: %s", userUUID, uu, err)
 	}
 
 	updUsr, err := a.userCore.Update(ctx, currentUsr, uu)
 	if err != nil {
-		return User{}, errs.Newf(errs.Internal, "update: userID[%s] uu[%+v]: %s", userUUID, uu, err)
+		return User{}, errs.Errorf(errs.Internal, "update: userID[%s] uu[%+v]: %s", userUUID, uu, err)
 	}
 
 	return toAppUser(updUsr), nil
@@ -74,16 +74,16 @@ func (a *UseCase) Update(ctx context.Context, res UpdateUser, userID string) (Us
 func (a *UseCase) Delete(ctx context.Context, userID string) error {
 	userUUID, err := uuid.Parse(userID)
 	if err != nil {
-		return errs.Newf(errs.InvalidArgument, "could not parse uuid: %s", err)
+		return errs.Errorf(errs.InvalidArgument, "could not parse uuid: %s", err)
 	}
 
 	currentUsr, err := a.userCore.QueryByID(ctx, userUUID)
 	if err != nil {
-		return errs.Newf(errs.Internal, "query by id: userID[%s] uu[%+v]: %s", userUUID, currentUsr, err)
+		return errs.Errorf(errs.Internal, "query by id: userID[%s] uu[%+v]: %s", userUUID, currentUsr, err)
 	}
 
 	if err := a.userCore.Delete(ctx, currentUsr); err != nil {
-		return errs.Newf(errs.Internal, "delete: userID[%s]: %s", userUUID, err)
+		return errs.Errorf(errs.Internal, "delete: userID[%s]: %s", userUUID, err)
 	}
 
 	return nil
@@ -93,7 +93,7 @@ func (a *UseCase) Delete(ctx context.Context, userID string) error {
 func (a *UseCase) Query(ctx context.Context, qp AppQueryParams) (page.Result[User], error) {
 	p, err := page.Parse(qp.Page, qp.Rows)
 	if err != nil {
-		return page.Result[User]{}, validation.NewFieldErrors("page", err)
+		return page.Result[User]{}, validation.ErrorfieldErrors("page", err)
 	}
 
 	filter, err := parseFilter(qp)
@@ -103,17 +103,17 @@ func (a *UseCase) Query(ctx context.Context, qp AppQueryParams) (page.Result[Use
 
 	orderBy, err := order.Parse(orderByFields, qp.OrderBy, defaultOrderBy)
 	if err != nil {
-		return page.Result[User]{}, validation.NewFieldErrors("order", err)
+		return page.Result[User]{}, validation.ErrorfieldErrors("order", err)
 	}
 
 	usrs, err := a.userCore.Query(ctx, filter, orderBy, p)
 	if err != nil {
-		return page.Result[User]{}, errs.Newf(errs.Internal, "query: %s", err)
+		return page.Result[User]{}, errs.Errorf(errs.Internal, "query: %s", err)
 	}
 
 	total, err := a.userCore.Count(ctx, filter)
 	if err != nil {
-		return page.Result[User]{}, errs.Newf(errs.Internal, "count: %s", err)
+		return page.Result[User]{}, errs.Errorf(errs.Internal, "count: %s", err)
 	}
 
 	return page.NewResult(toAppUsers(usrs), total, p), nil
@@ -123,12 +123,12 @@ func (a *UseCase) Query(ctx context.Context, qp AppQueryParams) (page.Result[Use
 func (a *UseCase) QueryByID(ctx context.Context, userID string) (User, error) {
 	userUUID, err := uuid.Parse(userID)
 	if err != nil {
-		return User{}, errs.Newf(errs.InvalidArgument, "could not parse uuid: %s", err)
+		return User{}, errs.Errorf(errs.InvalidArgument, "could not parse uuid: %s", err)
 	}
 
 	usr, err := a.userCore.QueryByID(ctx, userUUID)
 	if err != nil {
-		return User{}, errs.Newf(errs.Internal, "query_by_id: %s", err)
+		return User{}, errs.Errorf(errs.Internal, "query_by_id: %s", err)
 	}
 
 	return toAppUser(usr), nil
@@ -138,7 +138,7 @@ func (a *UseCase) QueryByID(ctx context.Context, userID string) (User, error) {
 func (a *UseCase) Authenticate(ctx context.Context, authUser AuthenticateUser) (User, error) {
 	addr, err := mail.ParseAddress(authUser.Email)
 	if err != nil {
-		return User{}, validation.NewFieldErrors("email", err)
+		return User{}, validation.ErrorfieldErrors("email", err)
 	}
 
 	usr, err := a.userCore.Authenticate(ctx, *addr, authUser.Password)

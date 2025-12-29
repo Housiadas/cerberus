@@ -10,4 +10,5 @@ CREATE TABLE refresh_tokens (
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
-CREATE INDEX idx_refresh_tokens_token ON refresh_tokens(token);
+CREATE INDEX refresh_tokens_token_idx   ON refresh_tokens(token);
+CREATE INDEX refresh_tokens_user_id_idx ON refresh_tokens(user_id);

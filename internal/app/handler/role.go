@@ -27,7 +27,7 @@ func (h *Handler) roleCreate(ctx context.Context, _ http.ResponseWriter, r *http
 
 	usr, err := h.UseCase.Role.Create(ctx, ucRole)
 	if err != nil {
-		return errs.NewError(err)
+		return errs.AsErr(err)
 	}
 
 	return usr
@@ -41,7 +41,7 @@ func (h *Handler) rolePermissionCreate(ctx context.Context, _ http.ResponseWrite
 
 	usr, err := h.UseCase.Role.Create(ctx, ucRole)
 	if err != nil {
-		return errs.NewError(err)
+		return errs.AsErr(err)
 	}
 
 	return usr
@@ -61,7 +61,7 @@ func (h *Handler) roleQuery(ctx context.Context, _ http.ResponseWriter, r *http.
 
 	roles, err := h.UseCase.Role.Query(ctx, qp)
 	if err != nil {
-		return errs.NewError(err)
+		return errs.AsErr(err)
 	}
 
 	return roles
@@ -86,7 +86,7 @@ func (h *Handler) roleUpdate(ctx context.Context, w http.ResponseWriter, r *http
 	roleID := web.Param(r, "role_id")
 	role, err := h.UseCase.Role.Update(ctx, res, roleID)
 	if err != nil {
-		return errs.NewError(err)
+		return errs.AsErr(err)
 	}
 
 	return role
@@ -104,7 +104,7 @@ func (h *Handler) roleUpdate(ctx context.Context, w http.ResponseWriter, r *http
 func (h *Handler) roleDelete(ctx context.Context, w http.ResponseWriter, r *http.Request) web.Encoder {
 	roleID := web.Param(r, "role_id")
 	if err := h.UseCase.Role.Delete(ctx, roleID); err != nil {
-		return errs.NewError(err)
+		return errs.AsErr(err)
 	}
 
 	return nil

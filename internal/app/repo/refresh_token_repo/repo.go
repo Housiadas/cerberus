@@ -73,7 +73,7 @@ func (s *Store) QueryByToken(ctx context.Context, token string) (refresh_token.R
 	var dbTkn tokenDB
 	if err := pgsql.NamedQueryStruct(ctx, s.log, s.db, tokenQueryByTokenSql, data, &dbTkn); err != nil {
 		if errors.Is(err, pgsql.ErrDBNotFound) {
-			return refresh_token.RefreshToken{}, errs.Newf(errs.NotFound, "refresh token not found")
+			return refresh_token.RefreshToken{}, errs.Errorf(errs.NotFound, "refresh token not found")
 		}
 		return refresh_token.RefreshToken{}, fmt.Errorf("db: %w", err)
 	}

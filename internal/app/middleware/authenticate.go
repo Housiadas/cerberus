@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/Housiadas/cerberus/internal/app/usecase/auth_usecase"
 	"github.com/Housiadas/cerberus/internal/app/usecase/user_usecase"
 	ctxPck "github.com/Housiadas/cerberus/internal/common/context"
 	"github.com/Housiadas/cerberus/pkg/errs"
@@ -25,7 +24,7 @@ func (m *Middleware) AuthenticateBearer() func(next http.Handler) http.Handler {
 			}
 
 			jwtUnverified := bearerToken[7:]
-			resp, err := m.UseCase.Auth.Validate(ctx, jwtUnverified, auth_usecase.AccessToken)
+			resp, err := m.UseCase.Auth.Validate(ctx, jwtUnverified)
 			if err != nil {
 				m.Error(w, err, http.StatusUnauthorized)
 			}
@@ -44,7 +43,7 @@ func (m *Middleware) AuthenticateBasic() func(next http.Handler) http.Handler {
 			authorizationHeader := r.Header.Get("authorization")
 			email, pass, ok := parseBasicAuth(authorizationHeader)
 			if !ok {
-				err := errs.Newf(errs.Unauthenticated, "invalid Basic auth")
+				err := errs.Errorf(errs.Unauthenticated, "invalid Basic auth")
 				m.Error(w, err, http.StatusUnauthorized)
 			}
 

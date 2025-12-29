@@ -27,7 +27,7 @@ func (h *Handler) userCreate(ctx context.Context, _ http.ResponseWriter, r *http
 
 	usr, err := h.UseCase.User.Create(ctx, app)
 	if err != nil {
-		return errs.NewError(err)
+		return errs.AsErr(err)
 	}
 
 	return usr
@@ -52,7 +52,7 @@ func (h *Handler) userUpdate(ctx context.Context, _ http.ResponseWriter, r *http
 	userID := web.Param(r, "user_id")
 	updUser, err := h.UseCase.User.Update(ctx, res, userID)
 	if err != nil {
-		return errs.NewError(err)
+		return errs.AsErr(err)
 	}
 
 	return updUser
@@ -70,7 +70,7 @@ func (h *Handler) userUpdate(ctx context.Context, _ http.ResponseWriter, r *http
 func (h *Handler) userDelete(ctx context.Context, _ http.ResponseWriter, r *http.Request) web.Encoder {
 	userID := web.Param(r, "user_id")
 	if err := h.UseCase.User.Delete(ctx, userID); err != nil {
-		return errs.NewError(err)
+		return errs.AsErr(err)
 	}
 
 	return nil
@@ -90,7 +90,7 @@ func (h *Handler) userQuery(ctx context.Context, _ http.ResponseWriter, r *http.
 
 	usr, err := h.UseCase.User.Query(ctx, qp)
 	if err != nil {
-		return errs.NewError(err)
+		return errs.AsErr(err)
 	}
 
 	return usr
@@ -109,7 +109,7 @@ func (h *Handler) userQueryByID(ctx context.Context, _ http.ResponseWriter, r *h
 	userID := web.Param(r, "user_id")
 	usr, err := h.UseCase.User.QueryByID(ctx, userID)
 	if err != nil {
-		return errs.NewError(err)
+		return errs.AsErr(err)
 	}
 
 	return usr
@@ -123,7 +123,7 @@ func (h *Handler) userRoleCreate(ctx context.Context, _ http.ResponseWriter, r *
 
 	usr, err := h.UseCase.User.Create(ctx, app)
 	if err != nil {
-		return errs.NewError(err)
+		return errs.AsErr(err)
 	}
 
 	return usr
@@ -132,7 +132,7 @@ func (h *Handler) userRoleCreate(ctx context.Context, _ http.ResponseWriter, r *
 func (h *Handler) userRoleDelete(ctx context.Context, _ http.ResponseWriter, r *http.Request) web.Encoder {
 	userID := web.Param(r, "user_id")
 	if err := h.UseCase.User.Delete(ctx, userID); err != nil {
-		return errs.NewError(err)
+		return errs.AsErr(err)
 	}
 
 	return nil

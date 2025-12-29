@@ -87,7 +87,7 @@ func Test_API_User_Create_400(t *testing.T) {
 			StatusCode: http.StatusBadRequest,
 			Input:      &user_usecase.NewUser{},
 			GotResp:    &errs.Error{},
-			ExpResp:    errs.Newf(errs.InvalidArgument, "validation: [{\"field\":\"name\",\"error\":\"name is a required field\"},{\"field\":\"email\",\"error\":\"email is a required field\"},{\"field\":\"roles\",\"error\":\"roles is a required field\"},{\"field\":\"password\",\"error\":\"password is a required field\"}]"),
+			ExpResp:    errs.Errorf(errs.InvalidArgument, "validation: [{\"field\":\"name\",\"error\":\"name is a required field\"},{\"field\":\"email\",\"error\":\"email is a required field\"},{\"field\":\"roles\",\"error\":\"roles is a required field\"},{\"field\":\"password\",\"error\":\"password is a required field\"}]"),
 			CmpFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},
@@ -106,7 +106,7 @@ func Test_API_User_Create_400(t *testing.T) {
 				PasswordConfirm: "123",
 			},
 			GotResp: &errs.Error{},
-			ExpResp: errs.Newf(errs.InvalidArgument, "parse: invalid role \"SUPER\""),
+			ExpResp: errs.Errorf(errs.InvalidArgument, "parse: invalid role \"SUPER\""),
 			CmpFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},
@@ -125,7 +125,7 @@ func Test_API_User_Create_400(t *testing.T) {
 				PasswordConfirm: "123",
 			},
 			GotResp: &errs.Error{},
-			ExpResp: errs.Newf(errs.InvalidArgument, "parse: invalid name \"Bi\""),
+			ExpResp: errs.Errorf(errs.InvalidArgument, "parse: invalid name \"Bi\""),
 			CmpFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},

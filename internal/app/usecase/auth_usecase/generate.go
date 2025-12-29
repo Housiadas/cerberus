@@ -2,11 +2,12 @@ package auth_usecase
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
+
+	"github.com/Housiadas/cerberus/pkg/errs"
 )
 
 type accessToken struct {
@@ -18,7 +19,7 @@ func (u *UseCase) generateAccessToken(ctx context.Context, userID string) (acces
 	// get user roles name
 	roles, err := u.userRolesUsecase.GetUserRolesNames(ctx, userID)
 	if err != nil {
-		return accessToken{}, fmt.Errorf("roles not found: %w", err)
+		return accessToken{}, errs.Errorf(errs.NotFound, "roles not found: %s", err)
 	}
 
 	// Generating a token requires defining a set of claims
@@ -47,12 +48,12 @@ func (u *UseCase) generateAccessToken(ctx context.Context, userID string) (acces
 	aToken := jwt.NewWithClaims(u.method, accessClaims)
 	accessTokenString, err := aToken.SignedString(accessTokenSecret)
 	if err != nil {
-		return accessToken{}, fmt.Errorf("failed to sign access token: %w", err)
+		return accessToken{}, errs.Errorf(errs.InvalidArgument, "failed to sign access token: %s", err)
 	}
 
 	expirationDate, err := aToken.Claims.GetExpirationTime()
 	if err != nil {
-		return accessToken{}, fmt.Errorf("get expiration time: %w", err)
+		return accessToken{}, errs.Errorf(errs.InvalidArgument, "expiration time: %s", err)
 	}
 
 	return accessToken{
