@@ -9,21 +9,19 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/Housiadas/cerberus/internal/core/domain/name"
-	"github.com/Housiadas/cerberus/internal/core/domain/role"
 	"github.com/Housiadas/cerberus/internal/core/domain/user"
-	"github.com/Housiadas/cerberus/pkg/pgsql/dbarray"
 )
 
 type userDB struct {
-	ID           uuid.UUID      `db:"user_id"`
+	ID           uuid.UUID      `db:"id"`
+	RoleID       uuid.UUID      `db:"role_id"`
 	Name         string         `db:"name"`
 	Email        string         `db:"email"`
-	Roles        dbarray.String `db:"roles"`
 	PasswordHash []byte         `db:"password_hash"`
 	Department   sql.NullString `db:"department"`
 	Enabled      bool           `db:"enabled"`
-	DateCreated  time.Time      `db:"date_created"`
-	DateUpdated  time.Time      `db:"date_updated"`
+	CreatedAt    time.Time      `db:"created_at"`
+	UpdatedAt    time.Time      `db:"updated_at"`
 }
 
 func toUserDB(usr user.User) userDB {
@@ -31,26 +29,20 @@ func toUserDB(usr user.User) userDB {
 		ID:           usr.ID,
 		Name:         usr.Name.String(),
 		Email:        usr.Email.Address,
-		Roles:        role.ParseToString(usr.Roles),
 		PasswordHash: usr.PasswordHash,
 		Department: sql.NullString{
 			String: usr.Department.String(),
 			Valid:  usr.Department.Valid(),
 		},
-		Enabled:     usr.Enabled,
-		DateCreated: usr.DateCreated.UTC(),
-		DateUpdated: usr.DateUpdated.UTC(),
+		Enabled:   usr.Enabled,
+		CreatedAt: usr.CreatedAt.UTC(),
+		UpdatedAt: usr.UpdatedAt.UTC(),
 	}
 }
 
 func toUserDomain(db userDB) (user.User, error) {
 	addr := mail.Address{
 		Address: db.Email,
-	}
-
-	roles, err := role.ParseMany(db.Roles)
-	if err != nil {
-		return user.User{}, fmt.Errorf("parse: %w", err)
 	}
 
 	nme, err := name.Parse(db.Name)
@@ -67,12 +59,11 @@ func toUserDomain(db userDB) (user.User, error) {
 		ID:           db.ID,
 		Name:         nme,
 		Email:        addr,
-		Roles:        roles,
 		PasswordHash: db.PasswordHash,
 		Enabled:      db.Enabled,
 		Department:   department,
-		DateCreated:  db.DateCreated.In(time.Local),
-		DateUpdated:  db.DateUpdated.In(time.Local),
+		CreatedAt:    db.CreatedAt.In(time.Local),
+		UpdatedAt:    db.UpdatedAt.In(time.Local),
 	}
 
 	return bus, nil

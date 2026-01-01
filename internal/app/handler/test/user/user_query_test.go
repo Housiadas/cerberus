@@ -11,8 +11,8 @@ import (
 	"github.com/Housiadas/cerberus/internal/app/usecase/user_usecase"
 	"github.com/Housiadas/cerberus/internal/common/apitest"
 	"github.com/Housiadas/cerberus/internal/core/domain/user"
-	"github.com/Housiadas/cerberus/pkg/errs"
-	"github.com/Housiadas/cerberus/pkg/page"
+	"github.com/Housiadas/cerberus/pkg/web"
+	"github.com/Housiadas/cerberus/pkg/web/errs"
 )
 
 func Test_API_User_Query_200(t *testing.T) {
@@ -48,10 +48,10 @@ func Test_API_User_Query_200(t *testing.T) {
 			URL:        "/api/v1/users?page=1&rows=10&orderBy=user_id,ASC&name=Name",
 			StatusCode: http.StatusOK,
 			Method:     http.MethodGet,
-			GotResp:    &page.Result[user_usecase.User]{},
-			ExpResp: &page.Result[user_usecase.User]{
+			GotResp:    &web.Result[user_usecase.User]{},
+			ExpResp: &web.Result[user_usecase.User]{
 				Data: toAppUsers(usrs),
-				Metadata: page.Metadata{
+				Metadata: web.Metadata{
 					FirstPage:   1,
 					CurrentPage: 1,
 					LastPage:    1,
@@ -118,7 +118,7 @@ func Test_API_User_Query_400(t *testing.T) {
 			StatusCode: http.StatusBadRequest,
 			Method:     http.MethodGet,
 			GotResp:    &errs.Error{},
-			ExpResp:    errs.Newf(errs.InvalidArgument, "[{\"field\":\"email\",\"error\":\"mail: missing '@' or angle-addr\"}]"),
+			ExpResp:    errs.Errorf(errs.InvalidArgument, "[{\"field\":\"email\",\"error\":\"mail: missing '@' or angle-addr\"}]"),
 			CmpFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},
@@ -129,7 +129,7 @@ func Test_API_User_Query_400(t *testing.T) {
 			StatusCode: http.StatusBadRequest,
 			Method:     http.MethodGet,
 			GotResp:    &errs.Error{},
-			ExpResp:    errs.Newf(errs.InvalidArgument, "[{\"field\":\"order\",\"error\":\"unknown order: ser_id\"}]"),
+			ExpResp:    errs.Errorf(errs.InvalidArgument, "[{\"field\":\"order\",\"error\":\"unknown order: ser_id\"}]"),
 			CmpFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},

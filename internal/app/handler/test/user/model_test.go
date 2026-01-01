@@ -13,12 +13,12 @@ func toAppUser(bus user.User) user_usecase.User {
 		ID:           bus.ID.String(),
 		Name:         bus.Name.String(),
 		Email:        bus.Email.Address,
-		Roles:        role.ParseToString(bus.Roles),
+		Roles:        role.ParseToString(bus.RoleID),
 		PasswordHash: nil, // This field is not marshalled.
 		Department:   bus.Department.String(),
 		Enabled:      bus.Enabled,
-		DateCreated:  bus.DateCreated.Format(time.RFC3339),
-		DateUpdated:  bus.DateUpdated.Format(time.RFC3339),
+		CreatedAt:    bus.CreatedAt.Format(time.RFC3339),
+		UpdatedAt:    bus.UpdatedAt.Format(time.RFC3339),
 	}
 }
 

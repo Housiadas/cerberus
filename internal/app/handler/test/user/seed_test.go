@@ -7,14 +7,14 @@ import (
 	"github.com/Housiadas/cerberus/internal/common/apitest"
 	"github.com/Housiadas/cerberus/internal/common/dbtest"
 	"github.com/Housiadas/cerberus/internal/core/domain/role"
-	"github.com/Housiadas/cerberus/internal/core/service/user_core"
+	"github.com/Housiadas/cerberus/internal/core/service/user_service"
 )
 
 func insertSeedData(db *dbtest.Database) (apitest.SeedData, error) {
 	ctx := context.Background()
 	busDomain := db.Core
 
-	usrs, err := user_core.TestSeedUsers(ctx, 2, role.Admin, busDomain.User)
+	usrs, err := user_service.TestSeedUsers(ctx, 2, role.Admin, busDomain.User)
 	if err != nil {
 		return apitest.SeedData{}, fmt.Errorf("seeding users : %w", err)
 	}
@@ -29,7 +29,7 @@ func insertSeedData(db *dbtest.Database) (apitest.SeedData, error) {
 
 	// -------------------------------------------------------------------------
 
-	usrs, err = user_core.TestSeedUsers(ctx, 3, role.User, busDomain.User)
+	usrs, err = user_service.TestSeedUsers(ctx, 3, role.User, busDomain.User)
 	if err != nil {
 		return apitest.SeedData{}, fmt.Errorf("seeding users : %w", err)
 	}

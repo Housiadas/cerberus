@@ -39,7 +39,7 @@ func NewBy(field string, direction string) By {
 }
 
 // Parse constructs a By value by parsing a string in the form of
-// "field,direction" i.e. "user_id,ASC".
+// "field,direction" i.e. "user_id, ASC".
 func Parse(fieldMappings map[string]string, orderBy string, defaultOrder By) (By, error) {
 	if orderBy == "" {
 		return defaultOrder, nil

@@ -117,7 +117,7 @@ func ExecContext(ctx context.Context, log *logger.Logger, db sqlx.ExtContext, qu
 	return NamedExecContext(ctx, log, db, query, struct{}{})
 }
 
-// NamedExecContext is a helper function to execute a CUD operation with
+// NamedExecContext is a helper function to execute a CRUD operation with
 // logging and tracing where field replacement is necessary.
 func NamedExecContext(ctx context.Context, log *logger.Logger, db sqlx.ExtContext, query string, data any) (err error) {
 	q := queryString(query, data)

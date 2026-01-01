@@ -1,3 +1,24 @@
 INSERT INTO users
-(user_id, name, email, password_hash, roles, department, enabled, date_created, date_updated)
-VALUES (:user_id, :name, :email, :password_hash, :roles, :department, :enabled, :date_created, :date_updated)
+(
+    id,
+    role_id,
+    name,
+    email,
+    password_hash,
+    department,
+    enabled,
+    created_at,
+    updated_at,
+)
+VALUES
+(
+    :id,
+    :role_id,
+    :name,
+    :email,
+    :password_hash,
+    :department,
+    :enabled,
+    :created_at,
+    :updated_at
+)

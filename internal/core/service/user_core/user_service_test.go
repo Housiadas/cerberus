@@ -1,1 +1,0 @@
-package user_core_test

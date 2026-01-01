@@ -2,15 +2,13 @@ package apitest
 
 import (
 	"github.com/Housiadas/cerberus/internal/core/domain/audit"
-	"github.com/Housiadas/cerberus/internal/core/domain/product"
 	"github.com/Housiadas/cerberus/internal/core/domain/user"
 )
 
 // User extends the dbtest user for api test support.
 type User struct {
 	user.User
-	Products []product.Product
-	Audits   []audit.Audit
+	Audits []audit.Audit
 }
 
 // SeedData represents users for api tests.

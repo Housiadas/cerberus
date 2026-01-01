@@ -11,6 +11,5 @@ var orderByFields = map[string]string{
 	"user_id": user.OrderByID,
 	"name":    user.OrderByName,
 	"email":   user.OrderByEmail,
-	"roles":   user.OrderByRoles,
 	"enabled": user.OrderByEnabled,
 }

@@ -7,9 +7,9 @@ import (
 
 func Test_Order_Parse(t *testing.T) {
 	fieldMappings := map[string]string{
-		"user_id": "user_id",
-		"name":    "name",
-		"email":   "email",
+		"id":    "id",
+		"name":  "name",
+		"email": "email",
 	}
 	type args struct {
 		orderBy      string
@@ -26,12 +26,12 @@ func Test_Order_Parse(t *testing.T) {
 			args: args{
 				orderBy: "",
 				defaultOrder: By{
-					Field:     "user_id",
+					Field:     "id",
 					Direction: ASC,
 				},
 			},
 			want: By{
-				Field:     "user_id",
+				Field:     "id",
 				Direction: ASC,
 			},
 			wantErr: false,
@@ -56,7 +56,7 @@ func Test_Order_Parse(t *testing.T) {
 			args: args{
 				orderBy: "unknown,DESC",
 				defaultOrder: By{
-					Field:     "user_id",
+					Field:     "id",
 					Direction: ASC,
 				},
 			},

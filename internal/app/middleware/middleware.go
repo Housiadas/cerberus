@@ -1,4 +1,4 @@
-// Package middleware provides cli level middleware support.
+// Package middleware provides level middleware support.
 package middleware
 
 import (
@@ -10,10 +10,12 @@ import (
 	"go.opentelemetry.io/otel/trace"
 	"golang.org/x/sync/singleflight"
 
-	"github.com/Housiadas/cerberus/internal/core/service/product_core"
-	"github.com/Housiadas/cerberus/internal/core/service/user_core"
+	"github.com/Housiadas/cerberus/internal/app/usecase/auth_usecase"
+	"github.com/Housiadas/cerberus/internal/app/usecase/user_roles_permissions_usecase"
+	"github.com/Housiadas/cerberus/internal/app/usecase/user_usecase"
 	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/Housiadas/cerberus/pkg/pgsql"
+	"github.com/Housiadas/cerberus/pkg/web"
 )
 
 var (
@@ -24,30 +26,33 @@ var (
 )
 
 type Config struct {
-	Log     *logger.Logger
-	Tracer  trace.Tracer
-	Tx      *pgsql.DBBeginner
-	User    *user_core.Core
-	Product *product_core.Core
+	Log                  *logger.Logger
+	Tracer               trace.Tracer
+	Tx                   *pgsql.DBBeginner
+	AuthUseCase          *auth_usecase.UseCase
+	UserUseCase          *user_usecase.UseCase
+	UserRolesPermissions *user_roles_permissions_usecase.UseCase
 }
 
 type Middleware struct {
-	Core   Core
-	Log    *logger.Logger
-	Tracer trace.Tracer
-	Tx     *pgsql.DBBeginner
+	Tracer  trace.Tracer
+	Log     *logger.Logger
+	Tx      *pgsql.DBBeginner
+	UseCase UseCase
 }
 
-type Core struct {
-	User    *user_core.Core
-	Product *product_core.Core
+type UseCase struct {
+	Auth                 *auth_usecase.UseCase
+	User                 *user_usecase.UseCase
+	UserRolesPermissions *user_roles_permissions_usecase.UseCase
 }
 
 func New(cfg Config) *Middleware {
 	return &Middleware{
-		Core: Core{
-			User:    cfg.User,
-			Product: cfg.Product,
+		UseCase: UseCase{
+			Auth:                 cfg.AuthUseCase,
+			User:                 cfg.UserUseCase,
+			UserRolesPermissions: cfg.UserRolesPermissions,
 		},
 		Log:    cfg.Log,
 		Tracer: cfg.Tracer,
@@ -67,9 +72,9 @@ func (m *Middleware) Error(w http.ResponseWriter, err error, statusCode int) {
 // ResponseRecorder a custom http.ResponseWriter to capture the response before it's sent to the client.
 // We are capturing the result of the handler to the middleware
 type ResponseRecorder struct {
-	http.ResponseWriter
 	statusCode int
 	body       bytes.Buffer
+	http.ResponseWriter
 }
 
 func (rec *ResponseRecorder) WriteHeader(code int) {
@@ -81,4 +86,13 @@ func (rec *ResponseRecorder) WriteHeader(code int) {
 func (rec *ResponseRecorder) Write(b []byte) (int, error) {
 	rec.body.Write(b)
 	return rec.ResponseWriter.Write(b)
+}
+
+func checkIsError(e web.Encoder) error {
+	err, hasError := e.(error)
+	if hasError {
+		return err
+	}
+
+	return nil
 }

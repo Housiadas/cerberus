@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 
-	"github.com/Housiadas/cerberus/pkg/errs"
+	"github.com/Housiadas/cerberus/pkg/web/errs"
 )
 
 // FieldError is used to indicate an error with a specific request field.
@@ -16,8 +16,8 @@ type FieldError struct {
 // FieldErrors represents a collection of field errors.
 type FieldErrors []FieldError
 
-// NewFieldErrors creates a field error.
-func NewFieldErrors(field string, err error) *errs.Error {
+// ErrorfieldErrors creates a field error.
+func ErrorfieldErrors(field string, err error) *errs.Error {
 	fe := FieldErrors{
 		{
 			Field: field,

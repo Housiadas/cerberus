@@ -11,7 +11,7 @@ import (
 // Routes returns applications router
 func (h *Handler) Routes() *chi.Mux {
 	mid := h.Web.Middleware
-	tran := mid.BeginCommitRollback()
+	authenticate := mid.AuthenticateBearer
 
 	apiRouter := chi.NewRouter()
 	apiRouter.Use(
@@ -19,8 +19,16 @@ func (h *Handler) Routes() *chi.Mux {
 		mid.RequestID,
 		mid.Logger(),
 		mid.Otel(),
+		mid.Metrics(),
 		middleware.SetHeader("Content-Type", "application/json"),
 		middleware.GetHead,
+		cors.Handler(cors.Options{
+			AllowedOrigins: h.Cors.AllowedOrigins,
+			AllowedMethods: h.Cors.AllowedMethods,
+			AllowedHeaders: h.Cors.AllowedHeaders,
+			ExposedHeaders: h.Cors.ExposedHeaders,
+			MaxAge:         h.Cors.MaxAge,
+		}),
 	)
 
 	// v1 routes
@@ -29,40 +37,48 @@ func (h *Handler) Routes() *chi.Mux {
 			mid.ApiVersion("v1"),
 			otelchi.Middleware(h.ServiceName, otelchi.WithChiRoutes(v1)),
 		)
-		v1.Use(cors.Handler(cors.Options{
-			AllowedOrigins: h.Cors.AllowedOrigins,
-			AllowedMethods: h.Cors.AllowedMethods,
-			AllowedHeaders: h.Cors.AllowedHeaders,
-			ExposedHeaders: h.Cors.ExposedHeaders,
-			MaxAge:         h.Cors.MaxAge,
-		}))
+
+		// Auth
+		v1.Route("/auth", func(a chi.Router) {
+			a.Post("/login", h.Web.Res.Respond(h.authLogin))
+			a.Post("/register", h.Web.Res.Respond(h.authRegister))
+			a.Post("/refresh", h.Web.Res.Respond(h.authRefresh))
+			// logout - authenticated route
+			a.With(authenticate()).Post("/logout", h.Web.Res.Respond(h.authLogout))
+		})
 
 		// Users
-		v1.Route("/users", func(u chi.Router) {
+		v1.With(authenticate()).Route("/users", func(u chi.Router) {
 			u.Get("/", h.Web.Res.Respond(h.userQuery))
 			u.Post("/", h.Web.Res.Respond(h.userCreate))
 			u.Get("/{user_id}", h.Web.Res.Respond(h.userQueryByID))
 			u.Put("/{user_id}", h.Web.Res.Respond(h.userUpdate))
-			u.Put("/role/{user_id}", h.Web.Res.Respond(h.updateRole))
 			u.Delete("/{user_id}", h.Web.Res.Respond(h.userDelete))
+			u.Post("/{user_id}/role", h.Web.Res.Respond(h.userRoleCreate))
+			u.Delete("/{user_id}/role", h.Web.Res.Respond(h.userRoleDelete))
 		})
 
-		// Products
-		v1.Route("/products", func(p chi.Router) {
-			p.Get("/", h.Web.Res.Respond(h.productQuery))
-			p.Post("/", h.Web.Res.Respond(h.productCreate))
-			p.Get("/{product_id}", h.Web.Res.Respond(h.productQueryByID))
-			p.Put("/{product_id}", h.Web.Res.Respond(h.productUpdate))
-			p.Delete("/{product_id}", h.Web.Res.Respond(h.productDelete))
+		// Roles
+		v1.With(authenticate()).Route("/roles", func(r chi.Router) {
+			r.Get("/", h.Web.Res.Respond(h.roleQuery))
+			r.Post("/", h.Web.Res.Respond(h.roleCreate))
+			r.Put("/{role_id}", h.Web.Res.Respond(h.roleUpdate))
+			r.Delete("/{role_id}", h.Web.Res.Respond(h.roleDelete))
+			r.Post("/{role_id}/permission", h.Web.Res.Respond(h.rolePermissionCreate))
+		})
+
+		// Permissions
+		v1.With(authenticate()).Route("/permissions", func(p chi.Router) {
+			p.Get("/", h.Web.Res.Respond(h.permissionQuery))
+			p.Post("/", h.Web.Res.Respond(h.permissionCreate))
+			p.Put("/{permission_id}", h.Web.Res.Respond(h.permissionUpdate))
+			p.Delete("/{permission_id}", h.Web.Res.Respond(h.permissionDelete))
 		})
 
 		// Audits
-		v1.Route("/audits", func(a chi.Router) {
+		v1.With(authenticate()).Route("/audits", func(a chi.Router) {
 			a.Get("/", h.Web.Res.Respond(h.auditQuery))
 		})
-
-		// Transaction example
-		v1.With(tran).Post("/transaction", h.Web.Res.Respond(h.transaction))
 	})
 
 	// System Routes

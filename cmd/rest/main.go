@@ -13,13 +13,17 @@ import (
 	_ "github.com/Housiadas/cerberus/docs"
 	"github.com/Housiadas/cerberus/internal/app/handler"
 	"github.com/Housiadas/cerberus/internal/app/repo/audit_repo"
-	"github.com/Housiadas/cerberus/internal/app/repo/product_repo"
+	"github.com/Housiadas/cerberus/internal/app/repo/permission_repo"
+	"github.com/Housiadas/cerberus/internal/app/repo/role_repo"
 	"github.com/Housiadas/cerberus/internal/app/repo/user_repo"
+	"github.com/Housiadas/cerberus/internal/app/repo/user_roles_permissions_repo"
 	ctxPck "github.com/Housiadas/cerberus/internal/common/context"
 	"github.com/Housiadas/cerberus/internal/config"
-	"github.com/Housiadas/cerberus/internal/core/service/audit_core"
-	"github.com/Housiadas/cerberus/internal/core/service/product_core"
-	"github.com/Housiadas/cerberus/internal/core/service/user_core"
+	"github.com/Housiadas/cerberus/internal/core/service/audit_service"
+	"github.com/Housiadas/cerberus/internal/core/service/permission_service"
+	"github.com/Housiadas/cerberus/internal/core/service/role_service"
+	"github.com/Housiadas/cerberus/internal/core/service/user_roles_permissions_service"
+	"github.com/Housiadas/cerberus/internal/core/service/user_service"
 	"github.com/Housiadas/cerberus/pkg/debug"
 	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/Housiadas/cerberus/pkg/otel"
@@ -137,13 +141,15 @@ func run(ctx context.Context, cfg config.Config, log *logger.Logger) error {
 	tracer := traceProvider.Tracer(cfg.App.Name)
 
 	// -------------------------------------------------------------------------
-	// Core Services
+	// Services
 	// -------------------------------------------------------------------------
 	log.Info(ctx, "startup", "status", "initializing internal layer")
 
-	auditCore := audit_core.NewCore(log, audit_repo.NewStore(log, db))
-	userCore := user_core.NewCore(log, user_repo.NewStore(log, db))
-	productCore := product_core.NewCore(log, userCore, product_repo.NewStore(log, db))
+	auditService := audit_service.New(log, audit_repo.NewStore(log, db))
+	userService := user_service.New(log, user_repo.NewStore(log, db))
+	roleService := role_service.New(log, role_repo.NewStore(log, db))
+	permissionService := permission_service.New(log, permission_repo.NewStore(log, db))
+	userRolesPermissionsService := user_roles_permissions_service.New(log, user_roles_permissions_repo.NewStore(log, db))
 
 	// -------------------------------------------------------------------------
 	// Start Debug Http Server
@@ -163,15 +169,17 @@ func run(ctx context.Context, cfg config.Config, log *logger.Logger) error {
 
 	// Initialize handler
 	h := handler.New(handler.Config{
-		ServiceName: cfg.App.Name,
-		Build:       build,
-		Cors:        cfg.Cors,
-		DB:          db,
-		Log:         log,
-		Tracer:      tracer,
-		AuditCore:   auditCore,
-		UserCore:    userCore,
-		ProductCore: productCore,
+		ServiceName:                 cfg.App.Name,
+		Build:                       build,
+		Cors:                        cfg.Cors,
+		DB:                          db,
+		Log:                         log,
+		Tracer:                      tracer,
+		AuditService:                auditService,
+		UserService:                 userService,
+		RoleService:                 roleService,
+		PermissionService:           permissionService,
+		UserRolesPermissionsService: userRolesPermissionsService,
 	})
 
 	api := http.Server{

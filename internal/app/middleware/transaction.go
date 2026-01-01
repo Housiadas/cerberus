@@ -5,12 +5,12 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/Housiadas/cerberus/pkg/errs"
 	"github.com/Housiadas/cerberus/pkg/pgsql"
+	"github.com/Housiadas/cerberus/pkg/web/errs"
 )
 
-// BeginCommitRollback starts a transaction for the core call.
-func (m *Middleware) BeginCommitRollback() func(next http.Handler) http.Handler {
+// BeginTransaction starts a transaction for the core call.
+func (m *Middleware) BeginTransaction() func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			ctx := r.Context()
@@ -19,7 +19,7 @@ func (m *Middleware) BeginCommitRollback() func(next http.Handler) http.Handler 
 			m.Log.Info(ctx, "BEGIN TRANSACTION")
 			tx, err := m.Tx.Begin()
 			if err != nil {
-				err := errs.Newf(errs.Internal, "BEGIN TRANSACTION: %s", err)
+				err := errs.Errorf(errs.Internal, "BEGIN TRANSACTION: %s", err)
 				m.Log.Error(ctx, "transaction middleware", err)
 				m.Error(w, err, http.StatusInternalServerError)
 				return
@@ -46,14 +46,14 @@ func (m *Middleware) BeginCommitRollback() func(next http.Handler) http.Handler 
 
 			// Access the recorded response
 			// Check if we can commit transaction
-			if rec.statusCode >= 400 {
+			if rec.statusCode >= http.StatusBadRequest {
 				m.Log.Info(ctx, "TRANSACTION FAILED, WILL ROLLBACK")
 				return
 			}
 
 			m.Log.Info(ctx, "COMMIT TRANSACTION")
 			if err := tx.Commit(); err != nil {
-				err := errs.Newf(errs.Internal, "COMMIT TRANSACTION: %s", err)
+				err := errs.Errorf(errs.Internal, "COMMIT TRANSACTION: %s", err)
 				m.Log.Error(ctx, "transaction middleware", err)
 				m.Error(w, err, http.StatusInternalServerError)
 				return

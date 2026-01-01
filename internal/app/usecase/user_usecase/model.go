@@ -8,10 +8,9 @@ import (
 
 	"github.com/Housiadas/cerberus/internal/common/validation"
 	"github.com/Housiadas/cerberus/internal/core/domain/name"
-	"github.com/Housiadas/cerberus/internal/core/domain/role"
 	"github.com/Housiadas/cerberus/internal/core/domain/user"
-	"github.com/Housiadas/cerberus/pkg/errs"
-	"github.com/Housiadas/cerberus/pkg/page"
+	"github.com/Housiadas/cerberus/pkg/web"
+	"github.com/Housiadas/cerberus/pkg/web/errs"
 )
 
 // =============================================================================
@@ -31,7 +30,7 @@ func (app *AuthenticateUser) Encode() ([]byte, string, error) {
 // Validate checks the data in the model is considered clean.
 func (app *AuthenticateUser) Validate() error {
 	if err := validation.Check(app); err != nil {
-		return errs.Newf(errs.InvalidArgument, "validation: %s", err)
+		return errs.Errorf(errs.InvalidArgument, "validation: %s", err)
 	}
 
 	return nil
@@ -41,15 +40,14 @@ func (app *AuthenticateUser) Validate() error {
 
 // User represents information about an individual user.
 type User struct {
-	ID           string   `json:"id"`
-	Name         string   `json:"name"`
-	Email        string   `json:"email"`
-	Roles        []string `json:"roles"`
-	PasswordHash []byte   `json:"-"`
-	Department   string   `json:"department"`
-	Enabled      bool     `json:"enabled"`
-	DateCreated  string   `json:"dateCreated"`
-	DateUpdated  string   `json:"dateUpdated"`
+	ID           string `json:"id"`
+	Name         string `json:"name"`
+	Email        string `json:"email"`
+	PasswordHash []byte `json:"-"`
+	Department   string `json:"department"`
+	Enabled      bool   `json:"enabled"`
+	CreatedAt    string `json:"CreatedAt"`
+	UpdatedAt    string `json:"UpdatedAt"`
 }
 
 // Encode implements the encoder interface.
@@ -59,21 +57,15 @@ func (app User) Encode() ([]byte, string, error) {
 }
 
 func toAppUser(bus user.User) User {
-	roles := make([]string, len(bus.Roles))
-	for i, r := range bus.Roles {
-		roles[i] = r.String()
-	}
-
 	return User{
 		ID:           bus.ID.String(),
 		Name:         bus.Name.String(),
 		Email:        bus.Email.Address,
-		Roles:        roles,
 		PasswordHash: bus.PasswordHash,
 		Department:   bus.Department.String(),
 		Enabled:      bus.Enabled,
-		DateCreated:  bus.DateCreated.Format(time.RFC3339),
-		DateUpdated:  bus.DateUpdated.Format(time.RFC3339),
+		CreatedAt:    bus.CreatedAt.Format(time.RFC3339),
+		UpdatedAt:    bus.UpdatedAt.Format(time.RFC3339),
 	}
 }
 
@@ -89,8 +81,8 @@ func toAppUsers(users []user.User) []User {
 // =============================================================================
 
 type UserPageResult struct {
-	Data     []User        `json:"data"`
-	Metadata page.Metadata `json:"metadata"`
+	Data     []User       `json:"data"`
+	Metadata web.Metadata `json:"metadata"`
 }
 
 // =============================================================================
@@ -121,11 +113,6 @@ func (app *NewUser) Validate() error {
 }
 
 func toBusNewUser(app NewUser) (user.NewUser, error) {
-	roles, err := role.ParseMany(app.Roles)
-	if err != nil {
-		return user.NewUser{}, fmt.Errorf("parse: %w", err)
-	}
-
 	addr, err := mail.ParseAddress(app.Email)
 	if err != nil {
 		return user.NewUser{}, fmt.Errorf("parse: %w", err)
@@ -144,7 +131,6 @@ func toBusNewUser(app NewUser) (user.NewUser, error) {
 	bus := user.NewUser{
 		Name:       nme,
 		Email:      *addr,
-		Roles:      roles,
 		Department: department,
 		Password:   app.Password,
 	}
@@ -167,33 +153,11 @@ func (app *UpdateUserRole) Decode(data []byte) error {
 // Validate checks the data in the model is considered clean.
 func (app *UpdateUserRole) Validate() error {
 	if err := validation.Check(app); err != nil {
-		return errs.Newf(errs.InvalidArgument, "validation: %s", err)
+		return errs.Errorf(errs.InvalidArgument, "validation: %s", err)
 	}
 
 	return nil
 }
-
-func toBusUpdateUserRole(app UpdateUserRole) (user.UpdateUser, error) {
-	var roles []role.Role
-	if app.Roles != nil {
-		roles = make([]role.Role, len(app.Roles))
-		for i, roleStr := range app.Roles {
-			r, err := role.Parse(roleStr)
-			if err != nil {
-				return user.UpdateUser{}, fmt.Errorf("parse: %w", err)
-			}
-			roles[i] = r
-		}
-	}
-
-	bus := user.UpdateUser{
-		Roles: roles,
-	}
-
-	return bus, nil
-}
-
-// =============================================================================
 
 // UpdateUser defines the data needed to update a user.
 type UpdateUser struct {
@@ -213,7 +177,7 @@ func (app *UpdateUser) Decode(data []byte) error {
 // Validate checks the data in the model is considered clean.
 func (app *UpdateUser) Validate() error {
 	if err := validation.Check(app); err != nil {
-		return errs.Newf(errs.InvalidArgument, "validation: %s", err)
+		return errs.Errorf(errs.InvalidArgument, "validation: %s", err)
 	}
 
 	return nil

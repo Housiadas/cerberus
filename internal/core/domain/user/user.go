@@ -8,7 +8,6 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/Housiadas/cerberus/internal/core/domain/name"
-	"github.com/Housiadas/cerberus/internal/core/domain/role"
 )
 
 // Set of error variables for CRUD operations.
@@ -23,19 +22,17 @@ type User struct {
 	ID           uuid.UUID
 	Name         name.Name
 	Email        mail.Address
-	Roles        []role.Role
 	PasswordHash []byte
 	Department   name.Null
 	Enabled      bool
-	DateCreated  time.Time
-	DateUpdated  time.Time
+	CreatedAt    time.Time
+	UpdatedAt    time.Time
 }
 
 // NewUser contains information needed to create a new user.
 type NewUser struct {
 	Name       name.Name
 	Email      mail.Address
-	Roles      []role.Role
 	Department name.Null
 	Password   string
 }
@@ -44,7 +41,6 @@ type NewUser struct {
 type UpdateUser struct {
 	Name       *name.Name
 	Email      *mail.Address
-	Roles      []role.Role
 	Department *name.Null
 	Password   *string
 	Enabled    *bool
