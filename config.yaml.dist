@@ -17,7 +17,7 @@ db:
   maxIdleConnections: "25"
   connectionIdleTime: "30s"
   disableTLS: true
-  postgresImage: "postgres:17.5"
+  postgresImage: "postgres:18.1"
   postgresContainerName: "repository-container"
 cors:
   allowedOrigins: "*"

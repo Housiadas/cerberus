@@ -1,9 +1,11 @@
 package middleware
 
 import (
+	"context"
 	"net/http"
 
-	"github.com/Housiadas/cerberus/internal/common/context"
+	ctxPck "github.com/Housiadas/cerberus/internal/common/context"
+	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/google/uuid"
 )
@@ -15,22 +17,32 @@ func (m *Middleware) RequestID(next http.Handler) http.Handler {
 		var err error
 
 		ctx := r.Context()
-		h := r.Header.Get(middleware.RequestIDHeader)
+		reqID := r.Header.Get(middleware.RequestIDHeader)
 
-		if h == "" {
-			u = uuid.New()
+		if reqID == "" {
+			u = initializeUUIDV7(ctx, m.Log)
 		} else {
-			u, err = uuid.Parse(h)
+			u, err = uuid.Parse(reqID)
 			if err != nil {
 				m.Log.Info(ctx, "request id parse error", err)
-				u = uuid.New()
+				u = initializeUUIDV7(ctx, m.Log)
 			}
 		}
 
 		us := u.String()
-		ctx = context.SetRequestID(ctx, us)
+		ctx = ctxPck.SetRequestID(ctx, us)
 		w.Header().Set(middleware.RequestIDHeader, us)
 
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
+}
+
+func initializeUUIDV7(ctx context.Context, log *logger.Logger) uuid.UUID {
+	u, err := uuid.NewV7()
+	if err != nil {
+		log.Info(ctx, "uuid v7 parse", err)
+		return uuid.New()
+	}
+
+	return u
 }

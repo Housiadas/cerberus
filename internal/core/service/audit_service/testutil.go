@@ -20,8 +20,9 @@ func TestNewAudits(n int, actorID uuid.UUID, objEntity entity.Entity, action str
 	for i := range n {
 		idx++
 
+		objID, _ := uuid.NewV7()
 		na := audit.NewAudit{
-			ObjID:     uuid.New(),
+			ObjID:     objID,
 			ObjEntity: objEntity,
 			ObjName:   name.MustParse(fmt.Sprintf("ObjName%d", idx)),
 			ActorID:   actorID,

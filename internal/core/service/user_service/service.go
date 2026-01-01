@@ -57,8 +57,13 @@ func (c *Service) Create(ctx context.Context, nu user.NewUser) (user.User, error
 
 	now := time.Now()
 
+	id, err := uuid.NewV7()
+	if err != nil {
+		return user.User{}, fmt.Errorf("uuid v7 error: %w", err)
+	}
+
 	usr := user.User{
-		ID:           uuid.New(),
+		ID:           id,
 		Name:         nu.Name,
 		Email:        nu.Email,
 		PasswordHash: hash,

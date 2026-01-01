@@ -29,9 +29,16 @@ func New(log *logger.Logger, storer refresh_token.Storer) *Service {
 // Create adds a new refresh token to the system.
 func (c *Service) Create(ctx context.Context, userID uuid.UUID, refreshTokenTTL time.Duration) (refresh_token.RefreshToken, error) {
 	now := time.Now()
-	tokenID := uuid.New()
+	id, err := uuid.NewV7()
+	if err != nil {
+		return refresh_token.RefreshToken{}, fmt.Errorf("uuid: %w", err)
+	}
+	tokenID, err := uuid.NewV7()
+	if err != nil {
+		return refresh_token.RefreshToken{}, fmt.Errorf("uuid: %w", err)
+	}
 	tkn := refresh_token.RefreshToken{
-		ID:        uuid.New(),
+		ID:        id,
 		UserID:    userID,
 		Token:     tokenID.String(),
 		CreatedAt: now,

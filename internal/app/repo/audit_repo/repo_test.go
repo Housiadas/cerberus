@@ -40,7 +40,7 @@ func Test_Audit(t *testing.T) {
 func insertSeedData(core dbtest.Service) (unitest.SeedData, error) {
 	ctx := context.Background()
 
-	roleID := uuid.New()
+	roleID, _ := uuid.NewV7()
 	usrs, err := user_service.TestSeedUsers(ctx, 1, roleID, core.User)
 	if err != nil {
 		return unitest.SeedData{}, fmt.Errorf("seeding users : %w", err)

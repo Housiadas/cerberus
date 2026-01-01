@@ -39,8 +39,13 @@ func (b *Service) Create(ctx context.Context, na audit.NewAudit) (audit.Audit, e
 		return audit.Audit{}, fmt.Errorf("marshal object: %w", err)
 	}
 
+	id, err := uuid.NewV7()
+	if err != nil {
+		return audit.Audit{}, fmt.Errorf("uuid: %w", err)
+	}
+
 	aud := audit.Audit{
-		ID:        uuid.New(),
+		ID:        id,
 		ObjID:     na.ObjID,
 		ObjEntity: na.ObjEntity,
 		ObjName:   na.ObjName,
