@@ -1,4 +1,4 @@
-// Package logger provides support for initializing the log systemapi.
+// Package logger provides support for initializing the log system.
 package logger
 
 import (
@@ -20,6 +20,7 @@ type RequestIDFn func(ctx context.Context) string
 
 // Logger represents a logger for logging information.
 type Logger struct {
+	discard     bool
 	handler     slog.Handler
 	traceIDFn   TraceIDFn
 	requestIDFn RequestIDFn
@@ -48,41 +49,73 @@ func NewStdLogger(logger *Logger, level Level) *log.Logger {
 
 // Debug logs at LevelDebug with the given context.
 func (log *Logger) Debug(ctx context.Context, msg string, args ...any) {
+	if log.discard {
+		return
+	}
+
 	log.write(ctx, LevelDebug, 3, msg, args...)
 }
 
 // Debugc logs the information at the specified call stack position.
 func (log *Logger) Debugc(ctx context.Context, caller int, msg string, args ...any) {
+	if log.discard {
+		return
+	}
+
 	log.write(ctx, LevelDebug, caller, msg, args...)
 }
 
 // Info logs at LevelInfo with the given context.
 func (log *Logger) Info(ctx context.Context, msg string, args ...any) {
+	if log.discard {
+		return
+	}
+
 	log.write(ctx, LevelInfo, 3, msg, args...)
 }
 
 // Infoc logs the information at the specified call stack position.
 func (log *Logger) Infoc(ctx context.Context, caller int, msg string, args ...any) {
+	if log.discard {
+		return
+	}
+
 	log.write(ctx, LevelInfo, caller, msg, args...)
 }
 
 // Warn logs at LevelWarn with the given context.
 func (log *Logger) Warn(ctx context.Context, msg string, args ...any) {
+	if log.discard {
+		return
+	}
+
 	log.write(ctx, LevelWarn, 3, msg, args...)
 }
 
 // Warnc logs the information at the specified call stack position.
 func (log *Logger) Warnc(ctx context.Context, caller int, msg string, args ...any) {
+	if log.discard {
+		return
+	}
+
 	log.write(ctx, LevelWarn, caller, msg, args...)
 }
 
 // Error logs at LevelError with the given context.
 func (log *Logger) Error(ctx context.Context, msg string, args ...any) {
+	if log.discard {
+		return
+	}
+
 	log.write(ctx, LevelError, 3, msg, args...)
 }
 
 // Errorc logs the information at the specified call stack position.
 func (log *Logger) Errorc(ctx context.Context, caller int, msg string, args ...any) {
+	if log.discard {
+		return
+	}
+
 	log.write(ctx, LevelError, caller, msg, args...)
 }
 
@@ -111,8 +144,7 @@ func (log *Logger) write(ctx context.Context, level Level, caller int, msg strin
 
 func new(w io.Writer, minLevel Level, serviceName string, traceIDFn TraceIDFn, requestIDFn RequestIDFn, events Events) *Logger {
 
-	// Convert the file name to just the name.ext when this key/value will
-	// be logged.
+	// Convert the file name to just the name.ext when this key/value is logged.
 	f := func(groups []string, a slog.Attr) slog.Attr {
 		if a.Key == slog.SourceKey {
 			if source, ok := a.Value.Any().(*slog.Source); ok {
@@ -135,13 +167,14 @@ func new(w io.Writer, minLevel Level, serviceName string, traceIDFn TraceIDFn, r
 
 	// Attributes to add to every log.
 	attrs := []slog.Attr{
-		{Key: "usecase", Value: slog.StringValue(serviceName)},
+		{Key: "service", Value: slog.StringValue(serviceName)},
 	}
 
 	// Add those attributes and capture the final handler.
 	handler = handler.WithAttrs(attrs)
 
 	return &Logger{
+		discard:     w == io.Discard,
 		handler:     handler,
 		traceIDFn:   traceIDFn,
 		requestIDFn: requestIDFn,

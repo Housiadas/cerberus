@@ -2,14 +2,15 @@ package otel
 
 import (
 	"context"
+
 	"go.opentelemetry.io/otel/trace"
 )
 
-type ctxKey string
+type ctxKey int
 
 const (
-	tracerKey  ctxKey = "tracerKey"
-	traceIDKey ctxKey = "traceIDKey"
+	tracerKey ctxKey = iota + 1
+	traceIDKey
 )
 
 func setTracer(ctx context.Context, tracer trace.Tracer) context.Context {
@@ -24,7 +25,7 @@ func setTraceID(ctx context.Context, traceID string) context.Context {
 func GetTraceID(ctx context.Context) string {
 	v, ok := ctx.Value(traceIDKey).(string)
 	if !ok {
-		return "00000000000000000000000000000000"
+		return defaultTraceID
 	}
 
 	return v

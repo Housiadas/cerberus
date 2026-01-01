@@ -1,0 +1,665 @@
+definitions:
+  audit_usecase.Audit:
+    properties:
+      action:
+        type: string
+      actorID:
+        type: string
+      data:
+        type: string
+      id:
+        type: string
+      message:
+        type: string
+      objEntity:
+        type: string
+      objID:
+        type: string
+      objName:
+        type: string
+      timestamp:
+        type: string
+    type: object
+  audit_usecase.AuditPageResult:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/audit_usecase.Audit'
+        type: array
+      metadata:
+        $ref: '#/definitions/web.Metadata'
+    type: object
+  auth_usecase.LoginReq:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    type: object
+  auth_usecase.RefreshTokenReq:
+    properties:
+      refresh_token:
+        type: string
+    type: object
+  auth_usecase.Token:
+    properties:
+      access_token:
+        type: string
+      expires_in:
+        type: integer
+      refresh_token:
+        type: string
+    type: object
+  errs.ErrCode:
+    type: object
+  errs.Error:
+    properties:
+      code:
+        $ref: '#/definitions/errs.ErrCode'
+      message:
+        type: string
+    type: object
+  permission_usecase.NewPermission:
+    properties:
+      name:
+        type: string
+    required:
+    - name
+    type: object
+  permission_usecase.Permission:
+    properties:
+      CreatedAt:
+        type: string
+      UpdatedAt:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+    type: object
+  permission_usecase.PermissionPageResults:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/permission_usecase.Permission'
+        type: array
+      metadata:
+        $ref: '#/definitions/web.Metadata'
+    type: object
+  permission_usecase.UpdatePermission:
+    properties:
+      name:
+        type: string
+    type: object
+  role_usecase.NewRole:
+    properties:
+      name:
+        type: string
+    required:
+    - name
+    type: object
+  role_usecase.Role:
+    properties:
+      CreatedAt:
+        type: string
+      UpdatedAt:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+    type: object
+  role_usecase.RolePageResult:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/role_usecase.Role'
+        type: array
+      metadata:
+        $ref: '#/definitions/web.Metadata'
+    type: object
+  role_usecase.UpdateRole:
+    properties:
+      name:
+        type: string
+    type: object
+  system_usecase.Info:
+    properties:
+      GOMAXPROCS:
+        type: integer
+      build:
+        type: string
+      host:
+        type: string
+      name:
+        type: string
+      namespace:
+        type: string
+      node:
+        type: string
+      podIP:
+        type: string
+      status:
+        type: string
+    type: object
+  system_usecase.Status:
+    properties:
+      status:
+        type: string
+    type: object
+  user_usecase.NewUser:
+    properties:
+      department:
+        type: string
+      email:
+        type: string
+      name:
+        type: string
+      password:
+        type: string
+      passwordConfirm:
+        type: string
+      roles:
+        items:
+          type: string
+        type: array
+    required:
+    - email
+    - name
+    - password
+    - roles
+    type: object
+  user_usecase.UpdateUser:
+    properties:
+      department:
+        type: string
+      email:
+        type: string
+      enabled:
+        type: boolean
+      name:
+        type: string
+      password:
+        type: string
+      passwordConfirm:
+        type: string
+    type: object
+  user_usecase.User:
+    properties:
+      CreatedAt:
+        type: string
+      UpdatedAt:
+        type: string
+      department:
+        type: string
+      email:
+        type: string
+      enabled:
+        type: boolean
+      id:
+        type: string
+      name:
+        type: string
+    type: object
+  user_usecase.UserPageResult:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/user_usecase.User'
+        type: array
+      metadata:
+        $ref: '#/definitions/web.Metadata'
+    type: object
+  web.Metadata:
+    properties:
+      currentPage:
+        type: integer
+      firstPage:
+        type: integer
+      lastPage:
+        type: integer
+      rowsPerPage:
+        type: integer
+      total:
+        type: integer
+    type: object
+externalDocs:
+  description: OpenAPI
+  url: https://swagger.io/resources/open-api/
+host: localhost:4000
+info:
+  contact:
+    email: support@swagger.io
+    name: API Support
+    url: http://www.swagger.io/support
+  description: This is a monitoring system.
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  title: Cerberus
+paths:
+  /liveness:
+    get:
+      consumes:
+      - application/json
+      description: Returns application's status info if the usecase is alive
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/system_usecase.Info'
+      summary: UseCase Liveness
+      tags:
+      - System
+  /readiness:
+    get:
+      consumes:
+      - application/json
+      description: Check application's readiness
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/system_usecase.Status'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errs.Error'
+      summary: UseCase Readiness
+      tags:
+      - System
+  /v1/audits:
+    get:
+      consumes:
+      - application/json
+      description: Search audits in database based on criteria
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/audit_usecase.AuditPageResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errs.Error'
+      summary: Query Audits
+      tags:
+      - Audit
+  /v1/auth/login:
+    post:
+      consumes:
+      - application/json
+      description: Validate user's credentials
+      parameters:
+      - description: Login data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/auth_usecase.LoginReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/auth_usecase.Token'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errs.Error'
+      summary: Auth login
+      tags:
+      - Auth
+  /v1/auth/logout:
+    post:
+      consumes:
+      - application/json
+      description: Logout a user
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errs.Error'
+      summary: Logout a user
+      tags:
+      - Auth
+  /v1/auth/refresh:
+    post:
+      consumes:
+      - application/json
+      description: RefreshAccessToken user's JWT tokens
+      parameters:
+      - description: RefreshAccessToken data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/auth_usecase.RefreshTokenReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/auth_usecase.Token'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errs.Error'
+      summary: Auth refresh
+      tags:
+      - Auth
+  /v1/auth/register:
+    post:
+      consumes:
+      - application/json
+      description: Register a new user
+      parameters:
+      - description: Login data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/user_usecase.NewUser'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/user_usecase.User'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errs.Error'
+      summary: Auth register
+      tags:
+      - Auth
+  /v1/permissions:
+    get:
+      consumes:
+      - application/json
+      description: Search roles
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/permission_usecase.PermissionPageResults'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errs.Error'
+      summary: Query Roles
+      tags:
+      - Permissions
+    post:
+      consumes:
+      - application/json
+      description: Create a new Permission
+      parameters:
+      - description: Permission data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/permission_usecase.NewPermission'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/permission_usecase.Permission'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errs.Error'
+      summary: Crete Permission
+      tags:
+      - Permissions
+  /v1/permissions/{permission_id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete a Permission
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errs.Error'
+      summary: Delete a Permission
+      tags:
+      - Permissions
+    put:
+      consumes:
+      - application/json
+      description: Update an existing Permission
+      parameters:
+      - description: Permission data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/permission_usecase.UpdatePermission'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/permission_usecase.Permission'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errs.Error'
+      summary: Update Permission
+      tags:
+      - Permissions
+  /v1/roles:
+    get:
+      consumes:
+      - application/json
+      description: Search roles
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/role_usecase.RolePageResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errs.Error'
+      summary: Query Roles
+      tags:
+      - Roles
+    post:
+      consumes:
+      - application/json
+      description: Create a new role
+      parameters:
+      - description: Role data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/role_usecase.NewRole'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/role_usecase.Role'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errs.Error'
+      summary: Crete Role
+      tags:
+      - Roles
+  /v1/roles/{role_id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete a role
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errs.Error'
+      summary: Delete a role
+      tags:
+      - Roles
+    put:
+      consumes:
+      - application/json
+      description: Update an existing role
+      parameters:
+      - description: Role data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/role_usecase.UpdateRole'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/role_usecase.Role'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errs.Error'
+      summary: Update Role
+      tags:
+      - Roles
+  /v1/users:
+    get:
+      consumes:
+      - application/json
+      description: Search users in database based on criteria
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/user_usecase.UserPageResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errs.Error'
+      summary: Query Users
+      tags:
+      - Users
+    post:
+      consumes:
+      - application/json
+      description: Create a new user
+      parameters:
+      - description: User data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/user_usecase.NewUser'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/user_usecase.User'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errs.Error'
+      summary: Crete User
+      tags:
+      - Users
+  /v1/users/{user_id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete a user
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errs.Error'
+      summary: Delete a user
+      tags:
+      - Users
+    get:
+      consumes:
+      - application/json
+      description: Search user in database by id
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/user_usecase.User'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errs.Error'
+      summary: Find User by id
+      tags:
+      - Users
+    put:
+      consumes:
+      - application/json
+      description: Update an existing user
+      parameters:
+      - description: User data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/user_usecase.UpdateUser'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/user_usecase.User'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errs.Error'
+      summary: Update User
+      tags:
+      - Users
+swagger: "2.0"

@@ -18,24 +18,24 @@ import (
 	semconv "go.opentelemetry.io/otel/semconv/v1.4.0"
 	"go.opentelemetry.io/otel/trace"
 	"go.opentelemetry.io/otel/trace/noop"
-
-	"github.com/Housiadas/cerberus/pkg/logger"
 )
+
+const defaultTraceID = "00000000000000000000000000000000"
 
 // Config defines the information needed to init tracing.
 type Config struct {
-	Log            *logger.Logger
 	ServiceName    string
 	Host           string
 	ExcludedRoutes map[string]struct{}
 	Probability    float64
 }
 
-// InitTracing configures open telemetry to be used with the usecase.
+// InitTracing configures open telemetry to be used with the service.
 func InitTracing(cfg Config) (trace.TracerProvider, func(ctx context.Context), error) {
 
 	// WARNING: The current settings are using defaults which may not be
-	// compatible with your project. Please review the documentation for opentelemetry.
+	// compatible with your project. Please review the documentation for
+	// opentelemetry.
 
 	exporter, err := otlptrace.New(
 		context.Background(),
@@ -53,12 +53,9 @@ func InitTracing(cfg Config) (trace.TracerProvider, func(ctx context.Context), e
 
 	switch cfg.Host {
 	case "":
-		cfg.Log.Info(context.Background(), "OTEL", "tracer", "NOOP")
 		traceProvider = noop.NewTracerProvider()
 
 	default:
-		cfg.Log.Info(context.Background(), "OTEL", "tracer", cfg.Host)
-
 		tp := sdktrace.NewTracerProvider(
 			sdktrace.WithSampler(sdktrace.ParentBased(newEndpointExcluder(cfg.ExcludedRoutes, cfg.Probability))),
 			sdktrace.WithBatcher(exporter,
@@ -101,7 +98,7 @@ func InjectTracing(ctx context.Context, tracer trace.Tracer) context.Context {
 	ctx = setTracer(ctx, tracer)
 
 	traceID := trace.SpanFromContext(ctx).SpanContext().TraceID().String()
-	if traceID == "00000000000000000000000000000000" {
+	if traceID == defaultTraceID { // Use defined constant
 		traceID = uuid.NewString()
 	}
 	ctx = setTraceID(ctx, traceID)
@@ -111,21 +108,20 @@ func InjectTracing(ctx context.Context, tracer trace.Tracer) context.Context {
 
 // AddSpan adds an otel span to the existing trace.
 func AddSpan(ctx context.Context, spanName string, keyValues ...attribute.KeyValue) (context.Context, trace.Span) {
-	v, ok := ctx.Value(tracerKey).(trace.Tracer)
-	if !ok || v == nil {
+	tracer, ok := ctx.Value(tracerKey).(trace.Tracer)
+	if !ok || tracer == nil {
 		return ctx, trace.SpanFromContext(ctx)
 	}
 
-	ctx, span := v.Start(ctx, spanName)
-	for _, kv := range keyValues {
-		span.SetAttributes(kv)
-	}
+	ctx, span := tracer.Start(ctx, spanName)
+
+	span.SetAttributes(keyValues...)
 
 	return ctx, span
 }
 
 // AddTraceToRequest adds the current trace id to the request so it
-// can be delivered to the usecase being called.
+// can be delivered to the service being called.
 func AddTraceToRequest(ctx context.Context, r *http.Request) {
 	hc := propagation.HeaderCarrier(r.Header)
 	otel.GetTextMapPropagator().Inject(ctx, hc)

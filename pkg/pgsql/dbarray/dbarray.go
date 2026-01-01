@@ -21,7 +21,7 @@ OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-// Package dbarray provides support for database array usecase.
+// Package dbarray provides support for database array types.
 package dbarray
 
 import (
@@ -44,10 +44,10 @@ var typeSQLScanner = reflect.TypeOf((*sql.Scanner)(nil)).Elem()
 //
 // For example:
 //
-//	repository.Query(`SELECT * FROM t WHERE id = ANY($1)`, pq.Array([]int{235, 401}))
+//	db.Query(`SELECT * FROM t WHERE id = ANY($1)`, pq.Array([]int{235, 401}))
 //
 //	var x []sql.NullInt64
-//	repository.QueryRow(`SELECT ARRAY[235, 401]`).Scan(pq.Array(&x))
+//	db.QueryRow(`SELECT ARRAY[235, 401]`).Scan(pq.Array(&x))
 //
 // Scanning multi-dimensional arrays is not supported.  Arrays where the lower
 // bound is not one (such as `[0:0]={1}') are not supported.
@@ -97,7 +97,7 @@ type Delimiter interface {
 	Delimiter() string
 }
 
-// Bool represents a one-dimensional array of the PostgresSQL boolean type.
+// Bool represents a one-dimensional array of the PostgreSQL boolean type.
 type Bool []bool
 
 // Scan implements the sql.Scanner interface.
@@ -171,7 +171,7 @@ func (a Bool) Value() (driver.Value, error) {
 	return "{}", nil
 }
 
-// Bytea represents a one-dimensional array of the PostgresSQL bytea type.
+// Bytea represents a one-dimensional array of the PostgreSQL bytea type.
 type Bytea [][]byte
 
 // Scan implements the sql.Scanner interface.
@@ -210,7 +210,7 @@ func (a *Bytea) scanBytes(src []byte) error {
 }
 
 // Value implements the driver.Valuer interface. It uses the "hex" format which
-// is only supported on PostgresSQL 9.0 or newer.
+// is only supported on PostgreSQL 9.0 or newer.
 func (a Bytea) Value() (driver.Value, error) {
 	if a == nil {
 		return nil, nil
@@ -242,7 +242,7 @@ func (a Bytea) Value() (driver.Value, error) {
 	return "{}", nil
 }
 
-// Float64 represents a one-dimensional array of the PostgresSQL double
+// Float64 represents a one-dimensional array of the PostgreSQL double
 // precision type.
 type Float64 []float64
 
@@ -304,7 +304,7 @@ func (a Float64) Value() (driver.Value, error) {
 	return "{}", nil
 }
 
-// Float32 represents a one-dimensional array of the PostgresSQL double
+// Float32 represents a one-dimensional array of the PostgreSQL double
 // precision type.
 type Float32 []float32
 
@@ -376,7 +376,7 @@ func (Generic) evaluateDestination(rt reflect.Type) (reflect.Type, func([]byte, 
 	var assign func([]byte, reflect.Value) error
 	var del = ","
 
-	// TODO calculate the assign function for other usecase
+	// TODO calculate the assign function for other types
 	// TODO repeat this section on the element type of arrays or slices (multidimensional)
 	{
 		if reflect.PointerTo(rt).Implements(typeSQLScanner) {
@@ -488,7 +488,6 @@ func (a Generic) scanBytes(src []byte, dv reflect.Value) error {
 		for i := 0; i < dims[0]; i++ {
 			dv.Index(i).Set(values.Index(i))
 		}
-	default:
 	}
 
 	return nil
@@ -524,7 +523,7 @@ func (a Generic) Value() (driver.Value, error) {
 	return "{}", nil
 }
 
-// Int64 represents a one-dimensional array of the PostgresSQL integer usecase.
+// Int64 represents a one-dimensional array of the PostgreSQL integer types.
 type Int64 []int64
 
 // Scan implements the sql.Scanner interface.
@@ -585,7 +584,7 @@ func (a Int64) Value() (driver.Value, error) {
 	return "{}", nil
 }
 
-// Int32 represents a one-dimensional array of the PostgresSQL integer usecase.
+// Int32 represents a one-dimensional array of the PostgreSQL integer types.
 type Int32 []int32
 
 // Scan implements the sql.Scanner interface.
@@ -648,7 +647,7 @@ func (a Int32) Value() (driver.Value, error) {
 	return "{}", nil
 }
 
-// String represents a one-dimensional array of the PostgresSQL character usecase.
+// String represents a one-dimensional array of the PostgreSQL character types.
 type String []string
 
 // Scan implements the sql.Scanner interface.

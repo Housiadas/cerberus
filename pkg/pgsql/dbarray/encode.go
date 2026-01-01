@@ -41,7 +41,7 @@ var infinityTSNegative time.Time
 var infinityTSPositive time.Time
 
 type parameterStatus struct {
-	// grpc version in the same format as server_version_num, or 0 if unavailable.
+	// server version in the same format as server_version_num, or 0 if unavailable.
 	serverVersion int
 }
 
@@ -55,7 +55,7 @@ type parameterStatus struct {
 //
 // Once EnableInfinityTS has been called, all connections created using this
 // driver will decode Postgres' "-infinity" and "infinity" for "timestamp",
-// "timestamp with time zone" and "date" usecase to the predefined minimum and
+// "timestamp with time zone" and "date" types to the predefined minimum and
 // maximum times, respectively.  When encoding time.Time values, any time which
 // equals or precedes the predefined minimum time will be encoded to
 // "-infinity".  Any values at or past the maximum time will similarly be
@@ -77,7 +77,7 @@ func EnableInfinityTS(negative time.Time, positive time.Time) {
 	infinityTSPositive = positive
 }
 
-func encode(parameterStatus *parameterStatus, x interface{}, oid int) []byte {
+func encode(parameterStatus *parameterStatus, x any, oid int) []byte {
 	const oidBytea = 17
 
 	switch v := x.(type) {
@@ -158,11 +158,11 @@ func formatTimestamp(t time.Time) []byte {
 	return b
 }
 
-func errorf(s string, args ...interface{}) {
+func errorf(s string, args ...any) {
 	panic(fmt.Errorf("pq: %s", fmt.Sprintf(s, args...)))
 }
 
-// Parse a bytea value received from the grpc.  Both "hex" and the legacy
+// Parse a bytea value received from the server.  Both "hex" and the legacy
 // "escape" format are supported.
 func parseBytea(s []byte) (result []byte, err error) {
 	if len(s) >= 2 && bytes.Equal(s[:2], []byte("\\x")) {
@@ -213,7 +213,7 @@ func parseBytea(s []byte) (result []byte, err error) {
 
 func encodeBytea(serverVersion int, v []byte) (result []byte) {
 	if serverVersion >= 90000 {
-		// Use the hex format if we know that the grpc supports it
+		// Use the hex format if we know that the server supports it
 		result = make([]byte, 2+hex.EncodedLen(len(v)))
 		result[0] = '\\'
 		result[1] = 'x'

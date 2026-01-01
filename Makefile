@@ -196,7 +196,7 @@ tools/update:
 # swagger: Generate swagger docs
 .PHONY: swagger
 swagger:
-	docker run --rm -v $(PWD):/code ghcr.io/swaggo/swag:v1.16.3 init --g app/rest/main.go
+	docker run --rm -v $(PWD):/code ghcr.io/swaggo/swag:v1.16.3 init --g cmd/rest/main.go
 
 ## metrics: See metrics
 .PHONY: metrics

@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/Housiadas/cerberus/internal/core/domain/audit"
+	"github.com/Housiadas/cerberus/pkg/web"
 )
 
 // Audit represents information about an individual audit record.
@@ -18,6 +19,11 @@ type Audit struct {
 	Data      string
 	Message   string
 	Timestamp string
+}
+
+type AuditPageResult struct {
+	Data     []Audit      `json:"data"`
+	Metadata web.Metadata `json:"metadata"`
 }
 
 // Encode implements the encoder interface.

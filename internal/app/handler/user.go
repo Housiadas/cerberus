@@ -12,13 +12,13 @@ import (
 // User godoc
 // @Summary      Crete User
 // @Description  Create a new user
-// @Tags 		 User
+// @Tags 		 Users
 // @Accept       json
 // @Produce      json
 // @Param        request body user_usecase.NewUser true "User data"
 // @Success      200  {object}  user_usecase.User
 // @Failure      500  {object}  errs.Error
-// @Router       /user [post]
+// @Router       /v1/users [post]
 func (h *Handler) userCreate(ctx context.Context, _ http.ResponseWriter, r *http.Request) web.Encoder {
 	var app user_usecase.NewUser
 	if err := web.Decode(r, &app); err != nil {
@@ -36,13 +36,13 @@ func (h *Handler) userCreate(ctx context.Context, _ http.ResponseWriter, r *http
 // User godoc
 // @Summary      Update User
 // @Description  Update an existing user
-// @Tags 		 User
+// @Tags 		 Users
 // @Accept       json
 // @Produce      json
 // @Param        request body user_usecase.UpdateUser true "User data"
 // @Success      200  {object}  user_usecase.User
 // @Failure      500  {object}  errs.Error
-// @Router       /user/{user_id} [put]
+// @Router       /v1/users/{user_id} [put]
 func (h *Handler) userUpdate(ctx context.Context, _ http.ResponseWriter, r *http.Request) web.Encoder {
 	var res user_usecase.UpdateUser
 	if err := web.Decode(r, &res); err != nil {
@@ -61,12 +61,12 @@ func (h *Handler) userUpdate(ctx context.Context, _ http.ResponseWriter, r *http
 // User godoc
 // @Summary      Delete a user
 // @Description  Delete a user
-// @Tags 		 User
+// @Tags 		 Users
 // @Accept       json
 // @Produce      json
 // @Success      204
 // @Failure      500  {object}  errs.Error
-// @Router       /user/{user_id} [delete]
+// @Router       /v1/users/{user_id} [delete]
 func (h *Handler) userDelete(ctx context.Context, _ http.ResponseWriter, r *http.Request) web.Encoder {
 	userID := web.Param(r, "user_id")
 	if err := h.UseCase.User.Delete(ctx, userID); err != nil {
@@ -79,12 +79,12 @@ func (h *Handler) userDelete(ctx context.Context, _ http.ResponseWriter, r *http
 // User godoc
 // @Summary      Query Users
 // @Description  Search users in database based on criteria
-// @Tags		 User
+// @Tags		 Users
 // @Accept       json
 // @Produce      json
 // @Success      200  {object}  user_usecase.UserPageResult
 // @Failure      500  {object}  errs.Error
-// @Router       /user [get]
+// @Router       /v1/users [get]
 func (h *Handler) userQuery(ctx context.Context, _ http.ResponseWriter, r *http.Request) web.Encoder {
 	qp := userParseQueryParams(r)
 
@@ -99,12 +99,12 @@ func (h *Handler) userQuery(ctx context.Context, _ http.ResponseWriter, r *http.
 // User godoc
 // @Summary      Find User by id
 // @Description  Search user in database by id
-// @Tags		 User
+// @Tags		 Users
 // @Accept       json
 // @Produce      json
 // @Success      200  {object}  user_usecase.User
 // @Failure      500  {object}  errs.Error
-// @Router       /user/{user_id} [get]
+// @Router       /v1/users/{user_id} [get]
 func (h *Handler) userQueryByID(ctx context.Context, _ http.ResponseWriter, r *http.Request) web.Encoder {
 	userID := web.Param(r, "user_id")
 	usr, err := h.UseCase.User.QueryByID(ctx, userID)

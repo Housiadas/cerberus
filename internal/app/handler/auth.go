@@ -15,7 +15,7 @@ import (
 // @Summary Auth login
 // @Description Validate user's credentials
 // @Tags	Auth
-// @Accept json
+// @Accept 	json
 // @Produce json
 // @Param request body auth_usecase.LoginReq true "Login data"
 // @Success 200 {object} auth_usecase.Token
@@ -62,12 +62,12 @@ func (h *Handler) authRegister(ctx context.Context, _ http.ResponseWriter, r *ht
 // Auth godoc
 // @Summary      Logout a user
 // @Description  Logout a user
-// @Tags 		 User
+// @Tags 		 Auth
 // @Accept       json
 // @Produce      json
 // @Success      204
 // @Failure      500  {object}  errs.Error
-// @Router       /auth/logout [post]
+// @Router       /v1/auth/logout [post]
 func (h *Handler) authLogout(ctx context.Context, _ http.ResponseWriter, r *http.Request) web.Encoder {
 	var req auth_usecase.LogoutReq
 	if err := web.Decode(r, &req); err != nil {
@@ -84,12 +84,12 @@ func (h *Handler) authLogout(ctx context.Context, _ http.ResponseWriter, r *http
 }
 
 // Auth godoc
-// @Summary Auth refresh
+// @Summary 		Auth refresh
 // @Description		RefreshAccessToken user's JWT tokens
 // @Tags			Auth
 // @Accept			json
 // @Produce			json
-// @Param request body auth_usecase.RefreshTokenReq true "RefreshAccessToken data"
+// @Param request body	auth_usecase.RefreshTokenReq true "RefreshAccessToken data"
 // @Success	200 {object} auth_usecase.Token
 // @Failure	500 {object} errs.Error
 // @Router	/v1/auth/refresh [post]
