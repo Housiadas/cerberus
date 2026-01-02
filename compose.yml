@@ -7,8 +7,8 @@ volumes:
 
 services:
   db:
-    image: postgres:18.1
-    container_name: repository-container
+    image: postgres:17.5
+    container_name: db-container
     restart: always
     environment:
       POSTGRES_DB: "housi_db"

@@ -151,18 +151,18 @@ func run(ctx context.Context, cfg config.Config, log *logger.Logger) error {
 	userRolesPermissionsService := user_roles_permissions_service.New(log, user_roles_permissions_repo.NewStore(log, db))
 
 	// -------------------------------------------------------------------------
-	// Start Debug Http Server
+	// Start Debug Rest Server
 	// -------------------------------------------------------------------------
 	go func() {
-		log.Info(ctx, "startup", "status", "Debug server starting", "host", cfg.Http.Debug)
+		log.Info(ctx, "startup", "status", "Debug server starting", "host", cfg.Rest.Debug)
 
-		if err := http.ListenAndServe(cfg.Http.Debug, debug.Mux()); err != nil {
-			log.Error(ctx, "shutdown", "status", "debug router closed", "host", cfg.Http.Debug, "msg", err)
+		if err := http.ListenAndServe(cfg.Rest.Debug, debug.Mux()); err != nil {
+			log.Error(ctx, "shutdown", "status", "debug router closed", "host", cfg.Rest.Debug, "msg", err)
 		}
 	}()
 
 	// -------------------------------------------------------------------------
-	// Start API Http Server
+	// Start API Rest Server
 	// -------------------------------------------------------------------------
 	log.Info(ctx, "startup", "status", "Rest server starting")
 
@@ -182,11 +182,11 @@ func run(ctx context.Context, cfg config.Config, log *logger.Logger) error {
 	})
 
 	api := http.Server{
-		Addr:         cfg.Http.Api,
+		Addr:         cfg.Rest.Api,
 		Handler:      h.Routes(),
-		ReadTimeout:  cfg.Http.ReadTimeout,
-		WriteTimeout: cfg.Http.WriteTimeout,
-		IdleTimeout:  cfg.Http.IdleTimeout,
+		ReadTimeout:  cfg.Rest.ReadTimeout,
+		WriteTimeout: cfg.Rest.WriteTimeout,
+		IdleTimeout:  cfg.Rest.IdleTimeout,
 		ErrorLog:     logger.NewStdLogger(log, logger.LevelError),
 	}
 
@@ -208,7 +208,7 @@ func run(ctx context.Context, cfg config.Config, log *logger.Logger) error {
 		log.Info(ctx, "shutdown", "status", "shutdown started", "signal", sig)
 		defer log.Info(ctx, "shutdown", "status", "shutdown complete", "signal", sig)
 
-		ctx, cancel := context.WithTimeout(ctx, cfg.Http.ShutdownTimeout)
+		ctx, cancel := context.WithTimeout(ctx, cfg.Rest.ShutdownTimeout)
 		defer cancel()
 
 		if err := api.Shutdown(ctx); err != nil {

@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/stretchr/testify/require"
 
 	"github.com/Housiadas/cerberus/internal/app/usecase/user_usecase"
 	"github.com/Housiadas/cerberus/internal/common/apitest"
@@ -19,21 +20,12 @@ func Test_API_User_Query_200(t *testing.T) {
 	t.Parallel()
 
 	test, err := apitest.StartTest(t, "Test_API_User")
-	if err != nil {
-		t.Fatalf("Start error: %s", err)
-	}
+	require.NoError(t, err)
 
 	sd, err := insertSeedData(test.DB)
-	if err != nil {
-		t.Fatalf("Seeding error: %s", err)
-	}
+	require.NoError(t, err)
 
 	usrs := make([]user.User, 0, len(sd.Admins)+len(sd.Users))
-
-	for _, adm := range sd.Admins {
-		usrs = append(usrs, adm.User)
-	}
-
 	for _, usr := range sd.Users {
 		usrs = append(usrs, usr.User)
 	}
@@ -72,14 +64,10 @@ func Test_API_User_Query_BY_ID_200(t *testing.T) {
 	t.Parallel()
 
 	test, err := apitest.StartTest(t, "Test_API_User")
-	if err != nil {
-		t.Fatalf("Start error: %s", err)
-	}
+	require.NoError(t, err)
 
 	sd, err := insertSeedData(test.DB)
-	if err != nil {
-		t.Fatalf("Seeding error: %s", err)
-	}
+	require.NoError(t, err)
 
 	table := []apitest.Table{
 		{
@@ -102,14 +90,10 @@ func Test_API_User_Query_400(t *testing.T) {
 	t.Parallel()
 
 	test, err := apitest.StartTest(t, "Test_API_User")
-	if err != nil {
-		t.Fatalf("Start error: %s", err)
-	}
+	require.NoError(t, err)
 
 	_, err = insertSeedData(test.DB)
-	if err != nil {
-		t.Fatalf("Seeding error: %s", err)
-	}
+	require.NoError(t, err)
 
 	table := []apitest.Table{
 		{

@@ -17,10 +17,10 @@ type accessToken struct {
 
 func (u *UseCase) generateAccessToken(ctx context.Context, userID string) (accessToken, error) {
 	// get user roles name
-	roles, err := u.userRolesUsecase.GetUserRolesNames(ctx, userID)
-	if err != nil {
-		return accessToken{}, errs.Errorf(errs.NotFound, "roles not found: %s", err)
-	}
+	//roles, err := u.userRolesUsecase.GetUserRolesNames(ctx, userID)
+	//if err != nil {
+	//	return accessToken{}, errs.Errorf(errs.NotFound, "roles not found: %s", err)
+	//}
 
 	// Generating a token requires defining a set of claims
 	// iss (issuer): Issuer of the JWT
@@ -46,7 +46,7 @@ func (u *UseCase) generateAccessToken(ctx context.Context, userID string) (acces
 			Audience:  []string{u.Issuer()},
 		},
 		TokenID: accessTokenID.String(),
-		Roles:   roles,
+		//Roles:   roles,
 	}
 
 	aToken := jwt.NewWithClaims(u.method, accessClaims)

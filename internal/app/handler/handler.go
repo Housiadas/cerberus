@@ -1,14 +1,12 @@
 package handler
 
 import (
-	"github.com/Housiadas/cerberus/internal/app/usecase/auth_usecase"
-	"github.com/Housiadas/cerberus/internal/app/usecase/user_roles_usecase"
-	"github.com/Housiadas/cerberus/internal/core/service/user_roles_service"
 	"github.com/jmoiron/sqlx"
 	"go.opentelemetry.io/otel/trace"
 
 	"github.com/Housiadas/cerberus/internal/app/middleware"
 	"github.com/Housiadas/cerberus/internal/app/usecase/audit_usecase"
+	"github.com/Housiadas/cerberus/internal/app/usecase/auth_usecase"
 	"github.com/Housiadas/cerberus/internal/app/usecase/permission_usecase"
 	"github.com/Housiadas/cerberus/internal/app/usecase/role_usecase"
 	"github.com/Housiadas/cerberus/internal/app/usecase/system_usecase"
@@ -65,7 +63,6 @@ type Config struct {
 	AuditService                *audit_service.Service
 	UserService                 *user_service.Service
 	RoleService                 *role_service.Service
-	UserRolesService            *user_roles_service.Service
 	PermissionService           *permission_service.Service
 	UserRolesPermissionsService *user_roles_permissions_service.Service
 }
@@ -73,10 +70,9 @@ type Config struct {
 func New(cfg Config) *Handler {
 	userUseCase := user_usecase.NewUseCase(cfg.UserService)
 	authUseCase := auth_usecase.NewUseCase(auth_usecase.Config{
-		Issuer:           cfg.ServiceName,
-		Log:              cfg.Log,
-		UserUsecase:      userUseCase,
-		UserRolesUsecase: user_roles_usecase.NewUseCase(cfg.UserRolesService),
+		Issuer:      cfg.ServiceName,
+		Log:         cfg.Log,
+		UserUsecase: userUseCase,
 	})
 	userRolesPermissionsUseCase := user_roles_permissions_usecase.NewUseCase(cfg.UserRolesPermissionsService)
 

@@ -4,9 +4,9 @@ CREATE TABLE refresh_tokens (
     token       VARCHAR(255)    UNIQUE NOT NULL,
     expires_at  TIMESTAMP       NOT NULL,
     created_at  TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    revoked     BOOLEAN         NOT NULL DEFAULT FALSE
+    revoked     BOOLEAN         NOT NULL DEFAULT FALSE,
 
-    PRIMARY KEY (id)
+    PRIMARY KEY (id),
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 

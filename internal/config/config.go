@@ -1,6 +1,8 @@
 package config
 
 import (
+	"path/filepath"
+
 	"github.com/spf13/viper"
 )
 
@@ -9,23 +11,26 @@ import (
 type Config struct {
 	App     App
 	Version Version
+	Rest    Rest
 	DB      DB
-	Http    Http
 	Tempo   Tempo
 	Cors    CorsSettings
 }
 
 // LoadConfig reads configuration from file or environment variables.
 func LoadConfig(path string) (config Config, err error) {
-	viper.AddConfigPath(path)
-	viper.SetConfigFile("config.yaml")
+	viper.SetConfigFile(filepath.Join(path, "config.yaml"))
 	viper.AutomaticEnv()
 
 	err = viper.ReadInConfig()
 	if err != nil {
-		return
+		return Config{}, err
 	}
 
 	err = viper.Unmarshal(&config)
-	return
+	if err != nil {
+		return Config{}, err
+	}
+
+	return config, nil
 }

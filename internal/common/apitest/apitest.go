@@ -45,7 +45,9 @@ func (at *Test) Run(t *testing.T, table []Table, testName string) {
 			at.Mux.ServeHTTP(w, r)
 
 			if w.Code != tt.StatusCode {
-				t.Fatalf("%s: Should receive a status code of %d for the response : %d", tt.Name, tt.StatusCode, w.Code)
+				t.Fatalf("%s: Should receive a status code of %d for the response : %d",
+					tt.Name, tt.StatusCode, w.Code,
+				)
 			}
 
 			if tt.StatusCode == http.StatusNoContent {

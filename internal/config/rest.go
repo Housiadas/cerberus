@@ -2,7 +2,7 @@ package config
 
 import "time"
 
-type Http struct {
+type Rest struct {
 	Api             string
 	Debug           string
 	ReadTimeout     time.Duration

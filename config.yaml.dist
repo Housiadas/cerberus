@@ -1,6 +1,6 @@
 app:
   name: "Cerberus"
-http:
+rest:
   api: "localhost:4000"
   debug: "localhost:4010"
   readTimeout: "5s"
@@ -17,8 +17,8 @@ db:
   maxIdleConnections: "25"
   connectionIdleTime: "30s"
   disableTLS: true
-  postgresImage: "postgres:18.1"
-  postgresContainerName: "repository-container"
+  postgresImage: "postgres:17.5"
+  postgresContainerName: "db-container"
 cors:
   allowedOrigins: "*"
   allowedMethods: "GET;POST;PUT;DELETE;OPTIONS;PATCH"

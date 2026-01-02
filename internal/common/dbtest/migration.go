@@ -1,17 +1,23 @@
 package dbtest
 
 import (
+	"database/sql"
 	"path/filepath"
 	"runtime"
 
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
-	"github.com/jmoiron/sqlx"
 )
 
-func migration(cfg Config, dbTest *sqlx.DB) error {
-	driver, err := postgres.WithInstance(dbTest.DB, &postgres.Config{})
+func migration(cfg Config, dbURL string) error {
+	db, err := sql.Open("postgres", dbURL+"sslmode=disable")
+	if err != nil {
+		return err
+	}
+	defer db.Close()
+
+	driver, err := postgres.WithInstance(db, &postgres.Config{})
 	m, err := migrate.NewWithDatabaseInstance(
 		getMigrationsDir(),
 		"postgres",
@@ -24,7 +30,6 @@ func migration(cfg Config, dbTest *sqlx.DB) error {
 	if err != nil {
 		return err
 	}
-
 	return nil
 }
 

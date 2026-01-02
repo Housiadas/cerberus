@@ -8,6 +8,7 @@ import (
 
 	"github.com/Housiadas/cerberus/pkg/web/errs"
 	"github.com/google/go-cmp/cmp"
+	"github.com/stretchr/testify/require"
 
 	"github.com/Housiadas/cerberus/internal/app/usecase/user_usecase"
 	"github.com/Housiadas/cerberus/internal/common/apitest"
@@ -18,14 +19,10 @@ func Test_API_User_Update_200(t *testing.T) {
 	t.Parallel()
 
 	test, err := apitest.StartTest(t, "Test_API_User")
-	if err != nil {
-		t.Fatalf("Start error: %s", err)
-	}
+	require.NoError(t, err)
 
 	sd, err := insertSeedData(test.DB)
-	if err != nil {
-		t.Fatalf("Seeding error: %s", err)
-	}
+	require.NoError(t, err)
 
 	table := []apitest.Table{
 		{
@@ -45,42 +42,10 @@ func Test_API_User_Update_200(t *testing.T) {
 				ID:         sd.Users[0].ID.String(),
 				Name:       "Jack Housi",
 				Email:      "chris@housi2.com",
-				Roles:      []string{"USER"},
 				Department: "IT0",
 				Enabled:    true,
 				CreatedAt:  sd.Users[0].CreatedAt.Format(time.RFC3339),
 				UpdatedAt:  sd.Users[0].UpdatedAt.Format(time.RFC3339),
-			},
-			CmpFunc: func(got any, exp any) string {
-				gotResp, exists := got.(*user_usecase.User)
-				if !exists {
-					return "error occurred"
-				}
-
-				expResp := exp.(*user_usecase.User)
-				gotResp.UpdatedAt = expResp.UpdatedAt
-
-				return cmp.Diff(gotResp, expResp)
-			},
-		},
-		{
-			Name:       "role",
-			URL:        fmt.Sprintf("/api/v1/users/role/%s", sd.Admins[0].ID),
-			Method:     http.MethodPut,
-			StatusCode: http.StatusOK,
-			Input: &user_usecase.UpdateUserRole{
-				Roles: []string{"USER"},
-			},
-			GotResp: &user_usecase.User{},
-			ExpResp: &user_usecase.User{
-				ID:         sd.Admins[0].ID.String(),
-				Name:       sd.Admins[0].Name.String(),
-				Email:      sd.Admins[0].Email.Address,
-				Roles:      []string{"USER"},
-				Department: sd.Admins[0].Department.String(),
-				Enabled:    true,
-				CreatedAt:  sd.Admins[0].CreatedAt.Format(time.RFC3339),
-				UpdatedAt:  sd.Admins[0].UpdatedAt.Format(time.RFC3339),
 			},
 			CmpFunc: func(got any, exp any) string {
 				gotResp, exists := got.(*user_usecase.User)
@@ -124,20 +89,6 @@ func Test_API_User_Update_400(t *testing.T) {
 			},
 			GotResp: &errs.Error{},
 			ExpResp: errs.Errorf(errs.InvalidArgument, "validation: [{\"field\":\"email\",\"error\":\"email must be a valid email address\"},{\"field\":\"passwordConfirm\",\"error\":\"passwordConfirm must be equal to Password\"}]"),
-			CmpFunc: func(got any, exp any) string {
-				return cmp.Diff(got, exp)
-			},
-		},
-		{
-			Name:       "bad-role",
-			URL:        fmt.Sprintf("/api/v1/users/role/%s", sd.Admins[0].ID),
-			Method:     http.MethodPut,
-			StatusCode: http.StatusBadRequest,
-			Input: &user_usecase.UpdateUserRole{
-				Roles: []string{"BAD ROLE"},
-			},
-			GotResp: &errs.Error{},
-			ExpResp: errs.Errorf(errs.InvalidArgument, "parse: invalid role \"BAD ROLE\""),
 			CmpFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},

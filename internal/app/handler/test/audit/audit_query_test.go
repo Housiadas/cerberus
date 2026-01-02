@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/stretchr/testify/require"
 
 	"github.com/Housiadas/cerberus/internal/app/usecase/audit_usecase"
 	"github.com/Housiadas/cerberus/internal/common/apitest"
@@ -18,17 +19,13 @@ func Test_API_Audit_Query_200(t *testing.T) {
 	t.Parallel()
 
 	test, err := apitest.StartTest(t, "Test_API_Audit")
-	if err != nil {
-		t.Fatalf("Start error: %s", err)
-	}
+	require.NoError(t, err)
 
 	sd, err := insertSeedData(test.DB)
-	if err != nil {
-		t.Fatalf("Seeding error: %s", err)
-	}
+	require.NoError(t, err)
 
-	sort.Slice(sd.Admins[0].Audits, func(i, j int) bool {
-		return sd.Admins[0].Audits[i].ObjName.String() <= sd.Admins[0].Audits[j].ObjName.String()
+	sort.Slice(sd.Users[0].Audits, func(i, j int) bool {
+		return sd.Users[0].Audits[i].ObjName.String() <= sd.Users[0].Audits[j].ObjName.String()
 	})
 
 	table := []apitest.Table{
@@ -99,7 +96,7 @@ func Test_API_Audit_Query_400(t *testing.T) {
 			},
 		},
 		{
-			Name:       "bad-orderby-value",
+			Name:       "bad-order-by-value",
 			URL:        "/api/v1/audits?page=1&rows=10&orderBy=ser_id,ASC",
 			StatusCode: http.StatusBadRequest,
 			Method:     http.MethodGet,

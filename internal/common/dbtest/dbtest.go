@@ -4,8 +4,9 @@ package dbtest
 import (
 	"bytes"
 	"context"
+	"fmt"
+	"strings"
 	"testing"
-	"time"
 
 	"github.com/jmoiron/sqlx"
 	"github.com/stretchr/testify/require"
@@ -26,14 +27,11 @@ type Database struct {
 // to handle testing. The database is migrated to the current version, and
 // a connection pool is provided with internal core packages.
 func New(t *testing.T, testName string) *Database {
-	// -------------------------------------------------------------------------
 	// load app local config
 	cfg := newConfig(t)
 
-	// -------------------------------------------------------------------------
 	// Start the postgres container and run any migrations on it
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
+	ctx := context.Background()
 
 	ctr, err := postgres.Run(
 		ctx,
@@ -51,16 +49,16 @@ func New(t *testing.T, testName string) *Database {
 	dbURL, err := ctr.ConnectionString(ctx)
 	require.NoError(t, err)
 
-	// Open DB
-	dbTest, err := sqlx.Open("pgx", dbURL)
-	require.NoError(t, err)
-
 	// set up migrations
-	err = migration(cfg, dbTest)
+	err = migration(cfg, dbURL)
 	require.NoError(t, err)
 
 	// Create a snapshot of the database to restore later
 	err = ctr.Snapshot(ctx, postgres.WithSnapshotName("test-snapshot"))
+	require.NoError(t, err)
+
+	// Open DB
+	dbTest, err := sqlx.Open("pgx", dbURL)
 	require.NoError(t, err)
 
 	// inject logger
@@ -74,12 +72,26 @@ func New(t *testing.T, testName string) *Database {
 	t.Cleanup(func() {
 		t.Helper()
 
+		// Close the DB
+		dbTest.Close()
+
+		// Connect to a postgres database to terminate connections
+		postgresURL := strings.Replace(dbURL, cfg.DBName, "postgres", 1)
+		adminDB, err := sqlx.Open("pgx", postgresURL)
+		require.NoError(t, err)
+		defer adminDB.Close()
+
+		_, err = adminDB.Exec(fmt.Sprintf(`
+      SELECT pg_terminate_backend(pg_stat_activity.pid)
+      FROM pg_stat_activity
+      WHERE pg_stat_activity.datname = '%s'
+      AND pid <> pg_backend_pid()
+   `, cfg.DBName))
+		require.NoError(t, err)
+
 		// Reset the DB to its snapshot state.
 		err = ctr.Restore(ctx)
 		require.NoError(t, err)
-
-		// Close the DB
-		dbTest.Close()
 
 		t.Logf("******************** LOGS (%s) ********************\n\n", testName)
 		t.Log(buf.String())
