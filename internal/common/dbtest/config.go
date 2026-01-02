@@ -36,6 +36,5 @@ func newConfig(t *testing.T) Config {
 func getConfigDir() string {
 	_, file, _, _ := runtime.Caller(0)
 	basepath := filepath.Dir(file)
-	migrationsPath := filepath.Join(basepath, "../../../")
-	return "file://" + migrationsPath
+	return filepath.Join(basepath, "../../../")
 }

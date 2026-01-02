@@ -17,7 +17,6 @@ func StartTest(t *testing.T, testName string) (*Test, error) {
 
 	// tracer
 	traceProvider, teardown, err := otel.InitTracing(otel.Config{
-		Log:         db.Log,
 		ServiceName: "Service Name",
 		Host:        "Test host",
 		ExcludedRoutes: map[string]struct{}{

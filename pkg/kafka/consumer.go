@@ -4,8 +4,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
+
+	"github.com/Housiadas/cerberus/pkg/logger"
 )
 
 const (
@@ -73,7 +74,7 @@ func (c *ConsumerClient) Consume(ctx context.Context, fn func(msg *kafka.Message
 					c.log.Error(ctx, fmt.Sprintf("consumer: Commiting%v\n", err))
 				}()
 			}
-			// Callback, application specific
+			// Callback, application-specific
 			err := fn(e)
 			if err != nil {
 				c.log.Error(ctx, fmt.Sprintf("consumer: %v\n", e))

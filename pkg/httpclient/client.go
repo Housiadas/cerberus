@@ -16,13 +16,13 @@ type Config struct {
 	Timeout time.Duration
 }
 
-// Client represents a http client.
+// Client represents an http client.
 type Client struct {
 	log  *logger.Logger
 	http *http.Client
 }
 
-// New constructs a http client
+// New constructs an http client
 func New(cfg Config) *Client {
 	cln := Client{
 		log: cfg.Log,
