@@ -9,9 +9,7 @@ CREATE TABLE users
     enabled       BOOLEAN     NOT NULL,
     created_at    TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at    TIMESTAMP   NOT NULL,
-    last_login    TIMESTAMP
+    last_login    TIMESTAMP,
 
     PRIMARY KEY (id)
 );
-
-CREATE INDEX users_email_idx ON users("email");

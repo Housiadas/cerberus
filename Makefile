@@ -12,9 +12,9 @@ CURRENT_TIME	:= $(shell date --iso-8601=seconds)
 GIT_VERSION		:= $(shell git describe --always --dirty --tags --long)
 LINKER_FLAGS	:= "-s -X main.buildTime=${CURRENT_TIME} -X main.version=${GIT_VERSION}"
 
-MIGRATE 				:= $(DOCKER_COMPOSE_LOCAL) run --rm migrate
-MIGRATION_DB_DSN 		:= "postgres://housi:secret123@db:5432/housi_db?sslmode=disable"
 DOCKER_COMPOSE_LOCAL	:= docker compose -f ./compose.yml
+MIGRATION_DB_DSN 		:= "postgres://housi:secret123@db:5432/housi_db?sslmode=disable"
+MIGRATE 				:= $(DOCKER_COMPOSE_LOCAL) run --rm migrate
 
 .PHONY: help
 help:
@@ -70,21 +70,6 @@ go/rest/run:
 go/rest/build:
 	cd cm/rest & \
 	go build -ldflags=${LINKER_FLAGS} -o=./rest-api
-
-## ==================
-## CLI Application
-## ==================
-
-## go/cli/build: Build cli application
-.PHONY: go/cli/build
-go/cli/build:
-	go build -o cmd/cli/cli cmd/cli/main.go
-
-## go/cli/useradd: Add user
-.PHONY: go/cli/useradd
-go/cli/user/add:
-	make go/cli/build
-	cmd/cli/cli useradd "chris housi" "example@example.com" "1232455477"
 
 ## ==================
 ## Database

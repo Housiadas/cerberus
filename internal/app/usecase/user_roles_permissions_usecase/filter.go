@@ -5,9 +5,9 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/Housiadas/cerberus/internal/common/validation"
 	"github.com/Housiadas/cerberus/internal/core/domain/name"
 	urp "github.com/Housiadas/cerberus/internal/core/domain/user_roles_permissions"
+	"github.com/Housiadas/cerberus/pkg/web/errs"
 )
 
 type AppQueryParams struct {
@@ -24,7 +24,7 @@ type AppQueryParams struct {
 }
 
 func parseFilter(qp AppQueryParams) (urp.QueryFilter, error) {
-	var fieldErrors validation.FieldErrors
+	var fieldErrors errs.FieldErrors
 	var filter urp.QueryFilter
 
 	if qp.UserID != "" {

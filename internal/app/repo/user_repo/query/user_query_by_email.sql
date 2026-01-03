@@ -1,6 +1,5 @@
 SELECT
     id,
-    role_id,
     name,
     email,
     password_hash,

@@ -4,12 +4,12 @@ package permission_usecase
 import (
 	"context"
 
-	"github.com/Housiadas/cerberus/internal/common/validation"
+	"github.com/google/uuid"
+
 	"github.com/Housiadas/cerberus/internal/core/service/permission_service"
 	"github.com/Housiadas/cerberus/pkg/order"
 	"github.com/Housiadas/cerberus/pkg/web"
 	"github.com/Housiadas/cerberus/pkg/web/errs"
-	"github.com/google/uuid"
 )
 
 // UseCase manages the set of cli layer api functions for the permission core.
@@ -102,7 +102,7 @@ func (uc *UseCase) QueryByID(ctx context.Context, permissionID string) (Permissi
 func (uc *UseCase) Query(ctx context.Context, qp AppQueryParams) (web.Result[Permission], error) {
 	p, err := web.Parse(qp.Page, qp.Rows)
 	if err != nil {
-		return web.Result[Permission]{}, validation.ErrorfieldErrors("page", err)
+		return web.Result[Permission]{}, errs.NewFieldErrors("page", err)
 	}
 
 	filter, err := parseFilter(qp)
@@ -112,7 +112,7 @@ func (uc *UseCase) Query(ctx context.Context, qp AppQueryParams) (web.Result[Per
 
 	orderBy, err := order.Parse(orderByFields, qp.OrderBy, defaultOrderBy)
 	if err != nil {
-		return web.Result[Permission]{}, validation.ErrorfieldErrors("order", err)
+		return web.Result[Permission]{}, errs.NewFieldErrors("order", err)
 	}
 
 	perms, err := uc.permissionService.Query(ctx, filter, orderBy, p)

@@ -9,7 +9,6 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 
 	"github.com/Housiadas/cerberus/internal/app/usecase/refresh_token_usecase"
-	"github.com/Housiadas/cerberus/internal/app/usecase/user_roles_usecase"
 	"github.com/Housiadas/cerberus/internal/app/usecase/user_usecase"
 	"github.com/Housiadas/cerberus/pkg/logger"
 )
@@ -26,7 +25,6 @@ type Config struct {
 	Issuer              string
 	Log                 *logger.Logger
 	UserUsecase         *user_usecase.UseCase
-	UserRolesUsecase    *user_roles_usecase.UseCase
 	RefreshTokenUsecase *refresh_token_usecase.UseCase
 }
 
@@ -39,7 +37,6 @@ type UseCase struct {
 	method              jwt.SigningMethod
 	log                 *logger.Logger
 	userUsecase         *user_usecase.UseCase
-	userRolesUsecase    *user_roles_usecase.UseCase
 	refreshTokenUsecase *refresh_token_usecase.UseCase
 }
 
@@ -59,7 +56,6 @@ func NewUseCase(cfg Config) *UseCase {
 		method:              jwt.GetSigningMethod(jwt.SigningMethodHS256.Name),
 		parser:              jwt.NewParser(jwt.WithValidMethods([]string{jwt.SigningMethodHS256.Name})),
 		userUsecase:         cfg.UserUsecase,
-		userRolesUsecase:    cfg.UserRolesUsecase,
 		refreshTokenUsecase: cfg.RefreshTokenUsecase,
 	}
 }

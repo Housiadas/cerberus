@@ -4,25 +4,22 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/Housiadas/cerberus/pkg/web/errs"
 	"github.com/google/go-cmp/cmp"
+	"github.com/stretchr/testify/require"
 
 	"github.com/Housiadas/cerberus/internal/app/usecase/user_usecase"
 	"github.com/Housiadas/cerberus/internal/common/apitest"
+	"github.com/Housiadas/cerberus/pkg/web/errs"
 )
 
 func Test_API_User_Create_200(t *testing.T) {
 	t.Parallel()
 
 	test, err := apitest.StartTest(t, "Test_API_User")
-	if err != nil {
-		t.Fatalf("Start error: %s", err)
-	}
+	require.NoError(t, err)
 
-	_, err = insertSeedData(test.DB)
-	if err != nil {
-		t.Fatalf("Seeding error: %s", err)
-	}
+	_, err = insertSeedData(test)
+	require.NoError(t, err)
 
 	table := []apitest.Table{
 		{
@@ -33,7 +30,6 @@ func Test_API_User_Create_200(t *testing.T) {
 			Input: &user_usecase.NewUser{
 				Name:            "Chris Housi",
 				Email:           "chris@housi.com",
-				Roles:           []string{"ADMIN"},
 				Department:      "IT0",
 				Password:        "123",
 				PasswordConfirm: "123",
@@ -42,7 +38,6 @@ func Test_API_User_Create_200(t *testing.T) {
 			ExpResp: &user_usecase.User{
 				Name:       "Chris Housi",
 				Email:      "chris@housi.com",
-				Roles:      []string{"ADMIN"},
 				Department: "IT0",
 				Enabled:    true,
 			},
@@ -70,14 +65,10 @@ func Test_API_User_Create_400(t *testing.T) {
 	t.Parallel()
 
 	test, err := apitest.StartTest(t, "Test_API_User")
-	if err != nil {
-		t.Fatalf("Start error: %s", err)
-	}
+	require.NoError(t, err)
 
-	_, err = insertSeedData(test.DB)
-	if err != nil {
-		t.Fatalf("Seeding error: %s", err)
-	}
+	_, err = insertSeedData(test)
+	require.NoError(t, err)
 
 	table := []apitest.Table{
 		{
@@ -87,26 +78,7 @@ func Test_API_User_Create_400(t *testing.T) {
 			StatusCode: http.StatusBadRequest,
 			Input:      &user_usecase.NewUser{},
 			GotResp:    &errs.Error{},
-			ExpResp:    errs.Errorf(errs.InvalidArgument, "validation: [{\"field\":\"name\",\"error\":\"name is a required field\"},{\"field\":\"email\",\"error\":\"email is a required field\"},{\"field\":\"roles\",\"error\":\"roles is a required field\"},{\"field\":\"password\",\"error\":\"password is a required field\"}]"),
-			CmpFunc: func(got any, exp any) string {
-				return cmp.Diff(got, exp)
-			},
-		},
-		{
-			Name:       "bad-role",
-			URL:        "/api/v1/users",
-			Method:     http.MethodPost,
-			StatusCode: http.StatusBadRequest,
-			Input: &user_usecase.NewUser{
-				Name:            "Chris Housi",
-				Email:           "chris@housi.com",
-				Roles:           []string{"SUPER"},
-				Department:      "IT0",
-				Password:        "123",
-				PasswordConfirm: "123",
-			},
-			GotResp: &errs.Error{},
-			ExpResp: errs.Errorf(errs.InvalidArgument, "parse: invalid role \"SUPER\""),
+			ExpResp:    errs.Errorf(errs.InvalidArgument, "validate: [{\"field\":\"email\",\"error\":\"mail: no address\"},{\"field\":\"name\",\"error\":\"invalid name \\\"\\\"\"},{\"field\":\"password\",\"error\":\"invalid password \\\"\\\"\"}]"),
 			CmpFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},
@@ -119,7 +91,6 @@ func Test_API_User_Create_400(t *testing.T) {
 			Input: &user_usecase.NewUser{
 				Name:            "Bi",
 				Email:           "chris@housi.com",
-				Roles:           []string{"USER"},
 				Department:      "IT0",
 				Password:        "123",
 				PasswordConfirm: "123",

@@ -43,7 +43,7 @@ func Test_User(t *testing.T) {
 func insertSeedData(service dbtest.Service) (unitest.SeedData, error) {
 	ctx := context.Background()
 
-	userRoleID := uuid.New()
+	userRoleID, _ := uuid.NewV7()
 	usrs, err := user_service.TestSeedUsers(ctx, 2, userRoleID, service.User)
 	if err != nil {
 		return unitest.SeedData{}, fmt.Errorf("seeding users : %w", err)
@@ -59,7 +59,7 @@ func insertSeedData(service dbtest.Service) (unitest.SeedData, error) {
 
 	// -------------------------------------------------------------------------
 
-	adminRoleID := uuid.New()
+	adminRoleID, _ := uuid.NewV7()
 	usrs, err = user_service.TestSeedUsers(ctx, 2, adminRoleID, service.User)
 	if err != nil {
 		return unitest.SeedData{}, fmt.Errorf("seeding users : %w", err)
@@ -175,7 +175,7 @@ func query(service dbtest.Service, sd unitest.SeedData) []unitest.Table {
 func create(service dbtest.Service) []unitest.Table {
 	email, _ := mail.ParseAddress("chris@housi.com")
 
-	roleID := uuid.New()
+	roleID, _ := uuid.NewV7()
 	table := []unitest.Table{
 		{
 			Name: "basic",
@@ -230,7 +230,7 @@ func create(service dbtest.Service) []unitest.Table {
 func update(busDomain dbtest.Service, sd unitest.SeedData) []unitest.Table {
 	email, _ := mail.ParseAddress("chris2@housi.com")
 
-	roleID := uuid.New()
+	roleID, _ := uuid.NewV7()
 	table := []unitest.Table{
 		{
 			Name: "basic",

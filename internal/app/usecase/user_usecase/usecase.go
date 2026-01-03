@@ -6,13 +6,13 @@ import (
 	"errors"
 	"net/mail"
 
-	"github.com/Housiadas/cerberus/internal/common/validation"
+	"github.com/google/uuid"
+
 	"github.com/Housiadas/cerberus/internal/core/domain/user"
 	"github.com/Housiadas/cerberus/internal/core/service/user_service"
 	"github.com/Housiadas/cerberus/pkg/order"
 	"github.com/Housiadas/cerberus/pkg/web"
 	"github.com/Housiadas/cerberus/pkg/web/errs"
-	"github.com/google/uuid"
 )
 
 // UseCase manages the set of cli layer api functions for the user core.
@@ -64,7 +64,9 @@ func (a *UseCase) Update(ctx context.Context, res UpdateUser, userID string) (Us
 
 	updUsr, err := a.userCore.Update(ctx, currentUsr, uu)
 	if err != nil {
-		return User{}, errs.Errorf(errs.Internal, "update: userID[%s] uu[%+v]: %s", userUUID, uu, err)
+		return User{}, errs.Errorf(errs.Internal, "update: userID[%s] uu[%+v]: %s",
+			userUUID, uu, err,
+		)
 	}
 
 	return toAppUser(updUsr), nil
@@ -93,7 +95,7 @@ func (a *UseCase) Delete(ctx context.Context, userID string) error {
 func (a *UseCase) Query(ctx context.Context, qp AppQueryParams) (web.Result[User], error) {
 	p, err := web.Parse(qp.Page, qp.Rows)
 	if err != nil {
-		return web.Result[User]{}, validation.ErrorfieldErrors("page", err)
+		return web.Result[User]{}, errs.NewFieldErrors("page", err)
 	}
 
 	filter, err := parseFilter(qp)
@@ -103,7 +105,7 @@ func (a *UseCase) Query(ctx context.Context, qp AppQueryParams) (web.Result[User
 
 	orderBy, err := order.Parse(orderByFields, qp.OrderBy, defaultOrderBy)
 	if err != nil {
-		return web.Result[User]{}, validation.ErrorfieldErrors("order", err)
+		return web.Result[User]{}, errs.NewFieldErrors("order", err)
 	}
 
 	usrs, err := a.userCore.Query(ctx, filter, orderBy, p)
@@ -138,7 +140,7 @@ func (a *UseCase) QueryByID(ctx context.Context, userID string) (User, error) {
 func (a *UseCase) Authenticate(ctx context.Context, authUser AuthenticateUser) (User, error) {
 	addr, err := mail.ParseAddress(authUser.Email)
 	if err != nil {
-		return User{}, validation.ErrorfieldErrors("email", err)
+		return User{}, errs.NewFieldErrors("email", err)
 	}
 
 	usr, err := a.userCore.Authenticate(ctx, *addr, authUser.Password)

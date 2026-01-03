@@ -1,50 +1,57 @@
 package apitest
 
 import (
+	"bytes"
 	"context"
-	"fmt"
 	"testing"
 
 	"github.com/Housiadas/cerberus/internal/app/handler"
 	"github.com/Housiadas/cerberus/internal/common/dbtest"
 	cfg "github.com/Housiadas/cerberus/internal/config"
+	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/Housiadas/cerberus/pkg/otel"
+	"github.com/stretchr/testify/require"
 )
 
 // StartTest initialized the system to run a test.
 func StartTest(t *testing.T, testName string) (*Test, error) {
+	// Initialize test database
 	db := dbtest.New(t, testName)
 
-	// tracer
+	// Initialize logger
+	var buf bytes.Buffer
+	traceIDfn := func(context.Context) string { return "" }
+	requestIDfn := func(context.Context) string { return "" }
+	log := logger.New(&buf, logger.LevelInfo, "TEST", traceIDfn, requestIDfn)
+
+	// Initialize tracer
 	traceProvider, teardown, err := otel.InitTracing(otel.Config{
-		Log:         db.Log,
 		ServiceName: "Service Name",
 		Host:        "Test host",
 		ExcludedRoutes: map[string]struct{}{
-			"/v1/liveness":  {},
-			"/v1/readiness": {},
+			"/liveness":  {},
+			"/readiness": {},
 		},
 		Probability: 0.5,
 	})
-	if err != nil {
-		return nil, fmt.Errorf("starting tracing: %w", err)
-	}
-
 	defer teardown(context.Background())
-
+	require.NoError(t, err)
 	tracer := traceProvider.Tracer("Service Name")
+
+	// initialize core services
+	c := newCore(log, db)
 
 	// Initialize handler
 	h := handler.New(handler.Config{
 		ServiceName:  "Test Service Name",
 		Build:        "Test",
 		Cors:         cfg.CorsSettings{},
-		DB:           db.DB,
-		Log:          db.Log,
+		DB:           db,
+		Log:          log,
 		Tracer:       tracer,
-		AuditService: db.Core.Audit,
-		UserService:  db.Core.User,
+		AuditService: c.Audit,
+		UserService:  c.User,
 	})
 
-	return New(db, h.Routes()), nil
+	return New(db, h.Routes(), c), nil
 }

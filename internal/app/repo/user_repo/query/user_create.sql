@@ -1,19 +1,17 @@
 INSERT INTO users
 (
     id,
-    role_id,
     name,
     email,
     password_hash,
     department,
     enabled,
     created_at,
-    updated_at,
+    updated_at
 )
 VALUES
 (
     :id,
-    :role_id,
     :name,
     :email,
     :password_hash,

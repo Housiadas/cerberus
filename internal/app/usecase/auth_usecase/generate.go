@@ -17,10 +17,10 @@ type accessToken struct {
 
 func (u *UseCase) generateAccessToken(ctx context.Context, userID string) (accessToken, error) {
 	// get user roles name
-	roles, err := u.userRolesUsecase.GetUserRolesNames(ctx, userID)
-	if err != nil {
-		return accessToken{}, errs.Errorf(errs.NotFound, "roles not found: %s", err)
-	}
+	//roles, err := u.userRolesUsecase.GetUserRolesNames(ctx, userID)
+	//if err != nil {
+	//	return accessToken{}, errs.Errorf(errs.NotFound, "roles not found: %s", err)
+	//}
 
 	// Generating a token requires defining a set of claims
 	// iss (issuer): Issuer of the JWT
@@ -31,7 +31,11 @@ func (u *UseCase) generateAccessToken(ctx context.Context, userID string) (acces
 	// iat (issued at time): Time at which the JWT was issued; can be used to determine age of the JWT
 	// jti (JWT ID): Unique identifier; can be used to prevent the JWT from being replayed (allows a token to be used only once)
 	now := time.Now()
-	accessTokenID := uuid.New().String()
+	accessTokenID, err := uuid.NewV7()
+	if err != nil {
+		return accessToken{}, errs.Errorf(errs.Internal, "uuid v7: %s", err)
+	}
+
 	accessClaims := Claims{
 		RegisteredClaims: jwt.RegisteredClaims{
 			Subject:   userID,
@@ -41,8 +45,8 @@ func (u *UseCase) generateAccessToken(ctx context.Context, userID string) (acces
 			ExpiresAt: jwt.NewNumericDate(now.UTC().Add(accessTokenTTL)),
 			Audience:  []string{u.Issuer()},
 		},
-		TokenID: accessTokenID,
-		Roles:   roles,
+		TokenID: accessTokenID.String(),
+		//Roles:   roles,
 	}
 
 	aToken := jwt.NewWithClaims(u.method, accessClaims)

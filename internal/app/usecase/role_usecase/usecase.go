@@ -4,13 +4,12 @@ package role_usecase
 import (
 	"context"
 
-	"github.com/Housiadas/cerberus/pkg/web"
-	"github.com/Housiadas/cerberus/pkg/web/errs"
 	"github.com/google/uuid"
 
-	"github.com/Housiadas/cerberus/internal/common/validation"
 	"github.com/Housiadas/cerberus/internal/core/service/role_service"
 	"github.com/Housiadas/cerberus/pkg/order"
+	"github.com/Housiadas/cerberus/pkg/web"
+	"github.com/Housiadas/cerberus/pkg/web/errs"
 )
 
 // UseCase manages the set of cli layer api functions for the user core.
@@ -103,7 +102,7 @@ func (uc *UseCase) QueryByID(ctx context.Context, roleID string) (Role, error) {
 func (uc *UseCase) Query(ctx context.Context, qp AppQueryParams) (web.Result[Role], error) {
 	p, err := web.Parse(qp.Page, qp.Rows)
 	if err != nil {
-		return web.Result[Role]{}, validation.ErrorfieldErrors("page", err)
+		return web.Result[Role]{}, errs.NewFieldErrors("page", err)
 	}
 
 	filter, err := parseFilter(qp)
@@ -113,7 +112,7 @@ func (uc *UseCase) Query(ctx context.Context, qp AppQueryParams) (web.Result[Rol
 
 	orderBy, err := order.Parse(orderByFields, qp.OrderBy, defaultOrderBy)
 	if err != nil {
-		return web.Result[Role]{}, validation.ErrorfieldErrors("order", err)
+		return web.Result[Role]{}, errs.NewFieldErrors("order", err)
 	}
 
 	usrs, err := uc.roleService.Query(ctx, filter, orderBy, p)

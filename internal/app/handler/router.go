@@ -48,7 +48,7 @@ func (h *Handler) Routes() *chi.Mux {
 		})
 
 		// Users
-		v1.With(authenticate()).Route("/users", func(u chi.Router) {
+		v1.With().Route("/users", func(u chi.Router) {
 			u.Get("/", h.Web.Res.Respond(h.userQuery))
 			u.Post("/", h.Web.Res.Respond(h.userCreate))
 			u.Get("/{user_id}", h.Web.Res.Respond(h.userQueryByID))
@@ -68,7 +68,7 @@ func (h *Handler) Routes() *chi.Mux {
 		})
 
 		// Permissions
-		v1.With(authenticate()).Route("/permissions", func(p chi.Router) {
+		v1.With().Route("/permissions", func(p chi.Router) {
 			p.Get("/", h.Web.Res.Respond(h.permissionQuery))
 			p.Post("/", h.Web.Res.Respond(h.permissionCreate))
 			p.Put("/{permission_id}", h.Web.Res.Respond(h.permissionUpdate))
@@ -76,7 +76,7 @@ func (h *Handler) Routes() *chi.Mux {
 		})
 
 		// Audits
-		v1.With(authenticate()).Route("/audits", func(a chi.Router) {
+		v1.With().Route("/audits", func(a chi.Router) {
 			a.Get("/", h.Web.Res.Respond(h.auditQuery))
 		})
 	})

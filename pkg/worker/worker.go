@@ -86,12 +86,12 @@ func (w *Worker) Shutdown(ctx context.Context) error {
 	}
 }
 
-// Start lookups a job by key and launches a goroutine to perform the work. A
+// Start looks up a job by key and launches a goroutine to perform the work. A
 // work key is returned so the caller can cancel work early.
 func (w *Worker) Start(ctx context.Context, jobFn JobFn) (string, error) {
 
 	// We need to block here waiting to capture a semaphore, timeout or shutdown.
-	// The shutdown is first to handle that event as priority.
+	// The shutdown is the first to handle that event as a priority.
 	select {
 	case <-w.isShutdown:
 		return "", errors.New("shutting down")

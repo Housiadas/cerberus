@@ -5,11 +5,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/Housiadas/cerberus/internal/common/validation"
 	"github.com/Housiadas/cerberus/internal/core/domain/name"
 	"github.com/Housiadas/cerberus/internal/core/domain/role"
 	"github.com/Housiadas/cerberus/pkg/web"
-	"github.com/Housiadas/cerberus/pkg/web/errs"
 )
 
 // =============================================================================
@@ -63,16 +61,6 @@ func (role *NewRole) Decode(data []byte) error {
 	return json.Unmarshal(data, role)
 }
 
-// Validate checks the data in the model is considered clean.
-func (role *NewRole) Validate() error {
-	if err := validation.Check(role); err != nil {
-		return fmt.Errorf("validation: %w", err)
-
-	}
-
-	return nil
-}
-
 func toBusNewRole(rl NewRole) (role.NewRole, error) {
 	nme, err := name.Parse(rl.Name)
 	if err != nil {
@@ -94,15 +82,6 @@ type UpdateRole struct {
 // Decode implements the decoder interface.
 func (app *UpdateRole) Decode(data []byte) error {
 	return json.Unmarshal(data, app)
-}
-
-// Validate checks the data in the model is considered clean.
-func (app *UpdateRole) Validate() error {
-	if err := validation.Check(app); err != nil {
-		return errs.Errorf(errs.InvalidArgument, "validation: %s", err)
-	}
-
-	return nil
 }
 
 func toBusUpdateUser(app UpdateRole) (role.UpdateRole, error) {

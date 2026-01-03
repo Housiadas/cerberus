@@ -14,7 +14,6 @@ import (
 
 type userDB struct {
 	ID           uuid.UUID      `db:"id"`
-	RoleID       uuid.UUID      `db:"role_id"`
 	Name         string         `db:"name"`
 	Email        string         `db:"email"`
 	PasswordHash []byte         `db:"password_hash"`

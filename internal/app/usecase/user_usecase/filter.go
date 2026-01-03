@@ -6,9 +6,9 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/Housiadas/cerberus/internal/common/validation"
 	"github.com/Housiadas/cerberus/internal/core/domain/name"
 	"github.com/Housiadas/cerberus/internal/core/domain/user"
+	"github.com/Housiadas/cerberus/pkg/web/errs"
 )
 
 type AppQueryParams struct {
@@ -23,7 +23,7 @@ type AppQueryParams struct {
 }
 
 func parseFilter(qp AppQueryParams) (user.QueryFilter, error) {
-	var fieldErrors validation.FieldErrors
+	var fieldErrors errs.FieldErrors
 	var filter user.QueryFilter
 
 	if qp.ID != "" {

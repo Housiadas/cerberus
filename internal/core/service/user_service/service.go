@@ -50,15 +50,20 @@ func (c *Service) NewWithTx(tx pgsql.CommitRollbacker) (*Service, error) {
 
 // Create adds a new User to the system.
 func (c *Service) Create(ctx context.Context, nu user.NewUser) (user.User, error) {
-	hash, err := bcrypt.GenerateFromPassword([]byte(nu.Password), bcrypt.DefaultCost)
+	hash, err := bcrypt.GenerateFromPassword([]byte(nu.Password.String()), bcrypt.DefaultCost)
 	if err != nil {
 		return user.User{}, fmt.Errorf("generate_from_password: %w", err)
 	}
 
 	now := time.Now()
 
+	id, err := uuid.NewV7()
+	if err != nil {
+		return user.User{}, fmt.Errorf("uuid v7 error: %w", err)
+	}
+
 	usr := user.User{
-		ID:           uuid.New(),
+		ID:           id,
 		Name:         nu.Name,
 		Email:        nu.Email,
 		PasswordHash: hash,
@@ -86,9 +91,9 @@ func (c *Service) Update(ctx context.Context, usr user.User, uu user.UpdateUser)
 	}
 
 	if uu.Password != nil {
-		pw, err := bcrypt.GenerateFromPassword([]byte(*uu.Password), bcrypt.DefaultCost)
+		pw, err := bcrypt.GenerateFromPassword([]byte(uu.Password.String()), bcrypt.DefaultCost)
 		if err != nil {
-			return user.User{}, fmt.Errorf("generatefrompassword: %w", err)
+			return user.User{}, fmt.Errorf("generate_from_password: %w", err)
 		}
 		usr.PasswordHash = pw
 	}

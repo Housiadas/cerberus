@@ -5,6 +5,8 @@ import (
 	"runtime"
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
 	"github.com/Housiadas/cerberus/internal/config"
 )
 
@@ -19,9 +21,7 @@ type Config struct {
 
 func newConfig(t *testing.T) Config {
 	cfg, err := config.LoadConfig(getConfigDir())
-	if err != nil {
-		t.Fatalf("[TEST]: error creating config %v", err)
-	}
+	require.NoError(t, err)
 
 	return Config{
 		DBUser:                cfg.DB.User,
@@ -36,6 +36,5 @@ func newConfig(t *testing.T) Config {
 func getConfigDir() string {
 	_, file, _, _ := runtime.Caller(0)
 	basepath := filepath.Dir(file)
-	migrationsPath := filepath.Join(basepath, "../../../")
-	return "file://" + migrationsPath
+	return filepath.Join(basepath, "../../../")
 }

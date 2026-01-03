@@ -3,9 +3,9 @@ package permission_usecase
 import (
 	"github.com/google/uuid"
 
-	"github.com/Housiadas/cerberus/internal/common/validation"
 	"github.com/Housiadas/cerberus/internal/core/domain/name"
 	"github.com/Housiadas/cerberus/internal/core/domain/permission"
+	"github.com/Housiadas/cerberus/pkg/web/errs"
 )
 
 type AppQueryParams struct {
@@ -17,7 +17,7 @@ type AppQueryParams struct {
 }
 
 func parseFilter(qp AppQueryParams) (permission.QueryFilter, error) {
-	var fieldErrors validation.FieldErrors
+	var fieldErrors errs.FieldErrors
 	var filter permission.QueryFilter
 
 	if qp.ID != "" {

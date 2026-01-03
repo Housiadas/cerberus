@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"net/mail"
 
-	"github.com/Housiadas/cerberus/pkg/web"
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 
@@ -17,6 +16,7 @@ import (
 	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/Housiadas/cerberus/pkg/order"
 	"github.com/Housiadas/cerberus/pkg/pgsql"
+	"github.com/Housiadas/cerberus/pkg/web"
 )
 
 // queries
@@ -71,9 +71,9 @@ func (s *Store) NewWithTx(tx pgsql.CommitRollbacker) (user.Storer, error) {
 func (s *Store) Create(ctx context.Context, usr user.User) error {
 	if err := pgsql.NamedExecContext(ctx, s.log, s.db, userCreateSql, toUserDB(usr)); err != nil {
 		if errors.Is(err, pgsql.ErrDBDuplicatedEntry) {
-			return fmt.Errorf("namedexeccontext: %w", user.ErrUniqueEmail)
+			return fmt.Errorf("named_exec_context: %w", user.ErrUniqueEmail)
 		}
-		return fmt.Errorf("namedexeccontext: %w", err)
+		return fmt.Errorf("named_exec_context: %w", err)
 	}
 
 	return nil
@@ -85,7 +85,7 @@ func (s *Store) Update(ctx context.Context, usr user.User) error {
 		if errors.Is(err, pgsql.ErrDBDuplicatedEntry) {
 			return user.ErrUniqueEmail
 		}
-		return fmt.Errorf("namedexeccontext: %w", err)
+		return fmt.Errorf("named_exec_context: %w", err)
 	}
 
 	return nil
@@ -94,7 +94,7 @@ func (s *Store) Update(ctx context.Context, usr user.User) error {
 // Delete removes a userDB from the database.
 func (s *Store) Delete(ctx context.Context, usr user.User) error {
 	if err := pgsql.NamedExecContext(ctx, s.log, s.db, userDeleteSql, toUserDB(usr)); err != nil {
-		return fmt.Errorf("namedexeccontext: %w", err)
+		return fmt.Errorf("named_exec_context: %w", err)
 	}
 
 	return nil
@@ -125,7 +125,7 @@ func (s *Store) Query(
 
 	var dbUsrs []userDB
 	if err := pgsql.NamedQuerySlice(ctx, s.log, s.db, buf.String(), data, &dbUsrs); err != nil {
-		return nil, fmt.Errorf("namedqueryslice: %w", err)
+		return nil, fmt.Errorf("named_query_slice: %w", err)
 	}
 
 	return toUsersDomain(dbUsrs)
