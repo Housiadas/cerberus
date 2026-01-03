@@ -12,7 +12,7 @@ func toAppUser(bus user.User) user_usecase.User {
 		ID:           bus.ID.String(),
 		Name:         bus.Name.String(),
 		Email:        bus.Email.Address,
-		PasswordHash: nil, // This field is not marshalled.
+		PasswordHash: nil, // This field is not marshaled.
 		Department:   bus.Department.String(),
 		Enabled:      bus.Enabled,
 		CreatedAt:    bus.CreatedAt.Format(time.RFC3339),

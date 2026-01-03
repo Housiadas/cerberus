@@ -4,12 +4,12 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/Housiadas/cerberus/pkg/web/errs"
 	"github.com/google/go-cmp/cmp"
 	"github.com/stretchr/testify/require"
 
 	"github.com/Housiadas/cerberus/internal/app/usecase/user_usecase"
 	"github.com/Housiadas/cerberus/internal/common/apitest"
+	"github.com/Housiadas/cerberus/pkg/web/errs"
 )
 
 func Test_API_User_Create_200(t *testing.T) {
@@ -18,7 +18,7 @@ func Test_API_User_Create_200(t *testing.T) {
 	test, err := apitest.StartTest(t, "Test_API_User")
 	require.NoError(t, err)
 
-	_, err = insertSeedData(test.DB)
+	_, err = insertSeedData(test)
 	require.NoError(t, err)
 
 	table := []apitest.Table{
@@ -69,7 +69,7 @@ func Test_API_User_Create_400(t *testing.T) {
 		t.Fatalf("Start error: %s", err)
 	}
 
-	_, err = insertSeedData(test.DB)
+	_, err = insertSeedData(test)
 	if err != nil {
 		t.Fatalf("Seeding error: %s", err)
 	}

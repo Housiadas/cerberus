@@ -5,23 +5,21 @@ import (
 	"fmt"
 
 	"github.com/Housiadas/cerberus/internal/common/apitest"
-	"github.com/Housiadas/cerberus/internal/common/dbtest"
 	"github.com/Housiadas/cerberus/internal/core/domain/entity"
-	"github.com/Housiadas/cerberus/internal/core/domain/role"
 	"github.com/Housiadas/cerberus/internal/core/service/audit_service"
 	"github.com/Housiadas/cerberus/internal/core/service/user_service"
 )
 
-func insertSeedData(db *dbtest.Database) (apitest.SeedData, error) {
+func insertSeedData(test *apitest.Test) (apitest.SeedData, error) {
 	ctx := context.Background()
-	busDomain := db.Core
-
-	usrs, err := user_service.TestSeedUsers(ctx, 1, role.Admin, busDomain.User)
+	usrs, err := user_service.TestSeedUsers(ctx, 1, test.Core.User)
 	if err != nil {
 		return apitest.SeedData{}, fmt.Errorf("seeding users : %w", err)
 	}
 
-	audits, err := audit_service.TestSeedAudits(ctx, 2, usrs[0].ID, entity.User, "create", busDomain.Audit)
+	audits, err := audit_service.TestSeedAudits(
+		ctx, 2, usrs[0].ID, entity.User, "create", test.Core.Audit,
+	)
 	if err != nil {
 		return apitest.SeedData{}, fmt.Errorf("seeding users : %w", err)
 	}

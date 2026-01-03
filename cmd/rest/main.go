@@ -126,8 +126,8 @@ func run(ctx context.Context, cfg config.Config, log *logger.Logger) error {
 		ServiceName: cfg.App.Name,
 		Host:        cfg.Tempo.Host,
 		ExcludedRoutes: map[string]struct{}{
-			"/v1/liveness":  {},
-			"/v1/readiness": {},
+			"/liveness":  {},
+			"/readiness": {},
 		},
 		Probability: cfg.Tempo.Probability,
 	})

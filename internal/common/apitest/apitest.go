@@ -8,20 +8,22 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/Housiadas/cerberus/internal/common/dbtest"
+	"github.com/jmoiron/sqlx"
 )
 
 // Test contains functions for executing an api test.
 type Test struct {
-	DB  *dbtest.Database
-	Mux http.Handler
+	DB   *sqlx.DB
+	Mux  http.Handler
+	Core Core
 }
 
 // New constructs a Test value for running api tests.
-func New(db *dbtest.Database, mux http.Handler) *Test {
+func New(db *sqlx.DB, mux http.Handler, c Core) *Test {
 	return &Test{
-		DB:  db,
-		Mux: mux,
+		DB:   db,
+		Mux:  mux,
+		Core: c,
 	}
 }
 

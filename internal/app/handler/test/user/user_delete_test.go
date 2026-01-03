@@ -16,7 +16,7 @@ func Test_API_User_Delete_200(t *testing.T) {
 	test, err := apitest.StartTest(t, "Test_API_User")
 	require.NoError(t, err)
 
-	sd, err := insertSeedData(test.DB)
+	sd, err := insertSeedData(test)
 	require.NoError(t, err)
 
 	table := []apitest.Table{

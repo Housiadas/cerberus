@@ -1,4 +1,4 @@
-package dbtest
+package apitest
 
 import (
 	"github.com/jmoiron/sqlx"
@@ -12,19 +12,19 @@ import (
 	"github.com/Housiadas/cerberus/pkg/logger"
 )
 
-// Service represents all the internal core apis needed for testing.
-type Service struct {
+// Core represents all the internal core services needed for testing.
+type Core struct {
 	Audit *audit_service.Service
 	User  *user_service.Service
 	Role  *role_service.Service
 }
 
-func newCore(log *logger.Logger, db *sqlx.DB) Service {
+func newCore(log *logger.Logger, db *sqlx.DB) Core {
 	auditService := audit_service.New(log, audit_repo.NewStore(log, db))
 	userService := user_service.New(log, user_repo.NewStore(log, db))
 	roleService := role_service.New(log, role_repo.NewStore(log, db))
 
-	return Service{
+	return Core{
 		Audit: auditService,
 		User:  userService,
 		Role:  roleService,

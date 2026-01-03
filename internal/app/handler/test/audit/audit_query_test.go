@@ -21,7 +21,7 @@ func Test_API_Audit_Query_200(t *testing.T) {
 	test, err := apitest.StartTest(t, "Test_API_Audit")
 	require.NoError(t, err)
 
-	sd, err := insertSeedData(test.DB)
+	sd, err := insertSeedData(test)
 	require.NoError(t, err)
 
 	sort.Slice(sd.Users[0].Audits, func(i, j int) bool {
@@ -74,14 +74,10 @@ func Test_API_Audit_Query_400(t *testing.T) {
 	t.Parallel()
 
 	test, err := apitest.StartTest(t, "Test_API_Audit")
-	if err != nil {
-		t.Fatalf("Start error: %s", err)
-	}
+	require.NoError(t, err)
 
-	_, err = insertSeedData(test.DB)
-	if err != nil {
-		t.Fatalf("Seeding error: %s", err)
-	}
+	_, err = insertSeedData(test)
+	require.NoError(t, err)
 
 	table := []apitest.Table{
 		{

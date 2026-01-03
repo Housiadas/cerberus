@@ -22,7 +22,7 @@ func Test_API_User_Query_200(t *testing.T) {
 	test, err := apitest.StartTest(t, "Test_API_User")
 	require.NoError(t, err)
 
-	sd, err := insertSeedData(test.DB)
+	sd, err := insertSeedData(test)
 	require.NoError(t, err)
 
 	usrs := make([]user.User, 0, len(sd.Admins)+len(sd.Users))
@@ -66,7 +66,7 @@ func Test_API_User_Query_BY_ID_200(t *testing.T) {
 	test, err := apitest.StartTest(t, "Test_API_User")
 	require.NoError(t, err)
 
-	sd, err := insertSeedData(test.DB)
+	sd, err := insertSeedData(test)
 	require.NoError(t, err)
 
 	table := []apitest.Table{
@@ -92,7 +92,7 @@ func Test_API_User_Query_400(t *testing.T) {
 	test, err := apitest.StartTest(t, "Test_API_User")
 	require.NoError(t, err)
 
-	_, err = insertSeedData(test.DB)
+	_, err = insertSeedData(test)
 	require.NoError(t, err)
 
 	table := []apitest.Table{
