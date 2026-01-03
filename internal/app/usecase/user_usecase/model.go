@@ -193,6 +193,10 @@ func toBusUpdateUser(app UpdateUser) (user.UpdateUser, error) {
 	}
 	pass = &p
 
+	if len(errors) > 0 {
+		return user.UpdateUser{}, fmt.Errorf("validate: %w", errors.ToError())
+	}
+
 	bus := user.UpdateUser{
 		Name:       nme,
 		Email:      addr,

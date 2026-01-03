@@ -8,4 +8,4 @@ SELECT
     created_at,
     updated_at
 FROM users
-WHERE user_id = :user_id
+WHERE id = :id
