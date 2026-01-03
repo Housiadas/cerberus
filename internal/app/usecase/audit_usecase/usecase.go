@@ -4,7 +4,6 @@ package audit_usecase
 import (
 	"context"
 
-	"github.com/Housiadas/cerberus/internal/common/validation"
 	"github.com/Housiadas/cerberus/internal/core/domain/user"
 	"github.com/Housiadas/cerberus/internal/core/service/audit_service"
 	"github.com/Housiadas/cerberus/pkg/order"
@@ -25,7 +24,7 @@ func NewUseCase(service *audit_service.Service) *UseCase {
 func (a *UseCase) Query(ctx context.Context, qp AppQueryParams) (web.Result[Audit], error) {
 	p, err := web.Parse(qp.Page, qp.Rows)
 	if err != nil {
-		return web.Result[Audit]{}, validation.ErrorfieldErrors("page", err)
+		return web.Result[Audit]{}, errs.NewFieldErrors("page", err)
 	}
 
 	filter, err := parseFilter(qp)
@@ -35,7 +34,7 @@ func (a *UseCase) Query(ctx context.Context, qp AppQueryParams) (web.Result[Audi
 
 	orderBy, err := order.Parse(orderByFields, qp.OrderBy, user.DefaultOrderBy)
 	if err != nil {
-		return web.Result[Audit]{}, validation.ErrorfieldErrors("order", err)
+		return web.Result[Audit]{}, errs.NewFieldErrors("order", err)
 	}
 
 	adts, err := a.AuditService.Query(ctx, filter, orderBy, p)

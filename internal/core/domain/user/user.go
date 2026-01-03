@@ -8,6 +8,7 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/Housiadas/cerberus/internal/core/domain/name"
+	"github.com/Housiadas/cerberus/internal/core/domain/password"
 )
 
 // Set of error variables for CRUD operations.
@@ -34,7 +35,7 @@ type NewUser struct {
 	Name       name.Name
 	Email      mail.Address
 	Department name.Null
-	Password   string
+	Password   password.Password
 }
 
 // UpdateUser contains information needed to update a user.
@@ -42,7 +43,7 @@ type UpdateUser struct {
 	Name       *name.Name
 	Email      *mail.Address
 	Department *name.Null
-	Password   *string
+	Password   *password.Password
 	Enabled    *bool
 }
 

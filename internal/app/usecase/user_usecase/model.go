@@ -6,8 +6,8 @@ import (
 	"net/mail"
 	"time"
 
-	"github.com/Housiadas/cerberus/internal/common/validation"
 	"github.com/Housiadas/cerberus/internal/core/domain/name"
+	"github.com/Housiadas/cerberus/internal/core/domain/password"
 	"github.com/Housiadas/cerberus/internal/core/domain/user"
 	"github.com/Housiadas/cerberus/pkg/web"
 	"github.com/Housiadas/cerberus/pkg/web/errs"
@@ -17,7 +17,7 @@ import (
 
 // AuthenticateUser defines the data needed to authenticate a user.
 type AuthenticateUser struct {
-	Email    string `json:"email" validate:"email"`
+	Email    string `json:"email"`
 	Password string `json:"password"`
 }
 
@@ -25,15 +25,6 @@ type AuthenticateUser struct {
 func (app *AuthenticateUser) Encode() ([]byte, string, error) {
 	data, err := json.Marshal(app)
 	return data, "application/json", err
-}
-
-// Validate checks the data in the model is considered clean.
-func (app *AuthenticateUser) Validate() error {
-	if err := validation.Check(app); err != nil {
-		return errs.Errorf(errs.InvalidArgument, "validation: %s", err)
-	}
-
-	return nil
 }
 
 // =============================================================================
@@ -89,11 +80,11 @@ type UserPageResult struct {
 
 // NewUser defines the data needed to add a new user.
 type NewUser struct {
-	Name            string `json:"name" validate:"required"`
-	Email           string `json:"email" validate:"required,email"`
+	Name            string `json:"name"`
+	Email           string `json:"email"`
 	Department      string `json:"department"`
-	Password        string `json:"password" validate:"required"`
-	PasswordConfirm string `json:"passwordConfirm" validate:"eqfield=Password"`
+	Password        string `json:"password"`
+	PasswordConfirm string `json:"passwordConfirm"`
 }
 
 // Decode implements the decoder interface.
@@ -101,37 +92,38 @@ func (app *NewUser) Decode(data []byte) error {
 	return json.Unmarshal(data, app)
 }
 
-// Validate checks the data in the model is considered clean.
-func (app *NewUser) Validate() error {
-	if err := validation.Check(app); err != nil {
-		return fmt.Errorf("validation: %w", err)
-
-	}
-
-	return nil
-}
-
 func toBusNewUser(app NewUser) (user.NewUser, error) {
+	var errors errs.FieldErrors
+
 	addr, err := mail.ParseAddress(app.Email)
 	if err != nil {
-		return user.NewUser{}, fmt.Errorf("parse: %w", err)
+		errors.Add("email", err)
 	}
 
 	nme, err := name.Parse(app.Name)
 	if err != nil {
-		return user.NewUser{}, fmt.Errorf("parse: %w", err)
+		errors.Add("name", err)
 	}
 
 	department, err := name.ParseNull(app.Department)
 	if err != nil {
-		return user.NewUser{}, fmt.Errorf("parse: %w", err)
+		errors.Add("department", err)
+	}
+
+	pass, err := password.ParseConfirm(app.Password, app.PasswordConfirm)
+	if err != nil {
+		errors.Add("password", err)
+	}
+
+	if len(errors) > 0 {
+		return user.NewUser{}, fmt.Errorf("validate: %w", errors.ToError())
 	}
 
 	bus := user.NewUser{
 		Name:       nme,
 		Email:      *addr,
 		Department: department,
-		Password:   app.Password,
+		Password:   pass,
 	}
 
 	return bus, nil
@@ -149,22 +141,13 @@ func (app *UpdateUserRole) Decode(data []byte) error {
 	return json.Unmarshal(data, app)
 }
 
-// Validate checks the data in the model is considered clean.
-func (app *UpdateUserRole) Validate() error {
-	if err := validation.Check(app); err != nil {
-		return errs.Errorf(errs.InvalidArgument, "validation: %s", err)
-	}
-
-	return nil
-}
-
 // UpdateUser defines the data needed to update a user.
 type UpdateUser struct {
 	Name            *string `json:"name"`
-	Email           *string `json:"email" validate:"omitempty,email"`
+	Email           *string `json:"email"`
 	Department      *string `json:"department"`
 	Password        *string `json:"password"`
-	PasswordConfirm *string `json:"passwordConfirm" validate:"omitempty,eqfield=Password"`
+	PasswordConfirm *string `json:"passwordConfirm"`
 	Enabled         *bool   `json:"enabled"`
 }
 
@@ -173,22 +156,15 @@ func (app *UpdateUser) Decode(data []byte) error {
 	return json.Unmarshal(data, app)
 }
 
-// Validate checks the data in the model is considered clean.
-func (app *UpdateUser) Validate() error {
-	if err := validation.Check(app); err != nil {
-		return errs.Errorf(errs.InvalidArgument, "validation: %s", err)
-	}
-
-	return nil
-}
-
 func toBusUpdateUser(app UpdateUser) (user.UpdateUser, error) {
+	var errors errs.FieldErrors
+
 	var addr *mail.Address
 	if app.Email != nil {
 		var err error
 		addr, err = mail.ParseAddress(*app.Email)
 		if err != nil {
-			return user.UpdateUser{}, fmt.Errorf("parse: %w", err)
+			errors.Add("email", err)
 		}
 	}
 
@@ -210,11 +186,18 @@ func toBusUpdateUser(app UpdateUser) (user.UpdateUser, error) {
 		department = &dep
 	}
 
+	var pass *password.Password
+	p, err := password.ParseConfirmPointers(app.Password, app.PasswordConfirm)
+	if err != nil {
+		errors.Add("password", err)
+	}
+	pass = &p
+
 	bus := user.UpdateUser{
 		Name:       nme,
 		Email:      addr,
 		Department: department,
-		Password:   app.Password,
+		Password:   pass,
 		Enabled:    app.Enabled,
 	}
 

@@ -5,11 +5,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/Housiadas/cerberus/internal/common/validation"
 	"github.com/Housiadas/cerberus/internal/core/domain/name"
 	"github.com/Housiadas/cerberus/internal/core/domain/permission"
 	"github.com/Housiadas/cerberus/pkg/web"
-	"github.com/Housiadas/cerberus/pkg/web/errs"
 )
 
 // Permission represents information about an individual permission.
@@ -58,14 +56,6 @@ func (p *NewPermission) Decode(data []byte) error {
 	return json.Unmarshal(data, p)
 }
 
-// Validate checks the data in the model is considered clean.
-func (p *NewPermission) Validate() error {
-	if err := validation.Check(p); err != nil {
-		return fmt.Errorf("validation: %w", err)
-	}
-	return nil
-}
-
 func toBusNewPermission(app NewPermission) (permission.NewPermission, error) {
 	nme, err := name.Parse(app.Name)
 	if err != nil {
@@ -84,14 +74,6 @@ type UpdatePermission struct {
 // Decode implements the decoder interface.
 func (app *UpdatePermission) Decode(data []byte) error {
 	return json.Unmarshal(data, app)
-}
-
-// Validate checks the data in the model is considered clean.
-func (app *UpdatePermission) Validate() error {
-	if err := validation.Check(app); err != nil {
-		return errs.Errorf(errs.InvalidArgument, "validation: %s", err)
-	}
-	return nil
 }
 
 func toBusUpdatePermission(app UpdatePermission) (permission.UpdatePermission, error) {

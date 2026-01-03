@@ -65,14 +65,10 @@ func Test_API_User_Create_400(t *testing.T) {
 	t.Parallel()
 
 	test, err := apitest.StartTest(t, "Test_API_User")
-	if err != nil {
-		t.Fatalf("Start error: %s", err)
-	}
+	require.NoError(t, err)
 
 	_, err = insertSeedData(test)
-	if err != nil {
-		t.Fatalf("Seeding error: %s", err)
-	}
+	require.NoError(t, err)
 
 	table := []apitest.Table{
 		{
@@ -82,7 +78,7 @@ func Test_API_User_Create_400(t *testing.T) {
 			StatusCode: http.StatusBadRequest,
 			Input:      &user_usecase.NewUser{},
 			GotResp:    &errs.Error{},
-			ExpResp:    errs.Errorf(errs.InvalidArgument, "validation: [{\"field\":\"name\",\"error\":\"name is a required field\"},{\"field\":\"email\",\"error\":\"email is a required field\"},{\"field\":\"roles\",\"error\":\"roles is a required field\"},{\"field\":\"password\",\"error\":\"password is a required field\"}]"),
+			ExpResp:    errs.Errorf(errs.InvalidArgument, "validate: [{\"field\":\"email\",\"error\":\"mail: no address\"},{\"field\":\"name\",\"error\":\"invalid name \\\"\\\"\"},{\"field\":\"password\",\"error\":\"invalid password \\\"\\\"\"}]"),
 			CmpFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},

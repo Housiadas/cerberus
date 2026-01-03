@@ -2,14 +2,11 @@ package auth_usecase
 
 import (
 	"encoding/json"
-
-	"github.com/Housiadas/cerberus/internal/common/validation"
-	"github.com/Housiadas/cerberus/pkg/web/errs"
 )
 
 // LoginReq defines the data needed to authenticate a user.
 type LoginReq struct {
-	Email    string `json:"email" validate:"email"`
+	Email    string `json:"email"`
 	Password string `json:"password"`
 }
 
@@ -17,15 +14,6 @@ type LoginReq struct {
 func (l *LoginReq) Encode() ([]byte, string, error) {
 	data, err := json.Marshal(l)
 	return data, "application/json", err
-}
-
-// Validate checks the data in the model is considered clean.
-func (l *LoginReq) Validate() error {
-	if err := validation.Check(l); err != nil {
-		return errs.Errorf(errs.InvalidArgument, "validation: %s", err)
-	}
-
-	return nil
 }
 
 // Decode implements the decoder interface.

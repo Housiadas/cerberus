@@ -7,6 +7,7 @@ import (
 	"net/mail"
 
 	"github.com/Housiadas/cerberus/internal/core/domain/name"
+	"github.com/Housiadas/cerberus/internal/core/domain/password"
 	"github.com/Housiadas/cerberus/internal/core/domain/user"
 )
 
@@ -39,7 +40,7 @@ func testNewUsers(n int) []user.NewUser {
 			Name:       name.MustParse(fmt.Sprintf("Name%d", idx)),
 			Email:      mail.Address{Address: fmt.Sprintf("Email%d@gmail.com", idx)},
 			Department: name.MustParseNull(fmt.Sprintf("Department%d", idx)),
-			Password:   fmt.Sprintf("Password%d", idx),
+			Password:   password.MustParse(fmt.Sprintf("Password%d", idx)),
 		}
 
 		newUsrs[i] = nu

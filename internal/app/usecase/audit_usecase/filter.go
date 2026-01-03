@@ -5,10 +5,10 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/Housiadas/cerberus/internal/common/validation"
 	"github.com/Housiadas/cerberus/internal/core/domain/audit"
 	"github.com/Housiadas/cerberus/internal/core/domain/entity"
 	"github.com/Housiadas/cerberus/internal/core/domain/name"
+	"github.com/Housiadas/cerberus/pkg/web/errs"
 )
 
 type AppQueryParams struct {
@@ -25,7 +25,7 @@ type AppQueryParams struct {
 }
 
 func parseFilter(qp AppQueryParams) (audit.QueryFilter, error) {
-	var fieldErrors validation.FieldErrors
+	var fieldErrors errs.FieldErrors
 	var filter audit.QueryFilter
 
 	if qp.ObjID != "" {
