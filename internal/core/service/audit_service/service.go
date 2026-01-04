@@ -17,12 +17,12 @@ import (
 
 // Service manages the set of APIs for audit access.
 type Service struct {
-	log    *logger.Logger
+	log    logger.Logger
 	storer audit.Storer
 }
 
 // New constructs an audit business API for use.
-func New(log *logger.Logger, storer audit.Storer) *Service {
+func New(log logger.Logger, storer audit.Storer) *Service {
 	return &Service{
 		log:    log,
 		storer: storer,

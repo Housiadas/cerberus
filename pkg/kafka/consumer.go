@@ -29,10 +29,10 @@ type ConsumerConfig struct {
 
 type ConsumerClient struct {
 	consumer *kafka.Consumer
-	log      *logger.Logger
+	log      *logger.Service
 }
 
-func NewConsumer(log *logger.Logger, cfg ConsumerConfig) (*ConsumerClient, error) {
+func NewConsumer(log *logger.Service, cfg ConsumerConfig) (*ConsumerClient, error) {
 	consumer, err := kafka.NewConsumer(&kafka.ConfigMap{
 		"bootstrap.servers":        cfg.Brokers,
 		"group.id":                 cfg.GroupId,

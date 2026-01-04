@@ -8,7 +8,7 @@ import (
 )
 
 // BuildInfo logs information stored inside the Go binary.
-func (log *Logger) BuildInfo(ctx context.Context) {
+func (log *Service) BuildInfo(ctx context.Context) {
 	var values []any
 
 	info, ok := debug.ReadBuildInfo()

@@ -29,7 +29,7 @@ type Handler struct {
 	Build       string
 	Cors        config.CorsSettings
 	DB          *sqlx.DB
-	Log         *logger.Logger
+	Log         logger.Logger
 	Tracer      trace.Tracer
 	Web         Web
 	UseCase     UseCase
@@ -58,7 +58,7 @@ type Config struct {
 	Build                       string
 	Cors                        config.CorsSettings
 	DB                          *sqlx.DB
-	Log                         *logger.Logger
+	Log                         logger.Logger
 	Tracer                      trace.Tracer
 	AuditService                *audit_service.Service
 	UserService                 *user_service.Service

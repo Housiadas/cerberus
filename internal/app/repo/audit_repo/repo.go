@@ -28,12 +28,12 @@ var (
 
 // Store manages the set of APIs for auditDB database access.
 type Store struct {
-	log *logger.Logger
+	log logger.Logger
 	db  sqlx.ExtContext
 }
 
 // NewStore constructs the API for data access.
-func NewStore(log *logger.Logger, db *sqlx.DB) audit.Storer {
+func NewStore(log logger.Logger, db *sqlx.DB) audit.Storer {
 	return &Store{
 		log: log,
 		db:  db,

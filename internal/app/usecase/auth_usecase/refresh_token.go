@@ -15,7 +15,6 @@ func (u *UseCase) RefreshAccessToken(ctx context.Context, authRefresh RefreshTok
 		return Token{}, err
 	}
 
-	// Check if the token is valid
 	if rToken.Revoked {
 		return Token{}, errs.New(errs.InvalidArgument, ErrInvalidToken)
 	}
@@ -35,7 +34,7 @@ func (u *UseCase) RefreshAccessToken(ctx context.Context, authRefresh RefreshTok
 		return Token{}, err
 	}
 
-	// Generate a new token pair
+	// Generate a new access token
 	aToken, err := u.generateAccessToken(ctx, usr.ID)
 	if err != nil {
 		return Token{}, err

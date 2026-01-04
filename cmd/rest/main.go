@@ -24,10 +24,13 @@ import (
 	"github.com/Housiadas/cerberus/internal/core/service/role_service"
 	"github.com/Housiadas/cerberus/internal/core/service/user_roles_permissions_service"
 	"github.com/Housiadas/cerberus/internal/core/service/user_service"
+	"github.com/Housiadas/cerberus/pkg/clock"
 	"github.com/Housiadas/cerberus/pkg/debug"
+	"github.com/Housiadas/cerberus/pkg/hasher"
 	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/Housiadas/cerberus/pkg/otel"
 	"github.com/Housiadas/cerberus/pkg/pgsql"
+	"github.com/Housiadas/cerberus/pkg/uuidgen"
 )
 
 var build = "develop"
@@ -63,9 +66,9 @@ func main() {
 	}
 
 	// -------------------------------------------------------------------------
-	// Initialize Logger
+	// Initialize Service
 	// -------------------------------------------------------------------------
-	var log *logger.Logger
+	var log *logger.Service
 	traceIDFn := func(ctx context.Context) string {
 		return otel.GetTraceID(ctx)
 	}
@@ -84,7 +87,7 @@ func main() {
 	}
 }
 
-func run(ctx context.Context, cfg config.Config, log *logger.Logger) error {
+func run(ctx context.Context, cfg config.Config, log *logger.Service) error {
 	// -------------------------------------------------------------------------
 	// GOMAXPROCS
 	// -------------------------------------------------------------------------
@@ -144,8 +147,11 @@ func run(ctx context.Context, cfg config.Config, log *logger.Logger) error {
 	// -------------------------------------------------------------------------
 	log.Info(ctx, "startup", "status", "initializing internal layer")
 
+	hash := hasher.NewBcrypt()
+	clk := clock.NewClock()
+	uuidGen := uuidgen.NewV7()
 	auditService := audit_service.New(log, audit_repo.NewStore(log, db))
-	userService := user_service.New(log, user_repo.NewStore(log, db))
+	userService := user_service.New(log, user_repo.NewStore(log, db), uuidGen, clk, hash)
 	roleService := role_service.New(log, role_repo.NewStore(log, db))
 	permissionService := permission_service.New(log, permission_repo.NewStore(log, db))
 	userRolesPermissionsService := user_roles_permissions_service.New(log, user_roles_permissions_repo.NewStore(log, db))

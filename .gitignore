@@ -9,6 +9,7 @@ cmd/cli/cmd
 .env
 app.env
 config.yaml
+config.yml
 
 cover.out
 coverage.out

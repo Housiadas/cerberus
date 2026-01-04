@@ -17,12 +17,12 @@ import (
 // UseCase manages the set of cli layer api functions for the check core.
 type UseCase struct {
 	build string
-	log   *logger.Logger
+	log   logger.Logger
 	db    *sqlx.DB
 }
 
 // NewUseCase constructs a check cli API for use.
-func NewUseCase(build string, log *logger.Logger, db *sqlx.DB) *UseCase {
+func NewUseCase(build string, log logger.Logger, db *sqlx.DB) *UseCase {
 	return &UseCase{
 		build: build,
 		log:   log,

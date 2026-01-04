@@ -23,7 +23,7 @@ var (
 // Config represents information required to initialize auth.
 type Config struct {
 	Issuer              string
-	Log                 *logger.Logger
+	Log                 logger.Logger
 	UserUsecase         *user_usecase.UseCase
 	RefreshTokenUsecase *refresh_token_usecase.UseCase
 }
@@ -35,7 +35,7 @@ type UseCase struct {
 	secret              []byte
 	parser              *jwt.Parser
 	method              jwt.SigningMethod
-	log                 *logger.Logger
+	log                 logger.Logger
 	userUsecase         *user_usecase.UseCase
 	refreshTokenUsecase *refresh_token_usecase.UseCase
 }

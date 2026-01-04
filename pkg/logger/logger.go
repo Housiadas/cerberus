@@ -18,8 +18,19 @@ type TraceIDFn func(ctx context.Context) string
 // RequestIDFn represents a function that can return the request id from the specified context.
 type RequestIDFn func(ctx context.Context) string
 
-// Logger represents a logger for logging information.
-type Logger struct {
+type Logger interface {
+	Debug(ctx context.Context, msg string, args ...any)
+	Debugc(ctx context.Context, caller int, msg string, args ...any)
+	Info(ctx context.Context, msg string, args ...any)
+	Infoc(ctx context.Context, caller int, msg string, args ...any)
+	Warn(ctx context.Context, msg string, args ...any)
+	Warnc(ctx context.Context, caller int, msg string, args ...any)
+	Error(ctx context.Context, msg string, args ...any)
+	Errorc(ctx context.Context, caller int, msg string, args ...any)
+}
+
+// Service represents a logger for logging information.
+type Service struct {
 	discard     bool
 	handler     slog.Handler
 	traceIDFn   TraceIDFn
@@ -27,28 +38,41 @@ type Logger struct {
 }
 
 // New constructs a new log for application use.
-func New(w io.Writer, minLevel Level, serviceName string, traceIDFn TraceIDFn, requestIDFn RequestIDFn) *Logger {
+func New(
+	w io.Writer,
+	minLevel Level,
+	serviceName string,
+	traceIDFn TraceIDFn,
+	requestIDFn RequestIDFn,
+) *Service {
 	return new(w, minLevel, serviceName, traceIDFn, requestIDFn, Events{})
 }
 
 // NewWithEvents constructs a new log for application use with events.
-func NewWithEvents(w io.Writer, minLevel Level, serviceName string, traceIDFn TraceIDFn, requestIDFn RequestIDFn, events Events) *Logger {
+func NewWithEvents(
+	w io.Writer,
+	minLevel Level,
+	serviceName string,
+	traceIDFn TraceIDFn,
+	requestIDFn RequestIDFn,
+	events Events,
+) *Service {
 	return new(w, minLevel, serviceName, traceIDFn, requestIDFn, events)
 }
 
 // NewWithHandler returns a new log for application use with the underlying
 // handler.
-func NewWithHandler(h slog.Handler) *Logger {
-	return &Logger{handler: h}
+func NewWithHandler(h slog.Handler) *Service {
+	return &Service{handler: h}
 }
 
-// NewStdLogger returns a standard library Logger that wraps the slog Logger.
-func NewStdLogger(logger *Logger, level Level) *log.Logger {
+// NewStdLogger returns a standard library Service that wraps the slog Service.
+func NewStdLogger(logger *Service, level Level) *log.Logger {
 	return slog.NewLogLogger(logger.handler, slog.Level(level))
 }
 
 // Debug logs at LevelDebug with the given context.
-func (log *Logger) Debug(ctx context.Context, msg string, args ...any) {
+func (log *Service) Debug(ctx context.Context, msg string, args ...any) {
 	if log.discard {
 		return
 	}
@@ -57,7 +81,7 @@ func (log *Logger) Debug(ctx context.Context, msg string, args ...any) {
 }
 
 // Debugc logs the information at the specified call stack position.
-func (log *Logger) Debugc(ctx context.Context, caller int, msg string, args ...any) {
+func (log *Service) Debugc(ctx context.Context, caller int, msg string, args ...any) {
 	if log.discard {
 		return
 	}
@@ -66,7 +90,7 @@ func (log *Logger) Debugc(ctx context.Context, caller int, msg string, args ...a
 }
 
 // Info logs at LevelInfo with the given context.
-func (log *Logger) Info(ctx context.Context, msg string, args ...any) {
+func (log *Service) Info(ctx context.Context, msg string, args ...any) {
 	if log.discard {
 		return
 	}
@@ -75,7 +99,7 @@ func (log *Logger) Info(ctx context.Context, msg string, args ...any) {
 }
 
 // Infoc logs the information at the specified call stack position.
-func (log *Logger) Infoc(ctx context.Context, caller int, msg string, args ...any) {
+func (log *Service) Infoc(ctx context.Context, caller int, msg string, args ...any) {
 	if log.discard {
 		return
 	}
@@ -84,7 +108,7 @@ func (log *Logger) Infoc(ctx context.Context, caller int, msg string, args ...an
 }
 
 // Warn logs at LevelWarn with the given context.
-func (log *Logger) Warn(ctx context.Context, msg string, args ...any) {
+func (log *Service) Warn(ctx context.Context, msg string, args ...any) {
 	if log.discard {
 		return
 	}
@@ -93,7 +117,7 @@ func (log *Logger) Warn(ctx context.Context, msg string, args ...any) {
 }
 
 // Warnc logs the information at the specified call stack position.
-func (log *Logger) Warnc(ctx context.Context, caller int, msg string, args ...any) {
+func (log *Service) Warnc(ctx context.Context, caller int, msg string, args ...any) {
 	if log.discard {
 		return
 	}
@@ -102,7 +126,7 @@ func (log *Logger) Warnc(ctx context.Context, caller int, msg string, args ...an
 }
 
 // Error logs at LevelError with the given context.
-func (log *Logger) Error(ctx context.Context, msg string, args ...any) {
+func (log *Service) Error(ctx context.Context, msg string, args ...any) {
 	if log.discard {
 		return
 	}
@@ -111,7 +135,7 @@ func (log *Logger) Error(ctx context.Context, msg string, args ...any) {
 }
 
 // Errorc logs the information at the specified call stack position.
-func (log *Logger) Errorc(ctx context.Context, caller int, msg string, args ...any) {
+func (log *Service) Errorc(ctx context.Context, caller int, msg string, args ...any) {
 	if log.discard {
 		return
 	}
@@ -119,7 +143,13 @@ func (log *Logger) Errorc(ctx context.Context, caller int, msg string, args ...a
 	log.write(ctx, LevelError, caller, msg, args...)
 }
 
-func (log *Logger) write(ctx context.Context, level Level, caller int, msg string, args ...any) {
+func (log *Service) write(
+	ctx context.Context,
+	level Level,
+	caller int,
+	msg string,
+	args ...any,
+) {
 	slogLevel := slog.Level(level)
 
 	if !log.handler.Enabled(ctx, slogLevel) {
@@ -142,8 +172,14 @@ func (log *Logger) write(ctx context.Context, level Level, caller int, msg strin
 	log.handler.Handle(ctx, r)
 }
 
-func new(w io.Writer, minLevel Level, serviceName string, traceIDFn TraceIDFn, requestIDFn RequestIDFn, events Events) *Logger {
-
+func new(
+	w io.Writer,
+	minLevel Level,
+	serviceName string,
+	traceIDFn TraceIDFn,
+	requestIDFn RequestIDFn,
+	events Events,
+) *Service {
 	// Convert the file name to just the name.ext when this key/value is logged.
 	f := func(groups []string, a slog.Attr) slog.Attr {
 		if a.Key == slog.SourceKey {
@@ -173,7 +209,7 @@ func new(w io.Writer, minLevel Level, serviceName string, traceIDFn TraceIDFn, r
 	// Add those attributes and capture the final handler.
 	handler = handler.WithAttrs(attrs)
 
-	return &Logger{
+	return &Service{
 		discard:     w == io.Discard,
 		handler:     handler,
 		traceIDFn:   traceIDFn,

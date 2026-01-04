@@ -14,12 +14,12 @@ import (
 
 // Service manages the set of APIs for user access.
 type Service struct {
-	log    *logger.Logger
+	log    *logger.Service
 	storer refresh_token.Storer
 }
 
 // New constructs a user.User internal API for use.
-func New(log *logger.Logger, storer refresh_token.Storer) *Service {
+func New(log *logger.Service, storer refresh_token.Storer) *Service {
 	return &Service{
 		log:    log,
 		storer: storer,

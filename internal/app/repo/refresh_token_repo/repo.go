@@ -28,11 +28,11 @@ var (
 )
 
 type Store struct {
-	log *logger.Logger
+	log *logger.Service
 	db  sqlx.ExtContext
 }
 
-func NewStore(log *logger.Logger, db *sqlx.DB) refresh_token.Storer {
+func NewStore(log *logger.Service, db *sqlx.DB) refresh_token.Storer {
 	return &Store{
 		log: log,
 		db:  db,

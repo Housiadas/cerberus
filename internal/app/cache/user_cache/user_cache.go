@@ -7,7 +7,6 @@ import (
 	"net/mail"
 	"time"
 
-	"github.com/Housiadas/cerberus/pkg/web"
 	"github.com/google/uuid"
 	"github.com/viccon/sturdyc"
 
@@ -15,17 +14,18 @@ import (
 	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/Housiadas/cerberus/pkg/order"
 	"github.com/Housiadas/cerberus/pkg/pgsql"
+	"github.com/Housiadas/cerberus/pkg/web"
 )
 
 // Store manages the set of APIs for user data and caching.
 type Store struct {
 	storer user.Storer
-	log    *logger.Logger
+	log    *logger.Service
 	cache  *sturdyc.Client[user.User]
 }
 
 // NewStore constructs the api for data and caching access.
-func NewStore(log *logger.Logger, storer user.Storer, ttl time.Duration) *Store {
+func NewStore(log *logger.Service, storer user.Storer, ttl time.Duration) *Store {
 	const capacity = 10000
 	const numShards = 10
 	const evictionPercentage = 10

@@ -25,14 +25,14 @@ func (u *UseCase) Login(ctx context.Context, authLogin LoginReq) (Token, error) 
 	}
 
 	// Create a refresh token
-	tkn, err := u.refreshTokenUsecase.Create(ctx, usr.ID, refreshTokenTTL)
+	rToken, err := u.refreshTokenUsecase.Create(ctx, usr.ID, refreshTokenTTL)
 	if err != nil {
 		return Token{}, err
 	}
 
 	return Token{
 		AccessToken:  aToken.token,
-		RefreshToken: tkn.Token,
+		RefreshToken: rToken.Token,
 		ExpiresIn:    aToken.expiresIn,
 	}, nil
 }

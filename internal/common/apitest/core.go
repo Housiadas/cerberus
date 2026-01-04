@@ -1,6 +1,8 @@
 package apitest
 
 import (
+	"github.com/Housiadas/cerberus/pkg/clock"
+	"github.com/Housiadas/cerberus/pkg/hasher"
 	"github.com/jmoiron/sqlx"
 
 	"github.com/Housiadas/cerberus/internal/app/repo/audit_repo"
@@ -10,6 +12,7 @@ import (
 	"github.com/Housiadas/cerberus/internal/core/service/role_service"
 	"github.com/Housiadas/cerberus/internal/core/service/user_service"
 	"github.com/Housiadas/cerberus/pkg/logger"
+	"github.com/Housiadas/cerberus/pkg/uuidgen"
 )
 
 // Core represents all the internal core services needed for testing.
@@ -19,9 +22,12 @@ type Core struct {
 	Role  *role_service.Service
 }
 
-func newCore(log *logger.Logger, db *sqlx.DB) Core {
+func newCore(log *logger.Service, db *sqlx.DB) Core {
+	hash := hasher.NewBcrypt()
+	clk := clock.NewClock()
+	uuidGen := uuidgen.NewV7()
 	auditService := audit_service.New(log, audit_repo.NewStore(log, db))
-	userService := user_service.New(log, user_repo.NewStore(log, db))
+	userService := user_service.New(log, user_repo.NewStore(log, db), uuidGen, clk, hash)
 	roleService := role_service.New(log, role_repo.NewStore(log, db))
 
 	return Core{
