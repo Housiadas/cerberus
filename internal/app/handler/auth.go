@@ -27,7 +27,7 @@ func (h *Handler) authLogin(ctx context.Context, _ http.ResponseWriter, r *http.
 		return errs.New(errs.InvalidArgument, err)
 	}
 
-	token, err := h.UseCase.Auth.Login(ctx, req)
+	token, err := h.Usecase.Auth.Login(ctx, req)
 	if err != nil {
 		return errs.AsErr(err)
 	}
@@ -51,7 +51,7 @@ func (h *Handler) authRegister(ctx context.Context, _ http.ResponseWriter, r *ht
 		return errs.New(errs.InvalidArgument, err)
 	}
 
-	usr, err := h.UseCase.User.Create(ctx, req)
+	usr, err := h.Usecase.User.Create(ctx, req)
 	if err != nil {
 		return errs.AsErr(err)
 	}
@@ -75,7 +75,7 @@ func (h *Handler) authLogout(ctx context.Context, _ http.ResponseWriter, r *http
 	}
 
 	claims := ctxPck.GetClaims(ctx)
-	err := h.UseCase.Auth.Logout(ctx, claims.Subject, req)
+	err := h.Usecase.Auth.Logout(ctx, claims.Subject, req)
 	if err != nil {
 		return errs.AsErr(err)
 	}
@@ -99,7 +99,7 @@ func (h *Handler) authRefresh(ctx context.Context, _ http.ResponseWriter, r *htt
 		return errs.New(errs.InvalidArgument, err)
 	}
 
-	token, err := h.UseCase.Auth.RefreshAccessToken(ctx, req)
+	token, err := h.Usecase.Auth.RefreshAccessToken(ctx, req)
 	if err != nil {
 		return errs.AsErr(err)
 	}
