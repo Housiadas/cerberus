@@ -40,7 +40,7 @@ func testNewUsers(n int) []user.NewUser {
 			Name:       name.MustParse(fmt.Sprintf("Name%d", idx)),
 			Email:      mail.Address{Address: fmt.Sprintf("Email%d@gmail.com", idx)},
 			Department: name.MustParseNull(fmt.Sprintf("Department%d", idx)),
-			Password:   password.MustParse(fmt.Sprintf("Password%d", idx)),
+			Password:   password.MustParse("Secret123!@#"),
 		}
 
 		newUsrs[i] = nu
