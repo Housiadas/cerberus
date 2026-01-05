@@ -7,12 +7,14 @@ import (
 	"github.com/Housiadas/cerberus/internal/app/middleware"
 	"github.com/Housiadas/cerberus/internal/app/repo/audit_repo"
 	"github.com/Housiadas/cerberus/internal/app/repo/permission_repo"
+	"github.com/Housiadas/cerberus/internal/app/repo/refresh_token_repo"
 	"github.com/Housiadas/cerberus/internal/app/repo/role_repo"
 	"github.com/Housiadas/cerberus/internal/app/repo/user_repo"
 	"github.com/Housiadas/cerberus/internal/app/repo/user_roles_permissions_repo"
 	"github.com/Housiadas/cerberus/internal/app/usecase/audit_usecase"
 	"github.com/Housiadas/cerberus/internal/app/usecase/auth_usecase"
 	"github.com/Housiadas/cerberus/internal/app/usecase/permission_usecase"
+	"github.com/Housiadas/cerberus/internal/app/usecase/refresh_token_usecase"
 	"github.com/Housiadas/cerberus/internal/app/usecase/role_usecase"
 	"github.com/Housiadas/cerberus/internal/app/usecase/system_usecase"
 	"github.com/Housiadas/cerberus/internal/app/usecase/user_roles_permissions_usecase"
@@ -20,6 +22,7 @@ import (
 	"github.com/Housiadas/cerberus/internal/config"
 	"github.com/Housiadas/cerberus/internal/core/service/audit_service"
 	"github.com/Housiadas/cerberus/internal/core/service/permission_service"
+	"github.com/Housiadas/cerberus/internal/core/service/refresh_token_service"
 	"github.com/Housiadas/cerberus/internal/core/service/role_service"
 	"github.com/Housiadas/cerberus/internal/core/service/user_roles_permissions_service"
 	"github.com/Housiadas/cerberus/internal/core/service/user_service"
@@ -82,21 +85,25 @@ func New(cfg Config) *Handler {
 	roleRepo := role_repo.NewStore(cfg.Log, cfg.DB)
 	permissionRepo := permission_repo.NewStore(cfg.Log, cfg.DB)
 	userRolesPermissionsRepo := user_roles_permissions_repo.NewStore(cfg.Log, cfg.DB)
+	refreshTokenRepo := refresh_token_repo.NewStore(cfg.Log, cfg.DB)
 
 	// services
 	auditService := audit_service.New(cfg.Log, auditRepo)
 	userService := user_service.New(cfg.Log, userRepo, uuidGen, clk, hash)
 	roleService := role_service.New(cfg.Log, roleRepo)
 	permissionService := permission_service.New(cfg.Log, permissionRepo)
+	refreshTokenService := refresh_token_service.New(cfg.Log, refreshTokenRepo, uuidGen, clk)
 	userRolesPermissionsService := user_roles_permissions_service.New(cfg.Log, userRolesPermissionsRepo)
 
 	// usecase
 	auditUsecase := audit_usecase.NewUseCase(auditService)
 	userUsecase := user_usecase.NewUseCase(userService)
+	refreshTokenUsecase := refresh_token_usecase.NewUseCase(refreshTokenService)
 	authUsecase := auth_usecase.NewUseCase(auth_usecase.Config{
-		Issuer:      cfg.ServiceName,
-		Log:         cfg.Log,
-		UserUsecase: userUsecase,
+		Issuer:              cfg.ServiceName,
+		Log:                 cfg.Log,
+		UserUsecase:         userUsecase,
+		RefreshTokenUsecase: refreshTokenUsecase,
 	})
 	roleUsecase := role_usecase.NewUseCase(roleService)
 	permissionUsecase := permission_usecase.NewUseCase(permissionService)

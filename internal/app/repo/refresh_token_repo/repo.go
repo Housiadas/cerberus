@@ -7,12 +7,12 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/Housiadas/cerberus/pkg/web/errs"
 	"github.com/jmoiron/sqlx"
 
 	"github.com/Housiadas/cerberus/internal/core/domain/refresh_token"
 	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/Housiadas/cerberus/pkg/pgsql"
+	"github.com/Housiadas/cerberus/pkg/web/errs"
 )
 
 // queries
@@ -28,11 +28,11 @@ var (
 )
 
 type Store struct {
-	log *logger.Service
+	log logger.Logger
 	db  sqlx.ExtContext
 }
 
-func NewStore(log *logger.Service, db *sqlx.DB) refresh_token.Storer {
+func NewStore(log logger.Logger, db *sqlx.DB) refresh_token.Storer {
 	return &Store{
 		log: log,
 		db:  db,
