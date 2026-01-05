@@ -21,14 +21,14 @@ type Config struct {
 
 type Command struct {
 	DB      pgsql.Config
-	Log     *logger.Logger
+	Log     *logger.Service
 	Version config.Version
 	Kafka   config.Kafka
 }
 
 func New(
-	cfg Config,
-	log *logger.Logger,
+	cfg config.Config,
+	log *logger.Service,
 	build string,
 	serviceName string,
 ) *Command {
@@ -47,6 +47,5 @@ func New(
 			Build: build,
 			Desc:  serviceName,
 		},
-		Kafka: cfg.Kafka,
 	}
 }

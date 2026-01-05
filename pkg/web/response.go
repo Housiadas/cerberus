@@ -15,10 +15,10 @@ import (
 )
 
 type Respond struct {
-	log *logger.Logger
+	log logger.Logger
 }
 
-func NewRespond(log *logger.Logger) *Respond {
+func NewRespond(log logger.Logger) *Respond {
 	return &Respond{
 		log: log,
 	}

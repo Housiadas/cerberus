@@ -12,18 +12,8 @@ import (
 
 	_ "github.com/Housiadas/cerberus/docs"
 	"github.com/Housiadas/cerberus/internal/app/handler"
-	"github.com/Housiadas/cerberus/internal/app/repo/audit_repo"
-	"github.com/Housiadas/cerberus/internal/app/repo/permission_repo"
-	"github.com/Housiadas/cerberus/internal/app/repo/role_repo"
-	"github.com/Housiadas/cerberus/internal/app/repo/user_repo"
-	"github.com/Housiadas/cerberus/internal/app/repo/user_roles_permissions_repo"
 	ctxPck "github.com/Housiadas/cerberus/internal/common/context"
 	"github.com/Housiadas/cerberus/internal/config"
-	"github.com/Housiadas/cerberus/internal/core/service/audit_service"
-	"github.com/Housiadas/cerberus/internal/core/service/permission_service"
-	"github.com/Housiadas/cerberus/internal/core/service/role_service"
-	"github.com/Housiadas/cerberus/internal/core/service/user_roles_permissions_service"
-	"github.com/Housiadas/cerberus/internal/core/service/user_service"
 	"github.com/Housiadas/cerberus/pkg/debug"
 	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/Housiadas/cerberus/pkg/otel"
@@ -63,16 +53,16 @@ func main() {
 	}
 
 	// -------------------------------------------------------------------------
-	// Initialize Logger
+	// Initialize Service
 	// -------------------------------------------------------------------------
-	var log *logger.Logger
+	var log *logger.Service
 	traceIDFn := func(ctx context.Context) string {
 		return otel.GetTraceID(ctx)
 	}
 	requestIDFn := func(ctx context.Context) string {
 		return ctxPck.GetRequestID(ctx)
 	}
-	log = logger.New(os.Stdout, logger.LevelInfo, "API", traceIDFn, requestIDFn)
+	log = logger.New(os.Stdout, logger.LevelInfo, "Rest api", traceIDFn, requestIDFn)
 
 	// -------------------------------------------------------------------------
 	// Run the application
@@ -84,15 +74,11 @@ func main() {
 	}
 }
 
-func run(ctx context.Context, cfg config.Config, log *logger.Logger) error {
-	// -------------------------------------------------------------------------
-	// GOMAXPROCS
-	// -------------------------------------------------------------------------
-	log.Info(ctx, "startup", "GOMAXPROCS", runtime.GOMAXPROCS(0))
-
+func run(ctx context.Context, cfg config.Config, log *logger.Service) error {
 	// -------------------------------------------------------------------------
 	// App Starting
 	// -------------------------------------------------------------------------
+	log.Info(ctx, "startup", "GOMAXPROCS", runtime.GOMAXPROCS(0))
 	log.Info(ctx, "starting application", "version", cfg.Version.Build)
 	defer log.Info(ctx, "shutdown complete")
 
@@ -140,24 +126,17 @@ func run(ctx context.Context, cfg config.Config, log *logger.Logger) error {
 	tracer := traceProvider.Tracer(cfg.App.Name)
 
 	// -------------------------------------------------------------------------
-	// Services
-	// -------------------------------------------------------------------------
-	log.Info(ctx, "startup", "status", "initializing internal layer")
-
-	auditService := audit_service.New(log, audit_repo.NewStore(log, db))
-	userService := user_service.New(log, user_repo.NewStore(log, db))
-	roleService := role_service.New(log, role_repo.NewStore(log, db))
-	permissionService := permission_service.New(log, permission_repo.NewStore(log, db))
-	userRolesPermissionsService := user_roles_permissions_service.New(log, user_roles_permissions_repo.NewStore(log, db))
-
-	// -------------------------------------------------------------------------
 	// Start Debug Rest Server
 	// -------------------------------------------------------------------------
 	go func() {
 		log.Info(ctx, "startup", "status", "Debug server starting", "host", cfg.Rest.Debug)
 
 		if err := http.ListenAndServe(cfg.Rest.Debug, debug.Mux()); err != nil {
-			log.Error(ctx, "shutdown", "status", "debug router closed", "host", cfg.Rest.Debug, "msg", err)
+			log.Error(ctx, "shutdown",
+				"status", "debug router closed",
+				"host", cfg.Rest.Debug,
+				"msg", err,
+			)
 		}
 	}()
 
@@ -168,17 +147,12 @@ func run(ctx context.Context, cfg config.Config, log *logger.Logger) error {
 
 	// Initialize handler
 	h := handler.New(handler.Config{
-		ServiceName:                 cfg.App.Name,
-		Build:                       build,
-		Cors:                        cfg.Cors,
-		DB:                          db,
-		Log:                         log,
-		Tracer:                      tracer,
-		AuditService:                auditService,
-		UserService:                 userService,
-		RoleService:                 roleService,
-		PermissionService:           permissionService,
-		UserRolesPermissionsService: userRolesPermissionsService,
+		ServiceName: cfg.App.Name,
+		Build:       build,
+		Cors:        cfg.Cors,
+		DB:          db,
+		Log:         log,
+		Tracer:      tracer,
 	})
 
 	api := http.Server{
@@ -213,7 +187,7 @@ func run(ctx context.Context, cfg config.Config, log *logger.Logger) error {
 
 		if err := api.Shutdown(ctx); err != nil {
 			api.Close()
-			return fmt.Errorf("could not stop grpc gracefully: %w", err)
+			return fmt.Errorf("could not stop server gracefully: %w", err)
 		}
 	}
 

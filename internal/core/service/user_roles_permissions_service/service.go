@@ -13,12 +13,12 @@ import (
 
 // Service manages the set of APIs for querying the user_roles_permissions view.
 type Service struct {
-	log    *logger.Logger
+	log    logger.Logger
 	storer user_roles_permissions.Storer
 }
 
 // New constructs a business API for use.
-func New(log *logger.Logger, storer user_roles_permissions.Storer) *Service {
+func New(log logger.Logger, storer user_roles_permissions.Storer) *Service {
 	return &Service{log: log, storer: storer}
 }
 

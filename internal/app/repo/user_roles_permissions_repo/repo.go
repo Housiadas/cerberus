@@ -30,12 +30,12 @@ var (
 
 // Store manages the set of APIs for DB access to the view.
 type Store struct {
-	log *logger.Logger
+	log logger.Logger
 	db  sqlx.ExtContext
 }
 
 // NewStore constructs the api for data access.
-func NewStore(log *logger.Logger, db *sqlx.DB) urp.Storer {
+func NewStore(log logger.Logger, db *sqlx.DB) urp.Storer {
 	return &Store{
 		log: log,
 		db:  db,

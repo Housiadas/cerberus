@@ -3,6 +3,7 @@ package unitest
 
 import (
 	"context"
+	"net/mail"
 	"testing"
 )
 
@@ -26,4 +27,12 @@ func Run(t *testing.T, table []Table, testName string) {
 
 		t.Run(testName+"-"+tt.Name, f)
 	}
+}
+
+func MustParseEmail(addr string) mail.Address {
+	email, err := mail.ParseAddress(addr)
+	if err != nil {
+		panic(err)
+	}
+	return *email
 }

@@ -5,6 +5,11 @@ import (
 	"go.opentelemetry.io/otel/trace"
 
 	"github.com/Housiadas/cerberus/internal/app/middleware"
+	"github.com/Housiadas/cerberus/internal/app/repo/audit_repo"
+	"github.com/Housiadas/cerberus/internal/app/repo/permission_repo"
+	"github.com/Housiadas/cerberus/internal/app/repo/role_repo"
+	"github.com/Housiadas/cerberus/internal/app/repo/user_repo"
+	"github.com/Housiadas/cerberus/internal/app/repo/user_roles_permissions_repo"
 	"github.com/Housiadas/cerberus/internal/app/usecase/audit_usecase"
 	"github.com/Housiadas/cerberus/internal/app/usecase/auth_usecase"
 	"github.com/Housiadas/cerberus/internal/app/usecase/permission_usecase"
@@ -18,8 +23,11 @@ import (
 	"github.com/Housiadas/cerberus/internal/core/service/role_service"
 	"github.com/Housiadas/cerberus/internal/core/service/user_roles_permissions_service"
 	"github.com/Housiadas/cerberus/internal/core/service/user_service"
+	"github.com/Housiadas/cerberus/pkg/clock"
+	"github.com/Housiadas/cerberus/pkg/hasher"
 	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/Housiadas/cerberus/pkg/pgsql"
+	"github.com/Housiadas/cerberus/pkg/uuidgen"
 	"github.com/Housiadas/cerberus/pkg/web"
 )
 
@@ -29,10 +37,10 @@ type Handler struct {
 	Build       string
 	Cors        config.CorsSettings
 	DB          *sqlx.DB
-	Log         *logger.Logger
+	Log         logger.Logger
 	Tracer      trace.Tracer
 	Web         Web
-	UseCase     UseCase
+	Usecase     Usecase
 }
 
 // Web represents the set of usecase for the http.
@@ -41,8 +49,8 @@ type Web struct {
 	Res        *web.Respond
 }
 
-// UseCase represents the use case layer
-type UseCase struct {
+// Usecase represents the use case layer
+type Usecase struct {
 	Audit                *audit_usecase.UseCase
 	Auth                 *auth_usecase.UseCase
 	User                 *user_usecase.UseCase
@@ -54,27 +62,46 @@ type UseCase struct {
 
 // Config represents the configuration for the handler.
 type Config struct {
-	ServiceName                 string
-	Build                       string
-	Cors                        config.CorsSettings
-	DB                          *sqlx.DB
-	Log                         *logger.Logger
-	Tracer                      trace.Tracer
-	AuditService                *audit_service.Service
-	UserService                 *user_service.Service
-	RoleService                 *role_service.Service
-	PermissionService           *permission_service.Service
-	UserRolesPermissionsService *user_roles_permissions_service.Service
+	ServiceName string
+	Build       string
+	Cors        config.CorsSettings
+	DB          *sqlx.DB
+	Log         logger.Logger
+	Tracer      trace.Tracer
 }
 
 func New(cfg Config) *Handler {
-	userUseCase := user_usecase.NewUseCase(cfg.UserService)
-	authUseCase := auth_usecase.NewUseCase(auth_usecase.Config{
+	// utils
+	hash := hasher.NewBcrypt()
+	clk := clock.NewClock()
+	uuidGen := uuidgen.NewV7()
+
+	// repos
+	auditRepo := audit_repo.NewStore(cfg.Log, cfg.DB)
+	userRepo := user_repo.NewStore(cfg.Log, cfg.DB)
+	roleRepo := role_repo.NewStore(cfg.Log, cfg.DB)
+	permissionRepo := permission_repo.NewStore(cfg.Log, cfg.DB)
+	userRolesPermissionsRepo := user_roles_permissions_repo.NewStore(cfg.Log, cfg.DB)
+
+	// services
+	auditService := audit_service.New(cfg.Log, auditRepo)
+	userService := user_service.New(cfg.Log, userRepo, uuidGen, clk, hash)
+	roleService := role_service.New(cfg.Log, roleRepo)
+	permissionService := permission_service.New(cfg.Log, permissionRepo)
+	userRolesPermissionsService := user_roles_permissions_service.New(cfg.Log, userRolesPermissionsRepo)
+
+	// usecase
+	auditUsecase := audit_usecase.NewUseCase(auditService)
+	userUsecase := user_usecase.NewUseCase(userService)
+	authUsecase := auth_usecase.NewUseCase(auth_usecase.Config{
 		Issuer:      cfg.ServiceName,
 		Log:         cfg.Log,
-		UserUsecase: userUseCase,
+		UserUsecase: userUsecase,
 	})
-	userRolesPermissionsUseCase := user_roles_permissions_usecase.NewUseCase(cfg.UserRolesPermissionsService)
+	roleUsecase := role_usecase.NewUseCase(roleService)
+	permissionUsecase := permission_usecase.NewUseCase(permissionService)
+	systemUsecase := system_usecase.NewUseCase(cfg.Build, cfg.Log, cfg.DB)
+	userRolesPermissionsUsecase := user_roles_permissions_usecase.NewUseCase(userRolesPermissionsService)
 
 	return &Handler{
 		ServiceName: cfg.ServiceName,
@@ -88,20 +115,20 @@ func New(cfg Config) *Handler {
 				Log:                  cfg.Log,
 				Tracer:               cfg.Tracer,
 				Tx:                   pgsql.NewBeginner(cfg.DB),
-				UserUseCase:          userUseCase,
-				AuthUseCase:          authUseCase,
-				UserRolesPermissions: userRolesPermissionsUseCase,
+				UserUseCase:          userUsecase,
+				AuthUseCase:          authUsecase,
+				UserRolesPermissions: userRolesPermissionsUsecase,
 			}),
 			Res: web.NewRespond(cfg.Log),
 		},
-		UseCase: UseCase{
-			Audit:                audit_usecase.NewUseCase(cfg.AuditService),
-			Auth:                 authUseCase,
-			User:                 userUseCase,
-			Role:                 role_usecase.NewUseCase(cfg.RoleService),
-			Permission:           permission_usecase.NewUseCase(cfg.PermissionService),
-			UserRolesPermissions: userRolesPermissionsUseCase,
-			System:               system_usecase.NewUseCase(cfg.Build, cfg.Log, cfg.DB),
+		Usecase: Usecase{
+			Audit:                auditUsecase,
+			Auth:                 authUsecase,
+			User:                 userUsecase,
+			Role:                 roleUsecase,
+			Permission:           permissionUsecase,
+			UserRolesPermissions: userRolesPermissionsUsecase,
+			System:               systemUsecase,
 		},
 	}
 }

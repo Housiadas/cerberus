@@ -21,7 +21,7 @@ import (
 func (h *Handler) auditQuery(ctx context.Context, _ http.ResponseWriter, r *http.Request) web.Encoder {
 	qp := auditParseQueryParams(r)
 
-	audits, err := h.UseCase.Audit.Query(ctx, qp)
+	audits, err := h.Usecase.Audit.Query(ctx, qp)
 	if err != nil {
 		return errs.AsErr(err)
 	}

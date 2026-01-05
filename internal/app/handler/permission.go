@@ -25,7 +25,7 @@ func (h *Handler) permissionCreate(ctx context.Context, _ http.ResponseWriter, r
 		return errs.New(errs.InvalidArgument, err)
 	}
 
-	usr, err := h.UseCase.Permission.Create(ctx, ucRole)
+	usr, err := h.Usecase.Permission.Create(ctx, ucRole)
 	if err != nil {
 		return errs.AsErr(err)
 	}
@@ -45,7 +45,7 @@ func (h *Handler) permissionCreate(ctx context.Context, _ http.ResponseWriter, r
 func (h *Handler) permissionQuery(ctx context.Context, _ http.ResponseWriter, r *http.Request) web.Encoder {
 	qp := permissionParseQueryParams(r)
 
-	roles, err := h.UseCase.Permission.Query(ctx, qp)
+	roles, err := h.Usecase.Permission.Query(ctx, qp)
 	if err != nil {
 		return errs.AsErr(err)
 	}
@@ -70,7 +70,7 @@ func (h *Handler) permissionUpdate(ctx context.Context, w http.ResponseWriter, r
 	}
 
 	permissionID := web.Param(r, "permission_id")
-	permission, err := h.UseCase.Permission.Update(ctx, app, permissionID)
+	permission, err := h.Usecase.Permission.Update(ctx, app, permissionID)
 	if err != nil {
 		return errs.AsErr(err)
 	}
@@ -89,7 +89,7 @@ func (h *Handler) permissionUpdate(ctx context.Context, w http.ResponseWriter, r
 // @Router       /v1/permissions/{permission_id} [delete]
 func (h *Handler) permissionDelete(ctx context.Context, w http.ResponseWriter, r *http.Request) web.Encoder {
 	permissionID := web.Param(r, "permission_id")
-	if err := h.UseCase.Permission.Delete(ctx, permissionID); err != nil {
+	if err := h.Usecase.Permission.Delete(ctx, permissionID); err != nil {
 		return errs.AsErr(err)
 	}
 

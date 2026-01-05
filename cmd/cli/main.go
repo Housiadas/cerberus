@@ -7,9 +7,8 @@ import (
 	"io"
 	"os"
 
-	"github.com/spf13/viper"
-
 	"github.com/Housiadas/cerberus/internal/app/command"
+	"github.com/Housiadas/cerberus/internal/config"
 	"github.com/Housiadas/cerberus/pkg/logger"
 )
 
@@ -28,13 +27,13 @@ func run() error {
 	// -------------------------------------------------------------------------
 	// Initialize Configuration
 	// -------------------------------------------------------------------------
-	c, err := LoadConfig("../../")
+	c, err := config.LoadConfig("../../")
 	if err != nil {
 		return fmt.Errorf("parsing config: %w", err)
 	}
 
 	// -------------------------------------------------------------------------
-	// Initialize Logger
+	// Initialize Service
 	// -------------------------------------------------------------------------
 	traceIDFn := func(context.Context) string {
 		return "00000000-0000-0000-0000-000000000000"
@@ -42,7 +41,7 @@ func run() error {
 	requestIDFn := func(context.Context) string {
 		return "00000000-0000-0000-0000-000000000000"
 	}
-	log := logger.New(io.Discard, logger.LevelInfo, "CMD", traceIDFn, requestIDFn)
+	log := logger.New(io.Discard, logger.LevelInfo, "CLI", traceIDFn, requestIDFn)
 
 	// -------------------------------------------------------------------------
 	// Initialize commands
@@ -50,21 +49,6 @@ func run() error {
 	cmd := command.New(c, log, build, "CMD")
 
 	return processCommands(os.Args, cmd)
-}
-
-// LoadConfig reads configuration from file or environment variables.
-func LoadConfig(path string) (cfg command.Config, err error) {
-	viper.AddConfigPath(path)
-	viper.SetConfigFile("config.yaml")
-	viper.AutomaticEnv()
-
-	err = viper.ReadInConfig()
-	if err != nil {
-		return
-	}
-
-	err = viper.Unmarshal(&cfg)
-	return
 }
 
 // processCommands handles the execution of the commands specified on the command line.

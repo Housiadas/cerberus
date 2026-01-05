@@ -43,14 +43,12 @@ func StartTest(t *testing.T, testName string) (*Test, error) {
 
 	// Initialize handler
 	h := handler.New(handler.Config{
-		ServiceName:  "Test Service Name",
-		Build:        "Test",
-		Cors:         cfg.CorsSettings{},
-		DB:           db,
-		Log:          log,
-		Tracer:       tracer,
-		AuditService: c.Audit,
-		UserService:  c.User,
+		ServiceName: "Test Service Name",
+		Build:       "Test",
+		Cors:        cfg.CorsSettings{},
+		DB:          db,
+		Log:         log,
+		Tracer:      tracer,
 	})
 
 	return New(db, h.Routes(), c), nil

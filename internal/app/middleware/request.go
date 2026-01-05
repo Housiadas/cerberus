@@ -37,7 +37,7 @@ func (m *Middleware) RequestID(next http.Handler) http.Handler {
 	})
 }
 
-func initializeUUIDV7(ctx context.Context, log *logger.Logger) uuid.UUID {
+func initializeUUIDV7(ctx context.Context, log logger.Logger) uuid.UUID {
 	u, err := uuid.NewV7()
 	if err != nil {
 		log.Info(ctx, "uuid v7 parse", err)

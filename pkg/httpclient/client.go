@@ -12,13 +12,13 @@ import (
 )
 
 type Config struct {
-	Log     *logger.Logger
+	Log     *logger.Service
 	Timeout time.Duration
 }
 
 // Client represents an http client.
 type Client struct {
-	log  *logger.Logger
+	log  *logger.Service
 	http *http.Client
 }
 

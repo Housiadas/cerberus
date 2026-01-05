@@ -8,15 +8,18 @@ import (
 
 	"github.com/Housiadas/cerberus/internal/app/repo/user_repo"
 	namePck "github.com/Housiadas/cerberus/internal/core/domain/name"
-	"github.com/Housiadas/cerberus/internal/core/domain/role"
+	"github.com/Housiadas/cerberus/internal/core/domain/password"
 	"github.com/Housiadas/cerberus/internal/core/domain/user"
 	"github.com/Housiadas/cerberus/internal/core/service/user_service"
+	"github.com/Housiadas/cerberus/pkg/clock"
+	"github.com/Housiadas/cerberus/pkg/hasher"
 	"github.com/Housiadas/cerberus/pkg/pgsql"
+	"github.com/Housiadas/cerberus/pkg/uuidgen"
 )
 
 // UserAdd adds new users into the database.
-func (cmd *Command) UserAdd(name, email, password string) error {
-	if name == "" || email == "" || password == "" {
+func (cmd *Command) UserAdd(name, email, pass string) error {
+	if name == "" || email == "" || pass == "" {
 		fmt.Println("help: useradd <name> <email> <password>")
 		return ErrHelp
 	}
@@ -30,18 +33,25 @@ func (cmd *Command) UserAdd(name, email, password string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	userBus := user_service.New(cmd.Log, user_repo.NewStore(cmd.Log, db))
+	hash := hasher.NewBcrypt()
+	clk := clock.NewClock()
+	uuidGen := uuidgen.NewV7()
+	userBus := user_service.New(cmd.Log, user_repo.NewStore(cmd.Log, db), uuidGen, clk, hash)
 
 	addr, err := mail.ParseAddress(email)
 	if err != nil {
 		return fmt.Errorf("parsing email: %w", err)
 	}
 
+	passd, err := password.ParseConfirm(pass, pass)
+	if err != nil {
+		return fmt.Errorf("parsing password: %w", err)
+	}
+
 	nu := user.NewUser{
 		Name:     namePck.MustParse(name),
 		Email:    *addr,
-		Password: password,
-		RoleID:   []role.Role{role.Admin, role.User},
+		Password: passd,
 	}
 
 	usr, err := userBus.Create(ctx, nu)

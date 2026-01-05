@@ -26,7 +26,7 @@ var (
 )
 
 type Config struct {
-	Log                  *logger.Logger
+	Log                  logger.Logger
 	Tracer               trace.Tracer
 	Tx                   *pgsql.DBBeginner
 	AuthUseCase          *auth_usecase.UseCase
@@ -35,8 +35,8 @@ type Config struct {
 }
 
 type Middleware struct {
+	Log     logger.Logger
 	Tracer  trace.Tracer
-	Log     *logger.Logger
 	Tx      *pgsql.DBBeginner
 	UseCase UseCase
 }

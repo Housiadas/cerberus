@@ -17,12 +17,12 @@ import (
 
 // Service manages the set of APIs for user access.
 type Service struct {
-	log    *logger.Logger
+	log    logger.Logger
 	storer role.Storer
 }
 
 // New constructor
-func New(log *logger.Logger, storer role.Storer) *Service {
+func New(log logger.Logger, storer role.Storer) *Service {
 	return &Service{
 		log:    log,
 		storer: storer,

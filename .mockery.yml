@@ -1,0 +1,32 @@
+all: false
+dir: '{{.InterfaceDir}}'
+filename: mock.go
+force-file-write: true
+formatter: goimports
+generate: true
+include-auto-generated: false
+log-level: info
+structname: '{{.Mock}}{{.InterfaceName}}'
+pkgname: '{{.SrcPackageName}}'
+recursive: false
+require-template-schema-exists: true
+template: testify
+template-schema: '{{.Template}}.schema.json'
+packages:
+  # core directory
+  github.com/Housiadas/cerberus/internal/core/domain/user:
+    config:
+      all: true
+  # pkg directory
+  github.com/Housiadas/cerberus/pkg/clock:
+    config:
+      all: true
+  github.com/Housiadas/cerberus/pkg/hasher:
+    config:
+      all: true
+  github.com/Housiadas/cerberus/pkg/logger:
+    config:
+      all: true
+  github.com/Housiadas/cerberus/pkg/uuidgen:
+    config:
+      all: true
