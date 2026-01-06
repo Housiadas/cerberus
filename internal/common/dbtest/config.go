@@ -18,7 +18,7 @@ type Config struct {
 }
 
 func newConfig(t *testing.T) Config {
-	cfg, err := config.LoadConfig(config.GetConfigDir("../../../"))
+	cfg, err := config.LoadConfig()
 	require.NoError(t, err)
 
 	return Config{

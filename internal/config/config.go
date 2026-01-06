@@ -19,8 +19,8 @@ type Config struct {
 }
 
 // LoadConfig reads configuration from file or environment variables.
-func LoadConfig(path string) (config Config, err error) {
-	viper.SetConfigFile(filepath.Join(path, "config.yml"))
+func LoadConfig() (config Config, err error) {
+	viper.SetConfigFile(filepath.Join(getConfigDir(), "config.yml"))
 	viper.AutomaticEnv()
 
 	err = viper.ReadInConfig()
@@ -36,8 +36,8 @@ func LoadConfig(path string) (config Config, err error) {
 	return config, nil
 }
 
-func GetConfigDir(path string) string {
+func getConfigDir() string {
 	_, file, _, _ := runtime.Caller(0)
 	basepath := filepath.Dir(file)
-	return filepath.Join(basepath, path)
+	return filepath.Join(basepath, "../../")
 }
