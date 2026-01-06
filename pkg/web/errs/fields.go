@@ -1,6 +1,11 @@
 package errs
 
-import "encoding/json"
+import (
+	"encoding/json"
+)
+
+// FieldErrors represents a collection of field errors.
+type FieldErrors []FieldError
 
 // FieldError is used to indicate an error with a specific request field.
 type FieldError struct {
@@ -8,10 +13,7 @@ type FieldError struct {
 	Err   string `json:"error"`
 }
 
-// FieldErrors represents a collection of field errors.
-type FieldErrors []FieldError
-
-// NewFieldErrors creates a field errors.
+// NewFieldErrors creates a field error.
 func NewFieldErrors(field string, err error) *Error {
 	fe := FieldErrors{
 		{

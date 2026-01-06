@@ -2,6 +2,7 @@ package config
 
 import (
 	"path/filepath"
+	"runtime"
 
 	"github.com/spf13/viper"
 )
@@ -33,4 +34,10 @@ func LoadConfig(path string) (config Config, err error) {
 	}
 
 	return config, nil
+}
+
+func GetConfigDir(path string) string {
+	_, file, _, _ := runtime.Caller(0)
+	basepath := filepath.Dir(file)
+	return filepath.Join(basepath, path)
 }

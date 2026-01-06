@@ -6,6 +6,7 @@ import (
 	"net/mail"
 	"time"
 
+	"github.com/Housiadas/cerberus/internal/common/validation"
 	"github.com/Housiadas/cerberus/internal/core/domain/name"
 	"github.com/Housiadas/cerberus/internal/core/domain/password"
 	"github.com/Housiadas/cerberus/internal/core/domain/user"
@@ -17,14 +18,22 @@ import (
 
 // AuthenticateUser defines the data needed to authenticate a user.
 type AuthenticateUser struct {
-	Email    string `json:"email"`
-	Password string `json:"password"`
+	Email    string `json:"email" validate:"required"`
+	Password string `json:"password" validate:"required"`
 }
 
 // Encode implements the encoder interface.
 func (app *AuthenticateUser) Encode() ([]byte, string, error) {
 	data, err := json.Marshal(app)
 	return data, "application/json", err
+}
+
+// Validate checks the data in the model is considered clean.
+func (app *AuthenticateUser) Validate() error {
+	if err := validation.Check(app); err != nil {
+		return err
+	}
+	return nil
 }
 
 // =============================================================================
@@ -80,16 +89,24 @@ type UserPageResult struct {
 
 // NewUser defines the data needed to add a new user.
 type NewUser struct {
-	Name            string `json:"name"`
-	Email           string `json:"email"`
+	Name            string `json:"name" validate:"required"`
+	Email           string `json:"email" validate:"required"`
 	Department      string `json:"department"`
-	Password        string `json:"password"`
-	PasswordConfirm string `json:"passwordConfirm"`
+	Password        string `json:"password" validate:"required"`
+	PasswordConfirm string `json:"passwordConfirm" validate:"required"`
 }
 
 // Decode implements the decoder interface.
 func (app *NewUser) Decode(data []byte) error {
 	return json.Unmarshal(data, app)
+}
+
+// Validate checks the data in the model is considered clean.
+func (app *NewUser) Validate() error {
+	if err := validation.Check(app); err != nil {
+		return err
+	}
+	return nil
 }
 
 func toBusNewUser(app NewUser) (user.NewUser, error) {

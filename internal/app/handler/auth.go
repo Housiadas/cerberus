@@ -24,7 +24,7 @@ import (
 func (h *Handler) authLogin(ctx context.Context, _ http.ResponseWriter, r *http.Request) web.Encoder {
 	var req auth_usecase.LoginReq
 	if err := web.Decode(r, &req); err != nil {
-		return errs.New(errs.InvalidArgument, err)
+		return errs.ParseValidationErrors(err)
 	}
 
 	token, err := h.Usecase.Auth.Login(ctx, req)
@@ -48,7 +48,7 @@ func (h *Handler) authLogin(ctx context.Context, _ http.ResponseWriter, r *http.
 func (h *Handler) authRegister(ctx context.Context, _ http.ResponseWriter, r *http.Request) web.Encoder {
 	var req user_usecase.NewUser
 	if err := web.Decode(r, &req); err != nil {
-		return errs.New(errs.InvalidArgument, err)
+		return errs.ParseValidationErrors(err)
 	}
 
 	usr, err := h.Usecase.User.Create(ctx, req)
@@ -71,7 +71,7 @@ func (h *Handler) authRegister(ctx context.Context, _ http.ResponseWriter, r *ht
 func (h *Handler) authLogout(ctx context.Context, _ http.ResponseWriter, r *http.Request) web.Encoder {
 	var req auth_usecase.LogoutReq
 	if err := web.Decode(r, &req); err != nil {
-		return errs.New(errs.InvalidArgument, err)
+		return errs.ParseValidationErrors(err)
 	}
 
 	claims := ctxPck.GetClaims(ctx)
@@ -96,7 +96,7 @@ func (h *Handler) authLogout(ctx context.Context, _ http.ResponseWriter, r *http
 func (h *Handler) authRefresh(ctx context.Context, _ http.ResponseWriter, r *http.Request) web.Encoder {
 	var req auth_usecase.RefreshTokenReq
 	if err := web.Decode(r, &req); err != nil {
-		return errs.New(errs.InvalidArgument, err)
+		return errs.ParseValidationErrors(err)
 	}
 
 	token, err := h.Usecase.Auth.RefreshAccessToken(ctx, req)

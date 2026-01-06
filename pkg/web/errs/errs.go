@@ -10,10 +10,11 @@ import (
 
 // Error represents an error in the system.
 type Error struct {
-	Code     ErrCode `json:"code"`
-	Message  string  `json:"message"`
-	FuncName string  `json:"-"`
-	FileName string  `json:"-"`
+	Code     ErrCode      `json:"code"`
+	Message  string       `json:"message"`
+	Fields   []FieldError `json:"fields,omitempty"`
+	FuncName string       `json:"-"`
+	FileName string       `json:"-"`
 }
 
 // New constructs an error based on an error.

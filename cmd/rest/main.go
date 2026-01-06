@@ -42,7 +42,7 @@ func main() {
 	// -------------------------------------------------------------------------
 	// Initialize Configuration
 	// -------------------------------------------------------------------------
-	cfg, err := config.LoadConfig("../../")
+	cfg, err := config.LoadConfig(config.GetConfigDir("../../"))
 	if err != nil {
 		fmt.Errorf("parsing config: %w", err)
 		os.Exit(1)

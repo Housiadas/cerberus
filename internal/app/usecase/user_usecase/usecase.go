@@ -130,7 +130,10 @@ func (a *UseCase) QueryByID(ctx context.Context, userID string) (User, error) {
 
 	usr, err := a.userCore.QueryByID(ctx, userUUID)
 	if err != nil {
-		return User{}, errs.Errorf(errs.Internal, "query_by_id: %s", err)
+		if errors.Is(err, user.ErrNotFound) {
+			return User{}, errs.New(errs.NotFound, err)
+		}
+		return User{}, errs.New(errs.Internal, err)
 	}
 
 	return toAppUser(usr), nil
@@ -145,6 +148,9 @@ func (a *UseCase) Authenticate(ctx context.Context, authUser AuthenticateUser) (
 
 	usr, err := a.userCore.Authenticate(ctx, *addr, authUser.Password)
 	if err != nil {
+		if errors.Is(err, user.ErrNotFound) {
+			return User{}, errs.New(errs.NotFound, err)
+		}
 		return User{}, err
 	}
 
