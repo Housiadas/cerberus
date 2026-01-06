@@ -36,11 +36,12 @@ func Test_API_User_Query_200(t *testing.T) {
 
 	table := []apitest.Table{
 		{
-			Name:       "basic",
-			URL:        "/api/v1/users?page=1&rows=10&orderBy=user_id,ASC&name=Name",
-			StatusCode: http.StatusOK,
-			Method:     http.MethodGet,
-			GotResp:    &web.Result[user_usecase.User]{},
+			Name:        "basic",
+			URL:         "/api/v1/users?page=1&rows=10&orderBy=user_id,ASC&name=Name",
+			StatusCode:  http.StatusOK,
+			Method:      http.MethodGet,
+			AccessToken: &sd.Users[0].AccessToken.Token,
+			GotResp:     &web.Result[user_usecase.User]{},
 			ExpResp: &web.Result[user_usecase.User]{
 				Data: toAppUsers(usrs),
 				Metadata: web.Metadata{
@@ -71,12 +72,13 @@ func Test_API_User_Query_BY_ID_200(t *testing.T) {
 
 	table := []apitest.Table{
 		{
-			Name:       "basic",
-			URL:        fmt.Sprintf("/api/v1/users/%s", sd.Users[0].ID),
-			StatusCode: http.StatusOK,
-			Method:     http.MethodGet,
-			GotResp:    &user_usecase.User{},
-			ExpResp:    toAppUserPtr(sd.Users[0].User),
+			Name:        "basic",
+			URL:         fmt.Sprintf("/api/v1/users/%s", sd.Users[0].ID),
+			StatusCode:  http.StatusOK,
+			Method:      http.MethodGet,
+			AccessToken: &sd.Users[0].AccessToken.Token,
+			GotResp:     &user_usecase.User{},
+			ExpResp:     toAppUserPtr(sd.Users[0].User),
 			AssertFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},
@@ -92,28 +94,30 @@ func Test_API_User_Query_400(t *testing.T) {
 	test, err := apitest.StartTest(t, "Test_API_User")
 	require.NoError(t, err)
 
-	_, err = insertSeedData(test)
+	sd, err := insertSeedData(test)
 	require.NoError(t, err)
 
 	table := []apitest.Table{
 		{
-			Name:       "bad-query-filter",
-			URL:        "/api/v1/users?page=1&rows=10&email=a.com",
-			StatusCode: http.StatusBadRequest,
-			Method:     http.MethodGet,
-			GotResp:    &errs.Error{},
-			ExpResp:    errs.Errorf(errs.InvalidArgument, "[{\"field\":\"email\",\"error\":\"mail: missing '@' or angle-addr\"}]"),
+			Name:        "bad-query-filter",
+			URL:         "/api/v1/users?page=1&rows=10&email=a.com",
+			StatusCode:  http.StatusBadRequest,
+			AccessToken: &sd.Users[0].AccessToken.Token,
+			Method:      http.MethodGet,
+			GotResp:     &errs.Error{},
+			ExpResp:     errs.Errorf(errs.InvalidArgument, "[{\"field\":\"email\",\"error\":\"mail: missing '@' or angle-addr\"}]"),
 			AssertFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},
 		},
 		{
-			Name:       "bad-order-by-value",
-			URL:        "/api/v1/users?page=1&rows=10&orderBy=ser_id,ASC",
-			StatusCode: http.StatusBadRequest,
-			Method:     http.MethodGet,
-			GotResp:    &errs.Error{},
-			ExpResp:    errs.Errorf(errs.InvalidArgument, "[{\"field\":\"order\",\"error\":\"unknown order: ser_id\"}]"),
+			Name:        "bad-order-by-value",
+			URL:         "/api/v1/users?page=1&rows=10&orderBy=ser_id,ASC",
+			StatusCode:  http.StatusBadRequest,
+			Method:      http.MethodGet,
+			AccessToken: &sd.Users[0].AccessToken.Token,
+			GotResp:     &errs.Error{},
+			ExpResp:     errs.Errorf(errs.InvalidArgument, "[{\"field\":\"order\",\"error\":\"unknown order: ser_id\"}]"),
 			AssertFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},

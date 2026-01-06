@@ -19,8 +19,11 @@ func (m *Middleware) AuthenticateBearer() func(next http.Handler) http.Handler {
 			ctx := r.Context()
 			bearerToken := r.Header.Get("Authorization")
 			if !strings.HasPrefix(bearerToken, "Bearer ") {
-				err := errors.New("expected authorization header format: Bearer <token>")
+				err := errs.New(errs.Unauthenticated,
+					errors.New("expected authorization header format: Bearer <token>"),
+				)
 				m.Error(w, err, http.StatusUnauthorized)
+				return
 			}
 
 			jwtUnverified := bearerToken[7:]

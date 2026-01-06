@@ -21,10 +21,11 @@ func Test_API_User_Delete_200(t *testing.T) {
 
 	table := []apitest.Table{
 		{
-			Name:       "asuser",
-			URL:        fmt.Sprintf("/api/v1/users/%s", sd.Users[1].ID),
-			Method:     http.MethodDelete,
-			StatusCode: http.StatusNoContent,
+			Name:        "asuser",
+			URL:         fmt.Sprintf("/api/v1/users/%s", sd.Users[1].ID),
+			Method:      http.MethodDelete,
+			StatusCode:  http.StatusNoContent,
+			AccessToken: &sd.Users[0].AccessToken.Token,
 		},
 	}
 

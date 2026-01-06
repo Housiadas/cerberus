@@ -61,7 +61,7 @@ func New(cfg Config) *Middleware {
 }
 
 func (m *Middleware) Error(w http.ResponseWriter, err error, statusCode int) {
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set(web.ContentTypeKey, web.ContentTypeJSON)
 	w.WriteHeader(statusCode)
 	if err := json.NewEncoder(w).Encode(err); err != nil {
 		return

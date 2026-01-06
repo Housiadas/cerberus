@@ -26,10 +26,11 @@ func Test_API_User_Update_200(t *testing.T) {
 
 	table := []apitest.Table{
 		{
-			Name:       "basic",
-			URL:        fmt.Sprintf("/api/v1/users/%s", sd.Users[0].ID),
-			Method:     http.MethodPut,
-			StatusCode: http.StatusOK,
+			Name:        "basic",
+			URL:         fmt.Sprintf("/api/v1/users/%s", sd.Users[0].ID),
+			Method:      http.MethodPut,
+			StatusCode:  http.StatusOK,
+			AccessToken: &sd.Users[0].AccessToken.Token,
 			Input: &user_usecase.UpdateUser{
 				Name:            dbtest.StringPointer("Jack Housi"),
 				Email:           dbtest.StringPointer("chris@housi2.com"),
@@ -79,10 +80,11 @@ func Test_API_User_Update_400(t *testing.T) {
 
 	table := []apitest.Table{
 		{
-			Name:       "bad-input",
-			URL:        fmt.Sprintf("/api/v1/users/%s", sd.Users[0].ID),
-			Method:     http.MethodPut,
-			StatusCode: http.StatusBadRequest,
+			Name:        "bad-input",
+			URL:         fmt.Sprintf("/api/v1/users/%s", sd.Users[0].ID),
+			Method:      http.MethodPut,
+			StatusCode:  http.StatusBadRequest,
+			AccessToken: &sd.Users[0].AccessToken.Token,
 			Input: &user_usecase.UpdateUser{
 				Email:           dbtest.StringPointer("bill@"),
 				PasswordConfirm: dbtest.StringPointer("jack"),

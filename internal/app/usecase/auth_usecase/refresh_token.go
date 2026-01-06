@@ -35,14 +35,14 @@ func (u *UseCase) RefreshAccessToken(ctx context.Context, authRefresh RefreshTok
 	}
 
 	// Generate a new access token
-	aToken, err := u.generateAccessToken(ctx, usr.ID)
+	aToken, err := u.GenerateAccessToken(ctx, usr.ID)
 	if err != nil {
 		return Token{}, err
 	}
 
 	return Token{
-		AccessToken:  aToken.token,
+		AccessToken:  aToken.Token,
 		RefreshToken: rToken.Token,
-		ExpiresIn:    aToken.expiresIn,
+		ExpiresIn:    aToken.ExpiresIn,
 	}, nil
 }

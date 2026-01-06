@@ -6,6 +6,8 @@ import (
 	"github.com/go-chi/cors"
 	"github.com/riandyrn/otelchi"
 	httpSwagger "github.com/swaggo/http-swagger"
+
+	"github.com/Housiadas/cerberus/pkg/web"
 )
 
 // Routes returns applications router
@@ -20,7 +22,7 @@ func (h *Handler) Routes() *chi.Mux {
 		mid.Logger(),
 		mid.Otel(),
 		mid.Metrics(),
-		middleware.SetHeader("Content-Type", "application/json"),
+		middleware.SetHeader(web.ContentTypeKey, web.ContentTypeJSON),
 		middleware.GetHead,
 		cors.Handler(cors.Options{
 			AllowedOrigins: h.Cors.AllowedOrigins,
@@ -48,7 +50,7 @@ func (h *Handler) Routes() *chi.Mux {
 		})
 
 		// Users
-		v1.With().Route("/users", func(u chi.Router) {
+		v1.With(authenticate()).Route("/users", func(u chi.Router) {
 			u.Get("/", h.Web.Res.Respond(h.userQuery))
 			u.Post("/", h.Web.Res.Respond(h.userCreate))
 			u.Get("/{user_id}", h.Web.Res.Respond(h.userQueryByID))
@@ -68,7 +70,7 @@ func (h *Handler) Routes() *chi.Mux {
 		})
 
 		// Permissions
-		v1.With().Route("/permissions", func(p chi.Router) {
+		v1.With(authenticate()).Route("/permissions", func(p chi.Router) {
 			p.Get("/", h.Web.Res.Respond(h.permissionQuery))
 			p.Post("/", h.Web.Res.Respond(h.permissionCreate))
 			p.Put("/{permission_id}", h.Web.Res.Respond(h.permissionUpdate))
@@ -76,7 +78,7 @@ func (h *Handler) Routes() *chi.Mux {
 		})
 
 		// Audits
-		v1.With().Route("/audits", func(a chi.Router) {
+		v1.With(authenticate()).Route("/audits", func(a chi.Router) {
 			a.Get("/", h.Web.Res.Respond(h.auditQuery))
 		})
 	})
