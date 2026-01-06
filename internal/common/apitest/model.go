@@ -26,5 +26,5 @@ type Table struct {
 	Input      any
 	GotResp    any
 	ExpResp    any
-	CmpFunc    func(got any, exp any) string
+	AssertFunc func(got any, exp any) string
 }

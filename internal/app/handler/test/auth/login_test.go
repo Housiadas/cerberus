@@ -1,11 +1,9 @@
 package auth_test
 
 import (
-	"fmt"
 	"net/http"
 	"testing"
 
-	"github.com/google/go-cmp/cmp"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -41,13 +39,12 @@ func Test_API_Auth_Login_200(t *testing.T) {
 			},
 			GotResp: &auth_usecase.Token{},
 			ExpResp: &auth_usecase.Token{},
-			CmpFunc: func(got any, exp any) string {
+			AssertFunc: func(got any, exp any) string {
 				gotResp, exists := got.(*auth_usecase.Token)
 				if !exists {
 					return "error occurred"
 				}
 
-				fmt.Println(gotResp)
 				assert.NotEmpty(t, gotResp.AccessToken)
 				assert.NotEmpty(t, gotResp.RefreshToken)
 				assert.NotEmpty(t, gotResp.ExpiresIn)
@@ -77,16 +74,22 @@ func Test_API_Auth_Login_400(t *testing.T) {
 	table := []apitest.Table{
 		{
 			Name:       "missing-password",
-			URL:        "/api/v1/users",
+			URL:        "/api/v1/auth/login",
 			Method:     http.MethodPost,
 			StatusCode: http.StatusBadRequest,
 			Input: &auth_usecase.LoginReq{
 				Email: usrs[0].Email.String(),
 			},
 			GotResp: &errs.Error{},
-			ExpResp: errs.Errorf(errs.InvalidArgument, "validate: [{\"field\":\"password\",\"error\":\"invalid password \\\"\\\"\"}]"),
-			CmpFunc: func(got any, exp any) string {
-				return cmp.Diff(got, exp)
+			AssertFunc: func(got any, exp any) string {
+				gotResp, exists := got.(*errs.Error)
+				if !exists {
+					return "error occurred"
+				}
+
+				assert.Len(t, gotResp.Fields, 1)
+				assert.Contains(t, gotResp.Fields[0].Field, "password")
+				return ""
 			},
 		},
 	}

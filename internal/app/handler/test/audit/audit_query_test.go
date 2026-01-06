@@ -45,7 +45,7 @@ func Test_API_Audit_Query_200(t *testing.T) {
 				},
 				Data: toAppAudits(sd.Admins[0].Audits),
 			},
-			CmpFunc: func(got any, exp any) string {
+			AssertFunc: func(got any, exp any) string {
 				gotResp, exists := got.(*web.Result[audit_usecase.Audit])
 				if !exists {
 					return "error occurred"
@@ -87,7 +87,7 @@ func Test_API_Audit_Query_400(t *testing.T) {
 			Method:     http.MethodGet,
 			GotResp:    &errs.Error{},
 			ExpResp:    errs.Errorf(errs.InvalidArgument, "[{\"field\":\"obj_id\",\"error\":\"invalid UUID length: 3\"}]"),
-			CmpFunc: func(got any, exp any) string {
+			AssertFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},
 		},
@@ -98,7 +98,7 @@ func Test_API_Audit_Query_400(t *testing.T) {
 			Method:     http.MethodGet,
 			GotResp:    &errs.Error{},
 			ExpResp:    errs.Errorf(errs.InvalidArgument, "[{\"field\":\"order\",\"error\":\"unknown order: ser_id\"}]"),
-			CmpFunc: func(got any, exp any) string {
+			AssertFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},
 		},

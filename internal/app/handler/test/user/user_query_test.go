@@ -51,7 +51,7 @@ func Test_API_User_Query_200(t *testing.T) {
 					Total:       len(usrs),
 				},
 			},
-			CmpFunc: func(got any, exp any) string {
+			AssertFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},
 		},
@@ -77,7 +77,7 @@ func Test_API_User_Query_BY_ID_200(t *testing.T) {
 			Method:     http.MethodGet,
 			GotResp:    &user_usecase.User{},
 			ExpResp:    toAppUserPtr(sd.Users[0].User),
-			CmpFunc: func(got any, exp any) string {
+			AssertFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},
 		},
@@ -103,7 +103,7 @@ func Test_API_User_Query_400(t *testing.T) {
 			Method:     http.MethodGet,
 			GotResp:    &errs.Error{},
 			ExpResp:    errs.Errorf(errs.InvalidArgument, "[{\"field\":\"email\",\"error\":\"mail: missing '@' or angle-addr\"}]"),
-			CmpFunc: func(got any, exp any) string {
+			AssertFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},
 		},
@@ -114,7 +114,7 @@ func Test_API_User_Query_400(t *testing.T) {
 			Method:     http.MethodGet,
 			GotResp:    &errs.Error{},
 			ExpResp:    errs.Errorf(errs.InvalidArgument, "[{\"field\":\"order\",\"error\":\"unknown order: ser_id\"}]"),
-			CmpFunc: func(got any, exp any) string {
+			AssertFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},
 		},

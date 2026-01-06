@@ -47,7 +47,7 @@ func Test_API_User_Update_200(t *testing.T) {
 				CreatedAt:  sd.Users[0].CreatedAt.Format(time.RFC3339),
 				UpdatedAt:  sd.Users[0].UpdatedAt.Format(time.RFC3339),
 			},
-			CmpFunc: func(got any, exp any) string {
+			AssertFunc: func(got any, exp any) string {
 				gotResp, exists := got.(*user_usecase.User)
 				if !exists {
 					return "error occurred"
@@ -89,7 +89,7 @@ func Test_API_User_Update_400(t *testing.T) {
 			},
 			GotResp: &errs.Error{},
 			ExpResp: errs.Errorf(errs.InvalidArgument, "validate: [{\"field\":\"email\",\"error\":\"mail: missing '@' or angle-addr\"},{\"field\":\"password\",\"error\":\"passwords do not match\"}]"),
-			CmpFunc: func(got any, exp any) string {
+			AssertFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},
 		},

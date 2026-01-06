@@ -41,7 +41,7 @@ func Test_API_User_Create_200(t *testing.T) {
 				Department: "IT0",
 				Enabled:    true,
 			},
-			CmpFunc: func(got any, exp any) string {
+			AssertFunc: func(got any, exp any) string {
 				gotResp, exists := got.(*user_usecase.User)
 				if !exists {
 					return "error occurred"
@@ -79,7 +79,7 @@ func Test_API_User_Create_400(t *testing.T) {
 			Input:      &user_usecase.NewUser{},
 			GotResp:    &errs.Error{},
 			ExpResp:    errs.Errorf(errs.InvalidArgument, "validate: [{\"field\":\"email\",\"error\":\"mail: no address\"},{\"field\":\"name\",\"error\":\"invalid name \\\"\\\"\"},{\"field\":\"password\",\"error\":\"invalid password \\\"\\\"\"}]"),
-			CmpFunc: func(got any, exp any) string {
+			AssertFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},
 		},
@@ -97,7 +97,7 @@ func Test_API_User_Create_400(t *testing.T) {
 			},
 			GotResp: &errs.Error{},
 			ExpResp: errs.Errorf(errs.InvalidArgument, "parse: invalid name \"Bi\""),
-			CmpFunc: func(got any, exp any) string {
+			AssertFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},
 		},

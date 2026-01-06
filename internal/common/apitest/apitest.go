@@ -60,7 +60,7 @@ func (at *Test) Run(t *testing.T, table []Table, testName string) {
 				t.Fatalf("Should be able to unmarshal the response : %s", err)
 			}
 
-			diff := tt.CmpFunc(tt.GotResp, tt.ExpResp)
+			diff := tt.AssertFunc(tt.GotResp, tt.ExpResp)
 			if diff != "" {
 				t.Log("DIFF")
 				t.Logf("%s", diff)
