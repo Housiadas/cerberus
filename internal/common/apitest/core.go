@@ -15,13 +15,6 @@ import (
 	"github.com/Housiadas/cerberus/pkg/uuidgen"
 )
 
-// Core represents all the internal core services needed for testing.
-type Core struct {
-	Audit *audit_service.Service
-	User  *user_service.Service
-	Role  *role_service.Service
-}
-
 func newCore(log *logger.Service, db *sqlx.DB) Core {
 	// utils
 	hash := hasher.NewBcrypt()

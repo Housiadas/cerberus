@@ -1,8 +1,6 @@
 package dbtest
 
 import (
-	"path/filepath"
-	"runtime"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -20,7 +18,7 @@ type Config struct {
 }
 
 func newConfig(t *testing.T) Config {
-	cfg, err := config.LoadConfig(getConfigDir())
+	cfg, err := config.LoadConfig()
 	require.NoError(t, err)
 
 	return Config{
@@ -31,10 +29,4 @@ func newConfig(t *testing.T) Config {
 		PostgresImage:         cfg.DB.PostgresImage,
 		PostgresContainerName: cfg.DB.PostgresContainerName,
 	}
-}
-
-func getConfigDir() string {
-	_, file, _, _ := runtime.Caller(0)
-	basepath := filepath.Dir(file)
-	return filepath.Join(basepath, "../../../")
 }

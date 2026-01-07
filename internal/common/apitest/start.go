@@ -38,9 +38,6 @@ func StartTest(t *testing.T, testName string) (*Test, error) {
 	require.NoError(t, err)
 	tracer := traceProvider.Tracer("Service Name")
 
-	// initialize core services
-	c := newCore(log, db)
-
 	// Initialize handler
 	h := handler.New(handler.Config{
 		ServiceName: "Test Service Name",
@@ -51,5 +48,11 @@ func StartTest(t *testing.T, testName string) (*Test, error) {
 		Tracer:      tracer,
 	})
 
-	return New(db, h.Routes(), c), nil
+	// initialize apitest services
+	c := newCore(log, db)
+
+	// initialize usecase
+	u := Usecase{Auth: h.Usecase.Auth}
+
+	return New(db, h.Routes(), c, u), nil
 }

@@ -22,7 +22,7 @@ import (
 func (h *Handler) roleCreate(ctx context.Context, _ http.ResponseWriter, r *http.Request) web.Encoder {
 	var ucRole role_usecase.NewRole
 	if err := web.Decode(r, &ucRole); err != nil {
-		return errs.New(errs.InvalidArgument, err)
+		return errs.ParseValidationErrors(err)
 	}
 
 	usr, err := h.Usecase.Role.Create(ctx, ucRole)
@@ -36,7 +36,7 @@ func (h *Handler) roleCreate(ctx context.Context, _ http.ResponseWriter, r *http
 func (h *Handler) rolePermissionCreate(ctx context.Context, _ http.ResponseWriter, r *http.Request) web.Encoder {
 	var ucRole role_usecase.NewRole
 	if err := web.Decode(r, &ucRole); err != nil {
-		return errs.New(errs.InvalidArgument, err)
+		return errs.ParseValidationErrors(err)
 	}
 
 	usr, err := h.Usecase.Role.Create(ctx, ucRole)
@@ -80,7 +80,7 @@ func (h *Handler) roleQuery(ctx context.Context, _ http.ResponseWriter, r *http.
 func (h *Handler) roleUpdate(ctx context.Context, w http.ResponseWriter, r *http.Request) web.Encoder {
 	var res role_usecase.UpdateRole
 	if err := web.Decode(r, &res); err != nil {
-		return errs.New(errs.InvalidArgument, err)
+		return errs.ParseValidationErrors(err)
 	}
 
 	roleID := web.Param(r, "role_id")

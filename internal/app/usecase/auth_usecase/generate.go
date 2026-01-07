@@ -10,30 +10,30 @@ import (
 	"github.com/Housiadas/cerberus/pkg/web/errs"
 )
 
-type accessToken struct {
-	token     string
-	expiresIn int64
+type AccessToken struct {
+	Token     string
+	ExpiresIn int64
 }
 
-func (u *UseCase) generateAccessToken(ctx context.Context, userID string) (accessToken, error) {
+func (u *UseCase) GenerateAccessToken(ctx context.Context, userID string) (AccessToken, error) {
 	// get user roles name
 	//roles, err := u.userRolesUsecase.GetUserRolesNames(ctx, userID)
 	//if err != nil {
-	//	return accessToken{}, errs.Errorf(errs.NotFound, "roles not found: %s", err)
+	//	return AccessToken{}, errs.Errorf(errs.NotFound, "roles not found: %s", err)
 	//}
 
-	// Generating a token requires defining a set of claims
+	// Generating a Token requires defining a set of claims
 	// iss (issuer): Issuer of the JWT
 	// sub (subject): Subject of the JWT (the user)
 	// aud (audience): Recipient for which the JWT is intended
 	// exp (expiration time): Time after which the JWT expires
 	// nbf (not before time): Time before which the JWT must not be accepted for processing
 	// iat (issued at time): Time at which the JWT was issued; can be used to determine age of the JWT
-	// jti (JWT ID): Unique identifier; can be used to prevent the JWT from being replayed (allows a token to be used only once)
+	// jti (JWT ID): Unique identifier; can be used to prevent the JWT from being replayed (allows a Token to be used only once)
 	now := time.Now()
 	accessTokenID, err := uuid.NewV7()
 	if err != nil {
-		return accessToken{}, errs.Errorf(errs.Internal, "uuid v7: %s", err)
+		return AccessToken{}, errs.Errorf(errs.Internal, "uuid v7: %s", err)
 	}
 
 	accessClaims := Claims{
@@ -52,16 +52,16 @@ func (u *UseCase) generateAccessToken(ctx context.Context, userID string) (acces
 	aToken := jwt.NewWithClaims(u.method, accessClaims)
 	accessTokenString, err := aToken.SignedString(accessTokenSecret)
 	if err != nil {
-		return accessToken{}, errs.Errorf(errs.InvalidArgument, "failed to sign access token: %s", err)
+		return AccessToken{}, errs.Errorf(errs.InvalidArgument, "failed to sign access Token: %s", err)
 	}
 
 	expirationDate, err := aToken.Claims.GetExpirationTime()
 	if err != nil {
-		return accessToken{}, errs.Errorf(errs.InvalidArgument, "expiration time: %s", err)
+		return AccessToken{}, errs.Errorf(errs.InvalidArgument, "expiration time: %s", err)
 	}
 
-	return accessToken{
-		token:     accessTokenString,
-		expiresIn: expirationDate.Unix(),
+	return AccessToken{
+		Token:     accessTokenString,
+		ExpiresIn: expirationDate.Unix(),
 	}, nil
 }

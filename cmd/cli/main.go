@@ -27,7 +27,7 @@ func run() error {
 	// -------------------------------------------------------------------------
 	// Initialize Configuration
 	// -------------------------------------------------------------------------
-	c, err := config.LoadConfig("../../")
+	c, err := config.LoadConfig()
 	if err != nil {
 		return fmt.Errorf("parsing config: %w", err)
 	}

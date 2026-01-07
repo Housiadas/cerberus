@@ -2,6 +2,7 @@ package refresh_token_usecase
 
 import (
 	"encoding/json"
+	"fmt"
 	"time"
 
 	"github.com/Housiadas/cerberus/internal/core/domain/refresh_token"
@@ -48,21 +49,27 @@ func toAppTokens(tkns []refresh_token.RefreshToken) []RefreshToken {
 }
 
 func toCoreToken(r RefreshToken) (refresh_token.RefreshToken, error) {
+	var errors errs.FieldErrors
+
 	id, err := uuid.Parse(r.ID)
 	if err != nil {
-		return refresh_token.RefreshToken{}, errs.Errorf(errs.Internal, "id parse: %s", err)
+		errors.Add("id", err)
 	}
 	userID, err := uuid.Parse(r.UserID)
 	if err != nil {
-		return refresh_token.RefreshToken{}, errs.Errorf(errs.Internal, "user_id parse: %s", err)
+		errors.Add("user_id", err)
 	}
 	expiresAt, err := time.Parse(time.RFC3339, r.ExpiresAt)
 	if err != nil {
-		return refresh_token.RefreshToken{}, errs.Errorf(errs.Internal, "expires_at parse: %s", err)
+		errors.Add("expires_at", err)
 	}
 	createdAt, err := time.Parse(time.RFC3339, r.CreatedAt)
 	if err != nil {
-		return refresh_token.RefreshToken{}, errs.Errorf(errs.Internal, "created_at parse: %s", err)
+		errors.Add("created_at", err)
+	}
+
+	if len(errors) > 0 {
+		return refresh_token.RefreshToken{}, fmt.Errorf("validate: %w", errors.ToError())
 	}
 
 	return refresh_token.RefreshToken{

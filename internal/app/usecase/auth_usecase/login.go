@@ -19,7 +19,7 @@ func (u *UseCase) Login(ctx context.Context, authLogin LoginReq) (Token, error) 
 	}
 
 	// Generate JWT access token
-	aToken, err := u.generateAccessToken(ctx, usr.ID)
+	aToken, err := u.GenerateAccessToken(ctx, usr.ID)
 	if err != nil {
 		return Token{}, err
 	}
@@ -31,8 +31,8 @@ func (u *UseCase) Login(ctx context.Context, authLogin LoginReq) (Token, error) 
 	}
 
 	return Token{
-		AccessToken:  aToken.token,
+		AccessToken:  aToken.Token,
 		RefreshToken: rToken.Token,
-		ExpiresIn:    aToken.expiresIn,
+		ExpiresIn:    aToken.ExpiresIn,
 	}, nil
 }

@@ -22,7 +22,7 @@ import (
 func (h *Handler) permissionCreate(ctx context.Context, _ http.ResponseWriter, r *http.Request) web.Encoder {
 	var ucRole permission_usecase.NewPermission
 	if err := web.Decode(r, &ucRole); err != nil {
-		return errs.New(errs.InvalidArgument, err)
+		return errs.ParseValidationErrors(err)
 	}
 
 	usr, err := h.Usecase.Permission.Create(ctx, ucRole)
@@ -66,7 +66,7 @@ func (h *Handler) permissionQuery(ctx context.Context, _ http.ResponseWriter, r 
 func (h *Handler) permissionUpdate(ctx context.Context, w http.ResponseWriter, r *http.Request) web.Encoder {
 	var app permission_usecase.UpdatePermission
 	if err := web.Decode(r, &app); err != nil {
-		return errs.New(errs.InvalidArgument, err)
+		return errs.ParseValidationErrors(err)
 	}
 
 	permissionID := web.Param(r, "permission_id")

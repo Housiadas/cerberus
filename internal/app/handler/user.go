@@ -22,7 +22,7 @@ import (
 func (h *Handler) userCreate(ctx context.Context, _ http.ResponseWriter, r *http.Request) web.Encoder {
 	var app user_usecase.NewUser
 	if err := web.Decode(r, &app); err != nil {
-		return errs.New(errs.InvalidArgument, err)
+		return errs.ParseValidationErrors(err)
 	}
 
 	usr, err := h.Usecase.User.Create(ctx, app)
@@ -46,7 +46,7 @@ func (h *Handler) userCreate(ctx context.Context, _ http.ResponseWriter, r *http
 func (h *Handler) userUpdate(ctx context.Context, _ http.ResponseWriter, r *http.Request) web.Encoder {
 	var res user_usecase.UpdateUser
 	if err := web.Decode(r, &res); err != nil {
-		return errs.New(errs.InvalidArgument, err)
+		return errs.ParseValidationErrors(err)
 	}
 
 	userID := web.Param(r, "user_id")
@@ -118,7 +118,7 @@ func (h *Handler) userQueryByID(ctx context.Context, _ http.ResponseWriter, r *h
 func (h *Handler) userRoleCreate(ctx context.Context, _ http.ResponseWriter, r *http.Request) web.Encoder {
 	var app user_usecase.NewUser
 	if err := web.Decode(r, &app); err != nil {
-		return errs.New(errs.InvalidArgument, err)
+		return errs.ParseValidationErrors(err)
 	}
 
 	usr, err := h.Usecase.User.Create(ctx, app)

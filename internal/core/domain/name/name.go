@@ -6,7 +6,7 @@ import (
 	"regexp"
 )
 
-var nameRegEx = regexp.MustCompile("^[a-zA-Z0-9' -]{3,20}$")
+var nameRegEx = regexp.MustCompile("^[a-zA-Z0-9' -]{3,40}$")
 
 // =============================================================================
 
