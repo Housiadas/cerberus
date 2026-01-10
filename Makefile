@@ -49,6 +49,11 @@ docker/stop:
 docker/down:
 	$(DOCKER_COMPOSE_LOCAL) down --remove-orphans
 
+## docker/golang-ci: Run golang-ci through docker
+.PHONY: docker/down
+docker/golang-ci:
+	docker run -t --rm -v $(pwd):/app -w /app golangci/golangci-lint:v2.8.0 golangci-lint run
+
 ## docker/clean: docker clean all
 .PHONY: docker/clean
 docker/clean:
@@ -94,12 +99,6 @@ db/migrate/down:
 ## Quality Control
 ## ================ #
 
-## fmt: Formatting
-.PHONY: fmt
-fmt:
-	go fmt ./...
-	go tool yamlfmt .
-
 ## tidy: Tidy
 .PHONY: tidy
 tidy:
@@ -121,11 +120,27 @@ errcheck:
 security:
 	go tool govulncheck ./...
 
+## vet: Vet examines Go source code and reports suspicious constructs
+.PHONY: vet
+vet:
+	go vet ./...
+
+## fmt: Formatting with standard library
+.PHONY: fmt
+fmt:
+	go fmt ./...
+
+## fmt/yaml: Formatting yaml files
+.PHONY: fmt/yaml
+fmt/yaml:
+	go tool yamlfmt .
+
 ## lint: Run linter
 .PHONY: lint
-lint: tidy tools/install fmt static security
-	go tool golangci-lint run ./...
-	go vet ./...
+lint: tidy tools/install static security vet
+	docker run -t --rm \
+		-v $(pwd):/app -w /app \
+		golangci/golangci-lint:v2.8.0 golangci-lint run
 
 ## ================ #
 ## Tests
