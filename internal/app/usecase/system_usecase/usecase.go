@@ -7,11 +7,10 @@ import (
 	"runtime"
 	"time"
 
-	"github.com/Housiadas/cerberus/pkg/web/errs"
-	"github.com/jmoiron/sqlx"
-
 	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/Housiadas/cerberus/pkg/pgsql"
+	"github.com/Housiadas/cerberus/pkg/web/errs"
+	"github.com/jmoiron/sqlx"
 )
 
 // UseCase manages the set of cli layer api functions for the check core.
@@ -37,8 +36,10 @@ func (a *UseCase) Readiness(ctx context.Context) error {
 	ctx, cancel := context.WithTimeout(ctx, time.Second)
 	defer cancel()
 
-	if err := pgsql.StatusCheck(ctx, a.db); err != nil {
+	err := pgsql.StatusCheck(ctx, a.db)
+	if err != nil {
 		a.log.Info(ctx, "readiness failure", "ERROR", err)
+
 		return errs.New(errs.Internal, err)
 	}
 

@@ -5,12 +5,11 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/google/uuid"
-	"github.com/jmoiron/sqlx/types"
-
 	"github.com/Housiadas/cerberus/internal/core/domain/audit"
 	"github.com/Housiadas/cerberus/internal/core/domain/entity"
 	"github.com/Housiadas/cerberus/internal/core/domain/name"
+	"github.com/google/uuid"
+	"github.com/jmoiron/sqlx/types"
 )
 
 type auditDB struct {

@@ -6,7 +6,7 @@ import (
 	"net/http"
 )
 
-// HandlerFunc represents a function that handles an http request
+// HandlerFunc represents a function that handles an http request.
 type HandlerFunc func(ctx context.Context, w http.ResponseWriter, r *http.Request) Encoder
 
 // Encoder defines behavior that can encode a data model and provide the content type for that encoding.

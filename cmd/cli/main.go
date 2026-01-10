@@ -15,10 +15,12 @@ import (
 var build = "develop"
 
 func main() {
-	if err := run(); err != nil {
+	err := run()
+	if err != nil {
 		if !errors.Is(err, command.ErrHelp) {
 			fmt.Println("msg", err)
 		}
+
 		os.Exit(1)
 	}
 }
@@ -57,8 +59,11 @@ func processCommands(args []string, cmd *command.Command) error {
 	case "useradd":
 		name := args[2]
 		email := args[3]
+
 		password := args[4]
-		if err := cmd.UserAdd(name, email, password); err != nil {
+
+		err := cmd.UserAdd(name, email, password)
+		if err != nil {
 			return fmt.Errorf("adding user: %w", err)
 		}
 
@@ -66,6 +71,7 @@ func processCommands(args []string, cmd *command.Command) error {
 		fmt.Println("seed:       add data to the database")
 		fmt.Println("useradd:    add a new user to the database")
 		fmt.Println("provide a command to get more help.")
+
 		return command.ErrHelp
 	}
 

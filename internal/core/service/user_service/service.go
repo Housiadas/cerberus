@@ -20,7 +20,7 @@ type Service struct {
 	hasher  hasher.Hasher
 }
 
-// New constructs the service
+// New constructs the service.
 func New(
 	log logger.Logger,
 	storer user.Storer,

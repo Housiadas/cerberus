@@ -17,16 +17,19 @@ func (m *Middleware) AuthenticateBearer() func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			ctx := r.Context()
+
 			bearerToken := r.Header.Get("Authorization")
 			if !strings.HasPrefix(bearerToken, "Bearer ") {
 				err := errs.New(errs.Unauthenticated,
 					errors.New("expected authorization header format: Bearer <token>"),
 				)
 				m.Error(w, err, http.StatusUnauthorized)
+
 				return
 			}
 
 			jwtUnverified := bearerToken[7:]
+
 			resp, err := m.UseCase.Auth.Validate(ctx, jwtUnverified)
 			if err != nil {
 				m.Error(w, err, http.StatusUnauthorized)
@@ -43,7 +46,8 @@ func (m *Middleware) AuthenticateBasic() func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			ctx := r.Context()
-			authorizationHeader := r.Header.Get("authorization")
+			authorizationHeader := r.Header.Get("Authorization")
+
 			email, pass, ok := parseBasicAuth(authorizationHeader)
 			if !ok {
 				err := errs.Errorf(errs.Unauthenticated, "invalid Basic auth")
@@ -54,6 +58,7 @@ func (m *Middleware) AuthenticateBasic() func(next http.Handler) http.Handler {
 				Email:    email,
 				Password: pass,
 			}
+
 			_, err := m.UseCase.User.Authenticate(ctx, authUsr)
 			if err != nil {
 				m.Error(w, err, http.StatusUnauthorized)

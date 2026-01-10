@@ -4,12 +4,11 @@ package role_usecase
 import (
 	"context"
 
-	"github.com/google/uuid"
-
 	"github.com/Housiadas/cerberus/internal/core/service/role_service"
 	"github.com/Housiadas/cerberus/pkg/order"
 	"github.com/Housiadas/cerberus/pkg/web"
 	"github.com/Housiadas/cerberus/pkg/web/errs"
+	"github.com/google/uuid"
 )
 
 // UseCase manages the set of cli layer api functions for the user core.
@@ -83,7 +82,7 @@ func (uc *UseCase) Delete(ctx context.Context, roleID string) error {
 	return nil
 }
 
-// QueryByID returns a role by its ID
+// QueryByID returns a role by its ID.
 func (uc *UseCase) QueryByID(ctx context.Context, roleID string) (Role, error) {
 	roleUUID, err := uuid.Parse(roleID)
 	if err != nil {

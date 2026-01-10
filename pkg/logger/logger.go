@@ -157,6 +157,7 @@ func (log *Service) write(
 	}
 
 	var pcs [1]uintptr
+
 	runtime.Callers(caller, pcs[:])
 
 	r := slog.NewRecord(time.Now(), slogLevel, msg, pcs[0])
@@ -164,9 +165,11 @@ func (log *Service) write(
 	if log.traceIDFn != nil {
 		args = append(args, "trace_id", log.traceIDFn(ctx))
 	}
+
 	if log.requestIDFn != nil {
 		args = append(args, "request_id", log.requestIDFn(ctx))
 	}
+
 	r.Add(args...)
 
 	log.handler.Handle(ctx, r)
@@ -185,6 +188,7 @@ func new(
 		if a.Key == slog.SourceKey {
 			if source, ok := a.Value.Any().(*slog.Source); ok {
 				v := fmt.Sprintf("%s:%d", filepath.Base(source.File), source.Line)
+
 				return slog.Attr{Key: "file", Value: slog.StringValue(v)}
 			}
 		}
@@ -193,7 +197,12 @@ func new(
 	}
 
 	// Construct the slog JSON handler for use.
-	handler := slog.Handler(slog.NewJSONHandler(w, &slog.HandlerOptions{AddSource: true, Level: slog.Level(minLevel), ReplaceAttr: f}))
+	handler := slog.Handler(
+		slog.NewJSONHandler(
+			w,
+			&slog.HandlerOptions{AddSource: true, Level: slog.Level(minLevel), ReplaceAttr: f},
+		),
+	)
 
 	// If events are to be processed, wrap the JSON handler around the custom
 	// log handler.

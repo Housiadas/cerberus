@@ -39,5 +39,6 @@ func LoadConfig() (config Config, err error) {
 func getConfigDir() string {
 	_, file, _, _ := runtime.Caller(0)
 	basepath := filepath.Dir(file)
+
 	return filepath.Join(basepath, "../../")
 }

@@ -1,16 +1,15 @@
 package handler
 
 import (
+	"github.com/Housiadas/cerberus/pkg/web"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
 	"github.com/riandyrn/otelchi"
 	httpSwagger "github.com/swaggo/http-swagger"
-
-	"github.com/Housiadas/cerberus/pkg/web"
 )
 
-// Routes returns applications router
+// Routes returns applications router.
 func (h *Handler) Routes() *chi.Mux {
 	mid := h.Web.Middleware
 	authenticate := mid.AuthenticateBearer
@@ -93,5 +92,6 @@ func (h *Handler) Routes() *chi.Mux {
 	))
 
 	router.Mount("/api", apiRouter)
+
 	return router
 }

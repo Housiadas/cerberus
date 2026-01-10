@@ -20,6 +20,7 @@ func StartTest(t *testing.T, testName string) (*Test, error) {
 
 	// Initialize logger
 	var buf bytes.Buffer
+
 	traceIDfn := func(context.Context) string { return "" }
 	requestIDfn := func(context.Context) string { return "" }
 	log := logger.New(&buf, logger.LevelInfo, "TEST", traceIDfn, requestIDfn)
@@ -35,7 +36,9 @@ func StartTest(t *testing.T, testName string) (*Test, error) {
 		Probability: 0.5,
 	})
 	defer teardown(context.Background())
+
 	require.NoError(t, err)
+
 	tracer := traceProvider.Tracer("Service Name")
 
 	// Initialize handler

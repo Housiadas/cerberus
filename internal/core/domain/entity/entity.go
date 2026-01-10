@@ -19,6 +19,7 @@ type Entity struct {
 func newEntity(entity string) Entity {
 	e := Entity{entity}
 	entities[entity] = e
+
 	return e
 }
 

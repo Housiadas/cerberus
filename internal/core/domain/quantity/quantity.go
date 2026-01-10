@@ -3,6 +3,7 @@ package quantity
 
 import (
 	"fmt"
+	"strconv"
 )
 
 // Quantity represents a quantity in the system.
@@ -17,7 +18,7 @@ func (q Quantity) Value() int {
 
 // String returns the value of the quantity.
 func (q Quantity) String() string {
-	return fmt.Sprintf("%d", q.value)
+	return strconv.Itoa(q.value)
 }
 
 // Equal provides support for the go-cmp package and testing.

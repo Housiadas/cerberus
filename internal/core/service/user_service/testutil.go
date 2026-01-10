@@ -16,6 +16,7 @@ func TestSeedUsers(ctx context.Context, n int, service *Service) ([]user.User, e
 	newUsrs := testNewUsers(n)
 
 	usrs := make([]user.User, len(newUsrs))
+
 	for i, nu := range newUsrs {
 		usr, err := service.Create(ctx, nu)
 		if err != nil {

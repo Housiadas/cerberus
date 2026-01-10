@@ -26,8 +26,9 @@ func (at *Test) Run(t *testing.T, table []Table, testName string) {
 
 			// add authorization JWT
 			if tt.AccessToken != nil {
-				r.Header.Set("authorization", "Bearer "+*tt.AccessToken)
+				r.Header.Set("Authorization", "Bearer "+*tt.AccessToken)
 			}
+
 			at.Mux.ServeHTTP(w, r)
 
 			if w.Code != tt.StatusCode {
@@ -40,7 +41,8 @@ func (at *Test) Run(t *testing.T, table []Table, testName string) {
 				return
 			}
 
-			if err := json.Unmarshal(w.Body.Bytes(), tt.GotResp); err != nil {
+			err := json.Unmarshal(w.Body.Bytes(), tt.GotResp)
+			if err != nil {
 				t.Fatalf("Should be able to unmarshal the response : %s", err)
 			}
 

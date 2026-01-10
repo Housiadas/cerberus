@@ -8,7 +8,11 @@ import (
 )
 
 // Update modifies information about a user.User.
-func (c *Service) Update(ctx context.Context, usr user.User, uu user.UpdateUser) (user.User, error) {
+func (c *Service) Update(
+	ctx context.Context,
+	usr user.User,
+	uu user.UpdateUser,
+) (user.User, error) {
 	if uu.Name != nil {
 		usr.Name = *uu.Name
 	}
@@ -22,6 +26,7 @@ func (c *Service) Update(ctx context.Context, usr user.User, uu user.UpdateUser)
 		if err != nil {
 			return user.User{}, fmt.Errorf("generate_from_password: %w", err)
 		}
+
 		usr.PasswordHash = pw
 	}
 
@@ -32,9 +37,11 @@ func (c *Service) Update(ctx context.Context, usr user.User, uu user.UpdateUser)
 	if uu.Enabled != nil {
 		usr.Enabled = *uu.Enabled
 	}
+
 	usr.UpdatedAt = c.clock.Now()
 
-	if err := c.storer.Update(ctx, usr); err != nil {
+	err := c.storer.Update(ctx, usr)
+	if err != nil {
 		return user.User{}, fmt.Errorf("update: %w", err)
 	}
 

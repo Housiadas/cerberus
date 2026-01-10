@@ -110,11 +110,6 @@ tidy:
 static:
 	go tool staticcheck ./...
 
-## errcheck: Check for unhandled errors
-.PHONY: errcheck
-errcheck:
-	go tool errcheck ./...
-
 # security: Check security
 .PHONY: security
 security:
@@ -135,12 +130,16 @@ fmt:
 fmt/yaml:
 	go tool yamlfmt .
 
+## lint/golangci: Run golangci
+.PHONY: lint/golangci
+lint/golangci:
+	docker run -t --rm \
+    -v $(PWD):/app -w /app \
+    golangci/golangci-lint:v2.8.0 golangci-lint run
+
 ## lint: Run linter
 .PHONY: lint
-lint: tidy tools/install static security vet
-	docker run -t --rm \
-		-v $(pwd):/app -w /app \
-		golangci/golangci-lint:v2.8.0 golangci-lint run
+lint: tidy tools/install static security vet lint/golangci
 
 ## ================ #
 ## Tests

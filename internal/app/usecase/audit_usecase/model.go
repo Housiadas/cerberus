@@ -29,6 +29,7 @@ type AuditPageResult struct {
 // Encode implements the encoder interface.
 func (app Audit) Encode() ([]byte, string, error) {
 	data, err := json.Marshal(app)
+
 	return data, "application/json", err
 }
 

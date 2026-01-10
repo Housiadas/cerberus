@@ -22,40 +22,28 @@ import (
 
 var build = "develop"
 
-// @title Cerberus
-// @description This is a monitoring system.
+// @title						Cerberus
+// @description				This is a monitoring system.
 //
-// @contact.name	API Support
-// @contact.url		http://www.swagger.io/support
-// @contact.email	support@swagger.io
+// @contact.name				API Support
+// @contact.url				http://www.swagger.io/support
+// @contact.email				support@swagger.io
 //
-// @license.name	Apache 2.0
-// @license.url		http://www.apache.org/licenses/LICENSE-2.0.html
+// @license.name				Apache 2.0
+// @license.url				http://www.apache.org/licenses/LICENSE-2.0.html
 //
-//	@query.collection.format multi
+// @query.collection.format	multi
 //
-// @externalDocs.description  OpenAPI
+// @externalDocs.description	OpenAPI
 //
-// @externalDocs.url	https://swagger.io/resources/open-api/
-// @host				localhost:4000
+// @externalDocs.url			https://swagger.io/resources/open-api/
+// @host						localhost:4000.
 func main() {
 	// -------------------------------------------------------------------------
-	// Initialize Configuration
-	// -------------------------------------------------------------------------
-	cfg, err := config.LoadConfig()
-	if err != nil {
-		fmt.Errorf("parsing config: %w", err)
-		os.Exit(1)
-	}
-	cfg.Version = config.Version{
-		Build: build,
-		Desc:  "API",
-	}
-
-	// -------------------------------------------------------------------------
-	// Initialize Service
+	// Initialize Logger
 	// -------------------------------------------------------------------------
 	var log *logger.Service
+
 	traceIDFn := func(ctx context.Context) string {
 		return otel.GetTraceID(ctx)
 	}
@@ -68,17 +56,34 @@ func main() {
 	// Run the application
 	// -------------------------------------------------------------------------
 	ctx := context.Background()
-	if err := run(ctx, cfg, log); err != nil {
+
+	err := run(ctx, log)
+	if err != nil {
 		log.Error(ctx, "error during rest server startup", "msg", err)
 		os.Exit(1)
 	}
 }
 
-func run(ctx context.Context, cfg config.Config, log *logger.Service) error {
+func run(ctx context.Context, log *logger.Service) error {
+	// -------------------------------------------------------------------------
+	// Initialize Configuration
+	// -------------------------------------------------------------------------
+	cfg, err := config.LoadConfig()
+	if err != nil {
+		log.Error(ctx, "error during config initialization", "msg", err)
+		os.Exit(1)
+	}
+
+	cfg.Version = config.Version{
+		Build: build,
+		Desc:  "API",
+	}
+
 	// -------------------------------------------------------------------------
 	// App Starting
 	// -------------------------------------------------------------------------
 	log.Info(ctx, "startup", "GOMAXPROCS", runtime.GOMAXPROCS(0))
+
 	log.Info(ctx, "starting application", "version", cfg.Version.Build)
 	defer log.Info(ctx, "shutdown complete")
 
@@ -89,6 +94,7 @@ func run(ctx context.Context, cfg config.Config, log *logger.Service) error {
 	// Initialize Database
 	// -------------------------------------------------------------------------
 	log.Info(ctx, "startup", "status", "initializing database", "host port", cfg.DB.Host)
+
 	db, err := pgsql.Open(pgsql.Config{
 		User:         cfg.DB.User,
 		Password:     cfg.DB.Password,
@@ -101,6 +107,7 @@ func run(ctx context.Context, cfg config.Config, log *logger.Service) error {
 	if err != nil {
 		return fmt.Errorf("connecting to db: %w", err)
 	}
+
 	defer db.Close()
 
 	// -------------------------------------------------------------------------
@@ -121,7 +128,7 @@ func run(ctx context.Context, cfg config.Config, log *logger.Service) error {
 		return fmt.Errorf("starting tracing: %w", err)
 	}
 
-	defer teardown(context.Background())
+	defer teardown(ctx)
 
 	tracer := traceProvider.Tracer(cfg.App.Name)
 
@@ -131,7 +138,8 @@ func run(ctx context.Context, cfg config.Config, log *logger.Service) error {
 	go func() {
 		log.Info(ctx, "startup", "status", "Debug server starting", "host", cfg.Rest.Debug)
 
-		if err := http.ListenAndServe(cfg.Rest.Debug, debug.Mux()); err != nil {
+		err := http.ListenAndServe(cfg.Rest.Debug, debug.Mux())
+		if err != nil {
 			log.Error(ctx, "shutdown",
 				"status", "debug router closed",
 				"host", cfg.Rest.Debug,
@@ -170,6 +178,7 @@ func run(ctx context.Context, cfg config.Config, log *logger.Service) error {
 
 	go func() {
 		log.Info(ctx, "startup", "status", "Rest server started", "host", api.Addr)
+
 		serverErrors <- api.ListenAndServe()
 	}()
 
@@ -185,8 +194,10 @@ func run(ctx context.Context, cfg config.Config, log *logger.Service) error {
 		ctx, cancel := context.WithTimeout(ctx, cfg.Rest.ShutdownTimeout)
 		defer cancel()
 
-		if err := api.Shutdown(ctx); err != nil {
+		err := api.Shutdown(ctx)
+		if err != nil {
 			api.Close()
+
 			return fmt.Errorf("could not stop server gracefully: %w", err)
 		}
 	}

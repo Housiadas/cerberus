@@ -4,10 +4,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/google/uuid"
-
 	"github.com/Housiadas/cerberus/internal/core/domain/name"
 	"github.com/Housiadas/cerberus/internal/core/domain/permission"
+	"github.com/google/uuid"
 )
 
 type permissionDB struct {
@@ -47,6 +46,7 @@ func toPermissionsDomain(dbs []permissionDB) ([]permission.Permission, error) {
 
 	for i, db := range dbs {
 		var err error
+
 		bus[i], err = toPermissionDomain(db)
 		if err != nil {
 			return nil, err

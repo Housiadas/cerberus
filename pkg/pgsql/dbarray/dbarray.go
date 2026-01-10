@@ -29,15 +29,18 @@ import (
 	"database/sql"
 	"database/sql/driver"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"reflect"
 	"strconv"
 	"strings"
 )
 
-var typeByteSlice = reflect.TypeOf([]byte{})
-var typeDriverValuer = reflect.TypeOf((*driver.Valuer)(nil)).Elem()
-var typeSQLScanner = reflect.TypeOf((*sql.Scanner)(nil)).Elem()
+var (
+	typeByteSlice    = reflect.TypeFor[[]byte]()
+	typeDriverValuer = reflect.TypeFor[driver.Valuer]()
+	typeSQLScanner   = reflect.TypeFor[sql.Scanner]()
+)
 
 // Array returns the optimal driver.Valuer and sql.Scanner for an array or
 // slice of any dimension.
@@ -109,6 +112,7 @@ func (a *Bool) Scan(src any) error {
 		return a.scanBytes([]byte(src))
 	case nil:
 		*a = nil
+
 		return nil
 	}
 
@@ -120,25 +124,38 @@ func (a *Bool) scanBytes(src []byte) error {
 	if err != nil {
 		return err
 	}
+
 	if *a != nil && len(elems) == 0 {
 		*a = (*a)[:0]
 	} else {
 		b := make(Bool, len(elems))
+
 		for i, v := range elems {
 			if len(v) != 1 {
-				return fmt.Errorf("database: could not parse boolean array index %d: invalid boolean %q", i, v)
+				return fmt.Errorf(
+					"database: could not parse boolean array index %d: invalid boolean %q",
+					i,
+					v,
+				)
 			}
+
 			switch v[0] {
 			case 't':
 				b[i] = true
 			case 'f':
 				b[i] = false
 			default:
-				return fmt.Errorf("database: could not parse boolean array index %d: invalid boolean %q", i, v)
+				return fmt.Errorf(
+					"database: could not parse boolean array index %d: invalid boolean %q",
+					i,
+					v,
+				)
 			}
 		}
+
 		*a = b
 	}
+
 	return nil
 }
 
@@ -153,7 +170,7 @@ func (a Bool) Value() (driver.Value, error) {
 		// and N-1 bytes of delimiters.
 		b := make([]byte, 1+2*n)
 
-		for i := 0; i < n; i++ {
+		for i := range n {
 			b[2*i] = ','
 			if a[i] {
 				b[1+2*i] = 't'
@@ -183,6 +200,7 @@ func (a *Bytea) Scan(src any) error {
 		return a.scanBytes([]byte(src))
 	case nil:
 		*a = nil
+
 		return nil
 	}
 
@@ -194,6 +212,7 @@ func (a *Bytea) scanBytes(src []byte) error {
 	if err != nil {
 		return err
 	}
+
 	if *a != nil && len(elems) == 0 {
 		*a = (*a)[:0]
 	} else {
@@ -204,8 +223,10 @@ func (a *Bytea) scanBytes(src []byte) error {
 				return fmt.Errorf("could not parse bytea array index %d: %s", i, err.Error())
 			}
 		}
+
 		*a = b
 	}
+
 	return nil
 }
 
@@ -255,6 +276,7 @@ func (a *Float64) Scan(src any) error {
 		return a.scanBytes([]byte(src))
 	case nil:
 		*a = nil
+
 		return nil
 	}
 
@@ -266,17 +288,21 @@ func (a *Float64) scanBytes(src []byte) error {
 	if err != nil {
 		return err
 	}
+
 	if *a != nil && len(elems) == 0 {
 		*a = (*a)[:0]
 	} else {
 		b := make(Float64, len(elems))
+
 		for i, v := range elems {
 			if b[i], err = strconv.ParseFloat(string(v), 64); err != nil {
-				return fmt.Errorf("database: parsing array element index %d: %v", i, err)
+				return fmt.Errorf("database: parsing array element index %d: %w", i, err)
 			}
 		}
+
 		*a = b
 	}
+
 	return nil
 }
 
@@ -317,6 +343,7 @@ func (a *Float32) Scan(src any) error {
 		return a.scanBytes([]byte(src))
 	case nil:
 		*a = nil
+
 		return nil
 	}
 
@@ -328,19 +355,25 @@ func (a *Float32) scanBytes(src []byte) error {
 	if err != nil {
 		return err
 	}
+
 	if *a != nil && len(elems) == 0 {
 		*a = (*a)[:0]
 	} else {
 		b := make(Float32, len(elems))
+
 		for i, v := range elems {
 			var x float64
+
 			if x, err = strconv.ParseFloat(string(v), 32); err != nil {
-				return fmt.Errorf("database: parsing array element index %d: %v", i, err)
+				return fmt.Errorf("database: parsing array element index %d: %w", i, err)
 			}
+
 			b[i] = float32(x)
 		}
+
 		*a = b
 	}
+
 	return nil
 }
 
@@ -372,9 +405,13 @@ func (a Float32) Value() (driver.Value, error) {
 // an array or slice of any dimension.
 type Generic struct{ A any }
 
-func (Generic) evaluateDestination(rt reflect.Type) (reflect.Type, func([]byte, reflect.Value) error, string) {
-	var assign func([]byte, reflect.Value) error
-	var del = ","
+func (Generic) evaluateDestination(
+	rt reflect.Type,
+) (reflect.Type, func([]byte, reflect.Value) error, string) {
+	var (
+		assign func([]byte, reflect.Value) error
+		del    = ","
+	)
 
 	// TODO calculate the assign function for other types
 	// TODO repeat this section on the element type of arrays or slices (multidimensional)
@@ -388,8 +425,10 @@ func (Generic) evaluateDestination(rt reflect.Type) (reflect.Type, func([]byte, 
 				} else {
 					err = ss.Scan(src)
 				}
+
 				return
 			}
+
 			goto FoundType
 		}
 
@@ -410,6 +449,7 @@ FoundType:
 // Scan implements the sql.Scanner interface.
 func (a Generic) Scan(src any) error {
 	dpv := reflect.ValueOf(a.A)
+
 	switch {
 	case dpv.Kind() != reflect.Ptr:
 		return fmt.Errorf("database: destination %T is not a pointer to array or slice", a.A)
@@ -433,6 +473,7 @@ func (a Generic) Scan(src any) error {
 	case nil:
 		if dv.Kind() == reflect.Slice {
 			dv.Set(reflect.Zero(dv.Type()))
+
 			return nil
 		}
 	}
@@ -442,6 +483,7 @@ func (a Generic) Scan(src any) error {
 
 func (a Generic) scanBytes(src []byte, dv reflect.Value) error {
 	dtype, assign, del := a.evaluateDestination(dv.Type().Elem())
+
 	dims, elems, err := parseArray(src, []byte(del))
 	if err != nil {
 		return err
@@ -451,7 +493,7 @@ func (a Generic) scanBytes(src []byte, dv reflect.Value) error {
 
 	if len(dims) > 1 {
 		return fmt.Errorf("database: scanning from multidimensional ARRAY%s is not implemented",
-			strings.Replace(fmt.Sprint(dims), " ", "][", -1))
+			strings.ReplaceAll(fmt.Sprint(dims), " ", "]["))
 	}
 
 	// Treat a zero-dimensional array like an array with a single dimension of zero.
@@ -465,7 +507,7 @@ func (a Generic) scanBytes(src []byte, dv reflect.Value) error {
 		case reflect.Array:
 			if rt.Len() != dims[i] {
 				return fmt.Errorf("database: cannot convert ARRAY%s to %s",
-					strings.Replace(fmt.Sprint(dims), " ", "][", -1), dv.Type())
+					strings.ReplaceAll(fmt.Sprint(dims), " ", "]["), dv.Type())
 			}
 		default:
 			// TODO handle multidimensional
@@ -474,8 +516,9 @@ func (a Generic) scanBytes(src []byte, dv reflect.Value) error {
 
 	values := reflect.MakeSlice(reflect.SliceOf(dtype), len(elems), len(elems))
 	for i, e := range elems {
-		if err := assign(e, values.Index(i)); err != nil {
-			return fmt.Errorf("database: parsing array element index %d: %v", i, err)
+		err := assign(e, values.Index(i))
+		if err != nil {
+			return fmt.Errorf("database: parsing array element index %d: %w", i, err)
 		}
 	}
 
@@ -485,7 +528,7 @@ func (a Generic) scanBytes(src []byte, dv reflect.Value) error {
 	case reflect.Slice:
 		dv.Set(values.Slice(0, dims[0]))
 	case reflect.Array:
-		for i := 0; i < dims[0]; i++ {
+		for i := range dims[0] {
 			dv.Index(i).Set(values.Index(i))
 		}
 	}
@@ -517,6 +560,7 @@ func (a Generic) Value() (driver.Value, error) {
 		b := make([]byte, 0, 1+2*n)
 
 		b, _, err := appendArray(b, rv, n)
+
 		return string(b), err
 	}
 
@@ -535,6 +579,7 @@ func (a *Int64) Scan(src any) error {
 		return a.scanBytes([]byte(src))
 	case nil:
 		*a = nil
+
 		return nil
 	}
 
@@ -546,17 +591,21 @@ func (a *Int64) scanBytes(src []byte) error {
 	if err != nil {
 		return err
 	}
+
 	if *a != nil && len(elems) == 0 {
 		*a = (*a)[:0]
 	} else {
 		b := make(Int64, len(elems))
+
 		for i, v := range elems {
 			if b[i], err = strconv.ParseInt(string(v), 10, 64); err != nil {
-				return fmt.Errorf("database: parsing array element index %d: %v", i, err)
+				return fmt.Errorf("database: parsing array element index %d: %w", i, err)
 			}
 		}
+
 		*a = b
 	}
+
 	return nil
 }
 
@@ -596,6 +645,7 @@ func (a *Int32) Scan(src any) error {
 		return a.scanBytes([]byte(src))
 	case nil:
 		*a = nil
+
 		return nil
 	}
 
@@ -607,19 +657,24 @@ func (a *Int32) scanBytes(src []byte) error {
 	if err != nil {
 		return err
 	}
+
 	if *a != nil && len(elems) == 0 {
 		*a = (*a)[:0]
 	} else {
 		b := make(Int32, len(elems))
+
 		for i, v := range elems {
 			x, err := strconv.ParseInt(string(v), 10, 32)
 			if err != nil {
-				return fmt.Errorf("database: parsing array element index %d: %v", i, err)
+				return fmt.Errorf("database: parsing array element index %d: %w", i, err)
 			}
+
 			b[i] = int32(x)
 		}
+
 		*a = b
 	}
+
 	return nil
 }
 
@@ -659,6 +714,7 @@ func (a *String) Scan(src any) error {
 		return a.scanBytes([]byte(src))
 	case nil:
 		*a = nil
+
 		return nil
 	}
 
@@ -670,17 +726,24 @@ func (a *String) scanBytes(src []byte) error {
 	if err != nil {
 		return err
 	}
+
 	if *a != nil && len(elems) == 0 {
 		*a = (*a)[:0]
 	} else {
 		b := make(String, len(elems))
+
 		for i, v := range elems {
 			if b[i] = string(v); v == nil {
-				return fmt.Errorf("database: parsing array element index %d: cannot convert nil to string", i)
+				return fmt.Errorf(
+					"database: parsing array element index %d: cannot convert nil to string",
+					i,
+				)
 			}
 		}
+
 		*a = b
 	}
+
 	return nil
 }
 
@@ -713,8 +776,10 @@ func (a String) Value() (driver.Value, error) {
 //
 // It panics when n <= 0 or rv's Kind is not reflect.Array nor reflect.Slice.
 func appendArray(b []byte, rv reflect.Value, n int) ([]byte, string, error) {
-	var del string
-	var err error
+	var (
+		del string
+		err error
+	)
 
 	b = append(b, '{')
 
@@ -751,9 +816,11 @@ func appendArrayElement(b []byte, rv reflect.Value) ([]byte, string, error) {
 		}
 	}
 
-	var del = ","
-	var err error
-	var iv = rv.Interface()
+	var (
+		del = ","
+		err error
+		iv  = rv.Interface()
+	)
 
 	if ad, ok := iv.(Delimiter); ok {
 		del = ad.Delimiter()
@@ -773,23 +840,29 @@ func appendArrayElement(b []byte, rv reflect.Value) ([]byte, string, error) {
 	}
 
 	b, err = appendValue(b, iv)
+
 	return b, del, err
 }
 
 func appendArrayQuotedBytes(b, v []byte) []byte {
 	b = append(b, '"')
+
 	for {
 		i := bytes.IndexAny(v, `"\`)
 		if i < 0 {
 			b = append(b, v...)
+
 			break
 		}
+
 		if i > 0 {
 			b = append(b, v[:i]...)
 		}
+
 		b = append(b, '\\', v[i])
 		v = v[i+1:]
 	}
+
 	return append(b, '"')
 }
 
@@ -807,7 +880,11 @@ func parseArray(src, del []byte) (dims []int, elems [][]byte, err error) {
 	var depth, i int
 
 	if len(src) < 1 || src[0] != '{' {
-		return nil, nil, fmt.Errorf("database: unable to parse array; expected %q at offset %d", '{', 0)
+		return nil, nil, fmt.Errorf(
+			"database: unable to parse array; expected %q at offset %d",
+			'{',
+			0,
+		)
 	}
 
 Open:
@@ -818,11 +895,13 @@ Open:
 			i++
 		case '}':
 			elems = make([][]byte, 0)
+
 			goto Close
 		default:
 			break Open
 		}
 	}
+
 	dims = make([]int, i)
 
 Element:
@@ -832,12 +911,16 @@ Element:
 			if depth == len(dims) {
 				break Element
 			}
+
 			depth++
 			dims[depth-1] = 0
 			i++
 		case '"':
-			var elem = []byte{}
-			var escape bool
+			var (
+				elem   = []byte{}
+				escape bool
+			)
+
 			for i++; i < len(src); i++ {
 				if escape {
 					elem = append(elem, src[i])
@@ -851,6 +934,7 @@ Element:
 					case '"':
 						elems = append(elems, elem)
 						i++
+
 						break Element
 					}
 				}
@@ -862,10 +946,13 @@ Element:
 					if len(elem) == 0 {
 						return nil, nil, fmt.Errorf("database: unable to parse array; unexpected %q at offset %d", src[i], i)
 					}
+
 					if bytes.Equal(elem, []byte("NULL")) {
 						elem = nil
 					}
+
 					elems = append(elems, elem)
+
 					break Element
 				}
 			}
@@ -876,13 +963,18 @@ Element:
 		if bytes.HasPrefix(src[i:], del) && depth > 0 {
 			dims[depth-1]++
 			i += len(del)
+
 			goto Element
 		} else if src[i] == '}' && depth > 0 {
 			dims[depth-1]++
 			depth--
 			i++
 		} else {
-			return nil, nil, fmt.Errorf("database: unable to parse array; unexpected %q at offset %d", src[i], i)
+			return nil, nil, fmt.Errorf(
+				"database: unable to parse array; unexpected %q at offset %d",
+				src[i],
+				i,
+			)
 		}
 	}
 
@@ -895,17 +987,22 @@ Close:
 			return nil, nil, fmt.Errorf("database: unable to parse array; unexpected %q at offset %d", src[i], i)
 		}
 	}
+
 	if depth > 0 {
 		err = fmt.Errorf("database: unable to parse array; expected %q at offset %d", '}', i)
 	}
+
 	if err == nil {
 		for _, d := range dims {
 			if (len(elems) % d) != 0 {
-				err = fmt.Errorf("database: multidimensional arrays must have elements with matching dimensions")
+				err = errors.New(
+					"database: multidimensional arrays must have elements with matching dimensions",
+				)
 			}
 		}
 	}
-	return
+
+	return dims, elems, err
 }
 
 func scanLinearArray(src, del []byte, typ string) (elems [][]byte, err error) {
@@ -913,8 +1010,14 @@ func scanLinearArray(src, del []byte, typ string) (elems [][]byte, err error) {
 	if err != nil {
 		return nil, err
 	}
+
 	if len(dims) > 1 {
-		return nil, fmt.Errorf("database: cannot convert ARRAY%s to %s", strings.Replace(fmt.Sprint(dims), " ", "][", -1), typ)
+		return nil, fmt.Errorf(
+			"database: cannot convert ARRAY%s to %s",
+			strings.ReplaceAll(fmt.Sprint(dims), " ", "]["),
+			typ,
+		)
 	}
+
 	return elems, err
 }

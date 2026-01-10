@@ -20,6 +20,7 @@ func GetRequestID(ctx context.Context) string {
 	if !ok {
 		return ""
 	}
+
 	return v
 }
 
@@ -32,5 +33,6 @@ func GetApiVersion(ctx context.Context) string {
 	if !ok {
 		return "v1"
 	}
+
 	return v
 }

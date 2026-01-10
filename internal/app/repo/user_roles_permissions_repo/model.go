@@ -5,10 +5,9 @@ import (
 	"fmt"
 	"net/mail"
 
-	"github.com/google/uuid"
-
 	"github.com/Housiadas/cerberus/internal/core/domain/name"
 	urp "github.com/Housiadas/cerberus/internal/core/domain/user_roles_permissions"
+	"github.com/google/uuid"
 )
 
 type rowDB struct {
@@ -26,16 +25,19 @@ func toDomain(db rowDB) (urp.UserRolesPermissions, error) {
 	if err != nil {
 		return urp.UserRolesPermissions{}, fmt.Errorf("parse user_name: %w", err)
 	}
+
 	roleName, err := name.Parse(db.RoleName)
 	if err != nil {
 		return urp.UserRolesPermissions{}, fmt.Errorf("parse role_name: %w", err)
 	}
+
 	permName, err := name.ParseNull(db.PermissionName.String)
 	if err != nil {
 		return urp.UserRolesPermissions{}, fmt.Errorf("parse permission_name: %w", err)
 	}
 
 	var permIDPtr *uuid.UUID
+
 	if db.PermissionID.Valid {
 		permID := db.PermissionID.UUID
 		permIDPtr = &permID
@@ -54,12 +56,15 @@ func toDomain(db rowDB) (urp.UserRolesPermissions, error) {
 
 func toDomains(dbs []rowDB) ([]urp.UserRolesPermissions, error) {
 	res := make([]urp.UserRolesPermissions, len(dbs))
+
 	for i, r := range dbs {
 		dr, err := toDomain(r)
 		if err != nil {
 			return nil, err
 		}
+
 		res[i] = dr
 	}
+
 	return res, nil
 }

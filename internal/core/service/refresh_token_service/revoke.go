@@ -17,7 +17,9 @@ func (c *Service) Revoke(ctx context.Context, tkn refresh_token.RefreshToken) er
 		CreatedAt: tkn.CreatedAt,
 		Revoked:   true,
 	}
-	if err := c.storer.Revoke(ctx, revToken); err != nil {
+
+	err := c.storer.Revoke(ctx, revToken)
+	if err != nil {
 		return fmt.Errorf("revoke: %w", err)
 	}
 

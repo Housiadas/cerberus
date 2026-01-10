@@ -31,7 +31,7 @@ func New(maxRunningJobs int) (*Worker, error) {
 	}
 
 	sem := make(chan bool, maxRunningJobs)
-	for i := 0; i < maxRunningJobs; i++ {
+	for range maxRunningJobs {
 		sem <- true
 	}
 
@@ -54,7 +54,6 @@ func (w *Worker) Running() int {
 
 // Shutdown waits for all jobs to complete before it returns.
 func (w *Worker) Shutdown(ctx context.Context) error {
-
 	// Signal we are shutting down.
 	close(w.isShutdown)
 
@@ -71,6 +70,7 @@ func (w *Worker) Shutdown(ctx context.Context) error {
 	// Launch a goroutine to wait for all the worker goroutines
 	// to complete their work.
 	ch := make(chan struct{})
+
 	go func() {
 		w.wg.Wait()
 		close(ch)
@@ -89,7 +89,6 @@ func (w *Worker) Shutdown(ctx context.Context) error {
 // Start looks up a job by key and launches a goroutine to perform the work. A
 // work key is returned so the caller can cancel work early.
 func (w *Worker) Start(ctx context.Context, jobFn JobFn) (string, error) {
-
 	// We need to block here waiting to capture a semaphore, timeout or shutdown.
 	// The shutdown is the first to handle that event as a priority.
 	select {
@@ -110,15 +109,15 @@ func (w *Worker) Start(ctx context.Context, jobFn JobFn) (string, error) {
 	}
 
 	// Create a cancel function and keep it for stop/shutdown purposes.
-	ctx, cancel := context.WithDeadline(context.Background(), deadline)
+	ctx, cancel := context.WithDeadline(ctx, deadline)
 
 	// Register this new G as running.
 	w.trackWork(workKey, cancel)
 
 	// Launch a goroutine to perform the work.
 	w.wg.Add(1)
-	go func() {
 
+	go func() {
 		// Do this in a separate defer in case the other defer panics.
 		// This adds a value back to the semaphore allowing a new message
 		// to be processed.

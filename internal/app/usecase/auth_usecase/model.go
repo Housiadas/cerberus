@@ -8,13 +8,14 @@ import (
 
 // LoginReq defines the data needed to authenticate a user.
 type LoginReq struct {
-	Email    string `json:"email" validate:"required"`
+	Email    string `json:"email"    validate:"required"`
 	Password string `json:"password" validate:"required"`
 }
 
 // Encode implements the encoder interface.
 func (l *LoginReq) Encode() ([]byte, string, error) {
 	data, err := json.Marshal(l)
+
 	return data, "application/json", err
 }
 
@@ -25,9 +26,11 @@ func (l *LoginReq) Decode(data []byte) error {
 
 // Validate checks the data in the model is considered clean.
 func (l *LoginReq) Validate() error {
-	if err := validation.Check(l); err != nil {
+	err := validation.Check(l)
+	if err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -40,6 +43,7 @@ type RefreshTokenReq struct {
 // Encode implements the encoder interface.
 func (r *RefreshTokenReq) Encode() ([]byte, string, error) {
 	data, err := json.Marshal(r)
+
 	return data, "application/json", err
 }
 
@@ -50,9 +54,11 @@ func (r *RefreshTokenReq) Decode(data []byte) error {
 
 // Validate checks the data in the model is considered clean.
 func (r *RefreshTokenReq) Validate() error {
-	if err := validation.Check(r); err != nil {
+	err := validation.Check(r)
+	if err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -65,6 +71,7 @@ type LogoutReq struct {
 // Encode implements the encoder interface.
 func (r *LogoutReq) Encode() ([]byte, string, error) {
 	data, err := json.Marshal(r)
+
 	return data, "application/json", err
 }
 
@@ -75,9 +82,11 @@ func (r *LogoutReq) Decode(data []byte) error {
 
 // Validate checks the data in the model is considered clean.
 func (l *LogoutReq) Validate() error {
-	if err := validation.Check(l); err != nil {
+	err := validation.Check(l)
+	if err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -93,5 +102,6 @@ type Token struct {
 // Encode implements the encoder interface.
 func (t Token) Encode() ([]byte, string, error) {
 	data, err := json.Marshal(t)
+
 	return data, "application/json", err
 }

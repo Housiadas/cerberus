@@ -28,6 +28,7 @@ type RolePageResult struct {
 // Encode implements the encoder interface.
 func (r Role) Encode() ([]byte, string, error) {
 	data, err := json.Marshal(r)
+
 	return data, "application/json", err
 }
 
@@ -86,11 +87,13 @@ func (app *UpdateRole) Decode(data []byte) error {
 
 func toBusUpdateUser(app UpdateRole) (role.UpdateRole, error) {
 	var nme *name.Name
+
 	if app.Name != nil {
 		nm, err := name.Parse(*app.Name)
 		if err != nil {
 			return role.UpdateRole{}, fmt.Errorf("parse: %w", err)
 		}
+
 		nme = &nm
 	}
 

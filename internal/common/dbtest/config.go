@@ -3,9 +3,8 @@ package dbtest
 import (
 	"testing"
 
-	"github.com/stretchr/testify/require"
-
 	"github.com/Housiadas/cerberus/internal/config"
+	"github.com/stretchr/testify/require"
 )
 
 type Config struct {

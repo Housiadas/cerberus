@@ -6,21 +6,23 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/go-playground/validator/v10"
-
 	"github.com/Housiadas/cerberus/pkg/web/errs"
+	"github.com/go-playground/validator/v10"
 )
 
 // Check validates the provided model against it's declared tags.
 func Check(val any) error {
-	if err := validate.Struct(val); err != nil {
+	err := validate.Struct(val)
+	if err != nil {
 		var vErrors validator.ValidationErrors
+
 		ok := errors.As(err, &vErrors)
 		if !ok {
 			return err
 		}
 
 		var fields errs.FieldErrors
+
 		for _, verror := range vErrors {
 			// Create a human-readable message
 			msg := formatValidationError(verror)
@@ -41,9 +43,9 @@ func formatValidationError(ve validator.FieldError) string {
 
 	switch ve.Tag() {
 	case "required":
-		return fmt.Sprintf("%s is required", field)
+		return field + " is required"
 	case "email":
-		return fmt.Sprintf("%s must be a valid email", field)
+		return field + " must be a valid email"
 	case "min":
 		return fmt.Sprintf("%s must be at least %s characters", field, ve.Param())
 	case "max":

@@ -7,15 +7,14 @@ import (
 	"errors"
 	"net/http"
 
-	"go.opentelemetry.io/otel/trace"
-	"golang.org/x/sync/singleflight"
-
 	"github.com/Housiadas/cerberus/internal/app/usecase/auth_usecase"
 	"github.com/Housiadas/cerberus/internal/app/usecase/user_roles_permissions_usecase"
 	"github.com/Housiadas/cerberus/internal/app/usecase/user_usecase"
 	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/Housiadas/cerberus/pkg/pgsql"
 	"github.com/Housiadas/cerberus/pkg/web"
+	"go.opentelemetry.io/otel/trace"
+	"golang.org/x/sync/singleflight"
 )
 
 var (
@@ -63,18 +62,21 @@ func New(cfg Config) *Middleware {
 func (m *Middleware) Error(w http.ResponseWriter, err error, statusCode int) {
 	w.Header().Set(web.ContentTypeKey, web.ContentTypeJSON)
 	w.WriteHeader(statusCode)
+
 	if err := json.NewEncoder(w).Encode(err); err != nil {
 		return
 	}
+
 	return
 }
 
 // ResponseRecorder a custom http.ResponseWriter to capture the response before it's sent to the client.
-// We are capturing the result of the handler to the middleware
+// We are capturing the result of the handler to the middleware.
 type ResponseRecorder struct {
+	http.ResponseWriter
+
 	statusCode int
 	body       bytes.Buffer
-	http.ResponseWriter
 }
 
 func (rec *ResponseRecorder) WriteHeader(code int) {
@@ -82,9 +84,10 @@ func (rec *ResponseRecorder) WriteHeader(code int) {
 	rec.ResponseWriter.WriteHeader(code)
 }
 
-// Capture the response body
+// Capture the response body.
 func (rec *ResponseRecorder) Write(b []byte) (int, error) {
 	rec.body.Write(b)
+
 	return rec.ResponseWriter.Write(b)
 }
 

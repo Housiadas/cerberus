@@ -8,7 +8,10 @@ import (
 	"github.com/Housiadas/cerberus/pkg/web/errs"
 )
 
-func (u *UseCase) RefreshAccessToken(ctx context.Context, authRefresh RefreshTokenReq) (Token, error) {
+func (u *UseCase) RefreshAccessToken(
+	ctx context.Context,
+	authRefresh RefreshTokenReq,
+) (Token, error) {
 	// Retrieve the refresh token
 	rToken, err := u.refreshTokenUsecase.QueryByToken(ctx, authRefresh.Token)
 	if err != nil {
@@ -24,6 +27,7 @@ func (u *UseCase) RefreshAccessToken(ctx context.Context, authRefresh RefreshTok
 	if err != nil {
 		return Token{}, fmt.Errorf("parse time: %w", err)
 	}
+
 	if time.Now().UTC().After(expiresAt) {
 		return Token{}, errs.New(errs.InvalidArgument, ErrExpiredToken)
 	}

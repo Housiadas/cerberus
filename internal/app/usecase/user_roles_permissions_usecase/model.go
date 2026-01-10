@@ -20,10 +20,12 @@ func toAppUserRolesPermissions(r urp.UserRolesPermissions) UserRolesPermissions 
 	if r.PermissionID != nil {
 		permID = r.PermissionID.String()
 	}
+
 	var permName string
 	if r.PermissionName.Valid() {
 		permName = r.PermissionName.String()
 	}
+
 	return UserRolesPermissions{
 		UserID:         r.UserID.String(),
 		UserName:       r.UserName.String(),
@@ -40,5 +42,6 @@ func toManyUserRolesPermissions(rows []urp.UserRolesPermissions) []UserRolesPerm
 	for i, r := range rows {
 		res[i] = toAppUserRolesPermissions(r)
 	}
+
 	return res
 }

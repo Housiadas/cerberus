@@ -1,247 +1,21 @@
 version: "2"
 linters:
-  # Default set of linters.
-  # The value can be:
-  # - `standard`: https://golangci-lint.run/docs/linters/#enabled-by-default
-  # - `all`: enables all linters by default.
-  # - `none`: disables all linters by default.
-  # - `fast`: enables only linters considered as "fast" (`golangci-lint help linters --json | jq '[ .[] | select(.fast==true) ] | map(.name)'`).
-  # Default: standard
   default: all
-  # Enable specific linter.
   enable:
-    - arangolint
-    - asasalint
-    - asciicheck
-    - bidichk
-    - bodyclose
-    - canonicalheader
-    - containedctx
-    - contextcheck
-    - copyloopvar
-    - cyclop
-    - decorder
-    - depguard
-    - dogsled
-    - dupl
-    - dupword
-    - durationcheck
-    - embeddedstructfieldcheck
-    - err113
-    - errcheck
-    - errchkjson
-    - errname
-    - errorlint
-    - exhaustive
-    - exhaustruct
-    - exptostd
-    - fatcontext
-    - forbidigo
-    - forcetypeassert
-    - funcorder
-    - funlen
-    - ginkgolinter
-    - gocheckcompilerdirectives
-    - gochecknoglobals
-    - gochecknoinits
-    - gochecksumtype
-    - gocognit
-    - goconst
-    - gocritic
-    - gocyclo
-    - godoclint
-    - godot
-    - godox
-    - goheader
-    - gomoddirectives
-    - gomodguard
-    - goprintffuncname
-    - gosec
-    - gosmopolitan
-    - govet
-    - grouper
-    - iface
-    - importas
-    - inamedparam
-    - ineffassign
-    - interfacebloat
-    - intrange
-    - iotamixing
-    - ireturn
-    - lll
-    - loggercheck
-    - maintidx
-    - makezero
-    - mirror
-    - misspell
-    - mnd
-    - modernize
-    - musttag
-    - nakedret
-    - nestif
-    - nilerr
-    - nilnesserr
-    - nilnil
-    - nlreturn
-    - noctx
-    - noinlineerr
-    - nolintlint
-    - nonamedreturns
-    - nosprintfhostport
-    - paralleltest
-    - perfsprint
-    - prealloc
-    - predeclared
-    - promlinter
-    - protogetter
-    - reassign
-    - recvcheck
-    - revive
-    - rowserrcheck
-    - sloglint
-    - spancheck
-    - sqlclosecheck
-    - staticcheck
-    - tagalign
-    - tagliatelle
-    - testableexamples
-    - testifylint
-    - testpackage
-    - thelper
-    - tparallel
-    - unconvert
-    - unparam
-    - unqueryvet
-    - unused
-    - usestdlibvars
-    - usetesting
-    - varnamelen
-    - wastedassign
-    - whitespace
-    - wrapcheck
-    - wsl
     - wsl_v5
-    - zerologlint
-  # Disable specific linters.
   disable:
-    - arangolint
-    - asasalint
-    - asciicheck
-    - bidichk
-    - bodyclose
-    - canonicalheader
-    - containedctx
-    - contextcheck
-    - copyloopvar
-    - cyclop
-    - decorder
-    - depguard
-    - dogsled
-    - dupl
-    - dupword
-    - durationcheck
-    - embeddedstructfieldcheck
+    - spancheck # Calling End() is implemented as expected
+      # I disagree with the rationale behind these linters
     - err113
-    - errcheck
-    - errchkjson
-    - errname
-    - errorlint
-    - exhaustive
-    - exhaustruct
-    - exptostd
-    - fatcontext
-    - forbidigo
-    - forcetypeassert
-    - funcorder
-    - funlen
-    - ginkgolinter
-    - gocheckcompilerdirectives
-    - gochecknoglobals
-    - gochecknoinits
-    - gochecksumtype
-    - gocognit
-    - goconst
-    - gocritic
-    - gocyclo
-    - godoclint
-    - godot
-    - godox
-    - goheader
-    - gomoddirectives
-    - gomodguard
-    - goprintffuncname
-    - gosec
-    - gosmopolitan
-    - govet
-    - grouper
-    - iface
-    - importas
-    - inamedparam
-    - ineffassign
-    - interfacebloat
-    - intrange
-    - iotamixing
-    - ireturn
-    - lll
-    - loggercheck
-    - maintidx
-    - makezero
-    - mirror
-    - misspell
-    - mnd
-    - modernize
+    - depguard
     - musttag
-    - nakedret
-    - nestif
-    - nilerr
-    - nilnesserr
-    - nilnil
-    - nlreturn
-    - noctx
-    - noinlineerr
-    - nolintlint
     - nonamedreturns
-    - nosprintfhostport
-    - paralleltest
-    - perfsprint
-    - prealloc
-    - predeclared
-    - promlinter
-    - protogetter
-    - reassign
-    - recvcheck
-    - revive
-    - rowserrcheck
-    - sloglint
-    - spancheck
-    - sqlclosecheck
-    - staticcheck
-    - tagalign
-    - tagliatelle
-    - testableexamples
-    - testifylint
-    - testpackage
-    - thelper
-    - tparallel
-    - unconvert
-    - unparam
-    - unqueryvet
-    - unused
-    - usestdlibvars
-    - usetesting
-    - varnamelen
-    - wastedassign
-    - whitespace
-    - wrapcheck
-    - wsl
-    - wsl_v5
-    - zerologlint
-  # All available settings of specific linters.
+    - mnd # Magic number
   settings:
-    # See the dedicated "linters.settings" documentation section.
-    option: value
-  # Defines a set of rules to ignore issues.
-  # It does not skip the analysis, and so does not ignore "typecheck" errors.
+    wsl_v5:
+      allow-first-in-block: true
+      allow-whole-block: false
+      branch-max-lines: 2
   exclusions:
     # Mode of the generated files analysis.
     #
@@ -253,7 +27,7 @@ linters:
     # - `disable`: disable the generated files exclusion.
     #
     # Default: strict
-    generated: lax
+    generated: strict
     # Log a warning if an exclusion rule is unused.
     # Default: false
     warn-unused: true
@@ -292,17 +66,6 @@ linters:
       - linters:
           - lll
         source: "^//go:generate "
-    # Which file paths to exclude: they will be analyzed, but issues from them won't be reported.
-    # "/" will be replaced by the current OS file path separator to properly work on Windows.
-    # Default: []
-    paths:
-      - ".*\\.my\\.go$"
-      - lib/bad.go
-    # Which file paths to not exclude.
-    # Default: []
-    paths-except:
-      - ".*\\.my\\.go$"
-      - lib/bad.go
 formatters:
   # Enable specific formatter.
   # Default: [] (uses standard Go formatting)
@@ -313,10 +76,6 @@ formatters:
     - goimports
     - golines
     - swaggo
-  # Formatters settings.
-  settings:
-    # See the dedicated "formatters.settings" documentation section.
-    option: value
   exclusions:
     # Log a warning if an exclusion path is unused.
     # Default: false
@@ -332,12 +91,6 @@ formatters:
     #
     # Default: lax
     generated: strict
-    # Which file paths to exclude.
-    # This option is ignored when using `--stdin` as the path is unknown.
-    # Default: []
-    paths:
-      - ".*\\.my\\.go$"
-      - lib/bad.go
 issues:
   # Maximum issues count per one linter.
   # Set to 0 to disable.
@@ -347,9 +100,6 @@ issues:
   # Set to 0 to disable.
   # Default: 3
   max-same-issues: 0
-  # Make issues output unique by line.
-  # Default: true
-  uniq-by-line: false
   # Show only new issues: if there are unstaged changes or untracked files,
   # only those changes are analyzed, else only changes in HEAD~ are analyzed.
   # It's a super-useful option for integration of golangci-lint into existing large codebase.
@@ -357,118 +107,38 @@ issues:
   # much better don't allow issues in new code.
   #
   # Default: false
-  new: true
+  # new: true
   # Show only new issues created after the best common ancestor (merge-base against HEAD).
   # Default: ""
-  new-from-merge-base: main
+  # new-from-merge-base: master
   # Show only new issues created after git revision `REV`.
   # Default: ""
-  new-from-rev: HEAD
+  # new-from-rev: HEAD
   # Show only new issues created in git patch with set file path.
   # Default: ""
-  new-from-patch: path/to/patch/file
+  # new-from-patch: path/to/patch/file
   # Show issues in any part of update files (requires new-from-rev or new-from-patch).
   # Default: false
-  whole-files: true
+  # whole-files: true
   # Apply the fixes detected by the linters and formatters (if it's supported by the linter).
   # Default: false
   fix: true
 output:
   formats:
-    # Prints issues in a text format with colors, line number, and linter name.
-    # This format is the default format.
-    text:
-      # Output path can be either `stdout`, `stderr` or path to the file to write to.
-      # Default: stdout
-      path: ./path/to/output.txt
-      # Print linter name in the end of issue text.
-      # Default: true
-      print-linter-name: false
-      # Print lines of code with issue.
-      # Default: true
-      print-issued-lines: false
-      # Use colors.
-      # Default: true
-      colors: false
-    # Prints issues in a JSON representation.
-    json:
-      # Output path can be either `stdout`, `stderr` or path to the file to write to.
-      # Default: stdout
-      path: ./path/to/output.json
-    # Prints issues in columns representation separated by tabulations.
-    tab:
-      # Output path can be either `stdout`, `stderr` or path to the file to write to.
-      # Default: stdout
-      path: ./path/to/output.txt
-      # Print linter name in the end of issue text.
-      # Default: true
-      print-linter-name: true
-      # Use colors.
-      # Default: true
-      colors: false
     # Prints issues in an HTML page.
-    # It uses the Cloudflare CDN (cdnjs) and React.
-    html:
-      # Output path can be either `stdout`, `stderr` or path to the file to write to.
+    #html:
+      # An output path can be either `stdout`, `stderr` or path to the file to write to.
       # Default: stdout
-      path: ./path/to/output.html
-    # Prints issues in the Checkstyle format.
-    checkstyle:
-      # Output path can be either `stdout`, `stderr` or path to the file to write to.
-      # Default: stdout
-      path: ./path/to/output.xml
-    # Prints issues in the Code Climate format.
-    code-climate:
-      # Output path can be either `stdout`, `stderr` or path to the file to write to.
-      # Default: stdout
-      path: ./path/to/output.json
-    # Prints issues in the JUnit XML format.
-    junit-xml:
-      # Output path can be either `stdout`, `stderr` or path to the file to write to.
-      # Default: stdout
-      path: ./path/to/output.xml
-      # Support extra JUnit XML fields.
-      # Default: false
-      extended: true
-    # Prints issues in the TeamCity format.
-    teamcity:
-      # Output path can be either `stdout`, `stderr` or path to the file to write to.
-      # Default: stdout
-      path: ./path/to/output.txt
-    # Prints issues in the SARIF format.
-    sarif:
-      # Output path can be either `stdout`, `stderr` or path to the file to write to.
-      # Default: stdout
-      path: ./path/to/output.json
-  # Add a prefix to the output file references.
-  # This option is ignored when using `output.path-mode: abs` mode.
-  # Default: ""
-  path-prefix: ""
-  # By default, the report are related to the path obtained by `run.relative-path-mode`.
-  # The mode `abs` allows to show absolute file paths instead of relative file paths.
-  # The option `output.path-prefix` is ignored when using `abs` mode.
-  # Default: ""
-  path-mode: "abs"
-  # Order to use when sorting results.
-  # Possible values: `file`, `linter`, and `severity`.
-  #
+      # path: ./build/output.html
   # If the severity values are inside the following list, they are ordered in this order:
   #   1. error
   #   2. warning
   #   3. high
   #   4. medium
   #   5. low
-  # Either they are sorted alphabetically.
-  #
-  # Default: ["linter", "file"]
-  sort-results: true
-  sort-order:
-    - linter
-    - severity
-    - file # filepath, line, and column.
   # Show statistics per linter.
   # Default: true
-  show-stats: false
+  show-stats: true
 run:
   # Timeout for total work, e.g. 30s, 5m, 5m30s.
   # If the value is lower or equal to 0, the timeout is disabled.
@@ -489,10 +159,6 @@ run:
   # Include test files or not.
   # Default: true
   tests: false
-  # List of build tags, all linters use it.
-  # Default: []
-  build-tags:
-    - mytag
   # If set, we pass it to "go list -mod={option}". From "go help modules":
   # If invoked with -mod=readonly, the go command is disallowed from the implicit
   # automatic updating of go.mod described above. Instead, it fails when any changes
@@ -504,16 +170,16 @@ run:
   #
   # Allowed values: readonly|vendor|mod
   # Default: ""
-  modules-download-mode: readonly
+  modules-download-mode: vendor
   # Allow multiple parallel golangci-lint instances running.
   # If false, golangci-lint acquires file lock on start.
   # Default: false
-  allow-parallel-runners: true
+  # allow-parallel-runners: true
   # Allow multiple golangci-lint instances running, but serialize them around a lock.
   # If false, golangci-lint exits with an error if it fails to acquire file lock on start.
   # Default: false
-  allow-serial-runners: true
+  # allow-serial-runners: true
   # Number of operating system threads (`GOMAXPROCS`) that can execute golangci-lint simultaneously.
   # Default: 0 (automatically set to match Linux container CPU quota and
   # fall back to the number of logical CPUs in the machine)
-  concurrency: 4
+  # concurrency: 4

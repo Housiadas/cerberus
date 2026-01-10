@@ -36,7 +36,8 @@ func New(
 
 // Delete removes the specified refresh_token.
 func (c *Service) Delete(ctx context.Context, tkn refresh_token.RefreshToken) error {
-	if err := c.storer.Delete(ctx, tkn); err != nil {
+	err := c.storer.Delete(ctx, tkn)
+	if err != nil {
 		return fmt.Errorf("delete: %w", err)
 	}
 

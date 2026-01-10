@@ -3,20 +3,19 @@ package auth_usecase
 import (
 	"context"
 	_ "embed"
-	"fmt"
+	"errors"
 	"time"
-
-	"github.com/golang-jwt/jwt/v5"
 
 	"github.com/Housiadas/cerberus/internal/app/usecase/refresh_token_usecase"
 	"github.com/Housiadas/cerberus/internal/app/usecase/user_usecase"
 	"github.com/Housiadas/cerberus/pkg/logger"
+	"github.com/golang-jwt/jwt/v5"
 )
 
 var (
 	accessTokenTTL  = 20 * time.Minute
 	refreshTokenTTL = 7 * 24 * time.Hour
-	// Use strong, random secrets in production (store in env vars)
+	// Use strong, random secrets in production (store in env vars).
 	accessTokenSecret = []byte("your-256-bit-access-secret")
 )
 
@@ -43,6 +42,7 @@ type UseCase struct {
 // Claims represent the authorization claims transmitted via a JWT.
 type Claims struct {
 	jwt.RegisteredClaims
+
 	TokenID string   `json:"jti"` // JWT ID for token revocation
 	Roles   []string `json:"roles"`
 }
@@ -50,11 +50,13 @@ type Claims struct {
 // NewUseCase creates a UseCase to support authentication/authorization.
 func NewUseCase(cfg Config) *UseCase {
 	return &UseCase{
-		log:                 cfg.Log,
-		issuer:              cfg.Issuer,
-		secret:              accessTokenSecret,
-		method:              jwt.GetSigningMethod(jwt.SigningMethodHS256.Name),
-		parser:              jwt.NewParser(jwt.WithValidMethods([]string{jwt.SigningMethodHS256.Name})),
+		log:    cfg.Log,
+		issuer: cfg.Issuer,
+		secret: accessTokenSecret,
+		method: jwt.GetSigningMethod(jwt.SigningMethodHS256.Name),
+		parser: jwt.NewParser(
+			jwt.WithValidMethods([]string{jwt.SigningMethodHS256.Name}),
+		),
 		userUsecase:         cfg.UserUsecase,
 		refreshTokenUsecase: cfg.RefreshTokenUsecase,
 	}
@@ -69,7 +71,7 @@ func (u *UseCase) CheckExpiredToken(claims Claims) error {
 	// Check if the token has expired
 	expiredAt := claims.ExpiresAt
 	if time.Now().Unix() > expiredAt.Unix() {
-		return fmt.Errorf("token has expired")
+		return errors.New("token has expired")
 	}
 
 	return nil
@@ -81,8 +83,10 @@ func (u *UseCase) isUserEnabled(ctx context.Context, claims Claims) error {
 	if err != nil {
 		return err
 	}
+
 	if !usr.Enabled {
 		return ErrUserDisabled
 	}
+
 	return nil
 }

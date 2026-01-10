@@ -31,6 +31,7 @@ func TestSeedRoles(ctx context.Context, n int, service *Service) ([]role.Role, e
 	newRoles := TestNewRoles(n)
 
 	roles := make([]role.Role, len(newRoles))
+
 	for i, nu := range newRoles {
 		nrole, err := service.Create(ctx, nu)
 		if err != nil {

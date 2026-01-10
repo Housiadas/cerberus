@@ -1,8 +1,6 @@
 package apitest
 
 import (
-	"github.com/jmoiron/sqlx"
-
 	"github.com/Housiadas/cerberus/internal/app/repo/audit_repo"
 	"github.com/Housiadas/cerberus/internal/app/repo/role_repo"
 	"github.com/Housiadas/cerberus/internal/app/repo/user_repo"
@@ -13,6 +11,7 @@ import (
 	"github.com/Housiadas/cerberus/pkg/hasher"
 	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/Housiadas/cerberus/pkg/uuidgen"
+	"github.com/jmoiron/sqlx"
 )
 
 func newCore(log *logger.Service, db *sqlx.DB) Core {

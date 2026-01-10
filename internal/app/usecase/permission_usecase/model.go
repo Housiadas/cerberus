@@ -26,6 +26,7 @@ type PermissionPageResults struct {
 // Encode implements the encoder interface.
 func (p Permission) Encode() ([]byte, string, error) {
 	data, err := json.Marshal(p)
+
 	return data, "application/json", err
 }
 
@@ -43,6 +44,7 @@ func toAppPermissions(perms []permission.Permission) []Permission {
 	for i, pr := range perms {
 		appPerms[i] = toAppPermission(pr)
 	}
+
 	return appPerms
 }
 
@@ -61,6 +63,7 @@ func toBusNewPermission(app NewPermission) (permission.NewPermission, error) {
 	if err != nil {
 		return permission.NewPermission{}, fmt.Errorf("parse: %w", err)
 	}
+
 	return permission.NewPermission{
 		Name: nme,
 	}, nil
@@ -78,13 +81,16 @@ func (app *UpdatePermission) Decode(data []byte) error {
 
 func toBusUpdatePermission(app UpdatePermission) (permission.UpdatePermission, error) {
 	var nme *name.Name
+
 	if app.Name != nil {
 		nm, err := name.Parse(*app.Name)
 		if err != nil {
 			return permission.UpdatePermission{}, fmt.Errorf("parse: %w", err)
 		}
+
 		nme = &nm
 	}
+
 	return permission.UpdatePermission{
 		Name: nme,
 	}, nil

@@ -8,12 +8,14 @@ import (
 
 func ParseValidationErrors(err error) *Error {
 	var fe *FieldErrors
+
 	ok := errors.As(err, &fe)
 	if !ok {
 		return Errorf(InvalidArgument, "validation error: %s", err.Error())
 	}
 
 	feSlice := toFieldErrorSlice(*fe)
+
 	return newWithFields(InvalidArgument, errors.New("validation error"), feSlice)
 }
 

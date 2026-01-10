@@ -7,18 +7,17 @@ import (
 	_ "embed"
 	"fmt"
 
-	"github.com/google/uuid"
-	"github.com/jmoiron/sqlx"
-
 	"github.com/Housiadas/cerberus/internal/core/domain/name"
 	urp "github.com/Housiadas/cerberus/internal/core/domain/user_roles_permissions"
 	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/Housiadas/cerberus/pkg/order"
 	"github.com/Housiadas/cerberus/pkg/pgsql"
 	"github.com/Housiadas/cerberus/pkg/web"
+	"github.com/google/uuid"
+	"github.com/jmoiron/sqlx"
 )
 
-// queries
+// queries.
 var (
 	//go:embed query/user_roles_permissions_query.sql
 	userRolesPermissionsQuerySql string
@@ -61,6 +60,7 @@ func (s *Store) Query(
 	if err != nil {
 		return nil, err
 	}
+
 	buf.WriteString(obc)
 	buf.WriteString(" OFFSET :offset ROWS FETCH NEXT :rows_per_page ROWS ONLY")
 
@@ -81,14 +81,21 @@ func (s *Store) Count(ctx context.Context, filter urp.QueryFilter) (int, error) 
 	var cnt struct {
 		Count int `db:"count"`
 	}
-	if err := pgsql.NamedQueryStruct(ctx, s.log, s.db, buf.String(), data, &cnt); err != nil {
+
+	err := pgsql.NamedQueryStruct(ctx, s.log, s.db, buf.String(), data, &cnt)
+	if err != nil {
 		return 0, fmt.Errorf("db count user_roles_permissions: %w", err)
 	}
+
 	return cnt.Count, nil
 }
 
 // HasPermission returns true if the user has the specified permission.
-func (s *Store) HasPermission(ctx context.Context, userID uuid.UUID, permissionName string) (bool, error) {
+func (s *Store) HasPermission(
+	ctx context.Context,
+	userID uuid.UUID,
+	permissionName string,
+) (bool, error) {
 	data := map[string]any{
 		"user_id":         userID,
 		"permission_name": permissionName,
@@ -110,6 +117,7 @@ func (s *Store) HasPermission(ctx context.Context, userID uuid.UUID, permissionN
 	var cnt struct {
 		Count int `db:"count"`
 	}
+
 	if err := pgsql.NamedQueryStruct(ctx, s.log, s.db, buf.String(), data, &cnt); err != nil {
 		return false, fmt.Errorf("db count has permissions: %w", err)
 	}

@@ -30,6 +30,7 @@ func toRecord(r slog.Record) Record {
 
 	f := func(attr slog.Attr) bool {
 		atts[attr.Key] = attr.Value.Any()
+
 		return true
 	}
 	r.Attrs(f)

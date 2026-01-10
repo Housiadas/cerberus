@@ -45,6 +45,7 @@ func toUsersDomain(dbs []tokenDB) ([]refresh_token.RefreshToken, error) {
 
 	for i, db := range dbs {
 		var err error
+
 		bus[i], err = toTokenDomain(db)
 		if err != nil {
 			return nil, err

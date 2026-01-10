@@ -17,11 +17,13 @@ func (m *Middleware) BeginTransaction() func(next http.Handler) http.Handler {
 			hasCommitted := false
 
 			m.Log.Info(ctx, "BEGIN TRANSACTION")
+
 			tx, err := m.Tx.Begin()
 			if err != nil {
 				err := errs.Errorf(errs.Internal, "BEGIN TRANSACTION: %s", err)
 				m.Log.Error(ctx, "transaction middleware", err)
 				m.Error(w, err, http.StatusInternalServerError)
+
 				return
 			}
 
@@ -30,10 +32,12 @@ func (m *Middleware) BeginTransaction() func(next http.Handler) http.Handler {
 					m.Log.Info(ctx, "ROLLBACK TRANSACTION")
 				}
 
-				if err := tx.Rollback(); err != nil {
+				err := tx.Rollback()
+				if err != nil {
 					if errors.Is(err, sql.ErrTxDone) {
 						return
 					}
+
 					m.Log.Error(ctx, "ROLLBACK TRANSACTION", "ERROR", err)
 				}
 			}()
@@ -48,14 +52,17 @@ func (m *Middleware) BeginTransaction() func(next http.Handler) http.Handler {
 			// Check if we can commit transaction
 			if rec.statusCode >= http.StatusBadRequest {
 				m.Log.Info(ctx, "TRANSACTION FAILED, WILL ROLLBACK")
+
 				return
 			}
 
 			m.Log.Info(ctx, "COMMIT TRANSACTION")
+
 			if err := tx.Commit(); err != nil {
 				err := errs.Errorf(errs.Internal, "COMMIT TRANSACTION: %s", err)
 				m.Log.Error(ctx, "transaction middleware", err)
 				m.Error(w, err, http.StatusInternalServerError)
+
 				return
 			}
 

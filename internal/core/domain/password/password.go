@@ -2,6 +2,7 @@
 package password
 
 import (
+	"errors"
 	"fmt"
 	"regexp"
 )
@@ -58,7 +59,7 @@ func ParseConfirm(pass string, confirm string) (Password, error) {
 	}
 
 	if pass != confirm {
-		return Password{}, fmt.Errorf("passwords do not match")
+		return Password{}, errors.New("passwords do not match")
 	}
 
 	return p, nil
@@ -66,7 +67,7 @@ func ParseConfirm(pass string, confirm string) (Password, error) {
 
 func ParseConfirmPointers(pass *string, confirm *string) (Password, error) {
 	if pass == nil || confirm == nil {
-		return Password{}, fmt.Errorf("passwords do not match")
+		return Password{}, errors.New("passwords do not match")
 	}
 
 	return ParseConfirm(*pass, *confirm)

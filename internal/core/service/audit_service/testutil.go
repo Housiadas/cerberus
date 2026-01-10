@@ -5,15 +5,19 @@ import (
 	"fmt"
 	"math/rand"
 
-	"github.com/google/uuid"
-
 	"github.com/Housiadas/cerberus/internal/core/domain/audit"
 	"github.com/Housiadas/cerberus/internal/core/domain/entity"
 	"github.com/Housiadas/cerberus/internal/core/domain/name"
+	"github.com/google/uuid"
 )
 
 // TestNewAudits is a helper method for testing.
-func TestNewAudits(n int, actorID uuid.UUID, objEntity entity.Entity, action string) []audit.NewAudit {
+func TestNewAudits(
+	n int,
+	actorID uuid.UUID,
+	objEntity entity.Entity,
+	action string,
+) []audit.NewAudit {
 	newAudits := make([]audit.NewAudit, n)
 
 	idx := rand.Intn(10000)
@@ -49,6 +53,7 @@ func TestSeedAudits(
 	newAudits := TestNewAudits(n, actorID, objEntity, action)
 
 	audits := make([]audit.Audit, len(newAudits))
+
 	for i, na := range newAudits {
 		adt, err := api.Create(ctx, na)
 		if err != nil {

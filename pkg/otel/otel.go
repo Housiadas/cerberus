@@ -32,11 +32,9 @@ type Config struct {
 
 // InitTracing configures open telemetry to be used with the service.
 func InitTracing(cfg Config) (trace.TracerProvider, func(ctx context.Context), error) {
-
 	// WARNING: The current settings are using defaults which may not be
 	// compatible with your project. Please review the documentation for
 	// opentelemetry.
-
 	exporter, err := otlptrace.New(
 		context.Background(),
 		otlptracegrpc.NewClient(
@@ -49,6 +47,7 @@ func InitTracing(cfg Config) (trace.TracerProvider, func(ctx context.Context), e
 	}
 
 	var traceProvider trace.TracerProvider
+
 	teardown := func(ctx context.Context) {}
 
 	switch cfg.Host {
@@ -57,7 +56,9 @@ func InitTracing(cfg Config) (trace.TracerProvider, func(ctx context.Context), e
 
 	default:
 		tp := sdktrace.NewTracerProvider(
-			sdktrace.WithSampler(sdktrace.ParentBased(newEndpointExcluder(cfg.ExcludedRoutes, cfg.Probability))),
+			sdktrace.WithSampler(
+				sdktrace.ParentBased(newEndpointExcluder(cfg.ExcludedRoutes, cfg.Probability)),
+			),
 			sdktrace.WithBatcher(exporter,
 				sdktrace.WithMaxExportBatchSize(sdktrace.DefaultMaxExportBatchSize),
 				sdktrace.WithBatchTimeout(sdktrace.DefaultScheduleDelay*time.Millisecond),
@@ -101,13 +102,18 @@ func InjectTracing(ctx context.Context, tracer trace.Tracer) context.Context {
 	if traceID == defaultTraceID { // Use defined constant
 		traceID = uuid.NewString()
 	}
+
 	ctx = setTraceID(ctx, traceID)
 
 	return ctx
 }
 
 // AddSpan adds an otel span to the existing trace.
-func AddSpan(ctx context.Context, spanName string, keyValues ...attribute.KeyValue) (context.Context, trace.Span) {
+func AddSpan(
+	ctx context.Context,
+	spanName string,
+	keyValues ...attribute.KeyValue,
+) (context.Context, trace.Span) {
 	tracer, ok := ctx.Value(tracerKey).(trace.Tracer)
 	if !ok || tracer == nil {
 		return ctx, trace.SpanFromContext(ctx)

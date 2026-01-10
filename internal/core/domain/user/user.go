@@ -5,10 +5,9 @@ import (
 	"net/mail"
 	"time"
 
-	"github.com/google/uuid"
-
 	"github.com/Housiadas/cerberus/internal/core/domain/name"
 	"github.com/Housiadas/cerberus/internal/core/domain/password"
+	"github.com/google/uuid"
 )
 
 // Set of error variables for CRUD operations.

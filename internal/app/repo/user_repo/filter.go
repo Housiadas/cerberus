@@ -13,26 +13,31 @@ func applyFilter(filter user.QueryFilter, data map[string]any, buf *bytes.Buffer
 
 	if filter.ID != nil {
 		data["id"] = *filter.ID
+
 		wc = append(wc, "id = :id")
 	}
 
 	if filter.Name != nil {
 		data["name"] = fmt.Sprintf("%%%s%%", *filter.Name)
+
 		wc = append(wc, "name LIKE :name")
 	}
 
 	if filter.Email != nil {
 		data["email"] = (*filter.Email).String()
+
 		wc = append(wc, "email = :email")
 	}
 
 	if filter.StartCreatedDate != nil {
 		data["start_created_at"] = filter.StartCreatedDate.UTC()
+
 		wc = append(wc, "created_at >= :start_created_at")
 	}
 
 	if filter.EndCreatedDate != nil {
 		data["end_created_at"] = filter.EndCreatedDate.UTC()
+
 		wc = append(wc, "created_at <= :end_created_at")
 	}
 

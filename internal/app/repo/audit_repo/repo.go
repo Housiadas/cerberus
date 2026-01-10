@@ -7,16 +7,15 @@ import (
 	_ "embed"
 	"fmt"
 
-	"github.com/Housiadas/cerberus/pkg/web"
-	"github.com/jmoiron/sqlx"
-
 	"github.com/Housiadas/cerberus/internal/core/domain/audit"
 	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/Housiadas/cerberus/pkg/order"
 	"github.com/Housiadas/cerberus/pkg/pgsql"
+	"github.com/Housiadas/cerberus/pkg/web"
+	"github.com/jmoiron/sqlx"
 )
 
-// queries
+// queries.
 var (
 	//go:embed query/audit_create.sql
 	auditCreateSql string
@@ -94,7 +93,9 @@ func (s *Store) Count(ctx context.Context, filter audit.QueryFilter) (int, error
 	var count struct {
 		Count int `db:"count"`
 	}
-	if err := pgsql.NamedQueryStruct(ctx, s.log, s.db, buf.String(), data, &count); err != nil {
+
+	err := pgsql.NamedQueryStruct(ctx, s.log, s.db, buf.String(), data, &count)
+	if err != nil {
 		return 0, fmt.Errorf("db: %w", err)
 	}
 

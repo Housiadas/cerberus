@@ -294,10 +294,6 @@ github.com/jackc/puddle/v2/internal/genstack
 github.com/jmoiron/sqlx
 github.com/jmoiron/sqlx/reflectx
 github.com/jmoiron/sqlx/types
-# github.com/kisielk/errcheck v1.9.0
-## explicit; go 1.22.0
-github.com/kisielk/errcheck
-github.com/kisielk/errcheck/errcheck
 # github.com/klauspost/compress v1.18.0
 ## explicit; go 1.22
 github.com/klauspost/compress

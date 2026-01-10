@@ -45,5 +45,6 @@ func getMigrationsDir() string {
 	_, file, _, _ := runtime.Caller(0)
 	basepath := filepath.Dir(file)
 	migrationsPath := filepath.Join(basepath, "../../../.migrations")
+
 	return "file://" + migrationsPath
 }

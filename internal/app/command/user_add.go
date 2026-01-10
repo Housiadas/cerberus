@@ -21,6 +21,7 @@ import (
 func (cmd *Command) UserAdd(name, email, pass string) error {
 	if name == "" || email == "" || pass == "" {
 		fmt.Println("help: useradd <name> <email> <password>")
+
 		return ErrHelp
 	}
 
@@ -60,5 +61,6 @@ func (cmd *Command) UserAdd(name, email, pass string) error {
 	}
 
 	fmt.Println("user id:", usr.ID)
+
 	return nil
 }

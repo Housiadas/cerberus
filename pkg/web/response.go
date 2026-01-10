@@ -7,11 +7,10 @@ import (
 	"net/http"
 	"path"
 
-	"go.opentelemetry.io/otel/attribute"
-
 	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/Housiadas/cerberus/pkg/otel"
 	"github.com/Housiadas/cerberus/pkg/web/errs"
+	"go.opentelemetry.io/otel/attribute"
 )
 
 type Respond struct {
@@ -48,7 +47,12 @@ func (respond *Respond) Respond(handlerFunc HandlerFunc) http.HandlerFunc {
 	}
 }
 
-func (respond *Respond) encode(ctx context.Context, w http.ResponseWriter, statusCode int, dataModel Encoder) error {
+func (respond *Respond) encode(
+	ctx context.Context,
+	w http.ResponseWriter,
+	statusCode int,
+	dataModel Encoder,
+) error {
 	// If the context has been canceled, it means the client is no longer waiting for a encode.
 	if err := ctx.Err(); err != nil {
 		if errors.Is(err, context.Canceled) {
@@ -61,6 +65,7 @@ func (respond *Respond) encode(ctx context.Context, w http.ResponseWriter, statu
 
 	if statusCode == http.StatusNoContent {
 		w.WriteHeader(statusCode)
+
 		return nil
 	}
 
@@ -81,6 +86,7 @@ func (respond *Respond) encode(ctx context.Context, w http.ResponseWriter, statu
 
 func (respond *Respond) errorRecorder(ctx context.Context, statusCode int, err error) Encoder {
 	var appErr *errs.Error
+
 	ok := errors.As(err, &appErr)
 	if !ok {
 		appErr = errs.Errorf(errs.Internal, "Internal Server Error")
@@ -92,6 +98,7 @@ func (respond *Respond) errorRecorder(ctx context.Context, statusCode int, err e
 	}
 
 	_, span := otel.AddSpan(ctx, "web.encode.error")
+
 	span.RecordError(err)
 	defer span.End()
 
@@ -115,11 +122,12 @@ func isError(e Encoder) error {
 	if isError {
 		return err
 	}
+
 	return nil
 }
 
 func (respond *Respond) statusCode(dataModel Encoder) int {
-	var statusCode = http.StatusOK
+	statusCode := http.StatusOK
 
 	switch v := dataModel.(type) {
 	case httpStatus:

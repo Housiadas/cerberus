@@ -54,6 +54,7 @@ func New(t *testing.T, testName string) *sqlx.DB {
 	// -------------------------------------------------------------------------
 	// Will be invoked when the caller is done with the database
 	var buf bytes.Buffer
+
 	t.Cleanup(func() {
 		t.Helper()
 

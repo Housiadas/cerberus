@@ -3,9 +3,8 @@ package user_roles_permissions
 import (
 	"net/mail"
 
-	"github.com/google/uuid"
-
 	"github.com/Housiadas/cerberus/internal/core/domain/name"
+	"github.com/google/uuid"
 )
 
 // QueryFilter holds the available fields a query can be filtered on.

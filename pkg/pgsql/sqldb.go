@@ -10,13 +10,12 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Housiadas/cerberus/pkg/logger"
+	"github.com/Housiadas/cerberus/pkg/otel"
 	"github.com/jackc/pgx/v5/pgconn"
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/jmoiron/sqlx"
 	"go.opentelemetry.io/otel/attribute"
-
-	"github.com/Housiadas/cerberus/pkg/logger"
-	"github.com/Housiadas/cerberus/pkg/otel"
 )
 
 // lib/pq errorCodeNames
@@ -55,6 +54,7 @@ func Open(cfg Config) (*sqlx.DB, error) {
 	q := make(url.Values)
 	q.Set("sslmode", sslMode)
 	q.Set("timezone", "utc")
+
 	if cfg.Schema != "" {
 		q.Set("search_path", cfg.Schema)
 	}
@@ -71,6 +71,7 @@ func Open(cfg Config) (*sqlx.DB, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	db.SetMaxIdleConns(cfg.MaxIdleConns)
 	db.SetMaxOpenConns(cfg.MaxOpenConns)
 
@@ -80,16 +81,17 @@ func Open(cfg Config) (*sqlx.DB, error) {
 // StatusCheck returns nil if it can successfully talk to the database. It
 // returns a non-nil error otherwise.
 func StatusCheck(ctx context.Context, db *sqlx.DB) error {
-
 	// If the user doesn't give us a deadline set 1 second.
 	if _, ok := ctx.Deadline(); !ok {
 		var cancel context.CancelFunc
+
 		ctx, cancel = context.WithTimeout(ctx, time.Second)
 		defer cancel()
 	}
 
 	for attempts := 1; ; attempts++ {
-		if err := db.Ping(); err == nil {
+		err := db.Ping()
+		if err == nil {
 			break
 		}
 
@@ -107,7 +109,9 @@ func StatusCheck(ctx context.Context, db *sqlx.DB) error {
 	// Run a simple query to determine connectivity.
 	// Running this query forces a round trip through the database.
 	const q = `SELECT TRUE`
+
 	var tmp bool
+
 	return db.QueryRowContext(ctx, q).Scan(&tmp)
 }
 
@@ -119,7 +123,13 @@ func ExecContext(ctx context.Context, log logger.Logger, db sqlx.ExtContext, que
 
 // NamedExecContext is a helper function to execute a CRUD operation with
 // logging and tracing where field replacement is necessary.
-func NamedExecContext(ctx context.Context, log logger.Logger, db sqlx.ExtContext, query string, data any) (err error) {
+func NamedExecContext(
+	ctx context.Context,
+	log logger.Logger,
+	db sqlx.ExtContext,
+	query string,
+	data any,
+) (err error) {
 	q := queryString(query, data)
 
 	defer func() {
@@ -146,6 +156,7 @@ func NamedExecContext(ctx context.Context, log logger.Logger, db sqlx.ExtContext
 				return ErrDBDuplicatedEntry
 			}
 		}
+
 		return err
 	}
 
@@ -154,25 +165,53 @@ func NamedExecContext(ctx context.Context, log logger.Logger, db sqlx.ExtContext
 
 // QuerySlice is a helper function for executing queries that return a
 // collection of data to be unmarshalled into a slice.
-func QuerySlice[T any](ctx context.Context, log *logger.Service, db sqlx.ExtContext, query string, dest *[]T) error {
+func QuerySlice[T any](
+	ctx context.Context,
+	log *logger.Service,
+	db sqlx.ExtContext,
+	query string,
+	dest *[]T,
+) error {
 	return namedQuerySlice(ctx, log, db, query, struct{}{}, dest, false)
 }
 
 // NamedQuerySlice is a helper function for executing queries that return a
 // collection of data to be unmarshalled into a slice where field replacement is
 // necessary.
-func NamedQuerySlice[T any](ctx context.Context, log logger.Logger, db sqlx.ExtContext, query string, data any, dest *[]T) error {
+func NamedQuerySlice[T any](
+	ctx context.Context,
+	log logger.Logger,
+	db sqlx.ExtContext,
+	query string,
+	data any,
+	dest *[]T,
+) error {
 	return namedQuerySlice(ctx, log, db, query, data, dest, false)
 }
 
 // NamedQuerySliceUsingIn is a helper function for executing queries that return
 // a collection of data to be unmarshalled into a slice where field replacement
 // is necessary. Use this if the query has an IN clause.
-func NamedQuerySliceUsingIn[T any](ctx context.Context, log *logger.Service, db sqlx.ExtContext, query string, data any, dest *[]T) error {
+func NamedQuerySliceUsingIn[T any](
+	ctx context.Context,
+	log *logger.Service,
+	db sqlx.ExtContext,
+	query string,
+	data any,
+	dest *[]T,
+) error {
 	return namedQuerySlice(ctx, log, db, query, data, dest, true)
 }
 
-func namedQuerySlice[T any](ctx context.Context, log logger.Logger, db sqlx.ExtContext, query string, data any, dest *[]T, withIn bool) (err error) {
+func namedQuerySlice[T any](
+	ctx context.Context,
+	log logger.Logger,
+	db sqlx.ExtContext,
+	query string,
+	data any,
+	dest *[]T,
+	withIn bool,
+) (err error) {
 	q := queryString(query, data)
 
 	defer func() {
@@ -200,6 +239,7 @@ func namedQuerySlice[T any](ctx context.Context, log logger.Logger, db sqlx.ExtC
 			}
 
 			query = db.Rebind(query)
+
 			return db.QueryxContext(ctx, query, args...)
 		}()
 
@@ -212,18 +252,25 @@ func namedQuerySlice[T any](ctx context.Context, log logger.Logger, db sqlx.ExtC
 		if errors.As(err, &pqerr) && pqerr.Code == undefinedTable {
 			return ErrUndefinedTable
 		}
+
 		return err
 	}
+
 	defer rows.Close()
 
 	var slice []T
+
 	for rows.Next() {
 		v := new(T)
-		if err := rows.StructScan(v); err != nil {
+
+		err := rows.StructScan(v)
+		if err != nil {
 			return err
 		}
+
 		slice = append(slice, *v)
 	}
+
 	*dest = slice
 
 	return nil
@@ -231,24 +278,52 @@ func namedQuerySlice[T any](ctx context.Context, log logger.Logger, db sqlx.ExtC
 
 // QueryStruct is a helper function for executing queries that return a
 // single value to be unmarshalled into a struct type where field replacement is necessary.
-func QueryStruct(ctx context.Context, log *logger.Service, db sqlx.ExtContext, query string, dest any) error {
+func QueryStruct(
+	ctx context.Context,
+	log *logger.Service,
+	db sqlx.ExtContext,
+	query string,
+	dest any,
+) error {
 	return namedQueryStruct(ctx, log, db, query, struct{}{}, dest, false)
 }
 
 // NamedQueryStruct is a helper function for executing queries that return a
 // single value to be unmarshalled into a struct type where field replacement is necessary.
-func NamedQueryStruct(ctx context.Context, log logger.Logger, db sqlx.ExtContext, query string, data any, dest any) error {
+func NamedQueryStruct(
+	ctx context.Context,
+	log logger.Logger,
+	db sqlx.ExtContext,
+	query string,
+	data any,
+	dest any,
+) error {
 	return namedQueryStruct(ctx, log, db, query, data, dest, false)
 }
 
 // NamedQueryStructUsingIn is a helper function for executing queries that return
 // a single value to be unmarshalled into a struct type where field replacement
 // is necessary. Use this if the query has an IN clause.
-func NamedQueryStructUsingIn(ctx context.Context, log logger.Logger, db sqlx.ExtContext, query string, data any, dest any) error {
+func NamedQueryStructUsingIn(
+	ctx context.Context,
+	log logger.Logger,
+	db sqlx.ExtContext,
+	query string,
+	data any,
+	dest any,
+) error {
 	return namedQueryStruct(ctx, log, db, query, data, dest, true)
 }
 
-func namedQueryStruct(ctx context.Context, log logger.Logger, db sqlx.ExtContext, query string, data any, dest any, withIn bool) (err error) {
+func namedQueryStruct(
+	ctx context.Context,
+	log logger.Logger,
+	db sqlx.ExtContext,
+	query string,
+	data any,
+	dest any,
+	withIn bool,
+) (err error) {
 	q := queryString(query, data)
 
 	defer func() {
@@ -276,6 +351,7 @@ func namedQueryStruct(ctx context.Context, log logger.Logger, db sqlx.ExtContext
 			}
 
 			query = db.Rebind(query)
+
 			return db.QueryxContext(ctx, query, args...)
 		}()
 
@@ -288,8 +364,10 @@ func namedQueryStruct(ctx context.Context, log logger.Logger, db sqlx.ExtContext
 		if errors.As(err, &pqerr) && pqerr.Code == undefinedTable {
 			return ErrUndefinedTable
 		}
+
 		return err
 	}
+
 	defer rows.Close()
 
 	if !rows.Next() {
@@ -312,6 +390,7 @@ func queryString(query string, args any) string {
 
 	for _, param := range params {
 		var value string
+
 		switch v := param.(type) {
 		case string:
 			value = fmt.Sprintf("'%s'", v)
@@ -320,6 +399,7 @@ func queryString(query string, args any) string {
 		default:
 			value = fmt.Sprintf("%v", v)
 		}
+
 		query = strings.Replace(query, "?", value, 1)
 	}
 

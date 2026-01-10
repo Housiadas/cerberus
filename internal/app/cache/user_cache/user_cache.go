@@ -3,18 +3,16 @@ package user_cache
 
 import (
 	"context"
-
 	"net/mail"
 	"time"
-
-	"github.com/google/uuid"
-	"github.com/viccon/sturdyc"
 
 	"github.com/Housiadas/cerberus/internal/core/domain/user"
 	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/Housiadas/cerberus/pkg/order"
 	"github.com/Housiadas/cerberus/pkg/pgsql"
 	"github.com/Housiadas/cerberus/pkg/web"
+	"github.com/google/uuid"
+	"github.com/viccon/sturdyc"
 )
 
 // Store manages the set of APIs for user data and caching.
@@ -26,9 +24,11 @@ type Store struct {
 
 // NewStore constructs the api for data and caching access.
 func NewStore(log *logger.Service, storer user.Storer, ttl time.Duration) *Store {
-	const capacity = 10000
-	const numShards = 10
-	const evictionPercentage = 10
+	const (
+		capacity           = 10000
+		numShards          = 10
+		evictionPercentage = 10
+	)
 
 	return &Store{
 		log:    log,
@@ -45,7 +45,8 @@ func (s *Store) NewWithTx(tx pgsql.CommitRollbacker) (user.Storer, error) {
 
 // Create inserts a new user into the database.
 func (s *Store) Create(ctx context.Context, usr user.User) error {
-	if err := s.storer.Create(ctx, usr); err != nil {
+	err := s.storer.Create(ctx, usr)
+	if err != nil {
 		return err
 	}
 
@@ -56,7 +57,8 @@ func (s *Store) Create(ctx context.Context, usr user.User) error {
 
 // Update replaces a user document in the database.
 func (s *Store) Update(ctx context.Context, usr user.User) error {
-	if err := s.storer.Update(ctx, usr); err != nil {
+	err := s.storer.Update(ctx, usr)
+	if err != nil {
 		return err
 	}
 
@@ -67,7 +69,8 @@ func (s *Store) Update(ctx context.Context, usr user.User) error {
 
 // Delete removes a user from the database.
 func (s *Store) Delete(ctx context.Context, usr user.User) error {
-	if err := s.storer.Delete(ctx, usr); err != nil {
+	err := s.storer.Delete(ctx, usr)
+	if err != nil {
 		return err
 	}
 

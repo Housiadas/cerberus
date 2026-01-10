@@ -9,6 +9,7 @@ import (
 // User extends the dbtest user for api test support.
 type User struct {
 	user.User
+
 	AccessToken auth_usecase.AccessToken
 	Audits      []audit.Audit
 }

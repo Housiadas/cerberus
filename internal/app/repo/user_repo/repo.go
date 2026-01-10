@@ -9,17 +9,16 @@ import (
 	"fmt"
 	"net/mail"
 
-	"github.com/google/uuid"
-	"github.com/jmoiron/sqlx"
-
 	"github.com/Housiadas/cerberus/internal/core/domain/user"
 	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/Housiadas/cerberus/pkg/order"
 	"github.com/Housiadas/cerberus/pkg/pgsql"
 	"github.com/Housiadas/cerberus/pkg/web"
+	"github.com/google/uuid"
+	"github.com/jmoiron/sqlx"
 )
 
-// queries
+// queries.
 var (
 	//go:embed query/user_create.sql
 	userCreateSql string
@@ -69,10 +68,12 @@ func (s *Store) NewWithTx(tx pgsql.CommitRollbacker) (user.Storer, error) {
 
 // Create inserts a new userDB into the database.
 func (s *Store) Create(ctx context.Context, usr user.User) error {
-	if err := pgsql.NamedExecContext(ctx, s.log, s.db, userCreateSql, toUserDB(usr)); err != nil {
+	err := pgsql.NamedExecContext(ctx, s.log, s.db, userCreateSql, toUserDB(usr))
+	if err != nil {
 		if errors.Is(err, pgsql.ErrDBDuplicatedEntry) {
 			return fmt.Errorf("named_exec_context: %w", user.ErrUniqueEmail)
 		}
+
 		return fmt.Errorf("named_exec_context: %w", err)
 	}
 
@@ -81,10 +82,12 @@ func (s *Store) Create(ctx context.Context, usr user.User) error {
 
 // Update replaces a userDB document in the database.
 func (s *Store) Update(ctx context.Context, usr user.User) error {
-	if err := pgsql.NamedExecContext(ctx, s.log, s.db, userUpdateSql, toUserDB(usr)); err != nil {
+	err := pgsql.NamedExecContext(ctx, s.log, s.db, userUpdateSql, toUserDB(usr))
+	if err != nil {
 		if errors.Is(err, pgsql.ErrDBDuplicatedEntry) {
 			return user.ErrUniqueEmail
 		}
+
 		return fmt.Errorf("named_exec_context: %w", err)
 	}
 
@@ -93,7 +96,8 @@ func (s *Store) Update(ctx context.Context, usr user.User) error {
 
 // Delete removes a userDB from the database.
 func (s *Store) Delete(ctx context.Context, usr user.User) error {
-	if err := pgsql.NamedExecContext(ctx, s.log, s.db, userDeleteSql, toUserDB(usr)); err != nil {
+	err := pgsql.NamedExecContext(ctx, s.log, s.db, userDeleteSql, toUserDB(usr))
+	if err != nil {
 		return fmt.Errorf("named_exec_context: %w", err)
 	}
 
@@ -140,7 +144,9 @@ func (s *Store) Count(ctx context.Context, filter user.QueryFilter) (int, error)
 	var count struct {
 		Count int `db:"count"`
 	}
-	if err := pgsql.NamedQueryStruct(ctx, s.log, s.db, buf.String(), data, &count); err != nil {
+
+	err := pgsql.NamedQueryStruct(ctx, s.log, s.db, buf.String(), data, &count)
+	if err != nil {
 		return 0, fmt.Errorf("db: %w", err)
 	}
 
@@ -156,10 +162,13 @@ func (s *Store) QueryByID(ctx context.Context, userID uuid.UUID) (user.User, err
 	}
 
 	var dbUsr userDB
-	if err := pgsql.NamedQueryStruct(ctx, s.log, s.db, userQueryByIdSql, data, &dbUsr); err != nil {
+
+	err := pgsql.NamedQueryStruct(ctx, s.log, s.db, userQueryByIdSql, data, &dbUsr)
+	if err != nil {
 		if errors.Is(err, pgsql.ErrDBNotFound) {
 			return user.User{}, fmt.Errorf("db: %w", user.ErrNotFound)
 		}
+
 		return user.User{}, fmt.Errorf("db: %w", err)
 	}
 
@@ -175,10 +184,13 @@ func (s *Store) QueryByEmail(ctx context.Context, email mail.Address) (user.User
 	}
 
 	var dbUsr userDB
-	if err := pgsql.NamedQueryStruct(ctx, s.log, s.db, userQueryByEmailSql, data, &dbUsr); err != nil {
+
+	err := pgsql.NamedQueryStruct(ctx, s.log, s.db, userQueryByEmailSql, data, &dbUsr)
+	if err != nil {
 		if errors.Is(err, pgsql.ErrDBNotFound) {
 			return user.User{}, fmt.Errorf("db: %w", user.ErrNotFound)
 		}
+
 		return user.User{}, fmt.Errorf("db: %w", err)
 	}
 

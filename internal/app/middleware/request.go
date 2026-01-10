@@ -10,11 +10,13 @@ import (
 	"github.com/google/uuid"
 )
 
-// RequestID is a middleware that injects uuid as middleware.RequestIDHeader when not present
+// RequestID is a middleware that injects uuid as middleware.RequestIDHeader when not present.
 func (m *Middleware) RequestID(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		var u uuid.UUID
-		var err error
+		var (
+			u   uuid.UUID
+			err error
+		)
 
 		ctx := r.Context()
 		reqID := r.Header.Get(middleware.RequestIDHeader)
@@ -41,6 +43,7 @@ func initializeUUIDV7(ctx context.Context, log logger.Logger) uuid.UUID {
 	u, err := uuid.NewV7()
 	if err != nil {
 		log.Info(ctx, "uuid v7 parse", err)
+
 		return uuid.New()
 	}
 

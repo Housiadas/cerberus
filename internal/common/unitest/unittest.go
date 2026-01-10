@@ -34,5 +34,6 @@ func MustParseEmail(addr string) mail.Address {
 	if err != nil {
 		panic(err)
 	}
+
 	return *email
 }

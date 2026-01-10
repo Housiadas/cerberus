@@ -14,6 +14,7 @@ func (log *Service) BuildInfo(ctx context.Context) {
 	info, ok := debug.ReadBuildInfo()
 	if !ok {
 		log.Warn(ctx, "build info not available")
+
 		return
 	}
 

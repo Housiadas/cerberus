@@ -4,10 +4,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/google/uuid"
-
 	"github.com/Housiadas/cerberus/internal/core/domain/name"
 	"github.com/Housiadas/cerberus/internal/core/domain/role"
+	"github.com/google/uuid"
 )
 
 type roleDB struct {
@@ -47,6 +46,7 @@ func toRolesDomain(dbs []roleDB) ([]role.Role, error) {
 
 	for i, db := range dbs {
 		var err error
+
 		bus[i], err = toRoleDomain(db)
 		if err != nil {
 			return nil, err

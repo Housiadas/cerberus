@@ -8,17 +8,16 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/Housiadas/cerberus/pkg/web"
-	"github.com/google/uuid"
-	"github.com/jmoiron/sqlx"
-
 	"github.com/Housiadas/cerberus/internal/core/domain/role"
 	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/Housiadas/cerberus/pkg/order"
 	"github.com/Housiadas/cerberus/pkg/pgsql"
+	"github.com/Housiadas/cerberus/pkg/web"
+	"github.com/google/uuid"
+	"github.com/jmoiron/sqlx"
 )
 
-// queries
+// queries.
 var (
 	//go:embed query/role_create.sql
 	roleCreateSql string
@@ -66,7 +65,8 @@ func (s *Store) NewWithTx(tx pgsql.CommitRollbacker) (role.Storer, error) {
 
 // Create inserts a new roleDB into the database.
 func (s *Store) Create(ctx context.Context, rl role.Role) error {
-	if err := pgsql.NamedExecContext(ctx, s.log, s.db, roleCreateSql, toRoleDB(rl)); err != nil {
+	err := pgsql.NamedExecContext(ctx, s.log, s.db, roleCreateSql, toRoleDB(rl))
+	if err != nil {
 		return fmt.Errorf("error role create in db: %w", err)
 	}
 
@@ -75,7 +75,8 @@ func (s *Store) Create(ctx context.Context, rl role.Role) error {
 
 // Update replaces a roleDB document in the database.
 func (s *Store) Update(ctx context.Context, rl role.Role) error {
-	if err := pgsql.NamedExecContext(ctx, s.log, s.db, roleUpdateSql, toRoleDB(rl)); err != nil {
+	err := pgsql.NamedExecContext(ctx, s.log, s.db, roleUpdateSql, toRoleDB(rl))
+	if err != nil {
 		return fmt.Errorf("error role update in db: %w", err)
 	}
 
@@ -84,7 +85,8 @@ func (s *Store) Update(ctx context.Context, rl role.Role) error {
 
 // Delete removes a roleDB from the database.
 func (s *Store) Delete(ctx context.Context, rl role.Role) error {
-	if err := pgsql.NamedExecContext(ctx, s.log, s.db, roleDeleteSql, toRoleDB(rl)); err != nil {
+	err := pgsql.NamedExecContext(ctx, s.log, s.db, roleDeleteSql, toRoleDB(rl))
+	if err != nil {
 		return fmt.Errorf("error delete role in db: %w", err)
 	}
 
@@ -100,10 +102,13 @@ func (s *Store) QueryByID(ctx context.Context, roleID uuid.UUID) (role.Role, err
 	}
 
 	var dbRole roleDB
-	if err := pgsql.NamedQueryStruct(ctx, s.log, s.db, roleQueryByIdSql, data, &dbRole); err != nil {
+
+	err := pgsql.NamedQueryStruct(ctx, s.log, s.db, roleQueryByIdSql, data, &dbRole)
+	if err != nil {
 		if errors.Is(err, pgsql.ErrDBNotFound) {
 			return role.Role{}, fmt.Errorf("db: %w", role.ErrNotFound)
 		}
+
 		return role.Role{}, fmt.Errorf("db: %w", err)
 	}
 
@@ -150,7 +155,9 @@ func (s *Store) Count(ctx context.Context, filter role.QueryFilter) (int, error)
 	var count struct {
 		Count int `db:"count"`
 	}
-	if err := pgsql.NamedQueryStruct(ctx, s.log, s.db, buf.String(), data, &count); err != nil {
+
+	err := pgsql.NamedQueryStruct(ctx, s.log, s.db, buf.String(), data, &count)
+	if err != nil {
 		return 0, fmt.Errorf("db: %w", err)
 	}
 

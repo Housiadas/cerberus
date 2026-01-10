@@ -9,9 +9,7 @@ import (
 	"github.com/google/uuid"
 )
 
-var (
-	ErrNotFound = errors.New("role not found")
-)
+var ErrNotFound = errors.New("role not found")
 
 // Role represents information about an individual role of our system.
 type Role struct {

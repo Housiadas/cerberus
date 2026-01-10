@@ -36,9 +36,11 @@ const (
 	infinityTSNegativeMustBeSmaller = "database: infinity timestamp: negative value must be smaller (before) than positive"
 )
 
-var infinityTSEnabled = false
-var infinityTSNegative time.Time
-var infinityTSPositive time.Time
+var (
+	infinityTSEnabled  = false
+	infinityTSNegative time.Time
+	infinityTSPositive time.Time
+)
 
 type parameterStatus struct {
 	// server version in the same format as server_version_num, or 0 if unavailable.
@@ -69,9 +71,11 @@ func EnableInfinityTS(negative time.Time, positive time.Time) {
 	if infinityTSEnabled {
 		panic(infinityTSEnabledAlready)
 	}
+
 	if !negative.Before(positive) {
 		panic(infinityTSNegativeMustBeSmaller)
 	}
+
 	infinityTSEnabled = true
 	infinityTSNegative = negative
 	infinityTSPositive = positive
@@ -121,6 +125,7 @@ func formatTS(t time.Time) []byte {
 			return []byte("infinity")
 		}
 	}
+
 	return formatTimestamp(t)
 }
 
@@ -130,15 +135,19 @@ func formatTimestamp(t time.Time) []byte {
 	// minus sign preferred by Go.
 	// Beware, "0000" in ISO is "1 BC", "-0001" is "2 BC" and so on
 	bc := false
+
 	if t.Year() <= 0 {
 		// flip year sign, and add 1, e.g: "0" will be "1", and "-10" will be "11"
 		t = t.AddDate((-t.Year())*2+1, 0, 0)
 		bc = true
 	}
+
 	b := []byte(t.Format("2006-01-02 15:04:05.999999999Z07:00"))
 
 	_, offset := t.Zone()
+
 	offset %= 60
+
 	if offset != 0 {
 		// RFC3339Nano already printed the minus sign
 		if offset < 0 {
@@ -149,12 +158,14 @@ func formatTimestamp(t time.Time) []byte {
 		if offset < 10 {
 			b = append(b, '0')
 		}
+
 		b = strconv.AppendInt(b, int64(offset), 10)
 	}
 
 	if bc {
 		b = append(b, " BC"...)
 	}
+
 	return b
 }
 
@@ -169,6 +180,7 @@ func parseBytea(s []byte) (result []byte, err error) {
 		// bytea_output = hex
 		s = s[2:] // trim off leading "\\x"
 		result = make([]byte, hex.DecodedLen(len(s)))
+
 		_, err := hex.Decode(result, s)
 		if err != nil {
 			return nil, err
@@ -181,6 +193,7 @@ func parseBytea(s []byte) (result []byte, err error) {
 				if len(s) >= 2 && s[1] == '\\' {
 					result = append(result, '\\')
 					s = s[2:]
+
 					continue
 				}
 
@@ -188,10 +201,12 @@ func parseBytea(s []byte) (result []byte, err error) {
 				if len(s) < 4 {
 					return nil, fmt.Errorf("invalid bytea sequence %v", s)
 				}
+
 				r, err := strconv.ParseUint(string(s[1:4]), 8, 8)
 				if err != nil {
 					return nil, fmt.Errorf("could not parse bytea value: %s", err.Error())
 				}
+
 				result = append(result, byte(r))
 				s = s[4:]
 			} else {
@@ -200,8 +215,10 @@ func parseBytea(s []byte) (result []byte, err error) {
 				i := bytes.IndexByte(s, '\\')
 				if i == -1 {
 					result = append(result, s...)
+
 					break
 				}
+
 				result = append(result, s[:i]...)
 				s = s[i:]
 			}
@@ -224,7 +241,7 @@ func encodeBytea(serverVersion int, v []byte) (result []byte) {
 			if b == '\\' {
 				result = append(result, '\\', '\\')
 			} else if b < 0x20 || b > 0x7e {
-				result = append(result, []byte(fmt.Sprintf("\\%03o", b))...)
+				result = append(result, fmt.Appendf(nil, "\\%03o", b)...)
 			} else {
 				result = append(result, b)
 			}

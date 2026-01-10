@@ -4,10 +4,9 @@ import (
 	"context"
 	"time"
 
+	"github.com/Housiadas/cerberus/pkg/web/errs"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
-
-	"github.com/Housiadas/cerberus/pkg/web/errs"
 )
 
 type AccessToken struct {
@@ -17,11 +16,10 @@ type AccessToken struct {
 
 func (u *UseCase) GenerateAccessToken(ctx context.Context, userID string) (AccessToken, error) {
 	// get user roles name
-	//roles, err := u.userRolesUsecase.GetUserRolesNames(ctx, userID)
-	//if err != nil {
+	// roles, err := u.userRolesUsecase.GetUserRolesNames(ctx, userID)
+	// if err != nil {
 	//	return AccessToken{}, errs.Errorf(errs.NotFound, "roles not found: %s", err)
 	//}
-
 	// Generating a Token requires defining a set of claims
 	// iss (issuer): Issuer of the JWT
 	// sub (subject): Subject of the JWT (the user)
@@ -31,6 +29,7 @@ func (u *UseCase) GenerateAccessToken(ctx context.Context, userID string) (Acces
 	// iat (issued at time): Time at which the JWT was issued; can be used to determine age of the JWT
 	// jti (JWT ID): Unique identifier; can be used to prevent the JWT from being replayed (allows a Token to be used only once)
 	now := time.Now()
+
 	accessTokenID, err := uuid.NewV7()
 	if err != nil {
 		return AccessToken{}, errs.Errorf(errs.Internal, "uuid v7: %s", err)
@@ -46,13 +45,18 @@ func (u *UseCase) GenerateAccessToken(ctx context.Context, userID string) (Acces
 			Audience:  []string{u.Issuer()},
 		},
 		TokenID: accessTokenID.String(),
-		//Roles:   roles,
+		// Roles:   roles,
 	}
 
 	aToken := jwt.NewWithClaims(u.method, accessClaims)
+
 	accessTokenString, err := aToken.SignedString(accessTokenSecret)
 	if err != nil {
-		return AccessToken{}, errs.Errorf(errs.InvalidArgument, "failed to sign access Token: %s", err)
+		return AccessToken{}, errs.Errorf(
+			errs.InvalidArgument,
+			"failed to sign access Token: %s",
+			err,
+		)
 	}
 
 	expirationDate, err := aToken.Claims.GetExpirationTime()

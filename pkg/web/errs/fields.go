@@ -44,5 +44,6 @@ func (fe FieldErrors) Error() string {
 	if err != nil {
 		return err.Error()
 	}
+
 	return string(d)
 }

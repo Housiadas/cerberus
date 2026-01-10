@@ -13,6 +13,7 @@ func applyFilter(filter permission.QueryFilter, data map[string]any, buf *bytes.
 
 	if filter.Name != nil {
 		data["name"] = fmt.Sprintf("%%%s%%", *filter.Name)
+
 		wc = append(wc, "name LIKE :name")
 	}
 

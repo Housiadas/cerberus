@@ -9,7 +9,8 @@ import (
 
 // Delete removes the specified user.
 func (c *Service) Delete(ctx context.Context, usr user.User) error {
-	if err := c.storer.Delete(ctx, usr); err != nil {
+	err := c.storer.Delete(ctx, usr)
+	if err != nil {
 		return fmt.Errorf("delete: %w", err)
 	}
 

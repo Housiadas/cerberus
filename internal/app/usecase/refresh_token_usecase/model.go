@@ -25,6 +25,7 @@ type RefreshToken struct {
 // Encode implements the encoder interface.
 func (r RefreshToken) Encode() ([]byte, string, error) {
 	data, err := json.Marshal(r)
+
 	return data, "application/json", err
 }
 
@@ -55,14 +56,17 @@ func toCoreToken(r RefreshToken) (refresh_token.RefreshToken, error) {
 	if err != nil {
 		errors.Add("id", err)
 	}
+
 	userID, err := uuid.Parse(r.UserID)
 	if err != nil {
 		errors.Add("user_id", err)
 	}
+
 	expiresAt, err := time.Parse(time.RFC3339, r.ExpiresAt)
 	if err != nil {
 		errors.Add("expires_at", err)
 	}
+
 	createdAt, err := time.Parse(time.RFC3339, r.CreatedAt)
 	if err != nil {
 		errors.Add("created_at", err)
