@@ -7,6 +7,7 @@ import (
 	"github.com/Housiadas/cerberus/pkg/order"
 )
 
+//nolint:gochecknoglobals
 var orderByFields = map[string]string{
 	urp.OrderByUserName:       "user_name",
 	urp.OrderByUserEmail:      "user_email",

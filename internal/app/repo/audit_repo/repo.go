@@ -27,15 +27,15 @@ var (
 
 // Store manages the set of APIs for auditDB database access.
 type Store struct {
-	log logger.Logger
-	db  sqlx.ExtContext
+	log    logger.Logger
+	dbPool sqlx.ExtContext
 }
 
 // NewStore constructs the API for data access.
-func NewStore(log logger.Logger, db *sqlx.DB) audit.Storer {
+func NewStore(log logger.Logger, dbPool *sqlx.DB) audit.Storer {
 	return &Store{
-		log: log,
-		db:  db,
+		log:    log,
+		dbPool: dbPool,
 	}
 }
 
@@ -43,10 +43,10 @@ func NewStore(log logger.Logger, db *sqlx.DB) audit.Storer {
 func (s *Store) Create(ctx context.Context, a audit.Audit) error {
 	dbAudit, err := toDBAudit(a)
 	if err != nil {
-		return err
+		return fmt.Errorf("audit repo create error: %w", err)
 	}
 
-	if err := pgsql.NamedExecContext(ctx, s.log, s.db, auditCreateSql, dbAudit); err != nil {
+	if err := pgsql.NamedExecContext(ctx, s.log, s.dbPool, auditCreateSql, dbAudit); err != nil {
 		return fmt.Errorf("namedexeccontext: %w", err)
 	}
 
@@ -76,7 +76,7 @@ func (s *Store) Query(
 	buf.WriteString(" OFFSET :offset ROWS FETCH NEXT :rows_per_page ROWS ONLY")
 
 	var dbAudits []auditDB
-	if err := pgsql.NamedQuerySlice(ctx, s.log, s.db, buf.String(), data, &dbAudits); err != nil {
+	if err := pgsql.NamedQuerySlice(ctx, s.log, s.dbPool, buf.String(), data, &dbAudits); err != nil {
 		return nil, fmt.Errorf("namedqueryslice: %w", err)
 	}
 
@@ -94,7 +94,7 @@ func (s *Store) Count(ctx context.Context, filter audit.QueryFilter) (int, error
 		Count int `db:"count"`
 	}
 
-	err := pgsql.NamedQueryStruct(ctx, s.log, s.db, buf.String(), data, &count)
+	err := pgsql.NamedQueryStruct(ctx, s.log, s.dbPool, buf.String(), data, &count)
 	if err != nil {
 		return 0, fmt.Errorf("db: %w", err)
 	}

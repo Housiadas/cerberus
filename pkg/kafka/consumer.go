@@ -66,7 +66,7 @@ func (c *ConsumerClient) Consume(ctx context.Context, fn func(msg *kafka.Message
 	run := true
 	for run {
 		ev := c.consumer.Poll(100)
-		switch e := ev.(type) {
+		switch event := ev.(type) {
 		case *kafka.Message:
 			msgCount += 1
 			if msgCount%MinCommitCount == 0 {
@@ -76,20 +76,20 @@ func (c *ConsumerClient) Consume(ctx context.Context, fn func(msg *kafka.Message
 				}()
 			}
 			// Callback, application-specific
-			err := fn(e)
+			err := fn(event)
 			if err != nil {
-				c.log.Error(ctx, fmt.Sprintf("consumer: %v\n", e))
+				c.log.Error(ctx, fmt.Sprintf("consumer: %v\n", event))
 			}
 
-			fmt.Printf("%% Message on %s:\n%s\n", e.TopicPartition, string(e.Value))
+			fmt.Printf("%% Message on %s:\n%s\n", event.TopicPartition, string(event.Value))
 		case kafka.PartitionEOF:
-			c.log.Info(ctx, fmt.Sprintf("consumer: EOF Reached %v\n", e))
+			c.log.Info(ctx, fmt.Sprintf("consumer: EOF Reached %v\n", event))
 		case kafka.Error:
-			c.log.Error(ctx, fmt.Sprintf("consumer: %v\n", e))
+			c.log.Error(ctx, fmt.Sprintf("consumer: %v\n", event))
 
 			run = false
 		default:
-			c.log.Info(ctx, fmt.Sprintf("consumer: Ignored %v\n", e))
+			c.log.Info(ctx, fmt.Sprintf("consumer: Ignored %v\n", event))
 		}
 	}
 

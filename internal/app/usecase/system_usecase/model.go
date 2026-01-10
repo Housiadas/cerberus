@@ -1,6 +1,9 @@
 package system_usecase
 
-import "encoding/json"
+import (
+	"encoding/json"
+	"fmt"
+)
 
 type Status struct {
 	Status string `json:"status"`
@@ -10,7 +13,7 @@ type Status struct {
 func (s Status) Encode() ([]byte, string, error) {
 	data, err := json.Marshal(s)
 
-	return data, "application/json", err
+	return data, "application/json", fmt.Errorf("status encode error: %w", err)
 }
 
 // Info represents information about the usecase.
@@ -29,5 +32,5 @@ type Info struct {
 func (info Info) Encode() ([]byte, string, error) {
 	data, err := json.Marshal(info)
 
-	return data, "application/json", err
+	return data, "application/json", fmt.Errorf("info encode error: %w", err)
 }

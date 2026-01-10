@@ -26,14 +26,14 @@ type AuthenticateUser struct {
 func (app *AuthenticateUser) Encode() ([]byte, string, error) {
 	data, err := json.Marshal(app)
 
-	return data, "application/json", err
+	return data, "application/json", fmt.Errorf("auth user encode error: %w", err)
 }
 
 // Validate checks the data in the model is considered clean.
 func (app *AuthenticateUser) Validate() error {
 	err := validation.Check(app)
 	if err != nil {
-		return err
+		return fmt.Errorf("auth user validation error: %w", err)
 	}
 
 	return nil
@@ -57,7 +57,7 @@ type User struct {
 func (app User) Encode() ([]byte, string, error) {
 	data, err := json.Marshal(app)
 
-	return data, "application/json", err
+	return data, "application/json", fmt.Errorf("user encode error: %w", err)
 }
 
 func toAppUser(bus user.User) User {
@@ -102,14 +102,15 @@ type NewUser struct {
 
 // Decode implements the decoder interface.
 func (app *NewUser) Decode(data []byte) error {
-	return json.Unmarshal(data, app)
+	err := json.Unmarshal(data, app)
+	return fmt.Errorf("new user decode error: %w", err)
 }
 
 // Validate checks the data in the model is considered clean.
 func (app *NewUser) Validate() error {
 	err := validation.Check(app)
 	if err != nil {
-		return err
+		return fmt.Errorf("new user validation error: %w", err)
 	}
 
 	return nil
@@ -161,7 +162,8 @@ type UpdateUserRole struct {
 
 // Decode implements the decoder interface.
 func (app *UpdateUserRole) Decode(data []byte) error {
-	return json.Unmarshal(data, app)
+	err := json.Unmarshal(data, app)
+	return fmt.Errorf("update user role decode error: %w", err)
 }
 
 // UpdateUser defines the data needed to update a user.
@@ -176,7 +178,8 @@ type UpdateUser struct {
 
 // Decode implements the decoder interface.
 func (app *UpdateUser) Decode(data []byte) error {
-	return json.Unmarshal(data, app)
+	err := json.Unmarshal(data, app)
+	return fmt.Errorf("update user decode error: %w", err)
 }
 
 func toBusUpdateUser(app UpdateUser) (user.UpdateUser, error) {

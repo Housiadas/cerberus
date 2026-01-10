@@ -49,7 +49,7 @@ func toPermissionsDomain(dbs []permissionDB) ([]permission.Permission, error) {
 
 		bus[i], err = toPermissionDomain(db)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("to permission object error: %w", err)
 		}
 	}
 

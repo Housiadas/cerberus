@@ -52,7 +52,7 @@ func NewStore(log logger.Logger, db *sqlx.DB) role.Storer {
 func (s *Store) NewWithTx(tx pgsql.CommitRollbacker) (role.Storer, error) {
 	ec, err := pgsql.GetExtContext(tx)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("role transaction init error: %w", err)
 	}
 
 	store := Store{

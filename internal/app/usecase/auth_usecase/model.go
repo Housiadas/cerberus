@@ -2,6 +2,7 @@ package auth_usecase
 
 import (
 	"encoding/json"
+	"fmt"
 
 	"github.com/Housiadas/cerberus/internal/common/validation"
 )
@@ -16,19 +17,21 @@ type LoginReq struct {
 func (l *LoginReq) Encode() ([]byte, string, error) {
 	data, err := json.Marshal(l)
 
-	return data, "application/json", err
+	return data, "application/json", fmt.Errorf("login req encode err %v", err)
 }
 
 // Decode implements the decoder interface.
 func (l *LoginReq) Decode(data []byte) error {
-	return json.Unmarshal(data, l)
+	err := json.Unmarshal(data, l)
+
+	return fmt.Errorf("login req decode error: %w", err)
 }
 
 // Validate checks the data in the model is considered clean.
 func (l *LoginReq) Validate() error {
 	err := validation.Check(l)
 	if err != nil {
-		return err
+		return fmt.Errorf("login req encode err %w", err)
 	}
 
 	return nil
@@ -44,19 +47,21 @@ type RefreshTokenReq struct {
 func (r *RefreshTokenReq) Encode() ([]byte, string, error) {
 	data, err := json.Marshal(r)
 
-	return data, "application/json", err
+	return data, "application/json", fmt.Errorf("refresh token req encode error: %w", err)
 }
 
 // Decode implements the decoder interface.
 func (r *RefreshTokenReq) Decode(data []byte) error {
-	return json.Unmarshal(data, r)
+	err := json.Unmarshal(data, r)
+
+	return fmt.Errorf("refresh token req decode error: %w", err)
 }
 
 // Validate checks the data in the model is considered clean.
 func (r *RefreshTokenReq) Validate() error {
 	err := validation.Check(r)
 	if err != nil {
-		return err
+		return fmt.Errorf("refresh token validation error: %w", err)
 	}
 
 	return nil
@@ -72,19 +77,21 @@ type LogoutReq struct {
 func (r *LogoutReq) Encode() ([]byte, string, error) {
 	data, err := json.Marshal(r)
 
-	return data, "application/json", err
+	return data, "application/json", fmt.Errorf("logout req encode error: %w", err)
 }
 
 // Decode implements the decoder interface.
 func (r *LogoutReq) Decode(data []byte) error {
-	return json.Unmarshal(data, r)
+	err := json.Unmarshal(data, r)
+
+	return fmt.Errorf("logout req decode error: %w", err)
 }
 
 // Validate checks the data in the model is considered clean.
 func (l *LogoutReq) Validate() error {
 	err := validation.Check(l)
 	if err != nil {
-		return err
+		return fmt.Errorf("logout req validation error: %w", err)
 	}
 
 	return nil
@@ -103,5 +110,5 @@ type Token struct {
 func (t Token) Encode() ([]byte, string, error) {
 	data, err := json.Marshal(t)
 
-	return data, "application/json", err
+	return data, "application/json", fmt.Errorf("token encode error: %w", err)
 }

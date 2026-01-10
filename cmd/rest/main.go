@@ -20,6 +20,7 @@ import (
 	"github.com/Housiadas/cerberus/pkg/pgsql"
 )
 
+//nolint:gochecknoglobals
 var build = "develop"
 
 // @title						Cerberus

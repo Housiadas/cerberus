@@ -67,20 +67,20 @@ func Open(cfg Config) (*sqlx.DB, error) {
 		RawQuery: q.Encode(),
 	}
 
-	db, err := sqlx.Open("pgx", u.String())
+	dbPool, err := sqlx.Open("pgx", u.String())
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("sqlx driver open error: %w", err)
 	}
 
-	db.SetMaxIdleConns(cfg.MaxIdleConns)
-	db.SetMaxOpenConns(cfg.MaxOpenConns)
+	dbPool.SetMaxIdleConns(cfg.MaxIdleConns)
+	dbPool.SetMaxOpenConns(cfg.MaxOpenConns)
 
-	return db, nil
+	return dbPool, nil
 }
 
 // StatusCheck returns nil if it can successfully talk to the database. It
 // returns a non-nil error otherwise.
-func StatusCheck(ctx context.Context, db *sqlx.DB) error {
+func StatusCheck(ctx context.Context, dbPool *sqlx.DB) error {
 	// If the user doesn't give us a deadline set 1 second.
 	if _, ok := ctx.Deadline(); !ok {
 		var cancel context.CancelFunc
@@ -90,7 +90,7 @@ func StatusCheck(ctx context.Context, db *sqlx.DB) error {
 	}
 
 	for attempts := 1; ; attempts++ {
-		err := db.Ping()
+		err := dbPool.Ping()
 		if err == nil {
 			break
 		}
@@ -103,7 +103,7 @@ func StatusCheck(ctx context.Context, db *sqlx.DB) error {
 	}
 
 	if ctx.Err() != nil {
-		return ctx.Err()
+		return fmt.Errorf("context error: %w", ctx.Err())
 	}
 
 	// Run a simple query to determine connectivity.
@@ -112,7 +112,9 @@ func StatusCheck(ctx context.Context, db *sqlx.DB) error {
 
 	var tmp bool
 
-	return db.QueryRowContext(ctx, q).Scan(&tmp)
+	err := dbPool.QueryRowContext(ctx, q).Scan(&tmp)
+
+	return fmt.Errorf("query row context error: %w", err)
 }
 
 // ExecContext is a helper function to execute a CUD operation with
@@ -157,7 +159,7 @@ func NamedExecContext(
 			}
 		}
 
-		return err
+		return fmt.Errorf("pg error: %w", err)
 	}
 
 	return nil
@@ -230,12 +232,12 @@ func namedQuerySlice[T any](
 		rows, err = func() (*sqlx.Rows, error) {
 			named, args, err := sqlx.Named(query, data)
 			if err != nil {
-				return nil, err
+				return nil, fmt.Errorf("sqlx named error: %w", err)
 			}
 
 			query, args, err := sqlx.In(named, args...)
 			if err != nil {
-				return nil, err
+				return nil, fmt.Errorf("sqlx in: %w", err)
 			}
 
 			query = db.Rebind(query)
@@ -253,7 +255,7 @@ func namedQuerySlice[T any](
 			return ErrUndefinedTable
 		}
 
-		return err
+		return fmt.Errorf("pg error: %w", err)
 	}
 
 	defer rows.Close()
@@ -265,7 +267,7 @@ func namedQuerySlice[T any](
 
 		err := rows.StructScan(v)
 		if err != nil {
-			return err
+			return fmt.Errorf("struct scan error: %w", err)
 		}
 
 		slice = append(slice, *v)
@@ -342,12 +344,12 @@ func namedQueryStruct(
 		rows, err = func() (*sqlx.Rows, error) {
 			named, args, err := sqlx.Named(query, data)
 			if err != nil {
-				return nil, err
+				return nil, fmt.Errorf("sqlx named error: %w", err)
 			}
 
 			query, args, err := sqlx.In(named, args...)
 			if err != nil {
-				return nil, err
+				return nil, fmt.Errorf("sqlx in error: %w", err)
 			}
 
 			query = db.Rebind(query)

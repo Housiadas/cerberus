@@ -49,7 +49,7 @@ func toRolesDomain(dbs []roleDB) ([]role.Role, error) {
 
 		bus[i], err = toRoleDomain(db)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("to roles domain error: %w", err)
 		}
 	}
 

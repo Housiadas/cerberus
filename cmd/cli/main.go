@@ -12,6 +12,7 @@ import (
 	"github.com/Housiadas/cerberus/pkg/logger"
 )
 
+//nolint:gochecknoglobals
 var build = "develop"
 
 func main() {

@@ -26,31 +26,3 @@ func toTokenDB(rToken refresh_token.RefreshToken) tokenDB {
 		Revoked:   rToken.Revoked,
 	}
 }
-
-func toTokenDomain(db tokenDB) (refresh_token.RefreshToken, error) {
-	bus := refresh_token.RefreshToken{
-		ID:        db.ID,
-		UserID:    db.UserID,
-		Token:     db.Token,
-		ExpiresAt: db.ExpiresAt,
-		CreatedAt: db.CreatedAt,
-		Revoked:   db.Revoked,
-	}
-
-	return bus, nil
-}
-
-func toUsersDomain(dbs []tokenDB) ([]refresh_token.RefreshToken, error) {
-	bus := make([]refresh_token.RefreshToken, len(dbs))
-
-	for i, db := range dbs {
-		var err error
-
-		bus[i], err = toTokenDomain(db)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	return bus, nil
-}

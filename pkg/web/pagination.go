@@ -28,7 +28,7 @@ func NewResult[T any](data []T, total int, page Page) Result[T] {
 func (r Result[T]) Encode() ([]byte, string, error) {
 	data, err := json.Marshal(r)
 
-	return data, "application/json", err
+	return data, "application/json", fmt.Errorf("page result encode error: %w", err)
 }
 
 // ============================================================================

@@ -38,15 +38,15 @@ var (
 
 // Store manages the set of APIs for userDB database access.
 type Store struct {
-	log logger.Logger
-	db  sqlx.ExtContext
+	log    logger.Logger
+	dbPool sqlx.ExtContext
 }
 
 // NewStore constructs the api for data access.
-func NewStore(log logger.Logger, db *sqlx.DB) user.Storer {
+func NewStore(log logger.Logger, dbPool *sqlx.DB) user.Storer {
 	return &Store{
-		log: log,
-		db:  db,
+		log:    log,
+		dbPool: dbPool,
 	}
 }
 
@@ -55,12 +55,12 @@ func NewStore(log logger.Logger, db *sqlx.DB) user.Storer {
 func (s *Store) NewWithTx(tx pgsql.CommitRollbacker) (user.Storer, error) {
 	ec, err := pgsql.GetExtContext(tx)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("user transaction init error: %w", err)
 	}
 
 	store := Store{
-		log: s.log,
-		db:  ec,
+		log:    s.log,
+		dbPool: ec,
 	}
 
 	return &store, nil
@@ -68,7 +68,7 @@ func (s *Store) NewWithTx(tx pgsql.CommitRollbacker) (user.Storer, error) {
 
 // Create inserts a new userDB into the database.
 func (s *Store) Create(ctx context.Context, usr user.User) error {
-	err := pgsql.NamedExecContext(ctx, s.log, s.db, userCreateSql, toUserDB(usr))
+	err := pgsql.NamedExecContext(ctx, s.log, s.dbPool, userCreateSql, toUserDB(usr))
 	if err != nil {
 		if errors.Is(err, pgsql.ErrDBDuplicatedEntry) {
 			return fmt.Errorf("named_exec_context: %w", user.ErrUniqueEmail)
@@ -82,7 +82,7 @@ func (s *Store) Create(ctx context.Context, usr user.User) error {
 
 // Update replaces a userDB document in the database.
 func (s *Store) Update(ctx context.Context, usr user.User) error {
-	err := pgsql.NamedExecContext(ctx, s.log, s.db, userUpdateSql, toUserDB(usr))
+	err := pgsql.NamedExecContext(ctx, s.log, s.dbPool, userUpdateSql, toUserDB(usr))
 	if err != nil {
 		if errors.Is(err, pgsql.ErrDBDuplicatedEntry) {
 			return user.ErrUniqueEmail
@@ -96,7 +96,7 @@ func (s *Store) Update(ctx context.Context, usr user.User) error {
 
 // Delete removes a userDB from the database.
 func (s *Store) Delete(ctx context.Context, usr user.User) error {
-	err := pgsql.NamedExecContext(ctx, s.log, s.db, userDeleteSql, toUserDB(usr))
+	err := pgsql.NamedExecContext(ctx, s.log, s.dbPool, userDeleteSql, toUserDB(usr))
 	if err != nil {
 		return fmt.Errorf("named_exec_context: %w", err)
 	}
@@ -128,7 +128,7 @@ func (s *Store) Query(
 	buf.WriteString(" OFFSET :offset ROWS FETCH NEXT :rows_per_page ROWS ONLY")
 
 	var dbUsrs []userDB
-	if err := pgsql.NamedQuerySlice(ctx, s.log, s.db, buf.String(), data, &dbUsrs); err != nil {
+	if err := pgsql.NamedQuerySlice(ctx, s.log, s.dbPool, buf.String(), data, &dbUsrs); err != nil {
 		return nil, fmt.Errorf("named_query_slice: %w", err)
 	}
 
@@ -145,7 +145,7 @@ func (s *Store) Count(ctx context.Context, filter user.QueryFilter) (int, error)
 		Count int `db:"count"`
 	}
 
-	err := pgsql.NamedQueryStruct(ctx, s.log, s.db, buf.String(), data, &count)
+	err := pgsql.NamedQueryStruct(ctx, s.log, s.dbPool, buf.String(), data, &count)
 	if err != nil {
 		return 0, fmt.Errorf("db: %w", err)
 	}
@@ -163,7 +163,7 @@ func (s *Store) QueryByID(ctx context.Context, userID uuid.UUID) (user.User, err
 
 	var dbUsr userDB
 
-	err := pgsql.NamedQueryStruct(ctx, s.log, s.db, userQueryByIdSql, data, &dbUsr)
+	err := pgsql.NamedQueryStruct(ctx, s.log, s.dbPool, userQueryByIdSql, data, &dbUsr)
 	if err != nil {
 		if errors.Is(err, pgsql.ErrDBNotFound) {
 			return user.User{}, fmt.Errorf("db: %w", user.ErrNotFound)
@@ -185,7 +185,7 @@ func (s *Store) QueryByEmail(ctx context.Context, email mail.Address) (user.User
 
 	var dbUsr userDB
 
-	err := pgsql.NamedQueryStruct(ctx, s.log, s.db, userQueryByEmailSql, data, &dbUsr)
+	err := pgsql.NamedQueryStruct(ctx, s.log, s.dbPool, userQueryByEmailSql, data, &dbUsr)
 	if err != nil {
 		if errors.Is(err, pgsql.ErrDBNotFound) {
 			return user.User{}, fmt.Errorf("db: %w", user.ErrNotFound)

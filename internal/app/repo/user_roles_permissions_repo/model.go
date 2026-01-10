@@ -60,7 +60,7 @@ func toDomains(dbs []rowDB) ([]urp.UserRolesPermissions, error) {
 	for i, r := range dbs {
 		dr, err := toDomain(r)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("to user domain error: %w", err)
 		}
 
 		res[i] = dr

@@ -2,6 +2,7 @@ package audit_usecase
 
 import (
 	"encoding/json"
+	"fmt"
 	"time"
 
 	"github.com/Housiadas/cerberus/internal/core/domain/audit"
@@ -30,7 +31,7 @@ type AuditPageResult struct {
 func (app Audit) Encode() ([]byte, string, error) {
 	data, err := json.Marshal(app)
 
-	return data, "application/json", err
+	return data, "application/json", fmt.Errorf("audit encode error: %w", err)
 }
 
 func toAppAudit(aud audit.Audit) Audit {
