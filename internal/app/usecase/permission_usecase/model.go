@@ -26,8 +26,11 @@ type PermissionPageResults struct {
 // Encode implements the encoder interface.
 func (p Permission) Encode() ([]byte, string, error) {
 	data, err := json.Marshal(p)
+	if err != nil {
+		return nil, "application/json", fmt.Errorf("permission encode error: %w", err)
+	}
 
-	return data, "application/json", fmt.Errorf("permission encode error: %w", err)
+	return data, "application/json", nil
 }
 
 func toAppPermission(p permission.Permission) Permission {
@@ -56,7 +59,11 @@ type NewPermission struct {
 // Decode implements the decoder interface.
 func (p *NewPermission) Decode(data []byte) error {
 	err := json.Unmarshal(data, p)
-	return fmt.Errorf("permission decode error: %w", err)
+	if err != nil {
+		return fmt.Errorf("permission decode error: %w", err)
+	}
+
+	return nil
 }
 
 func toBusNewPermission(app NewPermission) (permission.NewPermission, error) {
@@ -78,7 +85,11 @@ type UpdatePermission struct {
 // Decode implements the decoder interface.
 func (app *UpdatePermission) Decode(data []byte) error {
 	err := json.Unmarshal(data, app)
-	return fmt.Errorf("update permission decode error: %w", err)
+	if err != nil {
+		return fmt.Errorf("permission decode error: %w", err)
+	}
+
+	return nil
 }
 
 func toBusUpdatePermission(app UpdatePermission) (permission.UpdatePermission, error) {

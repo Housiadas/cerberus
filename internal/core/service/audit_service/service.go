@@ -85,5 +85,10 @@ func (b *Service) Count(ctx context.Context, filter audit.QueryFilter) (int, err
 	ctx, span := otel.AddSpan(ctx, "business.auditbus.count")
 	defer span.End()
 
-	return b.storer.Count(ctx, filter)
+	count, err := b.storer.Count(ctx, filter)
+	if err != nil {
+		return 0, fmt.Errorf("audit count: %w", err)
+	}
+
+	return count, nil
 }

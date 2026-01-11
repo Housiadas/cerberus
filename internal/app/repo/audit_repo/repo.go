@@ -76,7 +76,14 @@ func (s *Store) Query(
 	buf.WriteString(" OFFSET :offset ROWS FETCH NEXT :rows_per_page ROWS ONLY")
 
 	var dbAudits []auditDB
-	if err := pgsql.NamedQuerySlice(ctx, s.log, s.dbPool, buf.String(), data, &dbAudits); err != nil {
+	if err := pgsql.NamedQuerySlice(
+		ctx,
+		s.log,
+		s.dbPool,
+		buf.String(),
+		data,
+		&dbAudits,
+	); err != nil {
 		return nil, fmt.Errorf("namedqueryslice: %w", err)
 	}
 

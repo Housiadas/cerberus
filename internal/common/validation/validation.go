@@ -18,7 +18,7 @@ func Check(val any) error {
 
 		ok := errors.As(err, &vErrors)
 		if !ok {
-			return err
+			return fmt.Errorf("validation error: %w", err)
 		}
 
 		var fields errs.FieldErrors

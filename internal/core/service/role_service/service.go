@@ -33,7 +33,7 @@ func New(log logger.Logger, storer role.Storer) *Service {
 func (c *Service) NewWithTx(tx pgsql.CommitRollbacker) (*Service, error) {
 	storer, err := c.storer.NewWithTx(tx)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("role transaction issue: %w", err)
 	}
 
 	bus := Service{
@@ -94,7 +94,12 @@ func (c *Service) Delete(ctx context.Context, rl role.Role) error {
 
 // Count returns the total number of users.
 func (c *Service) Count(ctx context.Context, filter role.QueryFilter) (int, error) {
-	return c.storer.Count(ctx, filter)
+	count, err := c.storer.Count(ctx, filter)
+	if err != nil {
+		return 0, fmt.Errorf("roles count: %w", err)
+	}
+
+	return count, nil
 }
 
 // QueryByID finds the user by the specified ID.

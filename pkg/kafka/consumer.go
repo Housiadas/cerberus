@@ -56,8 +56,11 @@ func (c *ConsumerClient) Close() {
 
 func (c *ConsumerClient) Subscribe(topic string) error {
 	err := c.consumer.Subscribe(topic, nil)
+	if err != nil {
+		return fmt.Errorf("kafka subscribe error: %w", err)
+	}
 
-	return err
+	return nil
 }
 
 func (c *ConsumerClient) Consume(ctx context.Context, fn func(msg *kafka.Message) error) error {

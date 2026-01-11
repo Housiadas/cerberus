@@ -16,15 +16,21 @@ type LoginReq struct {
 // Encode implements the encoder interface.
 func (l *LoginReq) Encode() ([]byte, string, error) {
 	data, err := json.Marshal(l)
+	if err != nil {
+		return nil, "application/json", fmt.Errorf("login req encode err %w", err)
+	}
 
-	return data, "application/json", fmt.Errorf("login req encode err %v", err)
+	return data, "application/json", nil
 }
 
 // Decode implements the decoder interface.
 func (l *LoginReq) Decode(data []byte) error {
 	err := json.Unmarshal(data, l)
+	if err != nil {
+		return fmt.Errorf("login req decode err %w", err)
+	}
 
-	return fmt.Errorf("login req decode error: %w", err)
+	return nil
 }
 
 // Validate checks the data in the model is considered clean.
@@ -46,8 +52,11 @@ type RefreshTokenReq struct {
 // Encode implements the encoder interface.
 func (r *RefreshTokenReq) Encode() ([]byte, string, error) {
 	data, err := json.Marshal(r)
+	if err != nil {
+		return nil, "application/json", fmt.Errorf("refresh token req encode error: %w", err)
+	}
 
-	return data, "application/json", fmt.Errorf("refresh token req encode error: %w", err)
+	return data, "application/json", nil
 }
 
 // Decode implements the decoder interface.
@@ -76,8 +85,11 @@ type LogoutReq struct {
 // Encode implements the encoder interface.
 func (r *LogoutReq) Encode() ([]byte, string, error) {
 	data, err := json.Marshal(r)
+	if err != nil {
+		return nil, "application/json", fmt.Errorf("logout req encode error: %w", err)
+	}
 
-	return data, "application/json", fmt.Errorf("logout req encode error: %w", err)
+	return data, "application/json", nil
 }
 
 // Decode implements the decoder interface.
@@ -109,6 +121,9 @@ type Token struct {
 // Encode implements the encoder interface.
 func (t Token) Encode() ([]byte, string, error) {
 	data, err := json.Marshal(t)
+	if err != nil {
+		return nil, "application/json", fmt.Errorf("token encode error: %w", err)
+	}
 
-	return data, "application/json", fmt.Errorf("token encode error: %w", err)
+	return data, "application/json", nil
 }

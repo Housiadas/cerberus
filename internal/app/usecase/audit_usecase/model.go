@@ -30,8 +30,11 @@ type AuditPageResult struct {
 // Encode implements the encoder interface.
 func (app Audit) Encode() ([]byte, string, error) {
 	data, err := json.Marshal(app)
+	if err != nil {
+		return nil, "application/json", fmt.Errorf("audit encode error: %w", err)
+	}
 
-	return data, "application/json", fmt.Errorf("audit encode error: %w", err)
+	return data, "application/json", nil
 }
 
 func toAppAudit(aud audit.Audit) Audit {

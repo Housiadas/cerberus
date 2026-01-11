@@ -20,7 +20,7 @@ func (cln *Client) Request(
 	endpoint string,
 	headers map[string]string,
 	r io.Reader,
-	v any,
+	result any,
 ) error {
 	var statusCode int
 
@@ -79,7 +79,7 @@ func (cln *Client) Request(
 		return nil
 
 	case http.StatusOK:
-		err := json.Unmarshal(data, v)
+		err := json.Unmarshal(data, result)
 		if err != nil {
 			return fmt.Errorf("failed: response: %s, decoding error: %w ", string(data), err)
 		}

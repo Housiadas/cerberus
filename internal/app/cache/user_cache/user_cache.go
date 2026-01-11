@@ -3,6 +3,7 @@ package user_cache
 
 import (
 	"context"
+	"fmt"
 	"net/mail"
 	"time"
 
@@ -40,14 +41,19 @@ func NewStore(log *logger.Service, storer user.Storer, ttl time.Duration) *Store
 // NewWithTx constructs a new Store value replacing the sqlx DB
 // value with a sqlx DB value that is currently inside a transaction.
 func (s *Store) NewWithTx(tx pgsql.CommitRollbacker) (user.Storer, error) {
-	return s.storer.NewWithTx(tx)
+	withTx, err := s.storer.NewWithTx(tx)
+	if err != nil {
+		return nil, fmt.Errorf("user transaction issue: %w", err)
+	}
+
+	return withTx, nil
 }
 
 // Create inserts a new user into the database.
 func (s *Store) Create(ctx context.Context, usr user.User) error {
 	err := s.storer.Create(ctx, usr)
 	if err != nil {
-		return err
+		return fmt.Errorf("user create: %w", err)
 	}
 
 	s.writeCache(usr)
@@ -59,7 +65,7 @@ func (s *Store) Create(ctx context.Context, usr user.User) error {
 func (s *Store) Update(ctx context.Context, usr user.User) error {
 	err := s.storer.Update(ctx, usr)
 	if err != nil {
-		return err
+		return fmt.Errorf("user update: %w", err)
 	}
 
 	s.writeCache(usr)
@@ -71,7 +77,7 @@ func (s *Store) Update(ctx context.Context, usr user.User) error {
 func (s *Store) Delete(ctx context.Context, usr user.User) error {
 	err := s.storer.Delete(ctx, usr)
 	if err != nil {
-		return err
+		return fmt.Errorf("user delete: %w", err)
 	}
 
 	s.deleteCache(usr)
@@ -86,12 +92,22 @@ func (s *Store) Query(
 	orderBy order.By,
 	page web.Page,
 ) ([]user.User, error) {
-	return s.storer.Query(ctx, filter, orderBy, page)
+	query, err := s.storer.Query(ctx, filter, orderBy, page)
+	if err != nil {
+		return nil, fmt.Errorf("user query: %w", err)
+	}
+
+	return query, nil
 }
 
 // Count returns the total number of cards in the DB.
 func (s *Store) Count(ctx context.Context, filter user.QueryFilter) (int, error) {
-	return s.storer.Count(ctx, filter)
+	count, err := s.storer.Count(ctx, filter)
+	if err != nil {
+		return 0, fmt.Errorf("user count: %w", err)
+	}
+
+	return count, nil
 }
 
 // QueryByID gets the specified user from the database.
@@ -103,7 +119,7 @@ func (s *Store) QueryByID(ctx context.Context, userID uuid.UUID) (user.User, err
 
 	usr, err := s.storer.QueryByID(ctx, userID)
 	if err != nil {
-		return user.User{}, err
+		return user.User{}, fmt.Errorf("user query by id: %w", err)
 	}
 
 	s.writeCache(usr)
@@ -120,7 +136,7 @@ func (s *Store) QueryByEmail(ctx context.Context, email mail.Address) (user.User
 
 	usr, err := s.storer.QueryByEmail(ctx, email)
 	if err != nil {
-		return user.User{}, err
+		return user.User{}, fmt.Errorf("user query by email: %w", err)
 	}
 
 	s.writeCache(usr)

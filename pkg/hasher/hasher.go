@@ -1,6 +1,10 @@
 package hasher
 
-import "golang.org/x/crypto/bcrypt"
+import (
+	"fmt"
+
+	"golang.org/x/crypto/bcrypt"
+)
 
 // Hasher defines the interface for password hashing operations.
 type Hasher interface {
@@ -29,10 +33,20 @@ func NewBcryptWithCost(cost int) Hasher {
 
 // Hash generates a bcrypt hash from a password.
 func (h *BcryptHasher) Hash(password string) ([]byte, error) {
-	return bcrypt.GenerateFromPassword([]byte(password), h.cost)
+	fromPassword, err := bcrypt.GenerateFromPassword([]byte(password), h.cost)
+	if err != nil {
+		return nil, fmt.Errorf("password hashing failed: %w", err)
+	}
+
+	return fromPassword, nil
 }
 
 // Compare verifies a password against a hash.
 func (h *BcryptHasher) Compare(hashedPassword []byte, password string) error {
-	return bcrypt.CompareHashAndPassword(hashedPassword, []byte(password))
+	err := bcrypt.CompareHashAndPassword(hashedPassword, []byte(password))
+	if err != nil {
+		return fmt.Errorf("password verification failed: %w", err)
+	}
+
+	return nil
 }

@@ -98,6 +98,7 @@ func StatusCheck(ctx context.Context, dbPool *sqlx.DB) error {
 		time.Sleep(time.Duration(attempts) * 100 * time.Millisecond)
 
 		if ctx.Err() != nil {
+			//nolint:wrapcheck
 			return ctx.Err()
 		}
 	}
@@ -367,7 +368,7 @@ func namedQueryStruct(
 			return ErrUndefinedTable
 		}
 
-		return err
+		return fmt.Errorf("pg driver error: %w", err)
 	}
 
 	defer rows.Close()
@@ -377,7 +378,7 @@ func namedQueryStruct(
 	}
 
 	if err := rows.StructScan(dest); err != nil {
-		return err
+		return fmt.Errorf("struct scan error: %w", err)
 	}
 
 	return nil
@@ -393,13 +394,13 @@ func queryString(query string, args any) string {
 	for _, param := range params {
 		var value string
 
-		switch v := param.(type) {
+		switch paramType := param.(type) {
 		case string:
-			value = fmt.Sprintf("'%s'", v)
+			value = fmt.Sprintf("'%s'", paramType)
 		case []byte:
-			value = fmt.Sprintf("'%s'", string(v))
+			value = fmt.Sprintf("'%s'", string(paramType))
 		default:
-			value = fmt.Sprintf("%v", v)
+			value = fmt.Sprintf("%v", paramType)
 		}
 
 		query = strings.Replace(query, "?", value, 1)

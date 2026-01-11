@@ -4,6 +4,7 @@ import (
 	"context"
 	_ "embed"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/Housiadas/cerberus/internal/app/usecase/refresh_token_usecase"
@@ -81,7 +82,7 @@ func (u *UseCase) CheckExpiredToken(claims Claims) error {
 func (u *UseCase) isUserEnabled(ctx context.Context, claims Claims) error {
 	usr, err := u.userUsecase.QueryByID(ctx, claims.Subject)
 	if err != nil {
-		return err
+		return fmt.Errorf("could not query user: %w", err)
 	}
 
 	if !usr.Enabled {

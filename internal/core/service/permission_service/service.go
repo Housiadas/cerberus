@@ -30,7 +30,7 @@ func New(log logger.Logger, storer permission.Storer) *Service {
 func (s *Service) NewWithTx(tx pgsql.CommitRollbacker) (*Service, error) {
 	storer, err := s.storer.NewWithTx(tx)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("permission transaction issue: %w", err)
 	}
 
 	bus := Service{
@@ -94,7 +94,12 @@ func (s *Service) Delete(ctx context.Context, p permission.Permission) error {
 
 // Count returns the total number of permissions.
 func (s *Service) Count(ctx context.Context, filter permission.QueryFilter) (int, error) {
-	return s.storer.Count(ctx, filter)
+	count, err := s.storer.Count(ctx, filter)
+	if err != nil {
+		return 0, fmt.Errorf("permission count: %w", err)
+	}
+
+	return count, nil
 }
 
 // QueryByID finds the permission by the specified ID.

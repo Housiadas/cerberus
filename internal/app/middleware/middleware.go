@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 
 	"github.com/Housiadas/cerberus/internal/app/usecase/auth_usecase"
@@ -88,7 +89,12 @@ func (rec *ResponseRecorder) WriteHeader(code int) {
 func (rec *ResponseRecorder) Write(b []byte) (int, error) {
 	rec.body.Write(b)
 
-	return rec.ResponseWriter.Write(b)
+	write, err := rec.ResponseWriter.Write(b)
+	if err != nil {
+		return 0, fmt.Errorf("write response error: %w", err)
+	}
+
+	return write, err
 }
 
 func checkIsError(e web.Encoder) error {

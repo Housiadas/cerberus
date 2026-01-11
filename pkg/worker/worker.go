@@ -67,21 +67,21 @@ func (w *Worker) Shutdown(ctx context.Context) error {
 		}
 	}()
 
-	// Launch a goroutine to wait for all the worker goroutines
-	// to complete their work.
-	ch := make(chan struct{})
+	// Launch a goroutine to wait for all the worker goroutines to complete their work.
+	closeCh := make(chan struct{})
 
 	go func() {
 		w.wg.Wait()
-		close(ch)
+		close(closeCh)
 	}()
 
 	// Wait for the goroutines to report they are done or when
 	// the timeout is reached.
 	select {
-	case <-ch:
+	case <-closeCh:
 		return nil
 	case <-ctx.Done():
+		//nolint:wrapcheck
 		return ctx.Err()
 	}
 }
@@ -95,6 +95,7 @@ func (w *Worker) Start(ctx context.Context, jobFn JobFn) (string, error) {
 	case <-w.isShutdown:
 		return "", errors.New("shutting down")
 	case <-ctx.Done():
+		//nolint:wrapcheck
 		return "", ctx.Err()
 	case <-w.sem:
 	}

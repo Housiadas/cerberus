@@ -28,8 +28,11 @@ type RolePageResult struct {
 // Encode implements the encoder interface.
 func (r Role) Encode() ([]byte, string, error) {
 	data, err := json.Marshal(r)
+	if err != nil {
+		return nil, "application/json", fmt.Errorf("role encode error: %w", err)
+	}
 
-	return data, "application/json", fmt.Errorf("role encode error: %w", err)
+	return data, "application/json", nil
 }
 
 func toAppRole(r role.Role) Role {
@@ -59,7 +62,12 @@ type NewRole struct {
 
 // Decode implements the decoder interface.
 func (role *NewRole) Decode(data []byte) error {
-	return json.Unmarshal(data, role)
+	err := json.Unmarshal(data, role)
+	if err != nil {
+		return fmt.Errorf("new role decode error: %w", err)
+	}
+
+	return nil
 }
 
 func toBusNewRole(rl NewRole) (role.NewRole, error) {
@@ -83,7 +91,11 @@ type UpdateRole struct {
 // Decode implements the decoder interface.
 func (app *UpdateRole) Decode(data []byte) error {
 	err := json.Unmarshal(data, app)
-	return fmt.Errorf("update role error: %w", err)
+	if err != nil {
+		return fmt.Errorf("update role decode error: %w", err)
+	}
+
+	return nil
 }
 
 func toBusUpdateUser(app UpdateRole) (role.UpdateRole, error) {

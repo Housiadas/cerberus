@@ -3,6 +3,7 @@ package user_service
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/Housiadas/cerberus/internal/core/domain/user"
 	"github.com/Housiadas/cerberus/pkg/clock"
@@ -42,7 +43,7 @@ func New(
 func (c *Service) NewWithTx(tx pgsql.CommitRollbacker) (*Service, error) {
 	storer, err := c.storer.NewWithTx(tx)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("user transaction issue: %w", err)
 	}
 
 	bus := Service{
@@ -58,5 +59,10 @@ func (c *Service) NewWithTx(tx pgsql.CommitRollbacker) (*Service, error) {
 
 // Count returns the total number of users.
 func (c *Service) Count(ctx context.Context, filter user.QueryFilter) (int, error) {
-	return c.storer.Count(ctx, filter)
+	count, err := c.storer.Count(ctx, filter)
+	if err != nil {
+		return 0, fmt.Errorf("users count: %w", err)
+	}
+
+	return count, nil
 }

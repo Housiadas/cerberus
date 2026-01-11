@@ -39,13 +39,13 @@ type Service struct {
 
 // New constructs a new log for application use.
 func New(
-	w io.Writer,
+	writerIO io.Writer,
 	minLevel Level,
 	serviceName string,
 	traceIDFn TraceIDFn,
 	requestIDFn RequestIDFn,
 ) *Service {
-	return new(w, minLevel, serviceName, traceIDFn, requestIDFn, Events{})
+	return new(writerIO, minLevel, serviceName, traceIDFn, requestIDFn, Events{})
 }
 
 // NewWithEvents constructs a new log for application use with events.
@@ -160,7 +160,7 @@ func (log *Service) write(
 
 	runtime.Callers(caller, pcs[:])
 
-	r := slog.NewRecord(time.Now(), slogLevel, msg, pcs[0])
+	slogRec := slog.NewRecord(time.Now(), slogLevel, msg, pcs[0])
 
 	if log.traceIDFn != nil {
 		args = append(args, "trace_id", log.traceIDFn(ctx))
@@ -170,9 +170,9 @@ func (log *Service) write(
 		args = append(args, "request_id", log.requestIDFn(ctx))
 	}
 
-	r.Add(args...)
+	slogRec.Add(args...)
 
-	log.handler.Handle(ctx, r)
+	log.handler.Handle(ctx, slogRec)
 }
 
 func new(

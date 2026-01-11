@@ -4,6 +4,7 @@ package user_usecase
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/mail"
 
 	"github.com/Housiadas/cerberus/internal/core/domain/user"
@@ -165,7 +166,7 @@ func (a *UseCase) Authenticate(ctx context.Context, authUser AuthenticateUser) (
 			return User{}, errs.New(errs.NotFound, err)
 		}
 
-		return User{}, err
+		return User{}, fmt.Errorf("user authenticate error: %w", err)
 	}
 
 	return toAppUser(usr), nil

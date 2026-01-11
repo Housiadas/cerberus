@@ -18,13 +18,13 @@ func (log *Service) BuildInfo(ctx context.Context) {
 		return
 	}
 
-	for _, s := range info.Settings {
-		key := s.Key
+	for _, setting := range info.Settings {
+		key := setting.Key
 		if quoteKey(key) {
 			key = strconv.Quote(key)
 		}
 
-		value := s.Value
+		value := setting.Value
 		if quoteValue(value) {
 			value = strconv.Quote(value)
 		}

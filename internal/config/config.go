@@ -1,6 +1,7 @@
 package config
 
 import (
+	"fmt"
 	"path/filepath"
 	"runtime"
 
@@ -20,17 +21,17 @@ type Config struct {
 
 // LoadConfig reads configuration from file or environment variables.
 func LoadConfig() (config Config, err error) {
-	viper.SetConfigFile(filepath.Join(getConfigDir(), "config.yml"))
+	viper.SetConfigFile(filepath.Join(getConfigDir(), "config.yaml"))
 	viper.AutomaticEnv()
 
 	err = viper.ReadInConfig()
 	if err != nil {
-		return Config{}, err
+		return Config{}, fmt.Errorf("viper unable to read config file: %w", err)
 	}
 
 	err = viper.Unmarshal(&config)
 	if err != nil {
-		return Config{}, err
+		return Config{}, fmt.Errorf("viper unable to decode into struct: %w", err)
 	}
 
 	return config, nil

@@ -1,7 +1,11 @@
 // Package uuidgen is a wrapper for the uuid library
 package uuidgen
 
-import "github.com/google/uuid"
+import (
+	"fmt"
+
+	"github.com/google/uuid"
+)
 
 type Generator interface {
 	Generate() (uuid.UUID, error)
@@ -16,5 +20,7 @@ func NewV7() Generator {
 
 // Generate creates a new UUID v7.
 func (g *V7Generator) Generate() (uuid.UUID, error) {
-	return uuid.NewV7()
+	newUUID, err := uuid.NewV7()
+
+	return newUUID, fmt.Errorf("uuid v7 error: %w", err)
 }

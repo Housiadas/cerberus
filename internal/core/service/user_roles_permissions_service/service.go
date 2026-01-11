@@ -42,7 +42,12 @@ func (s *Service) Count(
 	ctx context.Context,
 	filter user_roles_permissions.QueryFilter,
 ) (int, error) {
-	return s.storer.Count(ctx, filter)
+	count, err := s.storer.Count(ctx, filter)
+	if err != nil {
+		return 0, fmt.Errorf("user roles permissions count: %w", err)
+	}
+
+	return count, nil
 }
 
 // HasPermission checks if the user has the specified permission.
@@ -51,5 +56,10 @@ func (s *Service) HasPermission(
 	userID uuid.UUID,
 	permissionName string,
 ) (bool, error) {
-	return s.storer.HasPermission(ctx, userID, permissionName)
+	hasPermissions, err := s.storer.HasPermission(ctx, userID, permissionName)
+	if err != nil {
+		return false, fmt.Errorf("user has permissions: %w", err)
+	}
+
+	return hasPermissions, nil
 }

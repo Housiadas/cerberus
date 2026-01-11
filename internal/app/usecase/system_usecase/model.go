@@ -12,8 +12,11 @@ type Status struct {
 // Encode implements the encoder interface.
 func (s Status) Encode() ([]byte, string, error) {
 	data, err := json.Marshal(s)
+	if err != nil {
+		return nil, "application/json", fmt.Errorf("status encode error: %w", err)
+	}
 
-	return data, "application/json", fmt.Errorf("status encode error: %w", err)
+	return data, "application/json", nil
 }
 
 // Info represents information about the usecase.
@@ -31,6 +34,9 @@ type Info struct {
 // Encode implements the encoder interface.
 func (info Info) Encode() ([]byte, string, error) {
 	data, err := json.Marshal(info)
+	if err != nil {
+		return nil, "application/json", fmt.Errorf("info encode error: %w", err)
+	}
 
-	return data, "application/json", fmt.Errorf("info encode error: %w", err)
+	return data, "application/json", nil
 }

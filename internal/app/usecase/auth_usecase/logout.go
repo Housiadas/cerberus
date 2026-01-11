@@ -2,6 +2,7 @@ package auth_usecase
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/Housiadas/cerberus/pkg/web/errs"
 )
@@ -10,7 +11,7 @@ func (u *UseCase) Logout(ctx context.Context, userID string, req LogoutReq) erro
 	// Retrieve refresh token
 	rToken, err := u.refreshTokenUsecase.QueryByToken(ctx, req.Token)
 	if err != nil {
-		return err
+		return fmt.Errorf("query by token: %w", err)
 	}
 
 	// Check if userID matches
@@ -21,7 +22,7 @@ func (u *UseCase) Logout(ctx context.Context, userID string, req LogoutReq) erro
 	// Revoke refresh token
 	err = u.refreshTokenUsecase.Revoke(ctx, rToken)
 	if err != nil {
-		return err
+		return fmt.Errorf("revoke issue: %w", err)
 	}
 
 	return nil

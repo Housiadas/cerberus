@@ -2,6 +2,7 @@ package logger
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 )
 
@@ -63,5 +64,10 @@ func (h *logHandler) Handle(ctx context.Context, r slog.Record) error {
 		}
 	}
 
-	return h.handler.Handle(ctx, r)
+	err := h.handler.Handle(ctx, r)
+	if err != nil {
+		return fmt.Errorf("logger handler error: %w", err)
+	}
+
+	return nil
 }

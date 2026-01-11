@@ -25,8 +25,11 @@ type RefreshToken struct {
 // Encode implements the encoder interface.
 func (r RefreshToken) Encode() ([]byte, string, error) {
 	data, err := json.Marshal(r)
+	if err != nil {
+		return nil, "application/json", fmt.Errorf("refresh token encode error: %w", err)
+	}
 
-	return data, "application/json", fmt.Errorf("refresh token error: %w", err)
+	return data, "application/json", nil
 }
 
 func toAppToken(r refresh_token.RefreshToken) RefreshToken {

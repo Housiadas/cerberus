@@ -5,6 +5,7 @@ linters:
     - wsl_v5
   disable:
     - funlen
+
 #    - err113
 #    - depguard
 #    - musttag

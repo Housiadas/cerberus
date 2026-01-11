@@ -3,6 +3,7 @@ package dbtest
 import (
 	"database/sql"
 	"errors"
+	"fmt"
 	"path/filepath"
 	"runtime"
 
@@ -15,13 +16,13 @@ import (
 func migration(cfg Config, dbURL string) error {
 	db, err := sql.Open("pgx", dbURL+"sslmode=disable")
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to connect to database: %w", err)
 	}
 	defer db.Close()
 
 	driver, err := postgres.WithInstance(db, &postgres.Config{})
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to create postgres driver: %w", err)
 	}
 
 	m, err := migrate.NewWithDatabaseInstance(
@@ -30,12 +31,12 @@ func migration(cfg Config, dbURL string) error {
 		driver,
 	)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to create migrate instance: %w", err)
 	}
 
 	err = m.Up()
 	if err != nil && !errors.Is(err, migrate.ErrNoChange) {
-		return err
+		return fmt.Errorf("migration failed: %w", err)
 	}
 
 	return nil

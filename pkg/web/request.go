@@ -36,7 +36,7 @@ func Decode(r *http.Request, val any) error {
 	if v, ok := val.(validator); ok {
 		err := v.Validate()
 		if err != nil {
-			return err
+			return fmt.Errorf("web decode validation: %w", err)
 		}
 	}
 

@@ -15,7 +15,7 @@ func (u *UseCase) RefreshAccessToken(
 	// Retrieve the refresh token
 	rToken, err := u.refreshTokenUsecase.QueryByToken(ctx, authRefresh.Token)
 	if err != nil {
-		return Token{}, err
+		return Token{}, fmt.Errorf("query by token: %w", err)
 	}
 
 	if rToken.Revoked {
@@ -35,7 +35,7 @@ func (u *UseCase) RefreshAccessToken(
 	// Get the user
 	usr, err := u.userUsecase.QueryByID(ctx, rToken.UserID)
 	if err != nil {
-		return Token{}, err
+		return Token{}, fmt.Errorf("query by id: %w", err)
 	}
 
 	// Generate a new access token

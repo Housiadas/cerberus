@@ -25,8 +25,11 @@ type AuthenticateUser struct {
 // Encode implements the encoder interface.
 func (app *AuthenticateUser) Encode() ([]byte, string, error) {
 	data, err := json.Marshal(app)
+	if err != nil {
+		return nil, "application/json", fmt.Errorf("auth user encode error: %w", err)
+	}
 
-	return data, "application/json", fmt.Errorf("auth user encode error: %w", err)
+	return data, "application/json", nil
 }
 
 // Validate checks the data in the model is considered clean.
@@ -56,8 +59,11 @@ type User struct {
 // Encode implements the encoder interface.
 func (app User) Encode() ([]byte, string, error) {
 	data, err := json.Marshal(app)
+	if err != nil {
+		return nil, "application/json", fmt.Errorf("user encode error: %w", err)
+	}
 
-	return data, "application/json", fmt.Errorf("user encode error: %w", err)
+	return data, "application/json", nil
 }
 
 func toAppUser(bus user.User) User {
@@ -103,7 +109,11 @@ type NewUser struct {
 // Decode implements the decoder interface.
 func (app *NewUser) Decode(data []byte) error {
 	err := json.Unmarshal(data, app)
-	return fmt.Errorf("new user decode error: %w", err)
+	if err != nil {
+		return fmt.Errorf("new user decode error: %w", err)
+	}
+
+	return nil
 }
 
 // Validate checks the data in the model is considered clean.
@@ -163,7 +173,11 @@ type UpdateUserRole struct {
 // Decode implements the decoder interface.
 func (app *UpdateUserRole) Decode(data []byte) error {
 	err := json.Unmarshal(data, app)
-	return fmt.Errorf("update user role decode error: %w", err)
+	if err != nil {
+		return fmt.Errorf("update user role decode error: %w", err)
+	}
+
+	return nil
 }
 
 // UpdateUser defines the data needed to update a user.
@@ -179,7 +193,11 @@ type UpdateUser struct {
 // Decode implements the decoder interface.
 func (app *UpdateUser) Decode(data []byte) error {
 	err := json.Unmarshal(data, app)
-	return fmt.Errorf("update user decode error: %w", err)
+	if err != nil {
+		return fmt.Errorf("update user decode error: %w", err)
+	}
+
+	return nil
 }
 
 func toBusUpdateUser(app UpdateUser) (user.UpdateUser, error) {
