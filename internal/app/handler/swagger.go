@@ -20,13 +20,15 @@ func (h *Handler) Swagger(w http.ResponseWriter, r *http.Request) {
 
 	data["host"] = r.Host
 
-	if err := json.NewDecoder(strings.NewReader(d)).Decode(&data); err != nil {
+	err = json.NewDecoder(strings.NewReader(d)).Decode(&data)
+	if err != nil {
 		h.Log.Error(r.Context(), "swagger: decode doc", err)
 
 		return
 	}
 
-	if err := json.NewEncoder(w).Encode(&data); err != nil {
+	err = json.NewEncoder(w).Encode(&data)
+	if err != nil {
 		h.Log.Error(r.Context(), "swagger: encode data", err)
 
 		return

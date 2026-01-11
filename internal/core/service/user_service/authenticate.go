@@ -21,7 +21,8 @@ func (c *Service) Authenticate(
 		return user.User{}, fmt.Errorf("query: email[%s]: %w", email, err)
 	}
 
-	if err := c.hasher.Compare(usr.PasswordHash, password); err != nil {
+	err = c.hasher.Compare(usr.PasswordHash, password)
+	if err != nil {
 		return user.User{}, fmt.Errorf(
 			"compare_hash_and_password: %w",
 			user.ErrAuthenticationFailure,

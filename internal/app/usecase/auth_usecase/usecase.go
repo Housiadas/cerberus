@@ -2,7 +2,6 @@ package auth_usecase
 
 import (
 	"context"
-	_ "embed"
 	"errors"
 	"fmt"
 	"time"

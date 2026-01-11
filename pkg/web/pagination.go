@@ -8,6 +8,11 @@ import (
 	"strconv"
 )
 
+const (
+	rowsPerPageDefault = 10
+	rowsPerPageMax     = 100
+)
+
 // The Result is the data model used when returning a query result.
 type Result[T any] struct {
 	Data     []T      `json:"data"`
@@ -97,7 +102,7 @@ func Parse(page string, rowsPerPage string) (Page, error) {
 		}
 	}
 
-	rows := 10
+	rows := rowsPerPageDefault
 
 	if rowsPerPage != "" {
 		var err error
@@ -116,7 +121,7 @@ func Parse(page string, rowsPerPage string) (Page, error) {
 		return Page{}, errors.New("rows value too small, must be larger than 0")
 	}
 
-	if rows > 100 {
+	if rows > rowsPerPageMax {
 		return Page{}, errors.New("rows value too large, must be less than 100")
 	}
 

@@ -13,15 +13,15 @@ import (
 
 // TestNewAudits is a helper method for testing.
 func TestNewAudits(
-	n int,
+	numb int,
 	actorID uuid.UUID,
 	objEntity entity.Entity,
 	action string,
 ) []audit.NewAudit {
-	newAudits := make([]audit.NewAudit, n)
+	newAudits := make([]audit.NewAudit, numb)
 
 	idx := rand.Intn(10000)
-	for i := range n {
+	for i := range numb {
 		idx++
 
 		objID, _ := uuid.NewV7()

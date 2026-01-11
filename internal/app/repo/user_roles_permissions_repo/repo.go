@@ -20,11 +20,11 @@ import (
 // queries.
 var (
 	//go:embed query/user_roles_permissions_query.sql
-	userRolesPermissionsQuerySql string
+	userRolesPermissionsQuerySQL string
 	//go:embed query/user_roles_permissions_count.sql
-	userRolesPermissionsCountSql string
+	userRolesPermissionsCountSQL string
 	//go:embed query/user_roles_permissions_count.sql
-	userHasPermissionSql string
+	userHasPermissionSQL string
 )
 
 // Store manages the set of APIs for DB access to the view.
@@ -53,7 +53,7 @@ func (s *Store) Query(
 		"rows_per_page": p.RowsPerPage(),
 	}
 
-	buf := bytes.NewBufferString(userRolesPermissionsQuerySql)
+	buf := bytes.NewBufferString(userRolesPermissionsQuerySQL)
 	applyFilter(filter, data, buf)
 
 	obc, err := orderByClause(ob)
@@ -65,7 +65,8 @@ func (s *Store) Query(
 	buf.WriteString(" OFFSET :offset ROWS FETCH NEXT :rows_per_page ROWS ONLY")
 
 	var dbRows []rowDB
-	if err := pgsql.NamedQuerySlice(ctx, s.log, s.db, buf.String(), data, &dbRows); err != nil {
+	err = pgsql.NamedQuerySlice(ctx, s.log, s.db, buf.String(), data, &dbRows)
+	if err != nil {
 		return nil, fmt.Errorf("db query user_roles_permissions: %w", err)
 	}
 
@@ -75,7 +76,7 @@ func (s *Store) Query(
 // Count returns the total number of rows that match the filter.
 func (s *Store) Count(ctx context.Context, filter urp.QueryFilter) (int, error) {
 	data := map[string]any{}
-	buf := bytes.NewBufferString(userRolesPermissionsCountSql)
+	buf := bytes.NewBufferString(userRolesPermissionsCountSQL)
 	applyFilter(filter, data, buf)
 
 	var cnt struct {
@@ -111,14 +112,15 @@ func (s *Store) HasPermission(
 		PermissionName: &pName,
 	}
 
-	buf := bytes.NewBufferString(userRolesPermissionsQuerySql)
+	buf := bytes.NewBufferString(userHasPermissionSQL)
 	applyFilter(filter, data, buf)
 
 	var cnt struct {
 		Count int `db:"count"`
 	}
 
-	if err := pgsql.NamedQueryStruct(ctx, s.log, s.db, buf.String(), data, &cnt); err != nil {
+	err = pgsql.NamedQueryStruct(ctx, s.log, s.db, buf.String(), data, &cnt)
+	if err != nil {
 		return false, fmt.Errorf("db count has permissions: %w", err)
 	}
 

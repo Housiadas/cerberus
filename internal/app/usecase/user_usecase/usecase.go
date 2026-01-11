@@ -97,7 +97,8 @@ func (a *UseCase) Delete(ctx context.Context, userID string) error {
 		)
 	}
 
-	if err := a.userCore.Delete(ctx, currentUsr); err != nil {
+	err = a.userCore.Delete(ctx, currentUsr)
+	if err != nil {
 		return errs.Errorf(errs.Internal, "delete: userID[%s]: %s", userUUID, err)
 	}
 

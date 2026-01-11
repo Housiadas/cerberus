@@ -26,7 +26,9 @@ func (h *Handler) roleCreate(
 	r *http.Request,
 ) web.Encoder {
 	var ucRole role_usecase.NewRole
-	if err := web.Decode(r, &ucRole); err != nil {
+
+	err := web.Decode(r, &ucRole)
+	if err != nil {
 		return errs.ParseValidationErrors(err)
 	}
 
@@ -44,7 +46,9 @@ func (h *Handler) rolePermissionCreate(
 	r *http.Request,
 ) web.Encoder {
 	var ucRole role_usecase.NewRole
-	if err := web.Decode(r, &ucRole); err != nil {
+
+	err := web.Decode(r, &ucRole)
+	if err != nil {
 		return errs.ParseValidationErrors(err)
 	}
 
@@ -94,11 +98,13 @@ func (h *Handler) roleQuery(
 //	@Router			/v1/roles/{role_id} [put].
 func (h *Handler) roleUpdate(
 	ctx context.Context,
-	w http.ResponseWriter,
+	_ http.ResponseWriter,
 	r *http.Request,
 ) web.Encoder {
 	var res role_usecase.UpdateRole
-	if err := web.Decode(r, &res); err != nil {
+
+	err := web.Decode(r, &res)
+	if err != nil {
 		return errs.ParseValidationErrors(err)
 	}
 
@@ -124,7 +130,7 @@ func (h *Handler) roleUpdate(
 //	@Router			/v1/roles/{role_id} [delete].
 func (h *Handler) roleDelete(
 	ctx context.Context,
-	w http.ResponseWriter,
+	_ http.ResponseWriter,
 	r *http.Request,
 ) web.Encoder {
 	roleID := web.Param(r, "role_id")

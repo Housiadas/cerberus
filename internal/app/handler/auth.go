@@ -28,7 +28,8 @@ func (h *Handler) authLogin(
 	r *http.Request,
 ) web.Encoder {
 	var req auth_usecase.LoginReq
-	if err := web.Decode(r, &req); err != nil {
+	err := web.Decode(r, &req)
+	if err != nil {
 		return errs.ParseValidationErrors(err)
 	}
 
@@ -57,7 +58,8 @@ func (h *Handler) authRegister(
 	r *http.Request,
 ) web.Encoder {
 	var req user_usecase.NewUser
-	if err := web.Decode(r, &req); err != nil {
+	err := web.Decode(r, &req)
+	if err != nil {
 		return errs.ParseValidationErrors(err)
 	}
 
@@ -85,13 +87,14 @@ func (h *Handler) authLogout(
 	r *http.Request,
 ) web.Encoder {
 	var req auth_usecase.LogoutReq
-	if err := web.Decode(r, &req); err != nil {
+	err := web.Decode(r, &req)
+	if err != nil {
 		return errs.ParseValidationErrors(err)
 	}
 
 	claims := ctxPck.GetClaims(ctx)
 
-	err := h.Usecase.Auth.Logout(ctx, claims.Subject, req)
+	err = h.Usecase.Auth.Logout(ctx, claims.Subject, req)
 	if err != nil {
 		return errs.AsErr(err)
 	}
@@ -116,7 +119,9 @@ func (h *Handler) authRefresh(
 	r *http.Request,
 ) web.Encoder {
 	var req auth_usecase.RefreshTokenReq
-	if err := web.Decode(r, &req); err != nil {
+
+	err := web.Decode(r, &req)
+	if err != nil {
 		return errs.ParseValidationErrors(err)
 	}
 

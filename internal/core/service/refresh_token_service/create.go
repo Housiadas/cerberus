@@ -35,7 +35,8 @@ func (c *Service) Create(
 		Revoked:   false,
 	}
 
-	if err := c.storer.Create(ctx, tkn); err != nil {
+	err = c.storer.Create(ctx, tkn)
+	if err != nil {
 		return refresh_token.RefreshToken{}, fmt.Errorf("create: %w", err)
 	}
 

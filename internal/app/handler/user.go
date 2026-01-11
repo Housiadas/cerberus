@@ -26,7 +26,8 @@ func (h *Handler) userCreate(
 	r *http.Request,
 ) web.Encoder {
 	var app user_usecase.NewUser
-	if err := web.Decode(r, &app); err != nil {
+	err := web.Decode(r, &app)
+	if err != nil {
 		return errs.ParseValidationErrors(err)
 	}
 
@@ -55,7 +56,8 @@ func (h *Handler) userUpdate(
 	r *http.Request,
 ) web.Encoder {
 	var res user_usecase.UpdateUser
-	if err := web.Decode(r, &res); err != nil {
+	err := web.Decode(r, &res)
+	if err != nil {
 		return errs.ParseValidationErrors(err)
 	}
 
@@ -150,7 +152,8 @@ func (h *Handler) userRoleCreate(
 	r *http.Request,
 ) web.Encoder {
 	var app user_usecase.NewUser
-	if err := web.Decode(r, &app); err != nil {
+	err := web.Decode(r, &app)
+	if err != nil {
 		return errs.ParseValidationErrors(err)
 	}
 

@@ -29,6 +29,7 @@ func (m *Middleware) Recoverer() func(next http.Handler) http.Handler {
 					)
 					m.Log.Error(ctx, "panic mid", err)
 					m.Error(w, err, http.StatusInternalServerError)
+					return
 				}
 			}()
 

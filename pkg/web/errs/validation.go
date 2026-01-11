@@ -32,7 +32,7 @@ func newWithFields(code ErrCode, err error, fe []FieldError) *Error {
 }
 
 func toFieldErrorSlice(fe FieldErrors) []FieldError {
-	var result []FieldError
+	result := make([]FieldError, 0, len(fe))
 	for _, err := range fe {
 		result = append(result, FieldError{
 			Field: err.Field,

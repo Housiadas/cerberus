@@ -20,7 +20,7 @@ type Consumer interface {
 
 type ConsumerConfig struct {
 	Brokers          string
-	GroupId          string
+	GroupID          string
 	AddressFamily    string
 	SecurityProtocol string
 	SessionTimeout   int
@@ -34,7 +34,7 @@ type ConsumerClient struct {
 func NewConsumer(log *logger.Service, cfg ConsumerConfig) (*ConsumerClient, error) {
 	consumer, err := kafka.NewConsumer(&kafka.ConfigMap{
 		"bootstrap.servers":        cfg.Brokers,
-		"group.id":                 cfg.GroupId,
+		"group.id":                 cfg.GroupID,
 		"broker.address.family":    cfg.AddressFamily,
 		"session.timeout.ms":       cfg.SessionTimeout,
 		"auto.offset.reset":        "earliest",
@@ -71,7 +71,7 @@ func (c *ConsumerClient) Consume(ctx context.Context, fn func(msg *kafka.Message
 		ev := c.consumer.Poll(100)
 		switch event := ev.(type) {
 		case *kafka.Message:
-			msgCount += 1
+			msgCount++
 			if msgCount%MinCommitCount == 0 {
 				go func() {
 					_, err := c.consumer.Commit()

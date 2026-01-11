@@ -48,7 +48,7 @@ func InitTracing(cfg Config) (trace.TracerProvider, func(ctx context.Context), e
 
 	var traceProvider trace.TracerProvider
 
-	teardown := func(ctx context.Context) {}
+	teardown := func(_ context.Context) {}
 
 	switch cfg.Host {
 	case "":

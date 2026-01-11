@@ -11,15 +11,15 @@ import (
 
 // Audit represents information about an individual audit record.
 type Audit struct {
-	ID        string
-	ObjID     string
-	ObjEntity string
-	ObjName   string
-	ActorID   string
-	Action    string
-	Data      string
-	Message   string
-	Timestamp string
+	ID        string `json:"id"`
+	ObjID     string `json:"objId"`
+	ObjEntity string `json:"objEntity"`
+	ObjName   string `json:"objName"`
+	ActorID   string `json:"actorId"`
+	Action    string `json:"action"`
+	Data      string `json:"data"`
+	Message   string `json:"message"`
+	Timestamp string `json:"timestamp"`
 }
 
 type AuditPageResult struct {

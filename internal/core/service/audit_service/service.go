@@ -55,7 +55,8 @@ func (b *Service) Create(ctx context.Context, na audit.NewAudit) (audit.Audit, e
 		Timestamp: time.Now(),
 	}
 
-	if err := b.storer.Create(ctx, aud); err != nil {
+	err = b.storer.Create(ctx, aud)
+	if err != nil {
 		return audit.Audit{}, fmt.Errorf("create audit: %w", err)
 	}
 

@@ -64,11 +64,10 @@ func (m *Middleware) Error(w http.ResponseWriter, err error, statusCode int) {
 	w.Header().Set(web.ContentTypeKey, web.ContentTypeJSON)
 	w.WriteHeader(statusCode)
 
-	if err := json.NewEncoder(w).Encode(err); err != nil {
+	err = json.NewEncoder(w).Encode(err)
+	if err != nil {
 		return
 	}
-
-	return
 }
 
 // ResponseRecorder a custom http.ResponseWriter to capture the response before it's sent to the client.

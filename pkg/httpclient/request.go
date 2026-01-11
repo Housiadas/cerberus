@@ -87,12 +87,14 @@ func (cln *Client) Request(
 		return nil
 
 	case http.StatusUnauthorized:
-		var err *errs.Error
-		if err := json.Unmarshal(data, &err); err != nil {
+		var errResult *errs.Error
+
+		err = json.Unmarshal(data, &errResult)
+		if err != nil {
 			return fmt.Errorf("failed: response: %s, decoding error: %w ", string(data), err)
 		}
 
-		return err
+		return errResult
 
 	default:
 		return fmt.Errorf("failed: response: %s", string(data))

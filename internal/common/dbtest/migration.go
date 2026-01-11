@@ -9,11 +9,11 @@ import (
 
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/postgres"
-	_ "github.com/golang-migrate/migrate/v4/source/file"
-	_ "github.com/jackc/pgx/v5/stdlib"
+	_ "github.com/golang-migrate/migrate/v4/source/file" // This is for golang-migrate
+	_ "github.com/jackc/pgx/v5/stdlib"                   // This is for golang-migrate sqlx driver
 )
 
-func migration(cfg Config, dbURL string) error {
+func migration(dbURL string) error {
 	db, err := sql.Open("pgx", dbURL+"sslmode=disable")
 	if err != nil {
 		return fmt.Errorf("failed to connect to database: %w", err)

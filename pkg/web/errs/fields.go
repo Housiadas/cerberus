@@ -34,12 +34,12 @@ func (fe *FieldErrors) Add(field string, err error) {
 }
 
 // ToError converts the field errors to an Error.
-func (fe FieldErrors) ToError() *Error {
+func (fe *FieldErrors) ToError() *Error {
 	return New(InvalidArgument, fe)
 }
 
 // Error implements the error interface.
-func (fe FieldErrors) Error() string {
+func (fe *FieldErrors) Error() string {
 	d, err := json.Marshal(fe)
 	if err != nil {
 		return err.Error()

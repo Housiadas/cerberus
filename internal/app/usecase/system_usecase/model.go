@@ -28,7 +28,7 @@ type Info struct {
 	PodIP      string `json:"podIP,omitempty"`
 	Node       string `json:"node,omitempty"`
 	Namespace  string `json:"namespace,omitempty"`
-	GOMAXPROCS int    `json:"GOMAXPROCS,omitempty"`
+	GOMAXPROCS int    `json:"gomaxprocs,omitempty"`
 }
 
 // Encode implements the encoder interface.

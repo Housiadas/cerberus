@@ -3,7 +3,7 @@ package config
 import "time"
 
 type Rest struct {
-	Api             string
+	API             string
 	Debug           string
 	ReadTimeout     time.Duration
 	WriteTimeout    time.Duration

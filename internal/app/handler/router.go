@@ -35,7 +35,7 @@ func (h *Handler) Routes() *chi.Mux {
 	// v1 routes
 	apiRouter.Route("/v1", func(v1 chi.Router) {
 		v1.Use(
-			mid.ApiVersion("v1"),
+			mid.APIVersion("v1"),
 			otelchi.Middleware(h.ServiceName, otelchi.WithChiRoutes(v1)),
 		)
 

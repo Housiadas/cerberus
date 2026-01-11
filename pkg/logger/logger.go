@@ -184,7 +184,7 @@ func new(
 	events Events,
 ) *Service {
 	// Convert the file name to just the name.ext when this key/value is logged.
-	f := func(groups []string, a slog.Attr) slog.Attr {
+	f := func(_ []string, a slog.Attr) slog.Attr {
 		if a.Key == slog.SourceKey {
 			if source, ok := a.Value.Any().(*slog.Source); ok {
 				v := fmt.Sprintf("%s:%d", filepath.Base(source.File), source.Line)

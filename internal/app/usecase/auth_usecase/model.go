@@ -79,12 +79,12 @@ func (r *RefreshTokenReq) Validate() error {
 // =================================================================
 
 type LogoutReq struct {
-	Token string `json:"refresh_token" validate:"required"`
+	Token string `json:"refreshToken" validate:"required"`
 }
 
 // Encode implements the encoder interface.
-func (r *LogoutReq) Encode() ([]byte, string, error) {
-	data, err := json.Marshal(r)
+func (l *LogoutReq) Encode() ([]byte, string, error) {
+	data, err := json.Marshal(l)
 	if err != nil {
 		return nil, "application/json", fmt.Errorf("logout req encode error: %w", err)
 	}
@@ -93,8 +93,8 @@ func (r *LogoutReq) Encode() ([]byte, string, error) {
 }
 
 // Decode implements the decoder interface.
-func (r *LogoutReq) Decode(data []byte) error {
-	err := json.Unmarshal(data, r)
+func (l *LogoutReq) Decode(data []byte) error {
+	err := json.Unmarshal(data, l)
 
 	return fmt.Errorf("logout req decode error: %w", err)
 }
@@ -113,9 +113,9 @@ func (l *LogoutReq) Validate() error {
 
 // Token represents the user token when requested.
 type Token struct {
-	AccessToken  string `json:"access_token"`
-	RefreshToken string `json:"refresh_token"`
-	ExpiresIn    int64  `json:"expires_in"`
+	AccessToken  string `json:"accessToken"`
+	RefreshToken string `json:"refreshToken"`
+	ExpiresIn    int64  `json:"expiresIn"`
 }
 
 // Encode implements the encoder interface.

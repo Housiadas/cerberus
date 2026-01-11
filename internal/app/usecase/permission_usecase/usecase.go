@@ -85,7 +85,8 @@ func (uc *UseCase) Delete(ctx context.Context, permissionID string) error {
 		return errs.Errorf(errs.Internal, "permission query by id: %s", err)
 	}
 
-	if err := uc.permissionService.Delete(ctx, perm); err != nil {
+	err = uc.permissionService.Delete(ctx, perm)
+	if err != nil {
 		return errs.Errorf(errs.Internal, "delete: permissionID[%s]: %s", permissionUUID, err)
 	}
 

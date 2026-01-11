@@ -6,7 +6,7 @@ import (
 	"context"
 	"testing"
 
-	_ "github.com/jackc/pgx/v5/stdlib"
+	_ "github.com/jackc/pgx/v5/stdlib" // This is for sqlx driver
 	"github.com/jmoiron/sqlx"
 	"github.com/stretchr/testify/require"
 	"github.com/testcontainers/testcontainers-go"
@@ -44,7 +44,7 @@ func New(t *testing.T, testName string) *sqlx.DB {
 	require.NoError(t, err)
 
 	// set up migrations
-	err = migration(cfg, dbURL)
+	err = migration(dbURL)
 	require.NoError(t, err)
 
 	// Open DB

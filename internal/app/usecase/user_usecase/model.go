@@ -52,8 +52,8 @@ type User struct {
 	PasswordHash []byte `json:"-"`
 	Department   string `json:"department"`
 	Enabled      bool   `json:"enabled"`
-	CreatedAt    string `json:"CreatedAt"`
-	UpdatedAt    string `json:"UpdatedAt"`
+	CreatedAt    string `json:"createdAt"`
+	UpdatedAt    string `json:"updatedAt"`
 }
 
 // Encode implements the encoder interface.

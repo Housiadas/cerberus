@@ -90,7 +90,7 @@ func StatusCheck(ctx context.Context, dbPool *sqlx.DB) error {
 	}
 
 	for attempts := 1; ; attempts++ {
-		err := dbPool.Ping()
+		err := dbPool.PingContext(ctx)
 		if err == nil {
 			break
 		}
@@ -149,7 +149,8 @@ func NamedExecContext(
 	ctx, span := otel.AddSpan(ctx, "internal.api.pgsql.exec", attribute.String("query", q))
 	defer span.End()
 
-	if _, err := sqlx.NamedExecContext(ctx, db, query, data); err != nil {
+	_, err = sqlx.NamedExecContext(ctx, db, query, data)
+	if err != nil {
 		var pqerr *pgconn.PgError
 		if errors.As(err, &pqerr) {
 			switch pqerr.Code {
@@ -377,7 +378,8 @@ func namedQueryStruct(
 		return ErrDBNotFound
 	}
 
-	if err := rows.StructScan(dest); err != nil {
+	err = rows.StructScan(dest)
+	if err != nil {
 		return fmt.Errorf("struct scan error: %w", err)
 	}
 

@@ -15,10 +15,10 @@ import (
 // RefreshToken represents information about an individual user.
 type RefreshToken struct {
 	ID        string `json:"id"`
-	UserID    string `json:"user_id"`
+	UserID    string `json:"userId"`
 	Token     string `json:"token"`
-	ExpiresAt string `json:"expires_at"`
-	CreatedAt string `json:"created_at"`
+	ExpiresAt string `json:"expiresAt"`
+	CreatedAt string `json:"createdAt"`
 	Revoked   bool   `json:"revoked"`
 }
 

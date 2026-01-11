@@ -37,7 +37,8 @@ func (u *UseCase) Validate(ctx context.Context, jwtUnverified string) (Claims, e
 		return Claims{}, errs.New(errs.InvalidArgument, ErrInvalidToken)
 	}
 
-	if err := u.CheckExpiredToken(claims); err != nil {
+	err = u.CheckExpiredToken(claims)
+	if err != nil {
 		return Claims{}, fmt.Errorf("token expired: %w", err)
 	}
 

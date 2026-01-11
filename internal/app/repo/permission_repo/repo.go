@@ -20,17 +20,17 @@ import (
 // queries.
 var (
 	//go:embed query/permission_create.sql
-	permissionCreateSql string
+	permissionCreateSQL string
 	//go:embed query/permission_update.sql
-	permissionUpdateSql string
+	permissionUpdateSQL string
 	//go:embed query/permission_delete.sql
-	permissionDeleteSql string
+	permissionDeleteSQL string
 	//go:embed query/permission_query.sql
-	permissionQuerySql string
+	permissionQuerySQL string
 	//go:embed query/permission_query_by_id.sql
-	permissionQueryByIdSql string
+	permissionQueryByIdSQL string
 	//go:embed query/permission_count.sql
-	permissionCountSql string
+	permissionCountSQL string
 )
 
 // Store manages the set of APIs for userDB database access.
@@ -65,7 +65,7 @@ func (s *Store) NewWithTx(tx pgsql.CommitRollbacker) (permission.Storer, error) 
 
 // Create inserts a new permissionDB into the database.
 func (s *Store) Create(ctx context.Context, perm permission.Permission) error {
-	err := pgsql.NamedExecContext(ctx, s.log, s.dbPool, permissionCreateSql, toPermissionDB(perm))
+	err := pgsql.NamedExecContext(ctx, s.log, s.dbPool, permissionCreateSQL, toPermissionDB(perm))
 	if err != nil {
 		return fmt.Errorf("error permission create in db: %w", err)
 	}
@@ -75,7 +75,7 @@ func (s *Store) Create(ctx context.Context, perm permission.Permission) error {
 
 // Update replaces a permissionDB document in the database.
 func (s *Store) Update(ctx context.Context, rl permission.Permission) error {
-	err := pgsql.NamedExecContext(ctx, s.log, s.dbPool, permissionUpdateSql, toPermissionDB(rl))
+	err := pgsql.NamedExecContext(ctx, s.log, s.dbPool, permissionUpdateSQL, toPermissionDB(rl))
 	if err != nil {
 		return fmt.Errorf("error permission update in db: %w", err)
 	}
@@ -85,7 +85,7 @@ func (s *Store) Update(ctx context.Context, rl permission.Permission) error {
 
 // Delete removes a permissionDB from the database.
 func (s *Store) Delete(ctx context.Context, rl permission.Permission) error {
-	err := pgsql.NamedExecContext(ctx, s.log, s.dbPool, permissionDeleteSql, toPermissionDB(rl))
+	err := pgsql.NamedExecContext(ctx, s.log, s.dbPool, permissionDeleteSQL, toPermissionDB(rl))
 	if err != nil {
 		return fmt.Errorf("error delete permission in db: %w", err)
 	}
@@ -106,7 +106,7 @@ func (s *Store) QueryByID(
 
 	var dbPermission permissionDB
 
-	err := pgsql.NamedQueryStruct(ctx, s.log, s.dbPool, permissionQueryByIdSql, data, &dbPermission)
+	err := pgsql.NamedQueryStruct(ctx, s.log, s.dbPool, permissionQueryByIdSQL, data, &dbPermission)
 	if err != nil {
 		if errors.Is(err, pgsql.ErrDBNotFound) {
 			return permission.Permission{}, fmt.Errorf("db: %w", permission.ErrNotFound)
@@ -130,7 +130,7 @@ func (s *Store) Query(
 		"rows_per_page": page.RowsPerPage(),
 	}
 
-	buf := bytes.NewBufferString(permissionQuerySql)
+	buf := bytes.NewBufferString(permissionQuerySQL)
 	applyFilter(filter, data, buf)
 
 	orderByClause, err := orderByClause(orderBy)
@@ -142,14 +142,8 @@ func (s *Store) Query(
 	buf.WriteString(" OFFSET :offset ROWS FETCH NEXT :rows_per_page ROWS ONLY")
 
 	var dbPermissions []permissionDB
-	if err := pgsql.NamedQuerySlice(
-		ctx,
-		s.log,
-		s.dbPool,
-		buf.String(),
-		data,
-		&dbPermissions,
-	); err != nil {
+	err = pgsql.NamedQuerySlice(ctx, s.log, s.dbPool, buf.String(), data, &dbPermissions)
+	if err != nil {
 		return nil, fmt.Errorf("error query permission in db: %w", err)
 	}
 
@@ -159,7 +153,7 @@ func (s *Store) Query(
 // Count returns the total number of users in the DB.
 func (s *Store) Count(ctx context.Context, filter permission.QueryFilter) (int, error) {
 	data := map[string]any{}
-	buf := bytes.NewBufferString(permissionCountSql)
+	buf := bytes.NewBufferString(permissionCountSQL)
 	applyFilter(filter, data, buf)
 
 	var count struct {

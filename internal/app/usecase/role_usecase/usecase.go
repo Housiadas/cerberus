@@ -75,7 +75,8 @@ func (uc *UseCase) Delete(ctx context.Context, roleID string) error {
 		return errs.Errorf(errs.Internal, "role query by id: %s", err)
 	}
 
-	if err := uc.roleService.Delete(ctx, rl); err != nil {
+	err = uc.roleService.Delete(ctx, rl)
+	if err != nil {
 		return errs.Errorf(errs.Internal, "delete: roleID[%s]: %s", rl.ID, err)
 	}
 

@@ -11,8 +11,8 @@ const (
 	apiVersion ctxKey = "apiVersion"
 )
 
-func SetRequestID(ctx context.Context, reqId string) context.Context {
-	return context.WithValue(ctx, requestID, reqId)
+func SetRequestID(ctx context.Context, reqID string) context.Context {
+	return context.WithValue(ctx, requestID, reqID)
 }
 
 func GetRequestID(ctx context.Context) string {
@@ -24,11 +24,12 @@ func GetRequestID(ctx context.Context) string {
 	return v
 }
 
-func SetApiVersion(ctx context.Context, version string) context.Context {
+func SetAPIVersion(ctx context.Context, version string) context.Context {
 	return context.WithValue(ctx, apiVersion, version)
 }
 
-func GetApiVersion(ctx context.Context) string {
+// GetAPIVersion returns the api version from the context.
+func GetAPIVersion(ctx context.Context) string {
 	v, ok := ctx.Value(apiVersion).(string)
 	if !ok {
 		return "v1"

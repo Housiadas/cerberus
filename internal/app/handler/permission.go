@@ -26,7 +26,9 @@ func (h *Handler) permissionCreate(
 	r *http.Request,
 ) web.Encoder {
 	var ucRole permission_usecase.NewPermission
-	if err := web.Decode(r, &ucRole); err != nil {
+
+	err := web.Decode(r, &ucRole)
+	if err != nil {
 		return errs.ParseValidationErrors(err)
 	}
 
@@ -76,11 +78,13 @@ func (h *Handler) permissionQuery(
 //	@Router			/v1/permissions/{permission_id} [put].
 func (h *Handler) permissionUpdate(
 	ctx context.Context,
-	w http.ResponseWriter,
+	_ http.ResponseWriter,
 	r *http.Request,
 ) web.Encoder {
 	var app permission_usecase.UpdatePermission
-	if err := web.Decode(r, &app); err != nil {
+
+	err := web.Decode(r, &app)
+	if err != nil {
 		return errs.ParseValidationErrors(err)
 	}
 
@@ -106,7 +110,7 @@ func (h *Handler) permissionUpdate(
 //	@Router			/v1/permissions/{permission_id} [delete].
 func (h *Handler) permissionDelete(
 	ctx context.Context,
-	w http.ResponseWriter,
+	_ http.ResponseWriter,
 	r *http.Request,
 ) web.Encoder {
 	permissionID := web.Param(r, "permission_id")

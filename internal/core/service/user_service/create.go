@@ -31,7 +31,8 @@ func (c *Service) Create(ctx context.Context, nu user.NewUser) (user.User, error
 		UpdatedAt:    now,
 	}
 
-	if err := c.storer.Create(ctx, usr); err != nil {
+	err = c.storer.Create(ctx, usr)
+	if err != nil {
 		return user.User{}, fmt.Errorf("create: %w", err)
 	}
 

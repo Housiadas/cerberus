@@ -165,7 +165,7 @@ func run(ctx context.Context, log *logger.Service) error {
 	})
 
 	api := http.Server{
-		Addr:         cfg.Rest.Api,
+		Addr:         cfg.Rest.API,
 		Handler:      h.Routes(),
 		ReadTimeout:  cfg.Rest.ReadTimeout,
 		WriteTimeout: cfg.Rest.WriteTimeout,

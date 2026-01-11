@@ -41,7 +41,8 @@ func (respond *Respond) Respond(handlerFunc HandlerFunc) http.HandlerFunc {
 		}
 
 		// Send an encoded response back to a client
-		if err := respond.encode(ctx, w, statusCode, resp); err != nil {
+		err = respond.encode(ctx, w, statusCode, resp)
+		if err != nil {
 			respond.log.Error(ctx, "web-respond", "ERROR", err)
 		}
 	}
@@ -53,8 +54,9 @@ func (respond *Respond) encode(
 	statusCode int,
 	dataModel Encoder,
 ) error {
-	// If the context has been canceled, it means the client is no longer waiting for a encode.
-	if err := ctx.Err(); err != nil {
+	// If the context has been canceled, it means the client is no longer waiting for an encode.
+	err := ctx.Err()
+	if err != nil {
 		if errors.Is(err, context.Canceled) {
 			return errors.New("client disconnected, do not send encode")
 		}
@@ -77,7 +79,8 @@ func (respond *Respond) encode(
 	w.Header().Set("Content-Type", contentType)
 	w.WriteHeader(statusCode)
 
-	if _, err := w.Write(data); err != nil {
+	_, err = w.Write(data)
+	if err != nil {
 		return fmt.Errorf("respond: write: %w", err)
 	}
 

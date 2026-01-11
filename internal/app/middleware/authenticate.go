@@ -33,6 +33,7 @@ func (m *Middleware) AuthenticateBearer() func(next http.Handler) http.Handler {
 			resp, err := m.UseCase.Auth.Validate(ctx, jwtUnverified)
 			if err != nil {
 				m.Error(w, err, http.StatusUnauthorized)
+				return
 			}
 
 			ctx = ctxPck.SetClaims(ctx, resp)
@@ -52,6 +53,7 @@ func (m *Middleware) AuthenticateBasic() func(next http.Handler) http.Handler {
 			if !ok {
 				err := errs.Errorf(errs.Unauthenticated, "invalid Basic auth")
 				m.Error(w, err, http.StatusUnauthorized)
+				return
 			}
 
 			authUsr := user_usecase.AuthenticateUser{
@@ -62,6 +64,7 @@ func (m *Middleware) AuthenticateBasic() func(next http.Handler) http.Handler {
 			_, err := m.UseCase.User.Authenticate(ctx, authUsr)
 			if err != nil {
 				m.Error(w, err, http.StatusUnauthorized)
+				return
 			}
 
 			next.ServeHTTP(w, r.WithContext(ctx))
