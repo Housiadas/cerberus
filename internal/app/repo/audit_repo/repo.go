@@ -41,12 +41,9 @@ func NewStore(log logger.Logger, dbPool *sqlx.DB) audit.Storer {
 
 // Create inserts a new auditDB record into the database.
 func (s *Store) Create(ctx context.Context, a audit.Audit) error {
-	dbAudit, err := toDBAudit(a)
-	if err != nil {
-		return fmt.Errorf("audit repo create error: %w", err)
-	}
+	dbAudit := toDBAudit(a)
 
-	err = pgsql.NamedExecContext(ctx, s.log, s.dbPool, auditCreateSQL, dbAudit)
+	err := pgsql.NamedExecContext(ctx, s.log, s.dbPool, auditCreateSQL, dbAudit)
 	if err != nil {
 		return fmt.Errorf("namedexeccontext: %w", err)
 	}
@@ -77,6 +74,7 @@ func (s *Store) Query(
 	buf.WriteString(" OFFSET :offset ROWS FETCH NEXT :rows_per_page ROWS ONLY")
 
 	var dbAudits []auditDB
+
 	err = pgsql.NamedQuerySlice(ctx, s.log, s.dbPool, buf.String(), data, &dbAudits)
 	if err != nil {
 		return nil, fmt.Errorf("namedqueryslice: %w", err)

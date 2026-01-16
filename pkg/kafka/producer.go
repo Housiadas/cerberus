@@ -49,7 +49,7 @@ func (p *ProducerClient) Produce(_ context.Context, msg *kafka.Message) error {
 
 	err := p.producer.Produce(msg, deliveryChan)
 	if err != nil {
-		return err
+		return fmt.Errorf("producer error: %w", err)
 	}
 
 	e := <-deliveryChan

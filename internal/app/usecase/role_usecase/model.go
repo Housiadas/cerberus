@@ -29,10 +29,10 @@ type RolePageResult struct {
 func (r Role) Encode() ([]byte, string, error) {
 	data, err := json.Marshal(r)
 	if err != nil {
-		return nil, "application/json", fmt.Errorf("role encode error: %w", err)
+		return nil, web.ContentTypeJSON, fmt.Errorf("role encode error: %w", err)
 	}
 
-	return data, "application/json", nil
+	return data, web.ContentTypeJSON, nil
 }
 
 func toAppRole(r role.Role) Role {

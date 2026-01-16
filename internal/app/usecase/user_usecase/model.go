@@ -26,10 +26,10 @@ type AuthenticateUser struct {
 func (app *AuthenticateUser) Encode() ([]byte, string, error) {
 	data, err := json.Marshal(app)
 	if err != nil {
-		return nil, "application/json", fmt.Errorf("auth user encode error: %w", err)
+		return nil, web.ContentTypeJSON, fmt.Errorf("auth user encode error: %w", err)
 	}
 
-	return data, "application/json", nil
+	return data, web.ContentTypeJSON, nil
 }
 
 // Validate checks the data in the model is considered clean.
@@ -60,10 +60,10 @@ type User struct {
 func (app User) Encode() ([]byte, string, error) {
 	data, err := json.Marshal(app)
 	if err != nil {
-		return nil, "application/json", fmt.Errorf("user encode error: %w", err)
+		return nil, web.ContentTypeJSON, fmt.Errorf("user encode error: %w", err)
 	}
 
-	return data, "application/json", nil
+	return data, web.ContentTypeJSON, nil
 }
 
 func toAppUser(bus user.User) User {

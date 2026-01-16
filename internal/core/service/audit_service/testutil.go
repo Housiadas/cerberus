@@ -3,7 +3,6 @@ package audit_service
 import (
 	"context"
 	"fmt"
-	"math/rand"
 
 	"github.com/Housiadas/cerberus/internal/core/domain/audit"
 	"github.com/Housiadas/cerberus/internal/core/domain/entity"
@@ -20,19 +19,16 @@ func TestNewAudits(
 ) []audit.NewAudit {
 	newAudits := make([]audit.NewAudit, numb)
 
-	idx := rand.Intn(10000)
 	for i := range numb {
-		idx++
-
 		objID, _ := uuid.NewV7()
 		na := audit.NewAudit{
 			ObjID:     objID,
 			ObjEntity: objEntity,
-			ObjName:   name.MustParse(fmt.Sprintf("ObjName%d", idx)),
+			ObjName:   name.MustParse(fmt.Sprintf("ObjName%d", i)),
 			ActorID:   actorID,
 			Action:    action,
-			Data:      struct{ Name string }{Name: fmt.Sprintf("Name%d", idx)},
-			Message:   fmt.Sprintf("Message%d", idx),
+			Data:      struct{ Name string }{Name: fmt.Sprintf("Name%d", i)},
+			Message:   fmt.Sprintf("Message%d", i),
 		}
 
 		newAudits[i] = na

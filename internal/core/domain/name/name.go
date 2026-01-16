@@ -54,6 +54,17 @@ type Null struct {
 	valid bool
 }
 
+// MustParseNull parses the string value and returns a name if the value
+// complies with the rules for a name. If an error occurs the function panics.
+func MustParseNull(value string) Null {
+	name, err := ParseNull(value)
+	if err != nil {
+		panic(err)
+	}
+
+	return name
+}
+
 // String returns the value of the name.
 func (n Null) String() string {
 	if !n.valid {
@@ -85,15 +96,4 @@ func ParseNull(value string) (Null, error) {
 	}
 
 	return Null{value, true}, nil
-}
-
-// MustParseNull parses the string value and returns a name if the value
-// complies with the rules for a name. If an error occurs the function panics.
-func MustParseNull(value string) Null {
-	name, err := ParseNull(value)
-	if err != nil {
-		panic(err)
-	}
-
-	return name
 }

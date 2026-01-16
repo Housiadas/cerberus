@@ -11,6 +11,7 @@ import (
 func Run(t *testing.T, table []Table, testName string) {
 	for _, tt := range table {
 		f := func(t *testing.T) {
+			t.Helper()
 			gotResp := tt.ExcFunc(context.Background())
 
 			diff := tt.CmpFunc(gotResp, tt.ExpResp)

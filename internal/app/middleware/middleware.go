@@ -1,4 +1,4 @@
-// Package middleware provides level middleware support.
+// Package middleware package provides level middleware support.
 package middleware
 
 import (
@@ -15,15 +15,10 @@ import (
 	"github.com/Housiadas/cerberus/pkg/pgsql"
 	"github.com/Housiadas/cerberus/pkg/web"
 	"go.opentelemetry.io/otel/trace"
-	"golang.org/x/sync/singleflight"
 )
 
-var (
-	// ErrInvalidID represents a condition where the id is not an uuid.
-	ErrInvalidID = errors.New("ID is not in its proper form")
-
-	group = singleflight.Group{}
-)
+// ErrInvalidID represents a condition where the id is not an uuid.
+var ErrInvalidID = errors.New("ID is not in its proper form")
 
 type Config struct {
 	Log                  logger.Logger
@@ -93,14 +88,5 @@ func (rec *ResponseRecorder) Write(b []byte) (int, error) {
 		return 0, fmt.Errorf("write response error: %w", err)
 	}
 
-	return write, err
-}
-
-func checkIsError(e web.Encoder) error {
-	err, hasError := e.(error)
-	if hasError {
-		return err
-	}
-
-	return nil
+	return write, nil
 }

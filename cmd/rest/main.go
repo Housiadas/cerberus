@@ -44,20 +44,15 @@ func main() {
 	// Initialize Logger
 	// -------------------------------------------------------------------------
 	var log *logger.Service
+	ctx := context.Background()
 
-	traceIDFn := func(ctx context.Context) string {
-		return otel.GetTraceID(ctx)
-	}
-	requestIDFn := func(ctx context.Context) string {
-		return ctxPck.GetRequestID(ctx)
-	}
+	traceIDFn := otel.GetTraceID(ctx)
+	requestIDFn := ctxPck.GetRequestID(ctx)
 	log = logger.New(os.Stdout, logger.LevelInfo, "Rest api", traceIDFn, requestIDFn)
 
 	// -------------------------------------------------------------------------
 	// Run the application
 	// -------------------------------------------------------------------------
-	ctx := context.Background()
-
 	err := run(ctx, log)
 	if err != nil {
 		log.Error(ctx, "error during rest server startup", "msg", err)

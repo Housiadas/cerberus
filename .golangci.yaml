@@ -6,6 +6,8 @@ linters:
   disable:
     - funlen
     - mnd
+    - varnamelen
+    - depguard
 #    - err113
 #    - depguard
 #    - musttag

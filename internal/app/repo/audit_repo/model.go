@@ -24,7 +24,7 @@ type auditDB struct {
 	Timestamp time.Time          `db:"timestamp"`
 }
 
-func toDBAudit(bus audit.Audit) (auditDB, error) {
+func toDBAudit(bus audit.Audit) auditDB {
 	db := auditDB{
 		ID:        bus.ID,
 		ObjID:     bus.ObjID,
@@ -37,7 +37,7 @@ func toDBAudit(bus audit.Audit) (auditDB, error) {
 		Timestamp: bus.Timestamp.UTC(),
 	}
 
-	return db, nil
+	return db
 }
 
 func toDomainAudit(db auditDB) (audit.Audit, error) {
@@ -60,7 +60,7 @@ func toDomainAudit(db auditDB) (audit.Audit, error) {
 		Action:    db.Action,
 		Data:      json.RawMessage(db.Data.JSONText),
 		Message:   db.Message,
-		Timestamp: db.Timestamp.Local(),
+		Timestamp: db.Timestamp.UTC(),
 	}
 
 	return bus, nil

@@ -35,6 +35,7 @@ func (m *Middleware) HasPermission(permissionName string) func(next http.Handler
 					"has_permissions", hasPermission,
 				)
 				m.Error(w, errs.New(errs.PermissionDenied, nil), http.StatusForbidden)
+
 				return
 			}
 

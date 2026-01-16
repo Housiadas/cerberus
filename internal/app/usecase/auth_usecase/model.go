@@ -17,10 +17,10 @@ type LoginReq struct {
 func (l *LoginReq) Encode() ([]byte, string, error) {
 	data, err := json.Marshal(l)
 	if err != nil {
-		return nil, "application/json", fmt.Errorf("login req encode err %w", err)
+		return nil, web.ContentTypeJSON, fmt.Errorf("login req encode err %w", err)
 	}
 
-	return data, "application/json", nil
+	return data, web.ContentTypeJSON, nil
 }
 
 // Decode implements the decoder interface.
@@ -46,17 +46,17 @@ func (l *LoginReq) Validate() error {
 // =================================================================
 
 type RefreshTokenReq struct {
-	Token string `json:"refresh_token" validate:"required"`
+	Token string `json:"refreshToken" validate:"required"`
 }
 
 // Encode implements the encoder interface.
 func (r *RefreshTokenReq) Encode() ([]byte, string, error) {
 	data, err := json.Marshal(r)
 	if err != nil {
-		return nil, "application/json", fmt.Errorf("refresh token req encode error: %w", err)
+		return nil, web.ContentTypeJSON, fmt.Errorf("refresh token req encode error: %w", err)
 	}
 
-	return data, "application/json", nil
+	return data, web.ContentTypeJSON, nil
 }
 
 // Decode implements the decoder interface.
@@ -86,10 +86,10 @@ type LogoutReq struct {
 func (l *LogoutReq) Encode() ([]byte, string, error) {
 	data, err := json.Marshal(l)
 	if err != nil {
-		return nil, "application/json", fmt.Errorf("logout req encode error: %w", err)
+		return nil, web.ContentTypeJSON, fmt.Errorf("logout req encode error: %w", err)
 	}
 
-	return data, "application/json", nil
+	return data, web.ContentTypeJSON, nil
 }
 
 // Decode implements the decoder interface.
@@ -122,8 +122,8 @@ type Token struct {
 func (t Token) Encode() ([]byte, string, error) {
 	data, err := json.Marshal(t)
 	if err != nil {
-		return nil, "application/json", fmt.Errorf("token encode error: %w", err)
+		return nil, web.ContentTypeJSON, fmt.Errorf("token encode error: %w", err)
 	}
 
-	return data, "application/json", nil
+	return data, web.ContentTypeJSON, nil
 }

@@ -10,8 +10,10 @@ import (
 
 // Run performs the actual test logic based on the table data.
 func (at *Test) Run(t *testing.T, table []Table, testName string) {
+	t.Helper()
 	for _, tt := range table {
 		f := func(t *testing.T) {
+			t.Helper()
 			r := httptest.NewRequest(tt.Method, tt.URL, nil)
 			w := httptest.NewRecorder()
 

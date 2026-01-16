@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -38,13 +37,7 @@ func run() error {
 	// -------------------------------------------------------------------------
 	// Initialize Service
 	// -------------------------------------------------------------------------
-	traceIDFn := func(context.Context) string {
-		return "00000000-0000-0000-0000-000000000000"
-	}
-	requestIDFn := func(context.Context) string {
-		return "00000000-0000-0000-0000-000000000000"
-	}
-	log := logger.New(io.Discard, logger.LevelInfo, "CLI", traceIDFn, requestIDFn)
+	log := logger.New(io.Discard, logger.LevelInfo, "CLI", "", "")
 
 	// -------------------------------------------------------------------------
 	// Initialize commands

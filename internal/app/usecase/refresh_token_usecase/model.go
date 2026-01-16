@@ -26,10 +26,10 @@ type RefreshToken struct {
 func (r RefreshToken) Encode() ([]byte, string, error) {
 	data, err := json.Marshal(r)
 	if err != nil {
-		return nil, "application/json", fmt.Errorf("refresh token encode error: %w", err)
+		return nil, web.ContentTypeJSON, fmt.Errorf("refresh token encode error: %w", err)
 	}
 
-	return data, "application/json", nil
+	return data, web.ContentTypeJSON, nil
 }
 
 func toAppToken(r refresh_token.RefreshToken) RefreshToken {
@@ -41,15 +41,6 @@ func toAppToken(r refresh_token.RefreshToken) RefreshToken {
 		CreatedAt: r.CreatedAt.Format(time.RFC3339),
 		Revoked:   r.Revoked,
 	}
-}
-
-func toAppTokens(tkns []refresh_token.RefreshToken) []RefreshToken {
-	appRoles := make([]RefreshToken, len(tkns))
-	for i, rl := range tkns {
-		appRoles[i] = toAppToken(rl)
-	}
-
-	return appRoles
 }
 
 func toCoreToken(r RefreshToken) (refresh_token.RefreshToken, error) {

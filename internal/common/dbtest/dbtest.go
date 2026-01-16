@@ -22,6 +22,7 @@ type Database struct {
 // to handle testing. The database is migrated to the current version, and
 // a connection pool is provided with internal core packages.
 func New(t *testing.T, testName string) *sqlx.DB {
+	t.Helper()
 	// load app local config
 	cfg := newConfig(t)
 

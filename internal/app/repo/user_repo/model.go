@@ -60,8 +60,8 @@ func toUserDomain(db userDB) (user.User, error) {
 		PasswordHash: db.PasswordHash,
 		Enabled:      db.Enabled,
 		Department:   department,
-		CreatedAt:    db.CreatedAt.In(time.Local),
-		UpdatedAt:    db.UpdatedAt.In(time.Local),
+		CreatedAt:    db.CreatedAt.In(time.UTC),
+		UpdatedAt:    db.UpdatedAt.In(time.UTC),
 	}
 
 	return bus, nil

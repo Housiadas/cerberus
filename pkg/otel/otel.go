@@ -120,6 +120,7 @@ func AddSpan(
 	}
 
 	ctx, span := tracer.Start(ctx, spanName)
+	defer span.End()
 
 	span.SetAttributes(keyValues...)
 

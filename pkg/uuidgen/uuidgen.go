@@ -14,7 +14,7 @@ type Generator interface {
 type V7Generator struct{}
 
 // NewV7 creates a new V7 UUID generator.
-func NewV7() Generator {
+func NewV7() *V7Generator {
 	return &V7Generator{}
 }
 

@@ -31,10 +31,10 @@ type Logger interface {
 
 // Service represents a logger for logging information.
 type Service struct {
-	discard     bool
-	handler     slog.Handler
-	traceIDFn   TraceIDFn
-	requestIDFn RequestIDFn
+	discard   bool
+	handler   slog.Handler
+	traceID   string
+	requestID string
 }
 
 // New constructs a new log for application use.
@@ -42,8 +42,8 @@ func New(
 	writerIO io.Writer,
 	minLevel Level,
 	serviceName string,
-	traceIDFn TraceIDFn,
-	requestIDFn RequestIDFn,
+	traceIDFn string,
+	requestIDFn string,
 ) *Service {
 	return new(writerIO, minLevel, serviceName, traceIDFn, requestIDFn, Events{})
 }
@@ -53,8 +53,8 @@ func NewWithEvents(
 	w io.Writer,
 	minLevel Level,
 	serviceName string,
-	traceIDFn TraceIDFn,
-	requestIDFn RequestIDFn,
+	traceIDFn string,
+	requestIDFn string,
 	events Events,
 ) *Service {
 	return new(w, minLevel, serviceName, traceIDFn, requestIDFn, events)
@@ -162,12 +162,12 @@ func (log *Service) write(
 
 	slogRec := slog.NewRecord(time.Now(), slogLevel, msg, pcs[0])
 
-	if log.traceIDFn != nil {
-		args = append(args, "trace_id", log.traceIDFn(ctx))
+	if log.traceID != "" {
+		args = append(args, "trace_id", log.traceID)
 	}
 
-	if log.requestIDFn != nil {
-		args = append(args, "request_id", log.requestIDFn(ctx))
+	if log.requestID != "" {
+		args = append(args, "request_id", log.requestID)
 	}
 
 	slogRec.Add(args...)
@@ -179,8 +179,8 @@ func new(
 	w io.Writer,
 	minLevel Level,
 	serviceName string,
-	traceIDFn TraceIDFn,
-	requestIDFn RequestIDFn,
+	traceID string,
+	requestID string,
 	events Events,
 ) *Service {
 	// Convert the file name to just the name.ext when this key/value is logged.
@@ -219,9 +219,9 @@ func new(
 	handler = handler.WithAttrs(attrs)
 
 	return &Service{
-		discard:     w == io.Discard,
-		handler:     handler,
-		traceIDFn:   traceIDFn,
-		requestIDFn: requestIDFn,
+		discard:   w == io.Discard,
+		handler:   handler,
+		traceID:   traceID,
+		requestID: requestID,
 	}
 }

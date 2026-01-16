@@ -34,8 +34,8 @@ func toPermissionDomain(db permissionDB) (permission.Permission, error) {
 	bus := permission.Permission{
 		ID:        db.ID,
 		Name:      nme,
-		CreatedAt: db.CreatedAt.In(time.Local),
-		UpdatedAt: db.UpdatedAt.In(time.Local),
+		CreatedAt: db.CreatedAt.In(time.UTC),
+		UpdatedAt: db.UpdatedAt.In(time.UTC),
 	}
 
 	return bus, nil

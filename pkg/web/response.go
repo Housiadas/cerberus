@@ -87,7 +87,7 @@ func (respond *Respond) encode(
 	return nil
 }
 
-func (respond *Respond) errorRecorder(ctx context.Context, statusCode int, err error) Encoder {
+func (respond *Respond) errorRecorder(ctx context.Context, statusCode int, err error) *errs.Error {
 	var appErr *errs.Error
 
 	ok := errors.As(err, &appErr)

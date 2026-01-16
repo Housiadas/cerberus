@@ -28,6 +28,7 @@ func (h *Handler) authLogin(
 	r *http.Request,
 ) web.Encoder {
 	var req auth_usecase.LoginReq
+
 	err := web.Decode(r, &req)
 	if err != nil {
 		return errs.ParseValidationErrors(err)
@@ -58,6 +59,7 @@ func (h *Handler) authRegister(
 	r *http.Request,
 ) web.Encoder {
 	var req user_usecase.NewUser
+
 	err := web.Decode(r, &req)
 	if err != nil {
 		return errs.ParseValidationErrors(err)
@@ -87,6 +89,7 @@ func (h *Handler) authLogout(
 	r *http.Request,
 ) web.Encoder {
 	var req auth_usecase.LogoutReq
+
 	err := web.Decode(r, &req)
 	if err != nil {
 		return errs.ParseValidationErrors(err)

@@ -65,6 +65,7 @@ func (s *Store) Query(
 	buf.WriteString(" OFFSET :offset ROWS FETCH NEXT :rows_per_page ROWS ONLY")
 
 	var dbRows []rowDB
+
 	err = pgsql.NamedQuerySlice(ctx, s.log, s.db, buf.String(), data, &dbRows)
 	if err != nil {
 		return nil, fmt.Errorf("db query user_roles_permissions: %w", err)

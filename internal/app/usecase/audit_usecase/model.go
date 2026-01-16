@@ -31,10 +31,10 @@ type AuditPageResult struct {
 func (app Audit) Encode() ([]byte, string, error) {
 	data, err := json.Marshal(app)
 	if err != nil {
-		return nil, "application/json", fmt.Errorf("audit encode error: %w", err)
+		return nil, web.ContentTypeJSON, fmt.Errorf("audit encode error: %w", err)
 	}
 
-	return data, "application/json", nil
+	return data, web.ContentTypeJSON, nil
 }
 
 func toAppAudit(aud audit.Audit) Audit {

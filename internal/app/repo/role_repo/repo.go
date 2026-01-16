@@ -139,6 +139,7 @@ func (s *Store) Query(
 	buf.WriteString(" OFFSET :offset ROWS FETCH NEXT :rows_per_page ROWS ONLY")
 
 	var dbRoles []roleDB
+
 	err = pgsql.NamedQuerySlice(ctx, s.log, s.db, buf.String(), data, &dbRoles)
 	if err != nil {
 		return nil, fmt.Errorf("error query role in db: %w", err)

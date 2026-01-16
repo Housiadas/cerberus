@@ -17,6 +17,7 @@ type Config struct {
 }
 
 func newConfig(t *testing.T) Config {
+	t.Helper()
 	cfg, err := config.LoadConfig()
 	require.NoError(t, err)
 

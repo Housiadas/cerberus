@@ -27,10 +27,10 @@ type PermissionPageResults struct {
 func (p Permission) Encode() ([]byte, string, error) {
 	data, err := json.Marshal(p)
 	if err != nil {
-		return nil, "application/json", fmt.Errorf("permission encode error: %w", err)
+		return nil, web.ContentTypeJSON, fmt.Errorf("permission encode error: %w", err)
 	}
 
-	return data, "application/json", nil
+	return data, web.ContentTypeJSON, nil
 }
 
 func toAppPermission(p permission.Permission) Permission {

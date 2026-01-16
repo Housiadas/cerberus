@@ -23,6 +23,17 @@ func newEntity(entity string) Entity {
 	return e
 }
 
+// MustParse parses the string value and returns a role if one exists.
+// If an error occurs, the function panics.
+func MustParse(value string) Entity {
+	entity, err := Parse(value)
+	if err != nil {
+		panic(err)
+	}
+
+	return entity
+}
+
 // String returns the name of the role.
 func (e Entity) String() string {
 	return e.value
@@ -46,15 +57,4 @@ func Parse(value string) (Entity, error) {
 	}
 
 	return entity, nil
-}
-
-// MustParse parses the string value and returns a role if one exists.
-// If an error occurs, the function panics.
-func MustParse(value string) Entity {
-	entity, err := Parse(value)
-	if err != nil {
-		panic(err)
-	}
-
-	return entity
 }

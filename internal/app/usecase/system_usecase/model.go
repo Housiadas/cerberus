@@ -3,6 +3,8 @@ package system_usecase
 import (
 	"encoding/json"
 	"fmt"
+
+	"github.com/Housiadas/cerberus/pkg/web"
 )
 
 type Status struct {
@@ -13,10 +15,10 @@ type Status struct {
 func (s Status) Encode() ([]byte, string, error) {
 	data, err := json.Marshal(s)
 	if err != nil {
-		return nil, "application/json", fmt.Errorf("status encode error: %w", err)
+		return nil, web.ContentTypeJSON, fmt.Errorf("status encode error: %w", err)
 	}
 
-	return data, "application/json", nil
+	return data, web.ContentTypeJSON, nil
 }
 
 // Info represents information about the usecase.
@@ -25,7 +27,7 @@ type Info struct {
 	Build      string `json:"build,omitempty"`
 	Host       string `json:"host,omitempty"`
 	Name       string `json:"name,omitempty"`
-	PodIP      string `json:"podIP,omitempty"`
+	PodIP      string `json:"podIp,omitempty"`
 	Node       string `json:"node,omitempty"`
 	Namespace  string `json:"namespace,omitempty"`
 	GOMAXPROCS int    `json:"gomaxprocs,omitempty"`
@@ -35,8 +37,8 @@ type Info struct {
 func (info Info) Encode() ([]byte, string, error) {
 	data, err := json.Marshal(info)
 	if err != nil {
-		return nil, "application/json", fmt.Errorf("info encode error: %w", err)
+		return nil, web.ContentTypeJSON, fmt.Errorf("info encode error: %w", err)
 	}
 
-	return data, "application/json", nil
+	return data, web.ContentTypeJSON, nil
 }
