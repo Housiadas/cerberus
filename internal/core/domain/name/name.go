@@ -15,16 +15,6 @@ type Name struct {
 	value string
 }
 
-// String returns the value of the name.
-func (n Name) String() string {
-	return n.value
-}
-
-// Equal provides support for the go-cmp package and testing.
-func (n Name) Equal(n2 Name) bool {
-	return n.value == n2.value
-}
-
 // Parse parses the string value and returns a name if the value complies
 // with the rules for a name.
 func Parse(value string) (Name, error) {
@@ -44,6 +34,16 @@ func MustParse(value string) Name {
 	}
 
 	return name
+}
+
+// String returns the value of the name.
+func (n Name) String() string {
+	return n.value
+}
+
+// Equal provides support for the go-cmp package and testing.
+func (n Name) Equal(n2 Name) bool {
+	return n.value == n2.value
 }
 
 // =============================================================================

@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/Housiadas/cerberus/internal/common/validation"
+	"github.com/Housiadas/cerberus/pkg/web"
 )
 
 // LoginReq defines the data needed to authenticate a user.

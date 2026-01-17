@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/Housiadas/cerberus/internal/core/domain/refresh_token"
+	"github.com/Housiadas/cerberus/pkg/web"
 	"github.com/Housiadas/cerberus/pkg/web/errs"
 	"github.com/google/uuid"
 )

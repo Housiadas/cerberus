@@ -45,7 +45,7 @@ func New(
 	traceIDFn string,
 	requestIDFn string,
 ) *Service {
-	return new(writerIO, minLevel, serviceName, traceIDFn, requestIDFn, Events{})
+	return newLogger(writerIO, minLevel, serviceName, traceIDFn, requestIDFn, Events{})
 }
 
 // NewWithEvents constructs a new log for application use with events.
@@ -57,7 +57,7 @@ func NewWithEvents(
 	requestIDFn string,
 	events Events,
 ) *Service {
-	return new(w, minLevel, serviceName, traceIDFn, requestIDFn, events)
+	return newLogger(w, minLevel, serviceName, traceIDFn, requestIDFn, events)
 }
 
 // NewWithHandler returns a new log for application use with the underlying
@@ -175,7 +175,7 @@ func (log *Service) write(
 	log.handler.Handle(ctx, slogRec)
 }
 
-func new(
+func newLogger(
 	w io.Writer,
 	minLevel Level,
 	serviceName string,

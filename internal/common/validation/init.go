@@ -10,6 +10,7 @@ import (
 // validate holds the settings and caches for validating request struct values.
 var validate *validator.Validate
 
+//nolint:gochecknoinits
 func init() {
 	// Instantiate a validator.
 	validate = validator.New(validator.WithRequiredStructEnabled())

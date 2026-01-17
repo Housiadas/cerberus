@@ -79,7 +79,7 @@ func (rec *ResponseRecorder) WriteHeader(code int) {
 	rec.ResponseWriter.WriteHeader(code)
 }
 
-// Capture the response body.
+// Write Capture the response body.
 func (rec *ResponseRecorder) Write(b []byte) (int, error) {
 	rec.body.Write(b)
 

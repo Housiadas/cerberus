@@ -12,54 +12,57 @@ import (
 func (at *Test) Run(t *testing.T, table []Table, testName string) {
 	t.Helper()
 	for _, tt := range table {
-		f := func(t *testing.T) {
-			t.Helper()
-			r := httptest.NewRequest(tt.Method, tt.URL, nil)
-			w := httptest.NewRecorder()
+		t.Run(testName+"-"+tt.Name, at.server(tt))
+	}
+}
 
-			if tt.Input != nil {
-				d, err := json.Marshal(tt.Input)
-				if err != nil {
-					t.Fatalf("Should be able to marshal the model : %s", err)
-				}
+func (at *Test) server(tt Table) func(t *testing.T) {
+	return func(t *testing.T) {
+		t.Helper()
 
-				r = httptest.NewRequest(tt.Method, tt.URL, bytes.NewBuffer(d))
-			}
+		r := httptest.NewRequest(tt.Method, tt.URL, nil)
+		w := httptest.NewRecorder()
 
-			// add authorization JWT
-			if tt.AccessToken != nil {
-				r.Header.Set("Authorization", "Bearer "+*tt.AccessToken)
-			}
-
-			at.Mux.ServeHTTP(w, r)
-
-			if w.Code != tt.StatusCode {
-				t.Fatalf("%s: Should receive a status code of %d for the response : %d",
-					tt.Name, tt.StatusCode, w.Code,
-				)
-			}
-
-			if tt.StatusCode == http.StatusNoContent {
-				return
-			}
-
-			err := json.Unmarshal(w.Body.Bytes(), tt.GotResp)
+		if tt.Input != nil {
+			d, err := json.Marshal(tt.Input)
 			if err != nil {
-				t.Fatalf("Should be able to unmarshal the response : %s", err)
+				t.Fatalf("Should be able to marshal the model : %s", err)
 			}
 
-			diff := tt.AssertFunc(tt.GotResp, tt.ExpResp)
-			if diff != "" {
-				t.Log("DIFF")
-				t.Logf("%s", diff)
-				t.Log("GOT")
-				t.Logf("%#v", tt.GotResp)
-				t.Log("EXP")
-				t.Logf("%#v", tt.ExpResp)
-				t.Fatalf("Should get the expected response")
-			}
+			r = httptest.NewRequest(tt.Method, tt.URL, bytes.NewBuffer(d))
 		}
 
-		t.Run(testName+"-"+tt.Name, f)
+		// add authorization JWT
+		if tt.AccessToken != nil {
+			r.Header.Set("Authorization", "Bearer "+*tt.AccessToken)
+		}
+
+		at.Mux.ServeHTTP(w, r)
+
+		if w.Code != tt.StatusCode {
+			t.Fatalf("%s: Should receive a status code of %d for the response : %d",
+				tt.Name, tt.StatusCode, w.Code,
+			)
+		}
+
+		if tt.StatusCode == http.StatusNoContent {
+			return
+		}
+
+		err := json.Unmarshal(w.Body.Bytes(), tt.GotResp)
+		if err != nil {
+			t.Fatalf("Should be able to unmarshal the response : %s", err)
+		}
+
+		diff := tt.AssertFunc(tt.GotResp, tt.ExpResp)
+		if diff != "" {
+			t.Log("DIFF")
+			t.Logf("%s", diff)
+			t.Log("GOT")
+			t.Logf("%#v", tt.GotResp)
+			t.Log("EXP")
+			t.Logf("%#v", tt.ExpResp)
+			t.Fatalf("Should get the expected response")
+		}
 	}
 }

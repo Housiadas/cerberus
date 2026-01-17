@@ -10,7 +10,6 @@ import (
 	"github.com/Housiadas/cerberus/internal/core/domain/user"
 	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/Housiadas/cerberus/pkg/order"
-	"github.com/Housiadas/cerberus/pkg/pgsql"
 	"github.com/Housiadas/cerberus/pkg/web"
 	"github.com/google/uuid"
 	"github.com/viccon/sturdyc"
@@ -36,53 +35,6 @@ func NewStore(log *logger.Service, storer user.Storer, ttl time.Duration) *Store
 		storer: storer,
 		cache:  sturdyc.New[user.User](capacity, numShards, ttl, evictionPercentage),
 	}
-}
-
-// NewWithTx constructs a new Store value replacing the sqlx DB
-// value with a sqlx DB value that is currently inside a transaction.
-func (s *Store) NewWithTx(tx pgsql.CommitRollbacker) (user.Storer, error) {
-	withTx, err := s.storer.NewWithTx(tx)
-	if err != nil {
-		return nil, fmt.Errorf("user transaction issue: %w", err)
-	}
-
-	return withTx, nil
-}
-
-// Create inserts a new user into the database.
-func (s *Store) Create(ctx context.Context, usr user.User) error {
-	err := s.storer.Create(ctx, usr)
-	if err != nil {
-		return fmt.Errorf("user create: %w", err)
-	}
-
-	s.writeCache(usr)
-
-	return nil
-}
-
-// Update replaces a user document in the database.
-func (s *Store) Update(ctx context.Context, usr user.User) error {
-	err := s.storer.Update(ctx, usr)
-	if err != nil {
-		return fmt.Errorf("user update: %w", err)
-	}
-
-	s.writeCache(usr)
-
-	return nil
-}
-
-// Delete removes a user from the database.
-func (s *Store) Delete(ctx context.Context, usr user.User) error {
-	err := s.storer.Delete(ctx, usr)
-	if err != nil {
-		return fmt.Errorf("user delete: %w", err)
-	}
-
-	s.deleteCache(usr)
-
-	return nil
 }
 
 // Query retrieves a list of existing users from the database.

@@ -32,7 +32,7 @@ type Store struct {
 }
 
 // NewStore constructs the API for data access.
-func NewStore(log logger.Logger, dbPool *sqlx.DB) audit.Storer {
+func NewStore(log logger.Logger, dbPool *sqlx.DB) *Store {
 	return &Store{
 		log:    log,
 		dbPool: dbPool,

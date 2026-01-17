@@ -31,7 +31,7 @@ type Store struct {
 	dbPool sqlx.ExtContext
 }
 
-func NewStore(log logger.Logger, dbPool *sqlx.DB) refresh_token.Storer {
+func NewStore(log logger.Logger, dbPool *sqlx.DB) *Store {
 	return &Store{
 		log:    log,
 		dbPool: dbPool,

@@ -2,7 +2,6 @@ package middleware
 
 import (
 	"encoding/base64"
-	"errors"
 	"net/http"
 	"strings"
 
@@ -20,9 +19,7 @@ func (m *Middleware) AuthenticateBearer() func(next http.Handler) http.Handler {
 
 			bearerToken := r.Header.Get("Authorization")
 			if !strings.HasPrefix(bearerToken, "Bearer ") {
-				err := errs.New(errs.Unauthenticated,
-					errors.New("expected authorization header format: Bearer <token>"),
-				)
+				err := errs.New(errs.Unauthenticated, ErrInvalidAuthHeader)
 				m.Error(w, err, http.StatusUnauthorized)
 
 				return
@@ -52,7 +49,7 @@ func (m *Middleware) AuthenticateBasic() func(next http.Handler) http.Handler {
 
 			email, pass, ok := parseBasicAuth(authorizationHeader)
 			if !ok {
-				err := errs.Errorf(errs.Unauthenticated, "invalid Basic auth")
+				err := errs.New(errs.Unauthenticated, ErrInvalidBasicAuth)
 				m.Error(w, err, http.StatusUnauthorized)
 
 				return

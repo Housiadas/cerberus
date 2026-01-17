@@ -44,6 +44,7 @@ func main() {
 	// Initialize Logger
 	// -------------------------------------------------------------------------
 	var log *logger.Service
+
 	ctx := context.Background()
 
 	traceIDFn := otel.GetTraceID(ctx)
@@ -134,7 +135,15 @@ func run(ctx context.Context, log *logger.Service) error {
 	go func() {
 		log.Info(ctx, "startup", "status", "Debug server starting", "host", cfg.Rest.Debug)
 
-		err := http.ListenAndServe(cfg.Rest.Debug, debug.Mux())
+		debugSrv := http.Server{
+			Addr:         cfg.Rest.Debug,
+			Handler:      debug.Mux(),
+			ReadTimeout:  cfg.Rest.ReadTimeout,
+			WriteTimeout: cfg.Rest.WriteTimeout,
+			IdleTimeout:  cfg.Rest.IdleTimeout,
+		}
+
+		err := debugSrv.ListenAndServe()
 		if err != nil {
 			log.Error(ctx, "shutdown",
 				"status", "debug router closed",

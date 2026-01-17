@@ -43,7 +43,7 @@ type Store struct {
 }
 
 // NewStore constructs the api for data access.
-func NewStore(log logger.Logger, dbPool *sqlx.DB) user.Storer {
+func NewStore(log logger.Logger, dbPool *sqlx.DB) *Store {
 	return &Store{
 		log:    log,
 		dbPool: dbPool,
@@ -52,7 +52,7 @@ func NewStore(log logger.Logger, dbPool *sqlx.DB) user.Storer {
 
 // NewWithTx constructs a new Store value replacing the sqlx DB
 // value with a sqlx DB value that is currently inside a transaction.
-func (s *Store) NewWithTx(tx pgsql.CommitRollbacker) (user.Storer, error) {
+func (s *Store) NewWithTx(tx pgsql.CommitRollbacker) (*Store, error) {
 	ec, err := pgsql.GetExtContext(tx)
 	if err != nil {
 		return nil, fmt.Errorf("user transaction init error: %w", err)

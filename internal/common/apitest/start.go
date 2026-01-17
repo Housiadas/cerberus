@@ -22,6 +22,7 @@ func StartTest(t *testing.T, testName string) (*Test, error) {
 
 	// Initialize logger
 	var buf bytes.Buffer
+
 	log := logger.New(&buf, logger.LevelInfo, "TEST", "", "")
 
 	// Initialize tracer

@@ -33,7 +33,6 @@ func testNewUsers(n int) []user.NewUser {
 	newUsrs := make([]user.NewUser, n)
 
 	for i := range n {
-
 		nu := user.NewUser{
 			Name:       name.MustParse(fmt.Sprintf("Name%d", i)),
 			Email:      mail.Address{Address: fmt.Sprintf("Email%d@gmail.com", i)},
