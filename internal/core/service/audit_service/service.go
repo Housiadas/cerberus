@@ -6,13 +6,12 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/Housiadas/cerberus/pkg/web"
-	"github.com/google/uuid"
-
 	"github.com/Housiadas/cerberus/internal/core/domain/audit"
 	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/Housiadas/cerberus/pkg/order"
 	"github.com/Housiadas/cerberus/pkg/otel"
+	"github.com/Housiadas/cerberus/pkg/web"
+	"github.com/google/uuid"
 )
 
 // Service manages the set of APIs for audit access.
@@ -56,7 +55,8 @@ func (b *Service) Create(ctx context.Context, na audit.NewAudit) (audit.Audit, e
 		Timestamp: time.Now(),
 	}
 
-	if err := b.storer.Create(ctx, aud); err != nil {
+	err = b.storer.Create(ctx, aud)
+	if err != nil {
 		return audit.Audit{}, fmt.Errorf("create audit: %w", err)
 	}
 
@@ -64,7 +64,12 @@ func (b *Service) Create(ctx context.Context, na audit.NewAudit) (audit.Audit, e
 }
 
 // Query retrieves a list of existing audit records.
-func (b *Service) Query(ctx context.Context, filter audit.QueryFilter, orderBy order.By, page web.Page) ([]audit.Audit, error) {
+func (b *Service) Query(
+	ctx context.Context,
+	filter audit.QueryFilter,
+	orderBy order.By,
+	page web.Page,
+) ([]audit.Audit, error) {
 	ctx, span := otel.AddSpan(ctx, "repo.audit.query")
 	defer span.End()
 
@@ -81,5 +86,10 @@ func (b *Service) Count(ctx context.Context, filter audit.QueryFilter) (int, err
 	ctx, span := otel.AddSpan(ctx, "business.auditbus.count")
 	defer span.End()
 
-	return b.storer.Count(ctx, filter)
+	count, err := b.storer.Count(ctx, filter)
+	if err != nil {
+		return 0, fmt.Errorf("audit count: %w", err)
+	}
+
+	return count, nil
 }

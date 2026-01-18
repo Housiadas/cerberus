@@ -20,7 +20,7 @@ type Service struct {
 	storer permission.Storer
 }
 
-// New constructor
+// New constructor.
 func New(log logger.Logger, storer permission.Storer) *Service {
 	return &Service{log: log, storer: storer}
 }
@@ -30,7 +30,7 @@ func New(log logger.Logger, storer permission.Storer) *Service {
 func (s *Service) NewWithTx(tx pgsql.CommitRollbacker) (*Service, error) {
 	storer, err := s.storer.NewWithTx(tx)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("permission transaction issue: %w", err)
 	}
 
 	bus := Service{
@@ -42,7 +42,10 @@ func (s *Service) NewWithTx(tx pgsql.CommitRollbacker) (*Service, error) {
 }
 
 // Create adds a new permission to the system.
-func (s *Service) Create(ctx context.Context, np permission.NewPermission) (permission.Permission, error) {
+func (s *Service) Create(
+	ctx context.Context,
+	np permission.NewPermission,
+) (permission.Permission, error) {
 	now := time.Now()
 	p := permission.Permission{
 		ID:        uuid.UUID{},
@@ -51,7 +54,8 @@ func (s *Service) Create(ctx context.Context, np permission.NewPermission) (perm
 		UpdatedAt: now,
 	}
 
-	if err := s.storer.Create(ctx, p); err != nil {
+	err := s.storer.Create(ctx, p)
+	if err != nil {
 		return permission.Permission{}, fmt.Errorf("permission create: %w", err)
 	}
 
@@ -70,7 +74,8 @@ func (s *Service) Update(
 
 	p.UpdatedAt = time.Now()
 
-	if err := s.storer.Update(ctx, p); err != nil {
+	err := s.storer.Update(ctx, p)
+	if err != nil {
 		return permission.Permission{}, fmt.Errorf("permission update: %w", err)
 	}
 
@@ -79,7 +84,8 @@ func (s *Service) Update(
 
 // Delete removes the specified permission.
 func (s *Service) Delete(ctx context.Context, p permission.Permission) error {
-	if err := s.storer.Delete(ctx, p); err != nil {
+	err := s.storer.Delete(ctx, p)
+	if err != nil {
 		return fmt.Errorf("permission delete: %w", err)
 	}
 
@@ -88,7 +94,12 @@ func (s *Service) Delete(ctx context.Context, p permission.Permission) error {
 
 // Count returns the total number of permissions.
 func (s *Service) Count(ctx context.Context, filter permission.QueryFilter) (int, error) {
-	return s.storer.Count(ctx, filter)
+	count, err := s.storer.Count(ctx, filter)
+	if err != nil {
+		return 0, fmt.Errorf("permission count: %w", err)
+	}
+
+	return count, nil
 }
 
 // QueryByID finds the permission by the specified ID.

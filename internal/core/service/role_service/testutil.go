@@ -3,7 +3,6 @@ package role_service
 import (
 	"context"
 	"fmt"
-	"math/rand"
 
 	"github.com/Housiadas/cerberus/internal/core/domain/name"
 	"github.com/Housiadas/cerberus/internal/core/domain/role"
@@ -13,11 +12,9 @@ import (
 func TestNewRoles(n int) []role.NewRole {
 	newRoles := make([]role.NewRole, n)
 
-	idx := rand.Intn(10000)
 	for i := range n {
-		idx++
 		nrole := role.NewRole{
-			Name: name.MustParse(fmt.Sprintf("Name%d", idx)),
+			Name: name.MustParse(fmt.Sprintf("Name%d", i)),
 		}
 
 		newRoles[i] = nrole
@@ -31,6 +28,7 @@ func TestSeedRoles(ctx context.Context, n int, service *Service) ([]role.Role, e
 	newRoles := TestNewRoles(n)
 
 	roles := make([]role.Role, len(newRoles))
+
 	for i, nu := range newRoles {
 		nrole, err := service.Create(ctx, nu)
 		if err != nil {

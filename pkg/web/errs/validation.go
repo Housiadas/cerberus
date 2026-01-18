@@ -7,30 +7,32 @@ import (
 )
 
 func ParseValidationErrors(err error) *Error {
-	var fe *FieldErrors
-	ok := errors.As(err, &fe)
+	var fieldErrors *FieldErrors
+
+	ok := errors.As(err, &fieldErrors)
 	if !ok {
 		return Errorf(InvalidArgument, "validation error: %s", err.Error())
 	}
 
-	feSlice := toFieldErrorSlice(*fe)
+	feSlice := toFieldErrorSlice(*fieldErrors)
+
 	return newWithFields(InvalidArgument, errors.New("validation error"), feSlice)
 }
 
 func newWithFields(code ErrCode, err error, fe []FieldError) *Error {
-	pc, filename, line, _ := runtime.Caller(1)
+	pCounter, filename, line, _ := runtime.Caller(1)
 
 	return &Error{
 		Code:     code,
 		Message:  err.Error(),
 		Fields:   fe,
-		FuncName: runtime.FuncForPC(pc).Name(),
+		FuncName: runtime.FuncForPC(pCounter).Name(),
 		FileName: fmt.Sprintf("%s:%d", filename, line),
 	}
 }
 
 func toFieldErrorSlice(fe FieldErrors) []FieldError {
-	var result []FieldError
+	result := make([]FieldError, 0, len(fe))
 	for _, err := range fe {
 		result = append(result, FieldError{
 			Field: err.Field,

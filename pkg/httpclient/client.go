@@ -6,9 +6,8 @@ import (
 	"net/http"
 	"time"
 
-	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
-
 	"github.com/Housiadas/cerberus/pkg/logger"
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 )
 
 type Config struct {
@@ -22,7 +21,7 @@ type Client struct {
 	http *http.Client
 }
 
-// New constructs an http client
+// New constructs an http client.
 func New(cfg Config) *Client {
 	cln := Client{
 		log: cfg.Log,

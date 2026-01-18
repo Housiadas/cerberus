@@ -1,14 +1,12 @@
-// Package middleware provides level middleware support.
+// Package middleware package provides level middleware support.
 package middleware
 
 import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
-
-	"go.opentelemetry.io/otel/trace"
-	"golang.org/x/sync/singleflight"
 
 	"github.com/Housiadas/cerberus/internal/app/usecase/auth_usecase"
 	"github.com/Housiadas/cerberus/internal/app/usecase/user_roles_permissions_usecase"
@@ -16,14 +14,11 @@ import (
 	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/Housiadas/cerberus/pkg/pgsql"
 	"github.com/Housiadas/cerberus/pkg/web"
+	"go.opentelemetry.io/otel/trace"
 )
 
-var (
-	// ErrInvalidID represents a condition where the id is not an uuid.
-	ErrInvalidID = errors.New("ID is not in its proper form")
-
-	group = singleflight.Group{}
-)
+// ErrInvalidID represents a condition where the id is not an uuid.
+var ErrInvalidID = errors.New("ID is not in its proper form")
 
 type Config struct {
 	Log                  logger.Logger
@@ -63,18 +58,20 @@ func New(cfg Config) *Middleware {
 func (m *Middleware) Error(w http.ResponseWriter, err error, statusCode int) {
 	w.Header().Set(web.ContentTypeKey, web.ContentTypeJSON)
 	w.WriteHeader(statusCode)
-	if err := json.NewEncoder(w).Encode(err); err != nil {
+
+	err = json.NewEncoder(w).Encode(err)
+	if err != nil {
 		return
 	}
-	return
 }
 
 // ResponseRecorder a custom http.ResponseWriter to capture the response before it's sent to the client.
-// We are capturing the result of the handler to the middleware
+// We are capturing the result of the handler to the middleware.
 type ResponseRecorder struct {
+	http.ResponseWriter
+
 	statusCode int
 	body       bytes.Buffer
-	http.ResponseWriter
 }
 
 func (rec *ResponseRecorder) WriteHeader(code int) {
@@ -82,17 +79,14 @@ func (rec *ResponseRecorder) WriteHeader(code int) {
 	rec.ResponseWriter.WriteHeader(code)
 }
 
-// Capture the response body
+// Write Capture the response body.
 func (rec *ResponseRecorder) Write(b []byte) (int, error) {
 	rec.body.Write(b)
-	return rec.ResponseWriter.Write(b)
-}
 
-func checkIsError(e web.Encoder) error {
-	err, hasError := e.(error)
-	if hasError {
-		return err
+	write, err := rec.ResponseWriter.Write(b)
+	if err != nil {
+		return 0, fmt.Errorf("write response error: %w", err)
 	}
 
-	return nil
+	return write, nil
 }

@@ -16,8 +16,8 @@ import (
 type Role struct {
 	ID        string `json:"id"`
 	Name      string `json:"name"`
-	CreatedAt string `json:"CreatedAt"`
-	UpdatedAt string `json:"UpdatedAt"`
+	CreatedAt string `json:"createdAt"`
+	UpdatedAt string `json:"updatedAt"`
 }
 
 type RolePageResult struct {
@@ -28,7 +28,11 @@ type RolePageResult struct {
 // Encode implements the encoder interface.
 func (r Role) Encode() ([]byte, string, error) {
 	data, err := json.Marshal(r)
-	return data, "application/json", err
+	if err != nil {
+		return nil, web.ContentTypeJSON, fmt.Errorf("role encode error: %w", err)
+	}
+
+	return data, web.ContentTypeJSON, nil
 }
 
 func toAppRole(r role.Role) Role {
@@ -58,7 +62,12 @@ type NewRole struct {
 
 // Decode implements the decoder interface.
 func (role *NewRole) Decode(data []byte) error {
-	return json.Unmarshal(data, role)
+	err := json.Unmarshal(data, role)
+	if err != nil {
+		return fmt.Errorf("new role decode error: %w", err)
+	}
+
+	return nil
 }
 
 func toBusNewRole(rl NewRole) (role.NewRole, error) {
@@ -81,16 +90,23 @@ type UpdateRole struct {
 
 // Decode implements the decoder interface.
 func (app *UpdateRole) Decode(data []byte) error {
-	return json.Unmarshal(data, app)
+	err := json.Unmarshal(data, app)
+	if err != nil {
+		return fmt.Errorf("update role decode error: %w", err)
+	}
+
+	return nil
 }
 
 func toBusUpdateUser(app UpdateRole) (role.UpdateRole, error) {
 	var nme *name.Name
+
 	if app.Name != nil {
 		nm, err := name.Parse(*app.Name)
 		if err != nil {
 			return role.UpdateRole{}, fmt.Errorf("parse: %w", err)
 		}
+
 		nme = &nm
 	}
 

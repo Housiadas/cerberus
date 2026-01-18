@@ -39,17 +39,3 @@ func toTokenDomain(db tokenDB) (refresh_token.RefreshToken, error) {
 
 	return bus, nil
 }
-
-func toUsersDomain(dbs []tokenDB) ([]refresh_token.RefreshToken, error) {
-	bus := make([]refresh_token.RefreshToken, len(dbs))
-
-	for i, db := range dbs {
-		var err error
-		bus[i], err = toTokenDomain(db)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	return bus, nil
-}

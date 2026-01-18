@@ -4,12 +4,11 @@ package user_roles_permissions_usecase
 import (
 	"context"
 
-	"github.com/google/uuid"
-
 	"github.com/Housiadas/cerberus/internal/core/service/user_roles_permissions_service"
 	"github.com/Housiadas/cerberus/pkg/order"
 	"github.com/Housiadas/cerberus/pkg/web"
 	"github.com/Housiadas/cerberus/pkg/web/errs"
+	"github.com/google/uuid"
 )
 
 // UseCase manages the set of cli layer api functions for the view.
@@ -25,7 +24,10 @@ func NewUseCase(service *user_roles_permissions_service.Service) *UseCase {
 }
 
 // Query returns a list of rows with paging.
-func (uc *UseCase) Query(ctx context.Context, qp AppQueryParams) (web.Result[UserRolesPermissions], error) {
+func (uc *UseCase) Query(
+	ctx context.Context,
+	qp AppQueryParams,
+) (web.Result[UserRolesPermissions], error) {
 	p, err := web.Parse(qp.Page, qp.Rows)
 	if err != nil {
 		return web.Result[UserRolesPermissions]{}, errs.NewFieldErrors("page", err)
@@ -59,6 +61,7 @@ func (uc *UseCase) HasPermission(ctx context.Context, userID, permissionName str
 	if err != nil {
 		return false, errs.Errorf(errs.InvalidArgument, "could not parse uuid: %s", err)
 	}
+
 	hasPermission, err := uc.service.HasPermission(ctx, userUUID, permissionName)
 	if err != nil {
 		return false, errs.Errorf(errs.Internal, "has_permission: %s", err)

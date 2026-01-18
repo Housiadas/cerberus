@@ -9,23 +9,28 @@ import (
 
 // Run performs the actual test logic based on the table data.
 func Run(t *testing.T, table []Table, testName string) {
+	t.Helper()
 	for _, tt := range table {
-		f := func(t *testing.T) {
-			gotResp := tt.ExcFunc(context.Background())
+		t.Run(testName+"-"+tt.Name, cmpTest(tt))
+	}
+}
 
-			diff := tt.CmpFunc(gotResp, tt.ExpResp)
-			if diff != "" {
-				t.Log("DIFF")
-				t.Logf("%s", diff)
-				t.Log("GOT")
-				t.Logf("%#v", gotResp)
-				t.Log("EXP")
-				t.Logf("%#v", tt.ExpResp)
-				t.Fatalf("Should get the expected response")
-			}
+func cmpTest(tt Table) func(t *testing.T) {
+	return func(t *testing.T) {
+		t.Helper()
+
+		gotResp := tt.ExcFunc(context.Background())
+
+		diff := tt.CmpFunc(gotResp, tt.ExpResp)
+		if diff != "" {
+			t.Log("DIFF")
+			t.Logf("%s", diff)
+			t.Log("GOT")
+			t.Logf("%#v", gotResp)
+			t.Log("EXP")
+			t.Logf("%#v", tt.ExpResp)
+			t.Fatalf("Should get the expected response")
 		}
-
-		t.Run(testName+"-"+tt.Name, f)
 	}
 }
 
@@ -34,5 +39,6 @@ func MustParseEmail(addr string) mail.Address {
 	if err != nil {
 		panic(err)
 	}
+
 	return *email
 }

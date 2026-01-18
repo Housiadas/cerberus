@@ -3,9 +3,8 @@ package dbtest
 import (
 	"testing"
 
-	"github.com/stretchr/testify/require"
-
 	"github.com/Housiadas/cerberus/internal/config"
+	"github.com/stretchr/testify/require"
 )
 
 type Config struct {
@@ -18,6 +17,8 @@ type Config struct {
 }
 
 func newConfig(t *testing.T) Config {
+	t.Helper()
+
 	cfg, err := config.LoadConfig()
 	require.NoError(t, err)
 

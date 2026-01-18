@@ -40,6 +40,7 @@ func BoolPointer(b bool) *bool {
 // but it's useful in some tests.
 func NamePointer(value string) *name.Name {
 	n := name.MustParse(value)
+
 	return &n
 }
 
@@ -48,6 +49,7 @@ func NamePointer(value string) *name.Name {
 // but it's useful in some tests.
 func NameNullPointer(value string) *name.Null {
 	n := name.MustParseNull(value)
+
 	return &n
 }
 
@@ -56,6 +58,7 @@ func NameNullPointer(value string) *name.Null {
 // but it's useful in some tests.
 func MoneyPointer(value float64) *money.Money {
 	m := money.MustParse(value)
+
 	return &m
 }
 
@@ -64,6 +67,7 @@ func MoneyPointer(value float64) *money.Money {
 // but it's useful in some tests.
 func QuantityPointer(value int) *quantity.Quantity {
 	q := quantity.MustParse(value)
+
 	return &q
 }
 
@@ -72,5 +76,6 @@ func QuantityPointer(value int) *quantity.Quantity {
 // but it's useful in some tests.
 func PasswordPointer(value string) *password.Password {
 	pass := password.MustParse(value)
+
 	return &pass
 }

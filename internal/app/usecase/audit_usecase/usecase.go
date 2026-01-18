@@ -3,6 +3,7 @@ package audit_usecase
 
 import (
 	"context"
+	"errors"
 
 	"github.com/Housiadas/cerberus/internal/core/domain/user"
 	"github.com/Housiadas/cerberus/internal/core/service/audit_service"
@@ -29,7 +30,12 @@ func (a *UseCase) Query(ctx context.Context, qp AppQueryParams) (web.Result[Audi
 
 	filter, err := parseFilter(qp)
 	if err != nil {
-		return web.Result[Audit]{}, err.(*errs.Error)
+		return web.Result[Audit]{}, func() *errs.Error {
+			target := &errs.Error{}
+			_ = errors.As(err, &target)
+
+			return target
+		}()
 	}
 
 	orderBy, err := order.Parse(orderByFields, qp.OrderBy, user.DefaultOrderBy)

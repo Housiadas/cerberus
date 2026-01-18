@@ -7,6 +7,7 @@ import (
 	"github.com/Housiadas/cerberus/pkg/order"
 )
 
+//nolint:gochecknoglobals
 var orderByFields = map[string]string{
 	urp.OrderByUserName:       "user_name",
 	urp.OrderByUserEmail:      "user_email",
@@ -19,5 +20,6 @@ func orderByClause(ob order.By) (string, error) {
 	if !exists {
 		return "", fmt.Errorf("field %q does not exist", ob.Field)
 	}
+
 	return " ORDER BY " + by + " " + ob.Direction, nil
 }

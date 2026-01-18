@@ -38,11 +38,28 @@ func (s *Service) Query(
 }
 
 // Count returns the total number of user roles and permissions that match the filter.
-func (s *Service) Count(ctx context.Context, filter user_roles_permissions.QueryFilter) (int, error) {
-	return s.storer.Count(ctx, filter)
+func (s *Service) Count(
+	ctx context.Context,
+	filter user_roles_permissions.QueryFilter,
+) (int, error) {
+	count, err := s.storer.Count(ctx, filter)
+	if err != nil {
+		return 0, fmt.Errorf("user roles permissions count: %w", err)
+	}
+
+	return count, nil
 }
 
 // HasPermission checks if the user has the specified permission.
-func (s *Service) HasPermission(ctx context.Context, userID uuid.UUID, permissionName string) (bool, error) {
-	return s.storer.HasPermission(ctx, userID, permissionName)
+func (s *Service) HasPermission(
+	ctx context.Context,
+	userID uuid.UUID,
+	permissionName string,
+) (bool, error) {
+	hasPermissions, err := s.storer.HasPermission(ctx, userID, permissionName)
+	if err != nil {
+		return false, fmt.Errorf("user has permissions: %w", err)
+	}
+
+	return hasPermissions, nil
 }

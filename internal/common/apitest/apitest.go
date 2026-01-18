@@ -4,12 +4,11 @@ package apitest
 import (
 	"net/http"
 
-	"github.com/jmoiron/sqlx"
-
 	"github.com/Housiadas/cerberus/internal/app/usecase/auth_usecase"
 	"github.com/Housiadas/cerberus/internal/core/service/audit_service"
 	"github.com/Housiadas/cerberus/internal/core/service/role_service"
 	"github.com/Housiadas/cerberus/internal/core/service/user_service"
+	"github.com/jmoiron/sqlx"
 )
 
 // Test contains functions for executing an api test.

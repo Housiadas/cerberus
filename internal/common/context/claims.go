@@ -20,5 +20,6 @@ func GetClaims(ctx context.Context) auth_usecase.Claims {
 	if !ok {
 		return auth_usecase.Claims{}
 	}
+
 	return v
 }

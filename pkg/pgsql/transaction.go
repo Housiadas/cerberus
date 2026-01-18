@@ -27,7 +27,7 @@ type CommitRollbacker interface {
 
 // =============================================================================
 
-// DBBeginner implements the Beginner interface,
+// DBBeginner implements the Beginner interface,.
 type DBBeginner struct {
 	sqlxDB *sqlx.DB
 }
@@ -42,7 +42,9 @@ func NewBeginner(sqlxDB *sqlx.DB) *DBBeginner {
 // Begin implements the Beginner interface and returns a concrete value that
 // implements the CommitRollbacker interface.
 func (db *DBBeginner) Begin() (CommitRollbacker, error) {
-	return db.sqlxDB.Beginx()
+	tran, err := db.sqlxDB.Beginx()
+
+	return tran, fmt.Errorf("begin transaction issue: %w", err)
 }
 
 // GetExtContext is a helper function that extracts the sqlx value

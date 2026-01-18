@@ -1,9 +1,6 @@
 package handler
 
 import (
-	"github.com/jmoiron/sqlx"
-	"go.opentelemetry.io/otel/trace"
-
 	"github.com/Housiadas/cerberus/internal/app/middleware"
 	"github.com/Housiadas/cerberus/internal/app/repo/audit_repo"
 	"github.com/Housiadas/cerberus/internal/app/repo/permission_repo"
@@ -32,6 +29,8 @@ import (
 	"github.com/Housiadas/cerberus/pkg/pgsql"
 	"github.com/Housiadas/cerberus/pkg/uuidgen"
 	"github.com/Housiadas/cerberus/pkg/web"
+	"github.com/jmoiron/sqlx"
+	"go.opentelemetry.io/otel/trace"
 )
 
 // Handler contains all the mandatory systems required by handler.
@@ -52,7 +51,7 @@ type Web struct {
 	Res        *web.Respond
 }
 
-// Usecase represents the use case layer
+// Usecase represents the use case layer.
 type Usecase struct {
 	Audit                *audit_usecase.UseCase
 	Auth                 *auth_usecase.UseCase
@@ -93,7 +92,10 @@ func New(cfg Config) *Handler {
 	roleService := role_service.New(cfg.Log, roleRepo)
 	permissionService := permission_service.New(cfg.Log, permissionRepo)
 	refreshTokenService := refresh_token_service.New(cfg.Log, refreshTokenRepo, uuidGen, clk)
-	userRolesPermissionsService := user_roles_permissions_service.New(cfg.Log, userRolesPermissionsRepo)
+	userRolesPermissionsService := user_roles_permissions_service.New(
+		cfg.Log,
+		userRolesPermissionsRepo,
+	)
 
 	// usecase
 	auditUsecase := audit_usecase.NewUseCase(auditService)
@@ -108,7 +110,9 @@ func New(cfg Config) *Handler {
 	roleUsecase := role_usecase.NewUseCase(roleService)
 	permissionUsecase := permission_usecase.NewUseCase(permissionService)
 	systemUsecase := system_usecase.NewUseCase(cfg.Build, cfg.Log, cfg.DB)
-	userRolesPermissionsUsecase := user_roles_permissions_usecase.NewUseCase(userRolesPermissionsService)
+	userRolesPermissionsUsecase := user_roles_permissions_usecase.NewUseCase(
+		userRolesPermissionsService,
+	)
 
 	return &Handler{
 		ServiceName: cfg.ServiceName,

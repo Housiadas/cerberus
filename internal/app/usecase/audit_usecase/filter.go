@@ -3,12 +3,11 @@ package audit_usecase
 import (
 	"time"
 
-	"github.com/google/uuid"
-
 	"github.com/Housiadas/cerberus/internal/core/domain/audit"
 	"github.com/Housiadas/cerberus/internal/core/domain/entity"
 	"github.com/Housiadas/cerberus/internal/core/domain/name"
 	"github.com/Housiadas/cerberus/pkg/web/errs"
+	"github.com/google/uuid"
 )
 
 type AppQueryParams struct {
@@ -25,8 +24,10 @@ type AppQueryParams struct {
 }
 
 func parseFilter(qp AppQueryParams) (audit.QueryFilter, error) {
-	var fieldErrors errs.FieldErrors
-	var filter audit.QueryFilter
+	var (
+		fieldErrors errs.FieldErrors
+		filter      audit.QueryFilter
+	)
 
 	if qp.ObjID != "" {
 		id, err := uuid.Parse(qp.ObjID)

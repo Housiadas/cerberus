@@ -2,9 +2,15 @@ package web
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"math"
 	"strconv"
+)
+
+const (
+	rowsPerPageDefault = 10
+	rowsPerPageMax     = 100
 )
 
 // The Result is the data model used when returning a query result.
@@ -16,6 +22,7 @@ type Result[T any] struct {
 // NewResult constructs a result value to return query results.
 func NewResult[T any](data []T, total int, page Page) Result[T] {
 	metadata := calculateMetadata(total, page.Number(), page.RowsPerPage())
+
 	return Result[T]{
 		Data:     data,
 		Metadata: metadata,
@@ -25,7 +32,8 @@ func NewResult[T any](data []T, total int, page Page) Result[T] {
 // Encode implements the encoder interface.
 func (r Result[T]) Encode() ([]byte, string, error) {
 	data, err := json.Marshal(r)
-	return data, "application/json", err
+
+	return data, ContentTypeJSON, fmt.Errorf("page result encode error: %w", err)
 }
 
 // ============================================================================
@@ -84,17 +92,21 @@ func (p Page) RowsPerPage() int {
 // Parse parses the strings and validates the values are in reason.
 func Parse(page string, rowsPerPage string) (Page, error) {
 	number := 1
+
 	if page != "" {
 		var err error
+
 		number, err = strconv.Atoi(page)
 		if err != nil {
 			return Page{}, fmt.Errorf("page conversion: %w", err)
 		}
 	}
 
-	rows := 10
+	rows := rowsPerPageDefault
+
 	if rowsPerPage != "" {
 		var err error
+
 		rows, err = strconv.Atoi(rowsPerPage)
 		if err != nil {
 			return Page{}, fmt.Errorf("rows conversion: %w", err)
@@ -102,15 +114,15 @@ func Parse(page string, rowsPerPage string) (Page, error) {
 	}
 
 	if number <= 0 {
-		return Page{}, fmt.Errorf("page value too small, must be larger than 0")
+		return Page{}, errors.New("page value too small, must be larger than 0")
 	}
 
 	if rows <= 0 {
-		return Page{}, fmt.Errorf("rows value too small, must be larger than 0")
+		return Page{}, errors.New("rows value too small, must be larger than 0")
 	}
 
-	if rows > 100 {
-		return Page{}, fmt.Errorf("rows value too large, must be less than 100")
+	if rows > rowsPerPageMax {
+		return Page{}, errors.New("rows value too large, must be less than 100")
 	}
 
 	p := Page{
@@ -121,8 +133,8 @@ func Parse(page string, rowsPerPage string) (Page, error) {
 	return p, nil
 }
 
-// MustParse creates a paging value for testing.
-func MustParse(page string, rowsPerPage string) Page {
+// PageMustParse creates a paging value for testing.
+func PageMustParse(page string, rowsPerPage string) Page {
 	pg, err := Parse(page, rowsPerPage)
 	if err != nil {
 		panic(err)

@@ -4,10 +4,9 @@ import (
 	"encoding/json"
 	"time"
 
-	"github.com/google/uuid"
-
 	"github.com/Housiadas/cerberus/internal/core/domain/entity"
 	"github.com/Housiadas/cerberus/internal/core/domain/name"
+	"github.com/google/uuid"
 )
 
 // Audit represents information about an individual audit record.

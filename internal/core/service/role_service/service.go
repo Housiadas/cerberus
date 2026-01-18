@@ -6,13 +6,12 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/Housiadas/cerberus/pkg/web"
-	"github.com/google/uuid"
-
 	"github.com/Housiadas/cerberus/internal/core/domain/role"
 	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/Housiadas/cerberus/pkg/order"
 	"github.com/Housiadas/cerberus/pkg/pgsql"
+	"github.com/Housiadas/cerberus/pkg/web"
+	"github.com/google/uuid"
 )
 
 // Service manages the set of APIs for user access.
@@ -21,7 +20,7 @@ type Service struct {
 	storer role.Storer
 }
 
-// New constructor
+// New constructor.
 func New(log logger.Logger, storer role.Storer) *Service {
 	return &Service{
 		log:    log,
@@ -34,7 +33,7 @@ func New(log logger.Logger, storer role.Storer) *Service {
 func (c *Service) NewWithTx(tx pgsql.CommitRollbacker) (*Service, error) {
 	storer, err := c.storer.NewWithTx(tx)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("role transaction issue: %w", err)
 	}
 
 	bus := Service{
@@ -55,31 +54,38 @@ func (c *Service) Create(ctx context.Context, nr role.NewRole) (role.Role, error
 		UpdatedAt: now,
 	}
 
-	if err := c.storer.Create(ctx, rol); err != nil {
+	err := c.storer.Create(ctx, rol)
+	if err != nil {
 		return role.Role{}, fmt.Errorf("role create: %w", err)
 	}
 
 	return rol, nil
 }
 
-// Update modifies information about a role.Role
-func (c *Service) Update(ctx context.Context, rl role.Role, uprole role.UpdateRole) (role.Role, error) {
+// Update modifies information about a role.Role.
+func (c *Service) Update(
+	ctx context.Context,
+	rl role.Role,
+	uprole role.UpdateRole,
+) (role.Role, error) {
 	if uprole.Name != nil {
 		rl.Name = *uprole.Name
 	}
 
 	rl.UpdatedAt = time.Now()
 
-	if err := c.storer.Update(ctx, rl); err != nil {
+	err := c.storer.Update(ctx, rl)
+	if err != nil {
 		return role.Role{}, fmt.Errorf("role update: %w", err)
 	}
 
 	return rl, nil
 }
 
-// Delete removes the specified role.Role
+// Delete removes the specified role.Role.
 func (c *Service) Delete(ctx context.Context, rl role.Role) error {
-	if err := c.storer.Delete(ctx, rl); err != nil {
+	err := c.storer.Delete(ctx, rl)
+	if err != nil {
 		return fmt.Errorf("role delete: %w", err)
 	}
 
@@ -88,7 +94,12 @@ func (c *Service) Delete(ctx context.Context, rl role.Role) error {
 
 // Count returns the total number of users.
 func (c *Service) Count(ctx context.Context, filter role.QueryFilter) (int, error) {
-	return c.storer.Count(ctx, filter)
+	count, err := c.storer.Count(ctx, filter)
+	if err != nil {
+		return 0, fmt.Errorf("roles count: %w", err)
+	}
+
+	return count, nil
 }
 
 // QueryByID finds the user by the specified ID.

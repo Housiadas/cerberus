@@ -4,9 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
-
 	"github.com/Housiadas/cerberus/pkg/logger"
+	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
 )
 
 const (
@@ -21,7 +20,7 @@ type Consumer interface {
 
 type ConsumerConfig struct {
 	Brokers          string
-	GroupId          string
+	GroupID          string
 	AddressFamily    string
 	SecurityProtocol string
 	SessionTimeout   int
@@ -35,7 +34,7 @@ type ConsumerClient struct {
 func NewConsumer(log *logger.Service, cfg ConsumerConfig) (*ConsumerClient, error) {
 	consumer, err := kafka.NewConsumer(&kafka.ConfigMap{
 		"bootstrap.servers":        cfg.Brokers,
-		"group.id":                 cfg.GroupId,
+		"group.id":                 cfg.GroupID,
 		"broker.address.family":    cfg.AddressFamily,
 		"session.timeout.ms":       cfg.SessionTimeout,
 		"auto.offset.reset":        "earliest",
@@ -57,37 +56,45 @@ func (c *ConsumerClient) Close() {
 
 func (c *ConsumerClient) Subscribe(topic string) error {
 	err := c.consumer.Subscribe(topic, nil)
-	return err
+	if err != nil {
+		return fmt.Errorf("kafka subscribe error: %w", err)
+	}
+
+	return nil
 }
 
 func (c *ConsumerClient) Consume(ctx context.Context, fn func(msg *kafka.Message) error) error {
 	msgCount := 0
+
 	run := true
-	for run == true {
+	for run {
 		ev := c.consumer.Poll(100)
-		switch e := ev.(type) {
+		switch event := ev.(type) {
 		case *kafka.Message:
-			msgCount += 1
+			msgCount++
 			if msgCount%MinCommitCount == 0 {
 				go func() {
 					_, err := c.consumer.Commit()
-					c.log.Error(ctx, fmt.Sprintf("consumer: Commiting%v\n", err))
+					c.log.Error(ctx, fmt.Sprintf("consumer: Committing%v\n", err))
 				}()
 			}
 			// Callback, application-specific
-			err := fn(e)
+			err := fn(event)
 			if err != nil {
-				c.log.Error(ctx, fmt.Sprintf("consumer: %v\n", e))
+				c.log.Error(ctx, fmt.Sprintf("consumer: %v\n", event))
 			}
-			fmt.Printf("%% Message on %s:\n%s\n", e.TopicPartition, string(e.Value))
+
+			fmt.Printf("%% Message on %s:\n%s\n", event.TopicPartition, string(event.Value))
 		case kafka.PartitionEOF:
-			c.log.Info(ctx, fmt.Sprintf("consumer: EOF Reached %v\n", e))
+			c.log.Info(ctx, fmt.Sprintf("consumer: EOF Reached %v\n", event))
 		case kafka.Error:
-			c.log.Error(ctx, fmt.Sprintf("consumer: %v\n", e))
+			c.log.Error(ctx, fmt.Sprintf("consumer: %v\n", event))
+
 			run = false
 		default:
-			c.log.Info(ctx, fmt.Sprintf("consumer: Ignored %v\n", e))
+			c.log.Info(ctx, fmt.Sprintf("consumer: Ignored %v\n", event))
 		}
 	}
+
 	return nil
 }

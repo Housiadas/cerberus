@@ -1,6 +1,7 @@
 package user_repo_test
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"net/mail"
@@ -8,43 +9,60 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Housiadas/cerberus/pkg/web"
-	"github.com/google/go-cmp/cmp"
-	"github.com/google/uuid"
-	"golang.org/x/crypto/bcrypt"
-
+	"github.com/Housiadas/cerberus/internal/app/repo/user_repo"
 	"github.com/Housiadas/cerberus/internal/common/dbtest"
 	"github.com/Housiadas/cerberus/internal/common/unitest"
 	"github.com/Housiadas/cerberus/internal/core/domain/name"
+	"github.com/Housiadas/cerberus/internal/core/domain/password"
 	"github.com/Housiadas/cerberus/internal/core/domain/user"
 	"github.com/Housiadas/cerberus/internal/core/service/user_service"
+	"github.com/Housiadas/cerberus/pkg/clock"
+	"github.com/Housiadas/cerberus/pkg/hasher"
+	"github.com/Housiadas/cerberus/pkg/logger"
+	"github.com/Housiadas/cerberus/pkg/uuidgen"
+	"github.com/Housiadas/cerberus/pkg/web"
+	"github.com/google/go-cmp/cmp"
+	"golang.org/x/crypto/bcrypt"
 )
 
 func Test_User(t *testing.T) {
 	t.Parallel()
 
+	// -------------------------------------------------------------------------
 	db := dbtest.New(t, "Test_User")
 
-	sd, err := insertSeedData(db.Core)
+	// -------------------------------------------------------------------------
+
+	// Initialize logger
+	var buf bytes.Buffer
+	log := logger.New(&buf, logger.LevelInfo, "TEST", "", "")
+
+	// utils
+	hash := hasher.NewBcrypt()
+	clk := clock.NewClock()
+	uuidGen := uuidgen.NewV7()
+	userService := user_service.New(log, user_repo.NewStore(log, db), uuidGen, clk, hash)
+
+	// -------------------------------------------------------------------------
+	sd, err := insertSeedData(userService)
 	if err != nil {
 		t.Fatalf("Seeding error: %s", err)
 	}
 
 	// -------------------------------------------------------------------------
 
-	unitest.Run(t, query(db.Core, sd), "query")
-	unitest.Run(t, create(db.Core), "create")
-	unitest.Run(t, update(db.Core, sd), "update")
-	unitest.Run(t, deleteUser(db.Core, sd), "delete")
+	unitest.Run(t, queryUser(userService, sd), "query")
+	unitest.Run(t, createUser(userService), "create")
+	unitest.Run(t, updateUser(userService, sd), "update")
+	unitest.Run(t, deleteUser(userService, sd), "delete")
 }
 
 // =============================================================================
 
-func insertSeedData(service dbtest.Service) (unitest.SeedData, error) {
+func insertSeedData(service *user_service.Service) (unitest.SeedData, error) {
 	ctx := context.Background()
 
-	userRoleID, _ := uuid.NewV7()
-	usrs, err := user_service.TestSeedUsers(ctx, 2, userRoleID, service.User)
+	usrs, err := user_service.TestSeedUsers(ctx, 2, service)
 	if err != nil {
 		return unitest.SeedData{}, fmt.Errorf("seeding users : %w", err)
 	}
@@ -59,25 +77,8 @@ func insertSeedData(service dbtest.Service) (unitest.SeedData, error) {
 
 	// -------------------------------------------------------------------------
 
-	adminRoleID, _ := uuid.NewV7()
-	usrs, err = user_service.TestSeedUsers(ctx, 2, adminRoleID, service.User)
-	if err != nil {
-		return unitest.SeedData{}, fmt.Errorf("seeding users : %w", err)
-	}
-
-	tu3 := unitest.User{
-		User: usrs[0],
-	}
-
-	tu4 := unitest.User{
-		User: usrs[1],
-	}
-
-	// -------------------------------------------------------------------------
-
 	sd := unitest.SeedData{
-		Users:  []unitest.User{tu3, tu4},
-		Admins: []unitest.User{tu1, tu2},
+		Users: []unitest.User{tu1, tu2},
 	}
 
 	return sd, nil
@@ -85,12 +86,8 @@ func insertSeedData(service dbtest.Service) (unitest.SeedData, error) {
 
 // =============================================================================
 
-func query(service dbtest.Service, sd unitest.SeedData) []unitest.Table {
-	usrs := make([]user.User, 0, len(sd.Admins)+len(sd.Users))
-
-	for _, adm := range sd.Admins {
-		usrs = append(usrs, adm.User)
-	}
+func queryUser(service *user_service.Service, sd unitest.SeedData) []unitest.Table {
+	usrs := make([]user.User, 0, len(sd.Users))
 
 	for _, usr := range sd.Users {
 		usrs = append(usrs, usr.User)
@@ -109,7 +106,7 @@ func query(service dbtest.Service, sd unitest.SeedData) []unitest.Table {
 					Name: dbtest.NamePointer("Name"),
 				}
 
-				resp, err := service.User.Query(ctx, filter, user.DefaultOrderBy, web.MustParse("1", "10"))
+				resp, err := service.Query(ctx, filter, user.DefaultOrderBy, web.PageMustParse("1", "10"))
 				if err != nil {
 					return err
 				}
@@ -141,7 +138,7 @@ func query(service dbtest.Service, sd unitest.SeedData) []unitest.Table {
 			Name:    "byid",
 			ExpResp: sd.Users[0].User,
 			ExcFunc: func(ctx context.Context) any {
-				resp, err := service.User.QueryByID(ctx, sd.Users[0].ID)
+				resp, err := service.QueryByID(ctx, sd.Users[0].ID)
 				if err != nil {
 					return err
 				}
@@ -172,30 +169,27 @@ func query(service dbtest.Service, sd unitest.SeedData) []unitest.Table {
 	return table
 }
 
-func create(service dbtest.Service) []unitest.Table {
-	email, _ := mail.ParseAddress("chris@housi.com")
+func createUser(service *user_service.Service) []unitest.Table {
+	email, _ := mail.ParseAddress("bill@ardanlabs.com")
 
-	roleID, _ := uuid.NewV7()
 	table := []unitest.Table{
 		{
 			Name: "basic",
 			ExpResp: user.User{
-				RoleID:     roleID,
-				Name:       name.MustParse("Chris Housi"),
+				Name:       name.MustParse("Bill Kennedy"),
 				Email:      *email,
-				Department: name.MustParseNull("IT0"),
+				Department: name.MustParseNull("ITO"),
 				Enabled:    true,
 			},
 			ExcFunc: func(ctx context.Context) any {
 				nu := user.NewUser{
-					Name:       name.MustParse("Chris Housi"),
+					Name:       name.MustParse("Bill Kennedy"),
 					Email:      *email,
-					RoleID:     roleID,
-					Department: name.MustParseNull("IT0"),
-					Password:   "123",
+					Department: name.MustParseNull("ITO"),
+					Password:   password.MustParse("123"),
 				}
 
-				resp, err := service.User.Create(ctx, nu)
+				resp, err := service.Create(ctx, nu)
 				if err != nil {
 					return err
 				}
@@ -227,32 +221,29 @@ func create(service dbtest.Service) []unitest.Table {
 	return table
 }
 
-func update(busDomain dbtest.Service, sd unitest.SeedData) []unitest.Table {
-	email, _ := mail.ParseAddress("chris2@housi.com")
+func updateUser(service *user_service.Service, sd unitest.SeedData) []unitest.Table {
+	email, _ := mail.ParseAddress("jack@housi.com")
 
-	roleID, _ := uuid.NewV7()
 	table := []unitest.Table{
 		{
 			Name: "basic",
 			ExpResp: user.User{
 				ID:         sd.Users[0].ID,
-				RoleID:     roleID,
-				Name:       name.MustParse("Chris Housi 2"),
+				Name:       name.MustParse("Jack Kennedy"),
 				Email:      *email,
-				Department: name.MustParseNull("IT0"),
+				Department: name.MustParseNull("ITO"),
 				Enabled:    true,
 				CreatedAt:  sd.Users[0].CreatedAt,
 			},
 			ExcFunc: func(ctx context.Context) any {
 				uu := user.UpdateUser{
-					RoleID:     roleID,
-					Name:       dbtest.NamePointer("Chris Housi 2"),
+					Name:       dbtest.NamePointer("Jack Kennedy"),
 					Email:      email,
-					Department: dbtest.NameNullPointer("IT0"),
-					Password:   dbtest.StringPointer("1234"),
+					Department: dbtest.NameNullPointer("ITO"),
+					Password:   dbtest.PasswordPointer("1234"),
 				}
 
-				resp, err := busDomain.User.Update(ctx, sd.Users[0].User, uu)
+				resp, err := service.Update(ctx, sd.Users[0].User, uu)
 				if err != nil {
 					return err
 				}
@@ -282,27 +273,13 @@ func update(busDomain dbtest.Service, sd unitest.SeedData) []unitest.Table {
 	return table
 }
 
-func deleteUser(busDomain dbtest.Service, sd unitest.SeedData) []unitest.Table {
+func deleteUser(service *user_service.Service, sd unitest.SeedData) []unitest.Table {
 	table := []unitest.Table{
 		{
 			Name:    "user",
 			ExpResp: nil,
 			ExcFunc: func(ctx context.Context) any {
-				if err := busDomain.User.Delete(ctx, sd.Users[1].User); err != nil {
-					return err
-				}
-
-				return nil
-			},
-			CmpFunc: func(got any, exp any) string {
-				return cmp.Diff(got, exp)
-			},
-		},
-		{
-			Name:    "admin",
-			ExpResp: nil,
-			ExcFunc: func(ctx context.Context) any {
-				if err := busDomain.User.Delete(ctx, sd.Admins[1].User); err != nil {
+				if err := service.Delete(ctx, sd.Users[1].User); err != nil {
 					return err
 				}
 

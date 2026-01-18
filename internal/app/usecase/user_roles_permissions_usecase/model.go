@@ -6,13 +6,13 @@ import (
 
 // UserRolesPermissions represents a single row from the user_roles_permissions view for the app layer.
 type UserRolesPermissions struct {
-	UserID         string `json:"user_id"`
-	UserName       string `json:"user_name"`
-	UserEmail      string `json:"user_email"`
-	RoleID         string `json:"role_id"`
-	RoleName       string `json:"role_name"`
-	PermissionID   string `json:"permission_id,omitempty"`
-	PermissionName string `json:"permission_name,omitempty"`
+	UserID         string `json:"userId"`
+	UserName       string `json:"userName"`
+	UserEmail      string `json:"userEmail"`
+	RoleID         string `json:"roleId"`
+	RoleName       string `json:"roleName"`
+	PermissionID   string `json:"permissionId,omitempty"`
+	PermissionName string `json:"permissionName,omitempty"`
 }
 
 func toAppUserRolesPermissions(r urp.UserRolesPermissions) UserRolesPermissions {
@@ -20,10 +20,12 @@ func toAppUserRolesPermissions(r urp.UserRolesPermissions) UserRolesPermissions 
 	if r.PermissionID != nil {
 		permID = r.PermissionID.String()
 	}
+
 	var permName string
 	if r.PermissionName.Valid() {
 		permName = r.PermissionName.String()
 	}
+
 	return UserRolesPermissions{
 		UserID:         r.UserID.String(),
 		UserName:       r.UserName.String(),
@@ -40,5 +42,6 @@ func toManyUserRolesPermissions(rows []urp.UserRolesPermissions) []UserRolesPerm
 	for i, r := range rows {
 		res[i] = toAppUserRolesPermissions(r)
 	}
+
 	return res
 }

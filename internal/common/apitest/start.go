@@ -15,14 +15,15 @@ import (
 
 // StartTest initialized the system to run a test.
 func StartTest(t *testing.T, testName string) (*Test, error) {
+	t.Helper()
+
 	// Initialize test database
 	db := dbtest.New(t, testName)
 
 	// Initialize logger
 	var buf bytes.Buffer
-	traceIDfn := func(context.Context) string { return "" }
-	requestIDfn := func(context.Context) string { return "" }
-	log := logger.New(&buf, logger.LevelInfo, "TEST", traceIDfn, requestIDfn)
+
+	log := logger.New(&buf, logger.LevelInfo, "TEST", "", "")
 
 	// Initialize tracer
 	traceProvider, teardown, err := otel.InitTracing(otel.Config{
@@ -35,7 +36,9 @@ func StartTest(t *testing.T, testName string) (*Test, error) {
 		Probability: 0.5,
 	})
 	defer teardown(context.Background())
+
 	require.NoError(t, err)
+
 	tracer := traceProvider.Tracer("Service Name")
 
 	// Initialize handler

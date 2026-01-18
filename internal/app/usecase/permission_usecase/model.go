@@ -14,8 +14,8 @@ import (
 type Permission struct {
 	ID        string `json:"id"`
 	Name      string `json:"name"`
-	CreatedAt string `json:"CreatedAt"`
-	UpdatedAt string `json:"UpdatedAt"`
+	CreatedAt string `json:"createdAt"`
+	UpdatedAt string `json:"updatedAt"`
 }
 
 type PermissionPageResults struct {
@@ -26,7 +26,11 @@ type PermissionPageResults struct {
 // Encode implements the encoder interface.
 func (p Permission) Encode() ([]byte, string, error) {
 	data, err := json.Marshal(p)
-	return data, "application/json", err
+	if err != nil {
+		return nil, web.ContentTypeJSON, fmt.Errorf("permission encode error: %w", err)
+	}
+
+	return data, web.ContentTypeJSON, nil
 }
 
 func toAppPermission(p permission.Permission) Permission {
@@ -43,6 +47,7 @@ func toAppPermissions(perms []permission.Permission) []Permission {
 	for i, pr := range perms {
 		appPerms[i] = toAppPermission(pr)
 	}
+
 	return appPerms
 }
 
@@ -53,7 +58,12 @@ type NewPermission struct {
 
 // Decode implements the decoder interface.
 func (p *NewPermission) Decode(data []byte) error {
-	return json.Unmarshal(data, p)
+	err := json.Unmarshal(data, p)
+	if err != nil {
+		return fmt.Errorf("permission decode error: %w", err)
+	}
+
+	return nil
 }
 
 func toBusNewPermission(app NewPermission) (permission.NewPermission, error) {
@@ -61,6 +71,7 @@ func toBusNewPermission(app NewPermission) (permission.NewPermission, error) {
 	if err != nil {
 		return permission.NewPermission{}, fmt.Errorf("parse: %w", err)
 	}
+
 	return permission.NewPermission{
 		Name: nme,
 	}, nil
@@ -73,18 +84,26 @@ type UpdatePermission struct {
 
 // Decode implements the decoder interface.
 func (app *UpdatePermission) Decode(data []byte) error {
-	return json.Unmarshal(data, app)
+	err := json.Unmarshal(data, app)
+	if err != nil {
+		return fmt.Errorf("permission decode error: %w", err)
+	}
+
+	return nil
 }
 
 func toBusUpdatePermission(app UpdatePermission) (permission.UpdatePermission, error) {
 	var nme *name.Name
+
 	if app.Name != nil {
 		nm, err := name.Parse(*app.Name)
 		if err != nil {
 			return permission.UpdatePermission{}, fmt.Errorf("parse: %w", err)
 		}
+
 		nme = &nm
 	}
+
 	return permission.UpdatePermission{
 		Name: nme,
 	}, nil

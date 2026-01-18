@@ -60,7 +60,11 @@ func (e *Error) Error() string {
 // Encode implements the encoder interface.
 func (e *Error) Encode() ([]byte, string, error) {
 	data, err := json.Marshal(e)
-	return data, "application/json", err
+	if err != nil {
+		return nil, "", fmt.Errorf("error encode issue: %w", err)
+	}
+
+	return data, "application/json", nil
 }
 
 // HTTPStatus implements the web package httpStatus interface so the

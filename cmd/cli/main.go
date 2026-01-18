@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -12,13 +11,16 @@ import (
 	"github.com/Housiadas/cerberus/pkg/logger"
 )
 
+//nolint:gochecknoglobals
 var build = "develop"
 
 func main() {
-	if err := run(); err != nil {
+	err := run()
+	if err != nil {
 		if !errors.Is(err, command.ErrHelp) {
 			fmt.Println("msg", err)
 		}
+
 		os.Exit(1)
 	}
 }
@@ -35,13 +37,7 @@ func run() error {
 	// -------------------------------------------------------------------------
 	// Initialize Service
 	// -------------------------------------------------------------------------
-	traceIDFn := func(context.Context) string {
-		return "00000000-0000-0000-0000-000000000000"
-	}
-	requestIDFn := func(context.Context) string {
-		return "00000000-0000-0000-0000-000000000000"
-	}
-	log := logger.New(io.Discard, logger.LevelInfo, "CLI", traceIDFn, requestIDFn)
+	log := logger.New(io.Discard, logger.LevelInfo, "CLI", "", "")
 
 	// -------------------------------------------------------------------------
 	// Initialize commands
@@ -57,8 +53,11 @@ func processCommands(args []string, cmd *command.Command) error {
 	case "useradd":
 		name := args[2]
 		email := args[3]
+
 		password := args[4]
-		if err := cmd.UserAdd(name, email, password); err != nil {
+
+		err := cmd.UserAdd(name, email, password)
+		if err != nil {
 			return fmt.Errorf("adding user: %w", err)
 		}
 
@@ -66,6 +65,7 @@ func processCommands(args []string, cmd *command.Command) error {
 		fmt.Println("seed:       add data to the database")
 		fmt.Println("useradd:    add a new user to the database")
 		fmt.Println("provide a command to get more help.")
+
 		return command.ErrHelp
 	}
 

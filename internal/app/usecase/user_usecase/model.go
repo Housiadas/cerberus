@@ -18,21 +18,27 @@ import (
 
 // AuthenticateUser defines the data needed to authenticate a user.
 type AuthenticateUser struct {
-	Email    string `json:"email" validate:"required"`
+	Email    string `json:"email"    validate:"required"`
 	Password string `json:"password" validate:"required"`
 }
 
 // Encode implements the encoder interface.
 func (app *AuthenticateUser) Encode() ([]byte, string, error) {
 	data, err := json.Marshal(app)
-	return data, "application/json", err
+	if err != nil {
+		return nil, web.ContentTypeJSON, fmt.Errorf("auth user encode error: %w", err)
+	}
+
+	return data, web.ContentTypeJSON, nil
 }
 
 // Validate checks the data in the model is considered clean.
 func (app *AuthenticateUser) Validate() error {
-	if err := validation.Check(app); err != nil {
-		return err
+	err := validation.Check(app)
+	if err != nil {
+		return fmt.Errorf("auth user validation error: %w", err)
 	}
+
 	return nil
 }
 
@@ -46,14 +52,18 @@ type User struct {
 	PasswordHash []byte `json:"-"`
 	Department   string `json:"department"`
 	Enabled      bool   `json:"enabled"`
-	CreatedAt    string `json:"CreatedAt"`
-	UpdatedAt    string `json:"UpdatedAt"`
+	CreatedAt    string `json:"createdAt"`
+	UpdatedAt    string `json:"updatedAt"`
 }
 
 // Encode implements the encoder interface.
 func (app User) Encode() ([]byte, string, error) {
 	data, err := json.Marshal(app)
-	return data, "application/json", err
+	if err != nil {
+		return nil, web.ContentTypeJSON, fmt.Errorf("user encode error: %w", err)
+	}
+
+	return data, web.ContentTypeJSON, nil
 }
 
 func toAppUser(bus user.User) User {
@@ -89,23 +99,30 @@ type UserPageResult struct {
 
 // NewUser defines the data needed to add a new user.
 type NewUser struct {
-	Name            string `json:"name" validate:"required"`
-	Email           string `json:"email" validate:"required"`
+	Name            string `json:"name"            validate:"required"`
+	Email           string `json:"email"           validate:"required"`
 	Department      string `json:"department"`
-	Password        string `json:"password" validate:"required"`
+	Password        string `json:"password"        validate:"required"`
 	PasswordConfirm string `json:"passwordConfirm" validate:"required"`
 }
 
 // Decode implements the decoder interface.
 func (app *NewUser) Decode(data []byte) error {
-	return json.Unmarshal(data, app)
+	err := json.Unmarshal(data, app)
+	if err != nil {
+		return fmt.Errorf("new user decode error: %w", err)
+	}
+
+	return nil
 }
 
 // Validate checks the data in the model is considered clean.
 func (app *NewUser) Validate() error {
-	if err := validation.Check(app); err != nil {
-		return err
+	err := validation.Check(app)
+	if err != nil {
+		return fmt.Errorf("new user validation error: %w", err)
 	}
+
 	return nil
 }
 
@@ -155,7 +172,12 @@ type UpdateUserRole struct {
 
 // Decode implements the decoder interface.
 func (app *UpdateUserRole) Decode(data []byte) error {
-	return json.Unmarshal(data, app)
+	err := json.Unmarshal(data, app)
+	if err != nil {
+		return fmt.Errorf("update user role decode error: %w", err)
+	}
+
+	return nil
 }
 
 // UpdateUser defines the data needed to update a user.
@@ -170,15 +192,22 @@ type UpdateUser struct {
 
 // Decode implements the decoder interface.
 func (app *UpdateUser) Decode(data []byte) error {
-	return json.Unmarshal(data, app)
+	err := json.Unmarshal(data, app)
+	if err != nil {
+		return fmt.Errorf("update user decode error: %w", err)
+	}
+
+	return nil
 }
 
 func toBusUpdateUser(app UpdateUser) (user.UpdateUser, error) {
 	var errors errs.FieldErrors
 
 	var addr *mail.Address
+
 	if app.Email != nil {
 		var err error
+
 		addr, err = mail.ParseAddress(*app.Email)
 		if err != nil {
 			errors.Add("email", err)
@@ -186,28 +215,34 @@ func toBusUpdateUser(app UpdateUser) (user.UpdateUser, error) {
 	}
 
 	var nme *name.Name
+
 	if app.Name != nil {
 		nm, err := name.Parse(*app.Name)
 		if err != nil {
 			return user.UpdateUser{}, fmt.Errorf("parse: %w", err)
 		}
+
 		nme = &nm
 	}
 
 	var department *name.Null
+
 	if app.Department != nil {
 		dep, err := name.ParseNull(*app.Department)
 		if err != nil {
 			return user.UpdateUser{}, fmt.Errorf("parse: %w", err)
 		}
+
 		department = &dep
 	}
 
 	var pass *password.Password
+
 	p, err := password.ParseConfirmPointers(app.Password, app.PasswordConfirm)
 	if err != nil {
 		errors.Add("password", err)
 	}
+
 	pass = &p
 
 	if len(errors) > 0 {

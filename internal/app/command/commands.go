@@ -1,5 +1,4 @@
-// Package commands contain the functionality for the set of commands
-// currently supported by the CLI tooling.
+// Package command contains the functionality for the set of commands currently supported by the CLI tooling.
 package command
 
 import (

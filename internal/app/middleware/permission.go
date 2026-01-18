@@ -15,20 +15,28 @@ func (m *Middleware) HasPermission(permissionName string) func(next http.Handler
 
 			// check if the user has the permission
 			userID := claims.Subject
-			hasPermission, err := m.UseCase.UserRolesPermissions.HasPermission(ctx, userID, permissionName)
+
+			hasPermission, err := m.UseCase.UserRolesPermissions.HasPermission(
+				ctx,
+				userID,
+				permissionName,
+			)
 			if err != nil {
 				m.Log.Error(ctx, "error checking permissions", err)
 				m.Error(w, err, http.StatusInternalServerError)
+
 				return
 			}
 
-			if hasPermission == false {
+			if !hasPermission {
 				m.Log.Info(ctx, "access denied",
 					"user_id", userID,
 					"permission", permissionName,
 					"has_permissions", hasPermission,
 				)
-				m.Error(w, errs.New(errs.PermissionDenied, nil), http.StatusForbidden)
+				m.Error(w, errs.New(errs.PermissionDenied, ErrPermissionDenied), http.StatusForbidden)
+
+				return
 			}
 
 			next.ServeHTTP(w, r.WithContext(ctx))

@@ -7,11 +7,12 @@ GID			:= $(shell id -g)
 GO_VERSION	:= 1.25.3
 
 INPUT			?= $(shell bash -c 'read -p "Insert name: " name; echo $$name')
+INPUT_TOOL		?= $(shell bash -c 'read -p "Insert tool: " name; echo $$name')
 CURRENT_TIME	:= $(shell date --iso-8601=seconds)
 GIT_VERSION		:= $(shell git describe --always --dirty --tags --long)
 LINKER_FLAGS	:= "-s -X main.buildTime=${CURRENT_TIME} -X main.version=${GIT_VERSION}"
 
-DOCKER_COMPOSE_LOCAL	:= docker compose -f ./compose.yml
+DOCKER_COMPOSE_LOCAL	:= docker compose -f ./compose.yaml
 MIGRATION_DB_DSN 		:= "postgres://housi:secret123@db:5432/housi_db?sslmode=disable"
 MIGRATE 				:= $(DOCKER_COMPOSE_LOCAL) run --rm migrate
 
@@ -47,6 +48,11 @@ docker/stop:
 .PHONY: docker/down
 docker/down:
 	$(DOCKER_COMPOSE_LOCAL) down --remove-orphans
+
+## docker/golang-ci: Run golang-ci through docker
+.PHONY: docker/down
+docker/golang-ci:
+	docker run -t --rm -v $(pwd):/app -w /app golangci/golangci-lint:v2.8.0 golangci-lint run
 
 ## docker/clean: docker clean all
 .PHONY: docker/clean
@@ -93,19 +99,51 @@ db/migrate/down:
 ## Quality Control
 ## ================ #
 
-## lint: Run linter
-.PHONY: lint
-lint:
+## tidy: Tidy
+.PHONY: tidy
+tidy:
 	go mod tidy
 	go mod verify
-	go fmt ./...
-	go vet ./...
-	staticcheck ./...
 
-## errcheck: Check for unhandled errors
-.PHONY: errcheck
-errcheck:
-	go tool errcheck ./...
+## static: Run static analysis
+.PHONY: static
+static:
+	go tool staticcheck ./...
+
+# security: Check security
+.PHONY: security
+security:
+	go tool govulncheck ./...
+
+## vet: Vet examines Go source code and reports suspicious constructs
+.PHONY: vet
+vet:
+	go vet ./...
+
+## fmt: Formatting with standard library
+.PHONY: fmt
+fmt:
+	go fmt ./...
+
+## fmt/yaml: Formatting yaml files
+.PHONY: fmt/yaml
+fmt/yaml:
+	go tool yamlfmt .
+
+## lint/golangci: Run golangci
+.PHONY: lint/golangci
+lint/golangci:
+	docker run -t --rm \
+    -v $(PWD):/app -w /app \
+    golangci/golangci-lint:v2.8.0 golangci-lint run
+
+## lint: Run linter
+.PHONY: lint
+lint: tidy tools/install static security vet lint/golangci
+
+## ================ #
+## Tests
+## ================ #
 
 ## test: Run tests
 .PHONY: test
@@ -164,12 +202,23 @@ list:
 ## Tooling
 ## ========== #
 
+## tools/get: Get tools
+.PHONY: tools/get
+tools/get:
+	go get --tool $(INPUT_TOOL)
+
+## tools/install: Install tools
+.PHONY: tools/install
 tools/install:
 	go install tool
 
+## tools/list: List all tools
+.PHONY: tools/list
 tools/list:
 	go tool
 
+## tools/update: Update tools
+.PHONY: tools/update
 tools/update:
 	go get -u tool
 
@@ -177,12 +226,17 @@ tools/update:
 ## Utils
 ## ======== #
 
-# swagger: Generate swagger docs
+## generate: Go generate command
+.PHONY: generate
+generate:
+	go generate ./...
+
+## swagger: Generate swagger docs
 .PHONY: swagger
 swagger:
 	docker run --rm -v $(PWD):/code ghcr.io/swaggo/swag:v1.16.3 init --g cmd/rest/main.go
 
-# mockery: Generate mocks
+## mockery: Generate mocks
 .PHONY: mockery
 mockery:
 	docker run --rm \

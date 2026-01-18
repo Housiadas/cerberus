@@ -3,7 +3,6 @@ package user_service
 import (
 	"context"
 	"fmt"
-	"math/rand"
 	"net/mail"
 
 	"github.com/Housiadas/cerberus/internal/core/domain/name"
@@ -16,6 +15,7 @@ func TestSeedUsers(ctx context.Context, n int, service *Service) ([]user.User, e
 	newUsrs := testNewUsers(n)
 
 	usrs := make([]user.User, len(newUsrs))
+
 	for i, nu := range newUsrs {
 		usr, err := service.Create(ctx, nu)
 		if err != nil {
@@ -32,14 +32,11 @@ func TestSeedUsers(ctx context.Context, n int, service *Service) ([]user.User, e
 func testNewUsers(n int) []user.NewUser {
 	newUsrs := make([]user.NewUser, n)
 
-	idx := rand.Intn(10000)
 	for i := range n {
-		idx++
-
 		nu := user.NewUser{
-			Name:       name.MustParse(fmt.Sprintf("Name%d", idx)),
-			Email:      mail.Address{Address: fmt.Sprintf("Email%d@gmail.com", idx)},
-			Department: name.MustParseNull(fmt.Sprintf("Department%d", idx)),
+			Name:       name.MustParse(fmt.Sprintf("Name%d", i)),
+			Email:      mail.Address{Address: fmt.Sprintf("Email%d@gmail.com", i)},
+			Department: name.MustParseNull(fmt.Sprintf("Department%d", i)),
 			Password:   password.MustParse("Secret123!@#"),
 		}
 

@@ -5,15 +5,19 @@ import (
 	"fmt"
 	"net/mail"
 
-	"github.com/google/uuid"
-
 	"github.com/Housiadas/cerberus/internal/core/domain/user"
 	"github.com/Housiadas/cerberus/pkg/order"
 	"github.com/Housiadas/cerberus/pkg/web"
+	"github.com/google/uuid"
 )
 
 // Query retrieves a list of existing users.
-func (c *Service) Query(ctx context.Context, filter user.QueryFilter, orderBy order.By, page web.Page) ([]user.User, error) {
+func (c *Service) Query(
+	ctx context.Context,
+	filter user.QueryFilter,
+	orderBy order.By,
+	page web.Page,
+) ([]user.User, error) {
 	users, err := c.storer.Query(ctx, filter, orderBy, page)
 	if err != nil {
 		return nil, fmt.Errorf("query: %w", err)

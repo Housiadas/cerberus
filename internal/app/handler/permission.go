@@ -10,18 +10,25 @@ import (
 )
 
 // Permission godoc
-// @Summary      Crete Permission
-// @Description  Create a new Permission
-// @Tags 		 Permissions
-// @Accept       json
-// @Produce      json
-// @Param        request body 	permission_usecase.NewPermission true "Permission data"
-// @Success      200  {object}  permission_usecase.Permission
-// @Failure      500  {object}  errs.Error
-// @Router       /v1/permissions [post]
-func (h *Handler) permissionCreate(ctx context.Context, _ http.ResponseWriter, r *http.Request) web.Encoder {
+//
+//	@Summary		Crete Permission
+//	@Description	Create a new Permission
+//	@Tags			Permissions
+//	@Accept			json
+//	@Produce		json
+//	@Param			request	body		permission_usecase.NewPermission	true	"Permission data"
+//	@Success		200		{object}	permission_usecase.Permission
+//	@Failure		500		{object}	errs.Error
+//	@Router			/v1/permissions [post].
+func (h *Handler) permissionCreate(
+	ctx context.Context,
+	_ http.ResponseWriter,
+	r *http.Request,
+) web.Encoder {
 	var ucRole permission_usecase.NewPermission
-	if err := web.Decode(r, &ucRole); err != nil {
+
+	err := web.Decode(r, &ucRole)
+	if err != nil {
 		return errs.ParseValidationErrors(err)
 	}
 
@@ -34,15 +41,20 @@ func (h *Handler) permissionCreate(ctx context.Context, _ http.ResponseWriter, r
 }
 
 // Permission godoc
-// @Summary      Query Roles
-// @Description  Search roles
-// @Tags		 Permissions
-// @Accept       json
-// @Produce      json
-// @Success      200  {object}  permission_usecase.PermissionPageResults
-// @Failure      500  {object}  errs.Error
-// @Router       /v1/permissions [get]
-func (h *Handler) permissionQuery(ctx context.Context, _ http.ResponseWriter, r *http.Request) web.Encoder {
+//
+//	@Summary		Query Roles
+//	@Description	Search roles
+//	@Tags			Permissions
+//	@Accept			json
+//	@Produce		json
+//	@Success		200	{object}	permission_usecase.PermissionPageResults
+//	@Failure		500	{object}	errs.Error
+//	@Router			/v1/permissions [get].
+func (h *Handler) permissionQuery(
+	ctx context.Context,
+	_ http.ResponseWriter,
+	r *http.Request,
+) web.Encoder {
 	qp := permissionParseQueryParams(r)
 
 	roles, err := h.Usecase.Permission.Query(ctx, qp)
@@ -54,22 +66,30 @@ func (h *Handler) permissionQuery(ctx context.Context, _ http.ResponseWriter, r 
 }
 
 // Permission godoc
-// @Summary      Update Permission
-// @Description  Update an existing Permission
-// @Tags 		 Permissions
-// @Accept       json
-// @Produce      json
-// @Param        request body 	permission_usecase.UpdatePermission true "Permission data"
-// @Success      200  {object}  permission_usecase.Permission
-// @Failure      500  {object}  errs.Error
-// @Router       /v1/permissions/{permission_id} [put]
-func (h *Handler) permissionUpdate(ctx context.Context, w http.ResponseWriter, r *http.Request) web.Encoder {
+//
+//	@Summary		Update Permission
+//	@Description	Update an existing Permission
+//	@Tags			Permissions
+//	@Accept			json
+//	@Produce		json
+//	@Param			request	body		permission_usecase.UpdatePermission	true	"Permission data"
+//	@Success		200		{object}	permission_usecase.Permission
+//	@Failure		500		{object}	errs.Error
+//	@Router			/v1/permissions/{permission_id} [put].
+func (h *Handler) permissionUpdate(
+	ctx context.Context,
+	_ http.ResponseWriter,
+	r *http.Request,
+) web.Encoder {
 	var app permission_usecase.UpdatePermission
-	if err := web.Decode(r, &app); err != nil {
+
+	err := web.Decode(r, &app)
+	if err != nil {
 		return errs.ParseValidationErrors(err)
 	}
 
 	permissionID := web.Param(r, "permission_id")
+
 	permission, err := h.Usecase.Permission.Update(ctx, app, permissionID)
 	if err != nil {
 		return errs.AsErr(err)
@@ -79,17 +99,24 @@ func (h *Handler) permissionUpdate(ctx context.Context, w http.ResponseWriter, r
 }
 
 // Permission godoc
-// @Summary      Delete a Permission
-// @Description  Delete a Permission
-// @Tags 		 Permissions
-// @Accept       json
-// @Produce      json
-// @Success      204
-// @Failure      500  {object}  errs.Error
-// @Router       /v1/permissions/{permission_id} [delete]
-func (h *Handler) permissionDelete(ctx context.Context, w http.ResponseWriter, r *http.Request) web.Encoder {
+//
+//	@Summary		Delete a Permission
+//	@Description	Delete a Permission
+//	@Tags			Permissions
+//	@Accept			json
+//	@Produce		json
+//	@Success		204
+//	@Failure		500	{object}	errs.Error
+//	@Router			/v1/permissions/{permission_id} [delete].
+func (h *Handler) permissionDelete(
+	ctx context.Context,
+	_ http.ResponseWriter,
+	r *http.Request,
+) web.Encoder {
 	permissionID := web.Param(r, "permission_id")
-	if err := h.Usecase.Permission.Delete(ctx, permissionID); err != nil {
+
+	err := h.Usecase.Permission.Delete(ctx, permissionID)
+	if err != nil {
 		return errs.AsErr(err)
 	}
 

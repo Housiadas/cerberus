@@ -31,21 +31,21 @@ type Logger interface {
 
 // Service represents a logger for logging information.
 type Service struct {
-	discard     bool
-	handler     slog.Handler
-	traceIDFn   TraceIDFn
-	requestIDFn RequestIDFn
+	discard   bool
+	handler   slog.Handler
+	traceID   string
+	requestID string
 }
 
 // New constructs a new log for application use.
 func New(
-	w io.Writer,
+	writerIO io.Writer,
 	minLevel Level,
 	serviceName string,
-	traceIDFn TraceIDFn,
-	requestIDFn RequestIDFn,
+	traceIDFn string,
+	requestIDFn string,
 ) *Service {
-	return new(w, minLevel, serviceName, traceIDFn, requestIDFn, Events{})
+	return newLogger(writerIO, minLevel, serviceName, traceIDFn, requestIDFn, Events{})
 }
 
 // NewWithEvents constructs a new log for application use with events.
@@ -53,11 +53,11 @@ func NewWithEvents(
 	w io.Writer,
 	minLevel Level,
 	serviceName string,
-	traceIDFn TraceIDFn,
-	requestIDFn RequestIDFn,
+	traceIDFn string,
+	requestIDFn string,
 	events Events,
 ) *Service {
-	return new(w, minLevel, serviceName, traceIDFn, requestIDFn, events)
+	return newLogger(w, minLevel, serviceName, traceIDFn, requestIDFn, events)
 }
 
 // NewWithHandler returns a new log for application use with the underlying
@@ -157,34 +157,38 @@ func (log *Service) write(
 	}
 
 	var pcs [1]uintptr
+
 	runtime.Callers(caller, pcs[:])
 
-	r := slog.NewRecord(time.Now(), slogLevel, msg, pcs[0])
+	slogRec := slog.NewRecord(time.Now(), slogLevel, msg, pcs[0])
 
-	if log.traceIDFn != nil {
-		args = append(args, "trace_id", log.traceIDFn(ctx))
+	if log.traceID != "" {
+		args = append(args, "trace_id", log.traceID)
 	}
-	if log.requestIDFn != nil {
-		args = append(args, "request_id", log.requestIDFn(ctx))
-	}
-	r.Add(args...)
 
-	log.handler.Handle(ctx, r)
+	if log.requestID != "" {
+		args = append(args, "request_id", log.requestID)
+	}
+
+	slogRec.Add(args...)
+
+	log.handler.Handle(ctx, slogRec)
 }
 
-func new(
+func newLogger(
 	w io.Writer,
 	minLevel Level,
 	serviceName string,
-	traceIDFn TraceIDFn,
-	requestIDFn RequestIDFn,
+	traceID string,
+	requestID string,
 	events Events,
 ) *Service {
 	// Convert the file name to just the name.ext when this key/value is logged.
-	f := func(groups []string, a slog.Attr) slog.Attr {
+	f := func(_ []string, a slog.Attr) slog.Attr {
 		if a.Key == slog.SourceKey {
 			if source, ok := a.Value.Any().(*slog.Source); ok {
 				v := fmt.Sprintf("%s:%d", filepath.Base(source.File), source.Line)
+
 				return slog.Attr{Key: "file", Value: slog.StringValue(v)}
 			}
 		}
@@ -193,7 +197,12 @@ func new(
 	}
 
 	// Construct the slog JSON handler for use.
-	handler := slog.Handler(slog.NewJSONHandler(w, &slog.HandlerOptions{AddSource: true, Level: slog.Level(minLevel), ReplaceAttr: f}))
+	handler := slog.Handler(
+		slog.NewJSONHandler(
+			w,
+			&slog.HandlerOptions{AddSource: true, Level: slog.Level(minLevel), ReplaceAttr: f},
+		),
+	)
 
 	// If events are to be processed, wrap the JSON handler around the custom
 	// log handler.
@@ -210,9 +219,9 @@ func new(
 	handler = handler.WithAttrs(attrs)
 
 	return &Service{
-		discard:     w == io.Discard,
-		handler:     handler,
-		traceIDFn:   traceIDFn,
-		requestIDFn: requestIDFn,
+		discard:   w == io.Discard,
+		handler:   handler,
+		traceID:   traceID,
+		requestID: requestID,
 	}
 }

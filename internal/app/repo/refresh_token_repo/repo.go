@@ -7,40 +7,40 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/jmoiron/sqlx"
-
 	"github.com/Housiadas/cerberus/internal/core/domain/refresh_token"
 	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/Housiadas/cerberus/pkg/pgsql"
 	"github.com/Housiadas/cerberus/pkg/web/errs"
+	"github.com/jmoiron/sqlx"
 )
 
-// queries
+// queries.
 var (
 	//go:embed query/token_create.sql
-	tokenCreateSql string
+	tokenCreateSQL string
 	//go:embed query/token_delete.sql
-	tokenDeleteSql string
+	tokenDeleteSQL string
 	//go:embed query/token_revoke.sql
-	tokenRevokeSql string
+	tokenRevokeSQL string
 	//go:embed query/token_query_by_token.sql
-	tokenQueryByTokenSql string
+	tokenQueryByTokenSQL string
 )
 
 type Store struct {
-	log logger.Logger
-	db  sqlx.ExtContext
+	log    logger.Logger
+	dbPool sqlx.ExtContext
 }
 
-func NewStore(log logger.Logger, db *sqlx.DB) refresh_token.Storer {
+func NewStore(log logger.Logger, dbPool *sqlx.DB) *Store {
 	return &Store{
-		log: log,
-		db:  db,
+		log:    log,
+		dbPool: dbPool,
 	}
 }
 
 func (s *Store) Create(ctx context.Context, token refresh_token.RefreshToken) error {
-	if err := pgsql.NamedExecContext(ctx, s.log, s.db, tokenCreateSql, toTokenDB(token)); err != nil {
+	err := pgsql.NamedExecContext(ctx, s.log, s.dbPool, tokenCreateSQL, toTokenDB(token))
+	if err != nil {
 		return fmt.Errorf("named_exec_context: %w", err)
 	}
 
@@ -48,7 +48,8 @@ func (s *Store) Create(ctx context.Context, token refresh_token.RefreshToken) er
 }
 
 func (s *Store) Delete(ctx context.Context, token refresh_token.RefreshToken) error {
-	if err := pgsql.NamedExecContext(ctx, s.log, s.db, tokenDeleteSql, toTokenDB(token)); err != nil {
+	err := pgsql.NamedExecContext(ctx, s.log, s.dbPool, tokenDeleteSQL, toTokenDB(token))
+	if err != nil {
 		return fmt.Errorf("named_exec_context: %w", err)
 	}
 
@@ -56,14 +57,18 @@ func (s *Store) Delete(ctx context.Context, token refresh_token.RefreshToken) er
 }
 
 func (s *Store) Revoke(ctx context.Context, token refresh_token.RefreshToken) error {
-	if err := pgsql.NamedExecContext(ctx, s.log, s.db, tokenRevokeSql, toTokenDB(token)); err != nil {
+	err := pgsql.NamedExecContext(ctx, s.log, s.dbPool, tokenRevokeSQL, toTokenDB(token))
+	if err != nil {
 		return fmt.Errorf("named_exec_context: %w", err)
 	}
 
 	return nil
 }
 
-func (s *Store) QueryByToken(ctx context.Context, token string) (refresh_token.RefreshToken, error) {
+func (s *Store) QueryByToken(
+	ctx context.Context,
+	token string,
+) (refresh_token.RefreshToken, error) {
 	data := struct {
 		Token string `db:"token"`
 	}{
@@ -71,10 +76,16 @@ func (s *Store) QueryByToken(ctx context.Context, token string) (refresh_token.R
 	}
 
 	var dbTkn tokenDB
-	if err := pgsql.NamedQueryStruct(ctx, s.log, s.db, tokenQueryByTokenSql, data, &dbTkn); err != nil {
+
+	err := pgsql.NamedQueryStruct(ctx, s.log, s.dbPool, tokenQueryByTokenSQL, data, &dbTkn)
+	if err != nil {
 		if errors.Is(err, pgsql.ErrDBNotFound) {
-			return refresh_token.RefreshToken{}, errs.Errorf(errs.NotFound, "refresh token not found")
+			return refresh_token.RefreshToken{}, errs.Errorf(
+				errs.NotFound,
+				"refresh token not found",
+			)
 		}
+
 		return refresh_token.RefreshToken{}, fmt.Errorf("db: %w", err)
 	}
 

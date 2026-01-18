@@ -5,17 +5,21 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/google/uuid"
-
 	"github.com/Housiadas/cerberus/internal/core/domain/refresh_token"
+	"github.com/google/uuid"
 )
 
 // Create adds a new refresh token to the system.
-func (c *Service) Create(ctx context.Context, userID uuid.UUID, refreshTokenTTL time.Duration) (refresh_token.RefreshToken, error) {
+func (c *Service) Create(
+	ctx context.Context,
+	userID uuid.UUID,
+	refreshTokenTTL time.Duration,
+) (refresh_token.RefreshToken, error) {
 	id, err := c.uuidGen.Generate()
 	if err != nil {
 		return refresh_token.RefreshToken{}, fmt.Errorf("uuid: %w", err)
 	}
+
 	tokenID, err := c.uuidGen.Generate()
 	if err != nil {
 		return refresh_token.RefreshToken{}, fmt.Errorf("uuid: %w", err)
@@ -31,7 +35,8 @@ func (c *Service) Create(ctx context.Context, userID uuid.UUID, refreshTokenTTL 
 		Revoked:   false,
 	}
 
-	if err := c.storer.Create(ctx, tkn); err != nil {
+	err = c.storer.Create(ctx, tkn)
+	if err != nil {
 		return refresh_token.RefreshToken{}, fmt.Errorf("create: %w", err)
 	}
 

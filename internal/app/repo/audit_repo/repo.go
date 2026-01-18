@@ -7,47 +7,44 @@ import (
 	_ "embed"
 	"fmt"
 
-	"github.com/Housiadas/cerberus/pkg/web"
-	"github.com/jmoiron/sqlx"
-
 	"github.com/Housiadas/cerberus/internal/core/domain/audit"
 	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/Housiadas/cerberus/pkg/order"
 	"github.com/Housiadas/cerberus/pkg/pgsql"
+	"github.com/Housiadas/cerberus/pkg/web"
+	"github.com/jmoiron/sqlx"
 )
 
-// queries
+// queries.
 var (
 	//go:embed query/audit_create.sql
-	auditCreateSql string
+	auditCreateSQL string
 	//go:embed query/audit_query.sql
-	auditQuerySql string
+	auditQuerySQL string
 	//go:embed query/audit_count.sql
-	auditCountSql string
+	auditCountSQL string
 )
 
 // Store manages the set of APIs for auditDB database access.
 type Store struct {
-	log logger.Logger
-	db  sqlx.ExtContext
+	log    logger.Logger
+	dbPool sqlx.ExtContext
 }
 
 // NewStore constructs the API for data access.
-func NewStore(log logger.Logger, db *sqlx.DB) audit.Storer {
+func NewStore(log logger.Logger, dbPool *sqlx.DB) *Store {
 	return &Store{
-		log: log,
-		db:  db,
+		log:    log,
+		dbPool: dbPool,
 	}
 }
 
 // Create inserts a new auditDB record into the database.
 func (s *Store) Create(ctx context.Context, a audit.Audit) error {
-	dbAudit, err := toDBAudit(a)
-	if err != nil {
-		return err
-	}
+	dbAudit := toDBAudit(a)
 
-	if err := pgsql.NamedExecContext(ctx, s.log, s.db, auditCreateSql, dbAudit); err != nil {
+	err := pgsql.NamedExecContext(ctx, s.log, s.dbPool, auditCreateSQL, dbAudit)
+	if err != nil {
 		return fmt.Errorf("namedexeccontext: %w", err)
 	}
 
@@ -65,7 +62,7 @@ func (s *Store) Query(
 		"rows_per_page": page.RowsPerPage(),
 	}
 
-	buf := bytes.NewBufferString(auditQuerySql)
+	buf := bytes.NewBufferString(auditQuerySQL)
 	applyFilter(filter, data, buf)
 
 	orderByClause, err := orderByClause(orderBy)
@@ -77,7 +74,9 @@ func (s *Store) Query(
 	buf.WriteString(" OFFSET :offset ROWS FETCH NEXT :rows_per_page ROWS ONLY")
 
 	var dbAudits []auditDB
-	if err := pgsql.NamedQuerySlice(ctx, s.log, s.db, buf.String(), data, &dbAudits); err != nil {
+
+	err = pgsql.NamedQuerySlice(ctx, s.log, s.dbPool, buf.String(), data, &dbAudits)
+	if err != nil {
 		return nil, fmt.Errorf("namedqueryslice: %w", err)
 	}
 
@@ -88,13 +87,15 @@ func (s *Store) Query(
 func (s *Store) Count(ctx context.Context, filter audit.QueryFilter) (int, error) {
 	data := map[string]any{}
 
-	buf := bytes.NewBufferString(auditCountSql)
+	buf := bytes.NewBufferString(auditCountSQL)
 	applyFilter(filter, data, buf)
 
 	var count struct {
 		Count int `db:"count"`
 	}
-	if err := pgsql.NamedQueryStruct(ctx, s.log, s.db, buf.String(), data, &count); err != nil {
+
+	err := pgsql.NamedQueryStruct(ctx, s.log, s.dbPool, buf.String(), data, &count)
+	if err != nil {
 		return 0, fmt.Errorf("db: %w", err)
 	}
 

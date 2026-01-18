@@ -3,11 +3,10 @@ package role
 import (
 	"context"
 
-	"github.com/Housiadas/cerberus/pkg/web"
-	"github.com/google/uuid"
-
 	"github.com/Housiadas/cerberus/pkg/order"
 	"github.com/Housiadas/cerberus/pkg/pgsql"
+	"github.com/Housiadas/cerberus/pkg/web"
+	"github.com/google/uuid"
 )
 
 // Storer interface declares the behavior this package needs to persist and retrieve data.

@@ -9,10 +9,9 @@ import (
 	"net/url"
 	"path"
 
+	"github.com/Housiadas/cerberus/pkg/otel"
 	"github.com/Housiadas/cerberus/pkg/web/errs"
 	"go.opentelemetry.io/otel/attribute"
-
-	"github.com/Housiadas/cerberus/pkg/otel"
 )
 
 func (cln *Client) Request(
@@ -21,7 +20,7 @@ func (cln *Client) Request(
 	endpoint string,
 	headers map[string]string,
 	r io.Reader,
-	v any,
+	result any,
 ) error {
 	var statusCode int
 
@@ -29,14 +28,17 @@ func (cln *Client) Request(
 	if err != nil {
 		return fmt.Errorf("parsing endpoint: %w", err)
 	}
+
 	base := path.Base(u.Path)
 
 	cln.log.Info(ctx, "http request: started", "method", method, "call", base, "endpoint", endpoint)
+
 	defer func() {
 		cln.log.Info(ctx, "http request: completed", "status", statusCode)
 	}()
 
-	ctx, span := otel.AddSpan(ctx, fmt.Sprintf("pkg.httpclient.%s", base), attribute.String("endpoint", endpoint))
+	ctx, span := otel.AddSpan(ctx, "pkg.httpclient."+base, attribute.String("endpoint", endpoint))
+
 	defer func() {
 		span.SetAttributes(attribute.Int("status", statusCode))
 		span.End()
@@ -50,6 +52,7 @@ func (cln *Client) Request(
 	req.Header.Set("Cache-Control", "no-cache")
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Accept", "application/json")
+
 	for key, value := range headers {
 		req.Header.Set(key, value)
 	}
@@ -76,17 +79,22 @@ func (cln *Client) Request(
 		return nil
 
 	case http.StatusOK:
-		if err := json.Unmarshal(data, v); err != nil {
+		err := json.Unmarshal(data, result)
+		if err != nil {
 			return fmt.Errorf("failed: response: %s, decoding error: %w ", string(data), err)
 		}
+
 		return nil
 
 	case http.StatusUnauthorized:
-		var err *errs.Error
-		if err := json.Unmarshal(data, &err); err != nil {
+		var errResult *errs.Error
+
+		err = json.Unmarshal(data, &errResult)
+		if err != nil {
 			return fmt.Errorf("failed: response: %s, decoding error: %w ", string(data), err)
 		}
-		return err
+
+		return errResult
 
 	default:
 		return fmt.Errorf("failed: response: %s", string(data))

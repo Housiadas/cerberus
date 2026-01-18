@@ -2,7 +2,6 @@ package middleware
 
 import (
 	"encoding/base64"
-	"errors"
 	"net/http"
 	"strings"
 
@@ -17,19 +16,22 @@ func (m *Middleware) AuthenticateBearer() func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			ctx := r.Context()
+
 			bearerToken := r.Header.Get("Authorization")
 			if !strings.HasPrefix(bearerToken, "Bearer ") {
-				err := errs.New(errs.Unauthenticated,
-					errors.New("expected authorization header format: Bearer <token>"),
-				)
+				err := errs.New(errs.Unauthenticated, ErrInvalidAuthHeader)
 				m.Error(w, err, http.StatusUnauthorized)
+
 				return
 			}
 
 			jwtUnverified := bearerToken[7:]
+
 			resp, err := m.UseCase.Auth.Validate(ctx, jwtUnverified)
 			if err != nil {
 				m.Error(w, err, http.StatusUnauthorized)
+
+				return
 			}
 
 			ctx = ctxPck.SetClaims(ctx, resp)
@@ -43,20 +45,26 @@ func (m *Middleware) AuthenticateBasic() func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			ctx := r.Context()
-			authorizationHeader := r.Header.Get("authorization")
+			authorizationHeader := r.Header.Get("Authorization")
+
 			email, pass, ok := parseBasicAuth(authorizationHeader)
 			if !ok {
-				err := errs.Errorf(errs.Unauthenticated, "invalid Basic auth")
+				err := errs.New(errs.Unauthenticated, ErrInvalidBasicAuth)
 				m.Error(w, err, http.StatusUnauthorized)
+
+				return
 			}
 
 			authUsr := user_usecase.AuthenticateUser{
 				Email:    email,
 				Password: pass,
 			}
+
 			_, err := m.UseCase.User.Authenticate(ctx, authUsr)
 			if err != nil {
 				m.Error(w, err, http.StatusUnauthorized)
+
+				return
 			}
 
 			next.ServeHTTP(w, r.WithContext(ctx))

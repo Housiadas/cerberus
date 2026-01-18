@@ -5,14 +5,11 @@ import (
 	"errors"
 	"time"
 
-	"github.com/google/uuid"
-
 	"github.com/Housiadas/cerberus/internal/core/domain/name"
+	"github.com/google/uuid"
 )
 
-var (
-	ErrNotFound = errors.New("permission not found")
-)
+var ErrNotFound = errors.New("permission not found")
 
 // Permission represents information about an individual permission of our system.
 type Permission struct {

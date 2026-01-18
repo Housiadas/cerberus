@@ -12,7 +12,8 @@ import (
 // Validate processes for the JWT token.
 func (u *UseCase) Validate(ctx context.Context, jwtUnverified string) (Claims, error) {
 	var claims Claims
-	token, err := jwt.ParseWithClaims(jwtUnverified, &claims, func(token *jwt.Token) (interface{}, error) {
+
+	token, err := jwt.ParseWithClaims(jwtUnverified, &claims, func(token *jwt.Token) (any, error) {
 		// Validate the signing method
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, errs.New(errs.InvalidArgument, ErrInvalidToken)
@@ -21,19 +22,23 @@ func (u *UseCase) Validate(ctx context.Context, jwtUnverified string) (Claims, e
 		if token.Method.Alg() != jwt.SigningMethodHS256.Name {
 			return nil, errs.New(errs.InvalidArgument, ErrInvalidToken)
 		}
+
 		return u.secret, nil
 	})
 	if err != nil {
 		if errors.Is(err, jwt.ErrTokenExpired) {
 			return Claims{}, fmt.Errorf("token expired: %w", err)
 		}
+
 		return Claims{}, fmt.Errorf("error parsing token: %w", err)
 	}
+
 	if !token.Valid {
 		return Claims{}, errs.New(errs.InvalidArgument, ErrInvalidToken)
 	}
 
-	if err := u.CheckExpiredToken(claims); err != nil {
+	err = u.CheckExpiredToken(claims)
+	if err != nil {
 		return Claims{}, fmt.Errorf("token expired: %w", err)
 	}
 
@@ -43,6 +48,7 @@ func (u *UseCase) Validate(ctx context.Context, jwtUnverified string) (Claims, e
 		if errors.Is(err, ErrUserDisabled) {
 			return Claims{}, errs.New(errs.Unauthenticated, ErrUserDisabled)
 		}
+
 		return Claims{}, err
 	}
 

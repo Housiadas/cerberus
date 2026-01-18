@@ -6,7 +6,7 @@ import (
 	"context"
 	"testing"
 
-	_ "github.com/jackc/pgx/v5/stdlib"
+	_ "github.com/jackc/pgx/v5/stdlib" // This is for sqlx driver
 	"github.com/jmoiron/sqlx"
 	"github.com/stretchr/testify/require"
 	"github.com/testcontainers/testcontainers-go"
@@ -22,6 +22,7 @@ type Database struct {
 // to handle testing. The database is migrated to the current version, and
 // a connection pool is provided with internal core packages.
 func New(t *testing.T, testName string) *sqlx.DB {
+	t.Helper()
 	// load app local config
 	cfg := newConfig(t)
 
@@ -44,7 +45,7 @@ func New(t *testing.T, testName string) *sqlx.DB {
 	require.NoError(t, err)
 
 	// set up migrations
-	err = migration(cfg, dbURL)
+	err = migration(dbURL)
 	require.NoError(t, err)
 
 	// Open DB
@@ -54,6 +55,7 @@ func New(t *testing.T, testName string) *sqlx.DB {
 	// -------------------------------------------------------------------------
 	// Will be invoked when the caller is done with the database
 	var buf bytes.Buffer
+
 	t.Cleanup(func() {
 		t.Helper()
 

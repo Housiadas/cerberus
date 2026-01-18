@@ -4,10 +4,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/google/uuid"
-
 	"github.com/Housiadas/cerberus/internal/core/domain/name"
 	"github.com/Housiadas/cerberus/internal/core/domain/role"
+	"github.com/google/uuid"
 )
 
 type roleDB struct {
@@ -35,8 +34,8 @@ func toRoleDomain(db roleDB) (role.Role, error) {
 	bus := role.Role{
 		ID:        db.ID,
 		Name:      nme,
-		CreatedAt: db.CreatedAt.In(time.Local),
-		UpdatedAt: db.UpdatedAt.In(time.Local),
+		CreatedAt: db.CreatedAt.In(time.UTC),
+		UpdatedAt: db.UpdatedAt.In(time.UTC),
 	}
 
 	return bus, nil
@@ -47,9 +46,10 @@ func toRolesDomain(dbs []roleDB) ([]role.Role, error) {
 
 	for i, db := range dbs {
 		var err error
+
 		bus[i], err = toRoleDomain(db)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("to roles domain error: %w", err)
 		}
 	}
 

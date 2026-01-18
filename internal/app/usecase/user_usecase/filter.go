@@ -4,11 +4,10 @@ import (
 	"net/mail"
 	"time"
 
-	"github.com/google/uuid"
-
 	"github.com/Housiadas/cerberus/internal/core/domain/name"
 	"github.com/Housiadas/cerberus/internal/core/domain/user"
 	"github.com/Housiadas/cerberus/pkg/web/errs"
+	"github.com/google/uuid"
 )
 
 type AppQueryParams struct {
@@ -23,8 +22,10 @@ type AppQueryParams struct {
 }
 
 func parseFilter(qp AppQueryParams) (user.QueryFilter, error) {
-	var fieldErrors errs.FieldErrors
-	var filter user.QueryFilter
+	var (
+		fieldErrors errs.FieldErrors
+		filter      user.QueryFilter
+	)
 
 	if qp.ID != "" {
 		id, err := uuid.Parse(qp.ID)

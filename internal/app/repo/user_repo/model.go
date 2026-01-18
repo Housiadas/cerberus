@@ -6,10 +6,9 @@ import (
 	"net/mail"
 	"time"
 
-	"github.com/google/uuid"
-
 	"github.com/Housiadas/cerberus/internal/core/domain/name"
 	"github.com/Housiadas/cerberus/internal/core/domain/user"
+	"github.com/google/uuid"
 )
 
 type userDB struct {
@@ -61,8 +60,8 @@ func toUserDomain(db userDB) (user.User, error) {
 		PasswordHash: db.PasswordHash,
 		Enabled:      db.Enabled,
 		Department:   department,
-		CreatedAt:    db.CreatedAt.In(time.Local),
-		UpdatedAt:    db.UpdatedAt.In(time.Local),
+		CreatedAt:    db.CreatedAt.In(time.UTC),
+		UpdatedAt:    db.UpdatedAt.In(time.UTC),
 	}
 
 	return bus, nil
@@ -73,6 +72,7 @@ func toUsersDomain(dbs []userDB) ([]user.User, error) {
 
 	for i, db := range dbs {
 		var err error
+
 		bus[i], err = toUserDomain(db)
 		if err != nil {
 			return nil, err

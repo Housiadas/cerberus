@@ -10,15 +10,20 @@ import (
 )
 
 // Audit godoc
-// @Summary      Query Audits
-// @Description  Search audits in database based on criteria
-// @Tags		 Audit
-// @Accept       json
-// @Produce      json
-// @Success      200  {object}  audit_usecase.AuditPageResult
-// @Failure      500  {object}  errs.Error
-// @Router       /v1/audits [get]
-func (h *Handler) auditQuery(ctx context.Context, _ http.ResponseWriter, r *http.Request) web.Encoder {
+//
+//	@Summary		Query Audits
+//	@Description	Search audits in database based on criteria
+//	@Tags			Audit
+//	@Accept			json
+//	@Produce		json
+//	@Success		200	{object}	audit_usecase.AuditPageResult
+//	@Failure		500	{object}	errs.Error
+//	@Router			/v1/audits [get].
+func (h *Handler) auditQuery(
+	ctx context.Context,
+	_ http.ResponseWriter,
+	r *http.Request,
+) web.Encoder {
 	qp := auditParseQueryParams(r)
 
 	audits, err := h.Usecase.Audit.Query(ctx, qp)

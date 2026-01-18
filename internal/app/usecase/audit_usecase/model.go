@@ -2,6 +2,7 @@ package audit_usecase
 
 import (
 	"encoding/json"
+	"fmt"
 	"time"
 
 	"github.com/Housiadas/cerberus/internal/core/domain/audit"
@@ -10,15 +11,15 @@ import (
 
 // Audit represents information about an individual audit record.
 type Audit struct {
-	ID        string
-	ObjID     string
-	ObjEntity string
-	ObjName   string
-	ActorID   string
-	Action    string
-	Data      string
-	Message   string
-	Timestamp string
+	ID        string `json:"id"`
+	ObjID     string `json:"objId"`
+	ObjEntity string `json:"objEntity"`
+	ObjName   string `json:"objName"`
+	ActorID   string `json:"actorId"`
+	Action    string `json:"action"`
+	Data      string `json:"data"`
+	Message   string `json:"message"`
+	Timestamp string `json:"timestamp"`
 }
 
 type AuditPageResult struct {
@@ -29,7 +30,11 @@ type AuditPageResult struct {
 // Encode implements the encoder interface.
 func (app Audit) Encode() ([]byte, string, error) {
 	data, err := json.Marshal(app)
-	return data, "application/json", err
+	if err != nil {
+		return nil, web.ContentTypeJSON, fmt.Errorf("audit encode error: %w", err)
+	}
+
+	return data, web.ContentTypeJSON, nil
 }
 
 func toAppAudit(aud audit.Audit) Audit {

@@ -2,6 +2,7 @@ package audit_usecase
 
 import "github.com/Housiadas/cerberus/internal/core/domain/audit"
 
+//nolint:gochecknoglobals
 var orderByFields = map[string]string{
 	"obj_id":     audit.OrderByObjID,
 	"obj_domain": audit.OrderByObjDomain,

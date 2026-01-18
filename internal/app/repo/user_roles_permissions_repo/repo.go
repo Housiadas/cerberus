@@ -7,25 +7,24 @@ import (
 	_ "embed"
 	"fmt"
 
-	"github.com/google/uuid"
-	"github.com/jmoiron/sqlx"
-
 	"github.com/Housiadas/cerberus/internal/core/domain/name"
 	urp "github.com/Housiadas/cerberus/internal/core/domain/user_roles_permissions"
 	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/Housiadas/cerberus/pkg/order"
 	"github.com/Housiadas/cerberus/pkg/pgsql"
 	"github.com/Housiadas/cerberus/pkg/web"
+	"github.com/google/uuid"
+	"github.com/jmoiron/sqlx"
 )
 
-// queries
+// queries.
 var (
 	//go:embed query/user_roles_permissions_query.sql
-	userRolesPermissionsQuerySql string
+	userRolesPermissionsQuerySQL string
 	//go:embed query/user_roles_permissions_count.sql
-	userRolesPermissionsCountSql string
+	userRolesPermissionsCountSQL string
 	//go:embed query/user_roles_permissions_count.sql
-	userHasPermissionSql string
+	userHasPermissionSQL string
 )
 
 // Store manages the set of APIs for DB access to the view.
@@ -35,7 +34,7 @@ type Store struct {
 }
 
 // NewStore constructs the api for data access.
-func NewStore(log logger.Logger, db *sqlx.DB) urp.Storer {
+func NewStore(log logger.Logger, db *sqlx.DB) *Store {
 	return &Store{
 		log: log,
 		db:  db,
@@ -54,18 +53,21 @@ func (s *Store) Query(
 		"rows_per_page": p.RowsPerPage(),
 	}
 
-	buf := bytes.NewBufferString(userRolesPermissionsQuerySql)
+	buf := bytes.NewBufferString(userRolesPermissionsQuerySQL)
 	applyFilter(filter, data, buf)
 
 	obc, err := orderByClause(ob)
 	if err != nil {
 		return nil, err
 	}
+
 	buf.WriteString(obc)
 	buf.WriteString(" OFFSET :offset ROWS FETCH NEXT :rows_per_page ROWS ONLY")
 
 	var dbRows []rowDB
-	if err := pgsql.NamedQuerySlice(ctx, s.log, s.db, buf.String(), data, &dbRows); err != nil {
+
+	err = pgsql.NamedQuerySlice(ctx, s.log, s.db, buf.String(), data, &dbRows)
+	if err != nil {
 		return nil, fmt.Errorf("db query user_roles_permissions: %w", err)
 	}
 
@@ -75,20 +77,27 @@ func (s *Store) Query(
 // Count returns the total number of rows that match the filter.
 func (s *Store) Count(ctx context.Context, filter urp.QueryFilter) (int, error) {
 	data := map[string]any{}
-	buf := bytes.NewBufferString(userRolesPermissionsCountSql)
+	buf := bytes.NewBufferString(userRolesPermissionsCountSQL)
 	applyFilter(filter, data, buf)
 
 	var cnt struct {
 		Count int `db:"count"`
 	}
-	if err := pgsql.NamedQueryStruct(ctx, s.log, s.db, buf.String(), data, &cnt); err != nil {
+
+	err := pgsql.NamedQueryStruct(ctx, s.log, s.db, buf.String(), data, &cnt)
+	if err != nil {
 		return 0, fmt.Errorf("db count user_roles_permissions: %w", err)
 	}
+
 	return cnt.Count, nil
 }
 
 // HasPermission returns true if the user has the specified permission.
-func (s *Store) HasPermission(ctx context.Context, userID uuid.UUID, permissionName string) (bool, error) {
+func (s *Store) HasPermission(
+	ctx context.Context,
+	userID uuid.UUID,
+	permissionName string,
+) (bool, error) {
 	data := map[string]any{
 		"user_id":         userID,
 		"permission_name": permissionName,
@@ -104,13 +113,15 @@ func (s *Store) HasPermission(ctx context.Context, userID uuid.UUID, permissionN
 		PermissionName: &pName,
 	}
 
-	buf := bytes.NewBufferString(userRolesPermissionsQuerySql)
+	buf := bytes.NewBufferString(userHasPermissionSQL)
 	applyFilter(filter, data, buf)
 
 	var cnt struct {
 		Count int `db:"count"`
 	}
-	if err := pgsql.NamedQueryStruct(ctx, s.log, s.db, buf.String(), data, &cnt); err != nil {
+
+	err = pgsql.NamedQueryStruct(ctx, s.log, s.db, buf.String(), data, &cnt)
+	if err != nil {
 		return false, fmt.Errorf("db count has permissions: %w", err)
 	}
 

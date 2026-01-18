@@ -3,32 +3,32 @@ package audit_service
 import (
 	"context"
 	"fmt"
-	"math/rand"
-
-	"github.com/google/uuid"
 
 	"github.com/Housiadas/cerberus/internal/core/domain/audit"
 	"github.com/Housiadas/cerberus/internal/core/domain/entity"
 	"github.com/Housiadas/cerberus/internal/core/domain/name"
+	"github.com/google/uuid"
 )
 
 // TestNewAudits is a helper method for testing.
-func TestNewAudits(n int, actorID uuid.UUID, objEntity entity.Entity, action string) []audit.NewAudit {
-	newAudits := make([]audit.NewAudit, n)
+func TestNewAudits(
+	numb int,
+	actorID uuid.UUID,
+	objEntity entity.Entity,
+	action string,
+) []audit.NewAudit {
+	newAudits := make([]audit.NewAudit, numb)
 
-	idx := rand.Intn(10000)
-	for i := range n {
-		idx++
-
+	for i := range numb {
 		objID, _ := uuid.NewV7()
 		na := audit.NewAudit{
 			ObjID:     objID,
 			ObjEntity: objEntity,
-			ObjName:   name.MustParse(fmt.Sprintf("ObjName%d", idx)),
+			ObjName:   name.MustParse(fmt.Sprintf("ObjName%d", i)),
 			ActorID:   actorID,
 			Action:    action,
-			Data:      struct{ Name string }{Name: fmt.Sprintf("Name%d", idx)},
-			Message:   fmt.Sprintf("Message%d", idx),
+			Data:      struct{ Name string }{Name: fmt.Sprintf("Name%d", i)},
+			Message:   fmt.Sprintf("Message%d", i),
 		}
 
 		newAudits[i] = na
@@ -49,6 +49,7 @@ func TestSeedAudits(
 	newAudits := TestNewAudits(n, actorID, objEntity, action)
 
 	audits := make([]audit.Audit, len(newAudits))
+
 	for i, na := range newAudits {
 		adt, err := api.Create(ctx, na)
 		if err != nil {

@@ -10,23 +10,6 @@ type Money struct {
 	value float64
 }
 
-// Value returns the float value of the money.
-func (m Money) Value() float64 {
-	return m.value
-}
-
-// String returns the value of the money.
-func (m Money) String() string {
-	return fmt.Sprintf("%.2f", m.value)
-}
-
-// Equal provides support for the go-cmp package and testing.
-func (m Money) Equal(m2 Money) bool {
-	return m.value == m2.value
-}
-
-// =============================================================================
-
 // Parse parses the float value and returns a money if the value complies
 // with the rules for money.
 func Parse(value float64) (Money, error) {
@@ -47,3 +30,20 @@ func MustParse(value float64) Money {
 
 	return money
 }
+
+// Value returns the float value of the money.
+func (m Money) Value() float64 {
+	return m.value
+}
+
+// String returns the value of the money.
+func (m Money) String() string {
+	return fmt.Sprintf("%.2f", m.value)
+}
+
+// Equal provides support for the go-cmp package and testing.
+func (m Money) Equal(m2 Money) bool {
+	return m.value == m2.value
+}
+
+// =============================================================================

@@ -3,11 +3,10 @@ package user_roles_permissions_usecase
 import (
 	"net/mail"
 
-	"github.com/google/uuid"
-
 	"github.com/Housiadas/cerberus/internal/core/domain/name"
 	urp "github.com/Housiadas/cerberus/internal/core/domain/user_roles_permissions"
 	"github.com/Housiadas/cerberus/pkg/web/errs"
+	"github.com/google/uuid"
 )
 
 type AppQueryParams struct {
@@ -24,8 +23,10 @@ type AppQueryParams struct {
 }
 
 func parseFilter(qp AppQueryParams) (urp.QueryFilter, error) {
-	var fieldErrors errs.FieldErrors
-	var filter urp.QueryFilter
+	var (
+		fieldErrors errs.FieldErrors
+		filter      urp.QueryFilter
+	)
 
 	if qp.UserID != "" {
 		id, err := uuid.Parse(qp.UserID)

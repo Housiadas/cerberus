@@ -35,7 +35,7 @@ func NewProducer(cfg ProducerConfig) (*ProducerClient, error) {
 		"security.protocol":        cfg.SecurityProtocol,
 	})
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("kafka producer error: %w", err)
 	}
 
 	return &ProducerClient{
@@ -47,14 +47,16 @@ func (p *ProducerClient) Produce(_ context.Context, msg *kafka.Message) error {
 	deliveryChan := make(chan kafka.Event)
 	defer close(deliveryChan)
 
-	if err := p.producer.Produce(msg, deliveryChan); err != nil {
-		return err
+	err := p.producer.Produce(msg, deliveryChan)
+	if err != nil {
+		return fmt.Errorf("producer error: %w", err)
 	}
 
 	e := <-deliveryChan
+
 	m := e.(*kafka.Message)
 	if m.TopicPartition.Error != nil {
-		return fmt.Errorf("error delivering message to kafka : %w", m.TopicPartition.Error)
+		return fmt.Errorf("error delivering message to kafka: %w", m.TopicPartition.Error)
 	}
 
 	return nil

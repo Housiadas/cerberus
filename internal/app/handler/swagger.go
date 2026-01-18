@@ -12,18 +12,25 @@ func (h *Handler) Swagger(w http.ResponseWriter, r *http.Request) {
 	d, err := swag.ReadDoc()
 	if err != nil {
 		h.Log.Error(r.Context(), "swagger: read doc", err)
+
 		return
 	}
 
-	data := make(map[string]interface{})
+	data := make(map[string]any)
+
 	data["host"] = r.Host
-	if err := json.NewDecoder(strings.NewReader(d)).Decode(&data); err != nil {
+
+	err = json.NewDecoder(strings.NewReader(d)).Decode(&data)
+	if err != nil {
 		h.Log.Error(r.Context(), "swagger: decode doc", err)
+
 		return
 	}
 
-	if err := json.NewEncoder(w).Encode(&data); err != nil {
+	err = json.NewEncoder(w).Encode(&data)
+	if err != nil {
 		h.Log.Error(r.Context(), "swagger: encode data", err)
+
 		return
 	}
 }

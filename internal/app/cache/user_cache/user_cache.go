@@ -3,18 +3,16 @@ package user_cache
 
 import (
 	"context"
-
+	"fmt"
 	"net/mail"
 	"time"
-
-	"github.com/google/uuid"
-	"github.com/viccon/sturdyc"
 
 	"github.com/Housiadas/cerberus/internal/core/domain/user"
 	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/Housiadas/cerberus/pkg/order"
-	"github.com/Housiadas/cerberus/pkg/pgsql"
 	"github.com/Housiadas/cerberus/pkg/web"
+	"github.com/google/uuid"
+	"github.com/viccon/sturdyc"
 )
 
 // Store manages the set of APIs for user data and caching.
@@ -26,54 +24,17 @@ type Store struct {
 
 // NewStore constructs the api for data and caching access.
 func NewStore(log *logger.Service, storer user.Storer, ttl time.Duration) *Store {
-	const capacity = 10000
-	const numShards = 10
-	const evictionPercentage = 10
+	const (
+		capacity           = 10000
+		numShards          = 10
+		evictionPercentage = 10
+	)
 
 	return &Store{
 		log:    log,
 		storer: storer,
 		cache:  sturdyc.New[user.User](capacity, numShards, ttl, evictionPercentage),
 	}
-}
-
-// NewWithTx constructs a new Store value replacing the sqlx DB
-// value with a sqlx DB value that is currently inside a transaction.
-func (s *Store) NewWithTx(tx pgsql.CommitRollbacker) (user.Storer, error) {
-	return s.storer.NewWithTx(tx)
-}
-
-// Create inserts a new user into the database.
-func (s *Store) Create(ctx context.Context, usr user.User) error {
-	if err := s.storer.Create(ctx, usr); err != nil {
-		return err
-	}
-
-	s.writeCache(usr)
-
-	return nil
-}
-
-// Update replaces a user document in the database.
-func (s *Store) Update(ctx context.Context, usr user.User) error {
-	if err := s.storer.Update(ctx, usr); err != nil {
-		return err
-	}
-
-	s.writeCache(usr)
-
-	return nil
-}
-
-// Delete removes a user from the database.
-func (s *Store) Delete(ctx context.Context, usr user.User) error {
-	if err := s.storer.Delete(ctx, usr); err != nil {
-		return err
-	}
-
-	s.deleteCache(usr)
-
-	return nil
 }
 
 // Query retrieves a list of existing users from the database.
@@ -83,12 +44,22 @@ func (s *Store) Query(
 	orderBy order.By,
 	page web.Page,
 ) ([]user.User, error) {
-	return s.storer.Query(ctx, filter, orderBy, page)
+	query, err := s.storer.Query(ctx, filter, orderBy, page)
+	if err != nil {
+		return nil, fmt.Errorf("user query: %w", err)
+	}
+
+	return query, nil
 }
 
 // Count returns the total number of cards in the DB.
 func (s *Store) Count(ctx context.Context, filter user.QueryFilter) (int, error) {
-	return s.storer.Count(ctx, filter)
+	count, err := s.storer.Count(ctx, filter)
+	if err != nil {
+		return 0, fmt.Errorf("user count: %w", err)
+	}
+
+	return count, nil
 }
 
 // QueryByID gets the specified user from the database.
@@ -100,7 +71,7 @@ func (s *Store) QueryByID(ctx context.Context, userID uuid.UUID) (user.User, err
 
 	usr, err := s.storer.QueryByID(ctx, userID)
 	if err != nil {
-		return user.User{}, err
+		return user.User{}, fmt.Errorf("user query by id: %w", err)
 	}
 
 	s.writeCache(usr)
@@ -117,7 +88,7 @@ func (s *Store) QueryByEmail(ctx context.Context, email mail.Address) (user.User
 
 	usr, err := s.storer.QueryByEmail(ctx, email)
 	if err != nil {
-		return user.User{}, err
+		return user.User{}, fmt.Errorf("user query by email: %w", err)
 	}
 
 	s.writeCache(usr)

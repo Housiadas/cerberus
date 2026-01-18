@@ -7,6 +7,7 @@ import (
 	"github.com/Housiadas/cerberus/pkg/order"
 )
 
+//nolint:gochecknoglobals
 var orderByFields = map[string]string{
 	audit.OrderByObjID:     "obj_id",
 	audit.OrderByObjDomain: "obj_domain",
