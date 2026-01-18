@@ -7,15 +7,17 @@ import (
 	"github.com/Housiadas/cerberus/pkg/order"
 )
 
-var orderByFields = map[string]string{
-	permission.OrderByName: "name",
-}
-
 func orderByClause(orderBy order.By) (string, error) {
-	by, exists := orderByFields[orderBy.Field]
+	by, exists := getOrderByFields()[orderBy.Field]
 	if !exists {
-		return "", fmt.Errorf("field %q does not exist", orderBy.Field)
+		return "", fmt.Errorf("%w: %s", errOrderFieldNotFound, orderBy.Field)
 	}
 
 	return " ORDER BY " + by + " " + orderBy.Direction, nil
+}
+
+func getOrderByFields() map[string]string {
+	return map[string]string{
+		permission.OrderByName: "name",
+	}
 }

@@ -2,7 +2,6 @@ package auth_usecase
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"time"
 
@@ -12,12 +11,16 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-var (
+const (
 	accessTokenTTL  = 20 * time.Minute
 	refreshTokenTTL = 7 * 24 * time.Hour
-	// Use strong, random secrets in production (store in env vars).
-	accessTokenSecret = []byte("your-256-bit-access-secret")
 )
+
+// Use strong, random secrets in production (store in env vars).
+// todo remove
+//
+//nolint:gochecknoglobals
+var accessTokenSecret = []byte("your-256-bit-access-secret")
 
 // Config represents information required to initialize auth.
 type Config struct {
@@ -71,7 +74,7 @@ func (u *UseCase) CheckExpiredToken(claims Claims) error {
 	// Check if the token has expired
 	expiredAt := claims.ExpiresAt
 	if time.Now().Unix() > expiredAt.Unix() {
-		return errors.New("token has expired")
+		return ErrExpiredToken
 	}
 
 	return nil

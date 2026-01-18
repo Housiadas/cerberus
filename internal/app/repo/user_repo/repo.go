@@ -29,7 +29,7 @@ var (
 	//go:embed query/user_query.sql
 	userQuerySQL string
 	//go:embed query/user_query_by_id.sql
-	userQueryByIdSQL string
+	userQueryByIDSQL string
 	//go:embed query/user_query_by_email.sql
 	userQueryByEmailSQL string
 	//go:embed query/user_count.sql
@@ -52,7 +52,7 @@ func NewStore(log logger.Logger, dbPool *sqlx.DB) *Store {
 
 // NewWithTx constructs a new Store value replacing the sqlx DB
 // value with a sqlx DB value that is currently inside a transaction.
-func (s *Store) NewWithTx(tx pgsql.CommitRollbacker) (*Store, error) {
+func (s *Store) NewWithTx(tx pgsql.CommitRollbacker) (user.Storer, error) {
 	ec, err := pgsql.GetExtContext(tx)
 	if err != nil {
 		return nil, fmt.Errorf("user transaction init error: %w", err)
@@ -165,7 +165,7 @@ func (s *Store) QueryByID(ctx context.Context, userID uuid.UUID) (user.User, err
 
 	var dbUsr userDB
 
-	err := pgsql.NamedQueryStruct(ctx, s.log, s.dbPool, userQueryByIdSQL, data, &dbUsr)
+	err := pgsql.NamedQueryStruct(ctx, s.log, s.dbPool, userQueryByIDSQL, data, &dbUsr)
 	if err != nil {
 		if errors.Is(err, pgsql.ErrDBNotFound) {
 			return user.User{}, fmt.Errorf("db: %w", user.ErrNotFound)

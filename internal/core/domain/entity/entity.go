@@ -1,37 +1,17 @@
 package entity
 
-import "fmt"
-
-// The set of roles that can be used.
-var (
-	User = newEntity("USER")
-	Role = newEntity("ROLE")
+const (
+	UserEntity = "USER"
+	RoleEntity = "ROLE"
 )
-
-// Set of known entities.
-var entities = make(map[string]Entity)
 
 // Entity represents a domain in the system.
 type Entity struct {
 	value string
 }
 
-func newEntity(entity string) Entity {
-	e := Entity{entity}
-	entities[entity] = e
-
-	return e
-}
-
-// MustParse parses the string value and returns a role if one exists.
-// If an error occurs, the function panics.
-func MustParse(value string) Entity {
-	entity, err := Parse(value)
-	if err != nil {
-		panic(err)
-	}
-
-	return entity
+func New(entity string) Entity {
+	return Entity{entity}
 }
 
 // String returns the name of the role.
@@ -49,12 +29,9 @@ func (e Entity) MarshalText() ([]byte, error) {
 	return []byte(e.value), nil
 }
 
-// Parse parses the string value and returns a role if one exists.
-func Parse(value string) (Entity, error) {
-	entity, exists := entities[value]
-	if !exists {
-		return Entity{}, fmt.Errorf("invalid domain %q", value)
+func getEntities() map[string]Entity {
+	return map[string]Entity{
+		UserEntity: New("USER"),
+		RoleEntity: New("ROLE"),
 	}
-
-	return entity, nil
 }

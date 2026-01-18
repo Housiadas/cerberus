@@ -23,6 +23,7 @@ type AppQueryParams struct {
 	Until     string
 }
 
+//nolint:cyclop
 func parseFilter(qp AppQueryParams) (audit.QueryFilter, error) {
 	var (
 		fieldErrors errs.FieldErrors

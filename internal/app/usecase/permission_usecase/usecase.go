@@ -120,7 +120,7 @@ func (uc *UseCase) Query(ctx context.Context, qp AppQueryParams) (web.Result[Per
 		return web.Result[Permission]{}, err
 	}
 
-	orderBy, err := order.Parse(orderByFields, qp.OrderBy, defaultOrderBy)
+	orderBy, err := order.Parse(getOrderByFields(), qp.OrderBy, getDefaultOrderBy())
 	if err != nil {
 		return web.Result[Permission]{}, errs.NewFieldErrors("order", err)
 	}

@@ -22,6 +22,7 @@ type AppQueryParams struct {
 	PermissionName string
 }
 
+//nolint:cyclop
 func parseFilter(qp AppQueryParams) (urp.QueryFilter, error) {
 	var (
 		fieldErrors errs.FieldErrors

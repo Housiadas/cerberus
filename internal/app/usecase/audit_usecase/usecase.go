@@ -38,7 +38,7 @@ func (a *UseCase) Query(ctx context.Context, qp AppQueryParams) (web.Result[Audi
 		}()
 	}
 
-	orderBy, err := order.Parse(orderByFields, qp.OrderBy, user.DefaultOrderBy)
+	orderBy, err := order.Parse(orderByFields, qp.OrderBy, user.GetDefaultOrderBy())
 	if err != nil {
 		return web.Result[Audit]{}, errs.NewFieldErrors("order", err)
 	}

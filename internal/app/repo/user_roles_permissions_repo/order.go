@@ -7,19 +7,20 @@ import (
 	"github.com/Housiadas/cerberus/pkg/order"
 )
 
-//nolint:gochecknoglobals
-var orderByFields = map[string]string{
-	urp.OrderByUserName:       "user_name",
-	urp.OrderByUserEmail:      "user_email",
-	urp.OrderByRoleName:       "role_name",
-	urp.OrderByPermissionName: "permission_name",
-}
-
 func orderByClause(ob order.By) (string, error) {
-	by, exists := orderByFields[ob.Field]
+	by, exists := getOrderFields()[ob.Field]
 	if !exists {
-		return "", fmt.Errorf("field %q does not exist", ob.Field)
+		return "", fmt.Errorf("%w: %s", errOrderFieldNotFound, ob.Field)
 	}
 
 	return " ORDER BY " + by + " " + ob.Direction, nil
+}
+
+func getOrderFields() map[string]string {
+	return map[string]string{
+		urp.OrderByUserName:       "user_name",
+		urp.OrderByUserEmail:      "user_email",
+		urp.OrderByRoleName:       "role_name",
+		urp.OrderByPermissionName: "permission_name",
+	}
 }

@@ -112,7 +112,7 @@ func run(ctx context.Context, log *logger.Service) error {
 	// -------------------------------------------------------------------------
 	log.Info(ctx, "startup", "status", "initializing tracing support")
 
-	traceProvider, teardown, err := otel.InitTracing(otel.Config{
+	traceProvider, teardown, err := otel.InitTracing(ctx, otel.Config{
 		ServiceName: cfg.App.Name,
 		Host:        cfg.Tempo.Host,
 		ExcludedRoutes: map[string]struct{}{

@@ -38,7 +38,7 @@ func (uc *UseCase) Query(
 		return web.Result[UserRolesPermissions]{}, err
 	}
 
-	ob, err := order.Parse(orderByFields, qp.OrderBy, defaultOrderBy)
+	ob, err := order.Parse(getOrderByFields(), qp.OrderBy, getDefaultOrderBy())
 	if err != nil {
 		return web.Result[UserRolesPermissions]{}, errs.NewFieldErrors("order", err)
 	}

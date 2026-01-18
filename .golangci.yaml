@@ -8,10 +8,8 @@ linters:
     - mnd
     - varnamelen
     - depguard
-#    - err113
-#    - depguard
-#    - musttag
-#    - nonamedreturns
+    - ireturn
+    - exhaustruct
   settings:
     wsl_v5:
       allow-first-in-block: true
@@ -93,7 +91,7 @@ formatters:
     # Default: lax
     generated: strict
     paths:
-      - "docs/"
+      - "docs"
 issues:
   # Maximum issues count per one linter.
   # Set to 0 to disable.

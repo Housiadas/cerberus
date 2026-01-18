@@ -131,8 +131,10 @@ func NamedExecContext(
 	db sqlx.ExtContext,
 	query string,
 	data any,
-) (err error) {
+) error {
 	q := queryString(query, data)
+
+	var err error
 
 	defer func() {
 		if err != nil {
@@ -206,6 +208,7 @@ func NamedQuerySliceUsingIn[T any](
 	return namedQuerySlice(ctx, log, db, query, data, dest, true)
 }
 
+//nolint:cyclop
 func namedQuerySlice[T any](
 	ctx context.Context,
 	log logger.Logger,
@@ -214,7 +217,9 @@ func namedQuerySlice[T any](
 	data any,
 	dest *[]T,
 	withIn bool,
-) (err error) {
+) error {
+	var err error
+
 	q := queryString(query, data)
 
 	defer func() {
@@ -318,6 +323,7 @@ func NamedQueryStructUsingIn(
 	return namedQueryStruct(ctx, log, db, query, data, dest, true)
 }
 
+//nolint:cyclop
 func namedQueryStruct(
 	ctx context.Context,
 	log logger.Logger,
@@ -326,7 +332,9 @@ func namedQueryStruct(
 	data any,
 	dest any,
 	withIn bool,
-) (err error) {
+) error {
+	var err error
+
 	q := queryString(query, data)
 
 	defer func() {

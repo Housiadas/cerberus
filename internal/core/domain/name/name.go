@@ -19,7 +19,7 @@ type Name struct {
 // with the rules for a name.
 func Parse(value string) (Name, error) {
 	if !nameRegEx.MatchString(value) {
-		return Name{}, fmt.Errorf("invalid name %q", value)
+		return Name{}, fmt.Errorf("%w: %q", ErrInvalidName, value)
 	}
 
 	return Name{value}, nil
@@ -92,7 +92,7 @@ func ParseNull(value string) (Null, error) {
 	}
 
 	if !nameRegEx.MatchString(value) {
-		return Null{}, fmt.Errorf("invalid name %q", value)
+		return Null{}, fmt.Errorf("%w: %q", ErrInvalidName, value)
 	}
 
 	return Null{value, true}, nil
