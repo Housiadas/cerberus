@@ -4,6 +4,7 @@ linters:
   enable:
     - wsl_v5
   disable:
+    - wsl
     - funlen
     - mnd
     - varnamelen
