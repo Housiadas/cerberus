@@ -45,12 +45,13 @@ func StartTest(t *testing.T, testName string) (*Test, error) {
 
 	// Initialize handler
 	h := handler.New(handler.Config{
-		ServiceName: "Test Service Name",
-		Build:       "Test",
-		Cors:        cfg.CorsSettings{},
-		DB:          db,
-		Log:         log,
-		Tracer:      tracer,
+		ServiceName:       "Test Service Name",
+		Build:             "Test",
+		Cors:              cfg.CorsSettings{},
+		DB:                db,
+		Log:               log,
+		Tracer:            tracer,
+		AccessTokenSecret: []byte("test-256-bit-access-secret"),
 	})
 
 	// initialize apitest services

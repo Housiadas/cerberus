@@ -21,6 +21,9 @@ func NewV7() *V7Generator {
 // Generate creates a new UUID v7.
 func (g *V7Generator) Generate() (uuid.UUID, error) {
 	newUUID, err := uuid.NewV7()
+	if err != nil {
+		return uuid.UUID{}, fmt.Errorf("uuid v7 error: %w", err)
+	}
 
-	return newUUID, fmt.Errorf("uuid v7 error: %w", err)
+	return newUUID, nil
 }
