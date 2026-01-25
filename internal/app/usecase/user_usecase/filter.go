@@ -21,6 +21,7 @@ type AppQueryParams struct {
 	EndCreatedDate   string
 }
 
+//nolint:cyclop
 func parseFilter(qp AppQueryParams) (user.QueryFilter, error) {
 	var (
 		fieldErrors errs.FieldErrors

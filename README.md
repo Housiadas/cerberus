@@ -4,6 +4,7 @@ A monitoring system built with Go `v1.25`.
 ## Stack
 - Go
 - PostgreSQL
+- Hashicorp Vault
 - Docker
 - Docker Compose
 

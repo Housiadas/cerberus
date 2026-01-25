@@ -26,7 +26,9 @@ func StartTest(t *testing.T, testName string) (*Test, error) {
 	log := logger.New(&buf, logger.LevelInfo, "TEST", "", "")
 
 	// Initialize tracer
-	traceProvider, teardown, err := otel.InitTracing(otel.Config{
+	ctx := context.Background()
+
+	traceProvider, teardown, err := otel.InitTracing(ctx, otel.Config{
 		ServiceName: "Service Name",
 		Host:        "Test host",
 		ExcludedRoutes: map[string]struct{}{
@@ -43,12 +45,13 @@ func StartTest(t *testing.T, testName string) (*Test, error) {
 
 	// Initialize handler
 	h := handler.New(handler.Config{
-		ServiceName: "Test Service Name",
-		Build:       "Test",
-		Cors:        cfg.CorsSettings{},
-		DB:          db,
-		Log:         log,
-		Tracer:      tracer,
+		ServiceName:       "Test Service Name",
+		Build:             "Test",
+		Cors:              cfg.CorsSettings{},
+		DB:                db,
+		Log:               log,
+		Tracer:            tracer,
+		AccessTokenSecret: []byte("test-256-bit-access-secret"),
 	})
 
 	// initialize apitest services

@@ -2,7 +2,6 @@ package pgsql
 
 import (
 	"context"
-	"errors"
 	"fmt"
 
 	"github.com/jmoiron/sqlx"
@@ -52,7 +51,7 @@ func (db *DBBeginner) Begin() (CommitRollbacker, error) {
 func GetExtContext(tx CommitRollbacker) (sqlx.ExtContext, error) {
 	ec, ok := tx.(sqlx.ExtContext)
 	if !ok {
-		return nil, fmt.Errorf("Transactor(%T) not of a type *sql.Tx", tx)
+		return nil, fmt.Errorf("%w: got %T", ErrInvalidTransactorType, tx)
 	}
 
 	return ec, nil
@@ -66,7 +65,7 @@ func SetTran(ctx context.Context, tx CommitRollbacker) context.Context {
 func GetTran(ctx context.Context) (CommitRollbacker, error) {
 	v, ok := ctx.Value(tranKey).(CommitRollbacker)
 	if !ok {
-		return nil, errors.New("transaction not found in context")
+		return nil, ErrTransactionNotFound
 	}
 
 	return v, nil

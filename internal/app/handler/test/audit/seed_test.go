@@ -18,7 +18,7 @@ func insertSeedData(test *apitest.Test) (apitest.SeedData, error) {
 	}
 
 	audits, err := audit_service.TestSeedAudits(
-		ctx, 2, usrs[0].ID, entity.User, "create", test.Core.Audit,
+		ctx, 2, usrs[0].ID, entity.New(entity.UserEntity), "create", test.Core.Audit,
 	)
 	if err != nil {
 		return apitest.SeedData{}, fmt.Errorf("seeding users : %w", err)

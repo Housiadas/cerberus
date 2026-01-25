@@ -4,7 +4,6 @@ import (
 	"github.com/Housiadas/cerberus/internal/core/domain/money"
 	"github.com/Housiadas/cerberus/internal/core/domain/name"
 	"github.com/Housiadas/cerberus/internal/core/domain/password"
-	"github.com/Housiadas/cerberus/internal/core/domain/quantity"
 )
 
 // StringPointer is a helper to get a *string from a string. It is in the tests
@@ -60,15 +59,6 @@ func MoneyPointer(value float64) *money.Money {
 	m := money.MustParse(value)
 
 	return &m
-}
-
-// QuantityPointer is a helper to get a *Quantity from an int. It's in the tests
-// package because we normally don't want to deal with pointers to basic usecase,
-// but it's useful in some tests.
-func QuantityPointer(value int) *quantity.Quantity {
-	q := quantity.MustParse(value)
-
-	return &q
 }
 
 // PasswordPointer is a helper to get a *Password from a string. It's in the tests

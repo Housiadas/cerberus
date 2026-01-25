@@ -51,7 +51,7 @@ func (u *UseCase) GenerateAccessToken(_ context.Context, userID string) (AccessT
 
 	aToken := jwt.NewWithClaims(u.method, accessClaims)
 
-	accessTokenString, err := aToken.SignedString(accessTokenSecret)
+	accessTokenString, err := aToken.SignedString(u.secret)
 	if err != nil {
 		return AccessToken{}, errs.Errorf(
 			errs.InvalidArgument,

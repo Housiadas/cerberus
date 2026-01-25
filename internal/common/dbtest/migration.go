@@ -43,7 +43,11 @@ func migration(dbURL string) error {
 }
 
 func getMigrationsDir() string {
-	_, file, _, _ := runtime.Caller(0)
+	_, file, _, ok := runtime.Caller(0)
+	if !ok {
+		panic("failed to get caller information")
+	}
+
 	basepath := filepath.Dir(file)
 	migrationsPath := filepath.Join(basepath, "../../../.migrations")
 

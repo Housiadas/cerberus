@@ -58,7 +58,7 @@ func (respond *Respond) encode(
 	err := ctx.Err()
 	if err != nil {
 		if errors.Is(err, context.Canceled) {
-			return errors.New("client disconnected, do not send encode")
+			return ErrClientDisconnected
 		}
 	}
 

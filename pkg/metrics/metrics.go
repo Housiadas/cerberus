@@ -8,6 +8,8 @@ import (
 // This holds the single instance of the metrics value needed for
 // collecting metrics. The expvar package is already based on a singleton
 // for the different metrics that are registered with the package, so there isn't much choice here.
+//
+//nolint:gochecknoglobals
 var m metrics
 
 // metrics represents the set of metrics we gather. These fields are

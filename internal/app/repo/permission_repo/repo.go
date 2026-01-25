@@ -28,7 +28,7 @@ var (
 	//go:embed query/permission_query.sql
 	permissionQuerySQL string
 	//go:embed query/permission_query_by_id.sql
-	permissionQueryByIdSQL string
+	permissionQueryByIDSQL string
 	//go:embed query/permission_count.sql
 	permissionCountSQL string
 )
@@ -49,7 +49,7 @@ func NewStore(log logger.Logger, dbPool *sqlx.DB) *Store {
 
 // NewWithTx constructs a new Store value replacing the sqlx DB
 // value with a sqlx DB value that is currently inside a transaction.
-func (s *Store) NewWithTx(tx pgsql.CommitRollbacker) (*Store, error) {
+func (s *Store) NewWithTx(tx pgsql.CommitRollbacker) (permission.Storer, error) {
 	ec, err := pgsql.GetExtContext(tx)
 	if err != nil {
 		return nil, fmt.Errorf("permission init transaction error: %w", err)
@@ -106,7 +106,7 @@ func (s *Store) QueryByID(
 
 	var dbPermission permissionDB
 
-	err := pgsql.NamedQueryStruct(ctx, s.log, s.dbPool, permissionQueryByIdSQL, data, &dbPermission)
+	err := pgsql.NamedQueryStruct(ctx, s.log, s.dbPool, permissionQueryByIDSQL, data, &dbPermission)
 	if err != nil {
 		if errors.Is(err, pgsql.ErrDBNotFound) {
 			return permission.Permission{}, fmt.Errorf("db: %w", permission.ErrNotFound)

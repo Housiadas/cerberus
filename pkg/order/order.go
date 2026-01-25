@@ -12,9 +12,11 @@ const (
 	DESC = "DESC"
 )
 
-var directions = map[string]string{
-	ASC:  "ASC",
-	DESC: "DESC",
+func getDirections() map[string]string {
+	return map[string]string{
+		ASC:  "ASC",
+		DESC: "DESC",
+	}
 }
 
 // By represents a field used to order by and direction.
@@ -25,7 +27,7 @@ type By struct {
 
 // NewBy constructs a new By value with no checks.
 func NewBy(field string, direction string) By {
-	if _, exists := directions[direction]; !exists {
+	if _, exists := getDirections()[direction]; !exists {
 		return By{
 			Field:     field,
 			Direction: ASC,
@@ -52,7 +54,7 @@ func Parse(fieldMappings map[string]string, orderBy string, defaultOrder By) (By
 	fieldName, exists := fieldMappings[orgFieldName]
 
 	if !exists {
-		return By{}, fmt.Errorf("unknown order: %s", orgFieldName)
+		return By{}, fmt.Errorf("%w: %s", ErrUnknownOrder, orgFieldName)
 	}
 
 	switch len(orderParts) {
@@ -61,13 +63,13 @@ func Parse(fieldMappings map[string]string, orderBy string, defaultOrder By) (By
 
 	case 2:
 		direction := strings.TrimSpace(orderParts[1])
-		if _, exists := directions[direction]; !exists {
-			return By{}, fmt.Errorf("unknown direction: %s", direction)
+		if _, exists := getDirections()[direction]; !exists {
+			return By{}, fmt.Errorf("%w: %s", ErrUnknownDirection, direction)
 		}
 
 		return NewBy(fieldName, direction), nil
 
 	default:
-		return By{}, fmt.Errorf("unknown order: %s", orderBy)
+		return By{}, fmt.Errorf("%w: %s", ErrUnknownOrder, orderBy)
 	}
 }

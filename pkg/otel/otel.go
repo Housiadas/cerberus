@@ -31,12 +31,15 @@ type Config struct {
 }
 
 // InitTracing configures open telemetry to be used with the service.
-func InitTracing(cfg Config) (trace.TracerProvider, func(ctx context.Context), error) {
+func InitTracing(
+	ctx context.Context,
+	cfg Config,
+) (trace.TracerProvider, func(ctx context.Context), error) {
 	// WARNING: The current settings are using defaults which may not be
 	// compatible with your project. Please review the documentation for
 	// opentelemetry.
 	exporter, err := otlptrace.New(
-		context.Background(),
+		ctx,
 		otlptracegrpc.NewClient(
 			otlptracegrpc.WithInsecure(), // This should be configurable
 			otlptracegrpc.WithEndpoint(cfg.Host),
@@ -72,7 +75,7 @@ func InitTracing(cfg Config) (trace.TracerProvider, func(ctx context.Context), e
 		)
 
 		teardown = func(ctx context.Context) {
-			tp.Shutdown(ctx)
+			tp.Shutdown(ctx) //nolint:errcheck
 		}
 
 		traceProvider = tp

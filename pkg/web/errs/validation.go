@@ -16,7 +16,7 @@ func ParseValidationErrors(err error) *Error {
 
 	feSlice := toFieldErrorSlice(*fieldErrors)
 
-	return newWithFields(InvalidArgument, errors.New("validation error"), feSlice)
+	return newWithFields(InvalidArgument, ErrValidationError, feSlice)
 }
 
 func newWithFields(code ErrCode, err error, fe []FieldError) *Error {

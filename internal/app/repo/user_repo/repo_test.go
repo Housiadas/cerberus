@@ -106,7 +106,7 @@ func queryUser(service *user_service.Service, sd unitest.SeedData) []unitest.Tab
 					Name: dbtest.NamePointer("Name"),
 				}
 
-				resp, err := service.Query(ctx, filter, user.DefaultOrderBy, web.PageMustParse("1", "10"))
+				resp, err := service.Query(ctx, filter, user.GetDefaultOrderBy(), web.PageMustParse("1", "10"))
 				if err != nil {
 					return err
 				}

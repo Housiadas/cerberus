@@ -18,6 +18,8 @@ import (
 	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/Housiadas/cerberus/pkg/otel"
 	"github.com/Housiadas/cerberus/pkg/pgsql"
+	"github.com/Housiadas/cerberus/pkg/vault"
+	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
 //nolint:gochecknoglobals
@@ -112,7 +114,7 @@ func run(ctx context.Context, log *logger.Service) error {
 	// -------------------------------------------------------------------------
 	log.Info(ctx, "startup", "status", "initializing tracing support")
 
-	traceProvider, teardown, err := otel.InitTracing(otel.Config{
+	traceProvider, teardown, err := otel.InitTracing(ctx, otel.Config{
 		ServiceName: cfg.App.Name,
 		Host:        cfg.Tempo.Host,
 		ExcludedRoutes: map[string]struct{}{
@@ -128,6 +130,26 @@ func run(ctx context.Context, log *logger.Service) error {
 	defer teardown(ctx)
 
 	tracer := traceProvider.Tracer(cfg.App.Name)
+
+	// -------------------------------------------------------------------------
+	// Initialize Vault Client
+	// -------------------------------------------------------------------------
+	log.Info(ctx, "startup", "status", "initializing vault client", "address", cfg.Vault.Address)
+
+	vaultClient, err := vault.New(vault.Config{
+		Address: cfg.Vault.Address,
+		Token:   cfg.Vault.Token,
+	})
+	if err != nil {
+		return fmt.Errorf("creating vault client: %w", err)
+	}
+
+	jwtSecret, err := vaultClient.GetJWTSecret(ctx)
+	if err != nil {
+		return fmt.Errorf("getting jwt secret from vault: %w", err)
+	}
+
+	log.Info(ctx, "startup", "status", "jwt secret loaded from vault")
 
 	// -------------------------------------------------------------------------
 	// Start Debug Rest Server
@@ -160,12 +182,13 @@ func run(ctx context.Context, log *logger.Service) error {
 
 	// Initialize handler
 	h := handler.New(handler.Config{
-		ServiceName: cfg.App.Name,
-		Build:       build,
-		Cors:        cfg.Cors,
-		DB:          db,
-		Log:         log,
-		Tracer:      tracer,
+		ServiceName:       cfg.App.Name,
+		Build:             build,
+		Cors:              cfg.Cors,
+		DB:                db,
+		Log:               log,
+		Tracer:            tracer,
+		AccessTokenSecret: jwtSecret,
 	})
 
 	api := http.Server{

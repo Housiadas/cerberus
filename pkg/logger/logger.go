@@ -172,7 +172,7 @@ func (log *Service) write(
 
 	slogRec.Add(args...)
 
-	log.handler.Handle(ctx, slogRec)
+	log.handler.Handle(ctx, slogRec) //nolint:errcheck
 }
 
 func newLogger(

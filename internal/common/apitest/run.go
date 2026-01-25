@@ -11,6 +11,7 @@ import (
 // Run performs the actual test logic based on the table data.
 func (at *Test) Run(t *testing.T, table []Table, testName string) {
 	t.Helper()
+
 	for _, tt := range table {
 		t.Run(testName+"-"+tt.Name, at.server(tt))
 	}

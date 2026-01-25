@@ -10,6 +10,7 @@ import (
 // Run performs the actual test logic based on the table data.
 func Run(t *testing.T, table []Table, testName string) {
 	t.Helper()
+
 	for _, tt := range table {
 		t.Run(testName+"-"+tt.Name, cmpTest(tt))
 	}

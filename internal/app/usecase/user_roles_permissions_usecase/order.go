@@ -5,14 +5,18 @@ import (
 	"github.com/Housiadas/cerberus/pkg/order"
 )
 
-var orderByFields = map[string]string{
-	"user_name":       urp.OrderByUserName,
-	"user_email":      urp.OrderByUserEmail,
-	"role_name":       urp.OrderByRoleName,
-	"permission_name": urp.OrderByPermissionName,
+func getDefaultOrderBy() order.By {
+	return order.By{
+		Field:     urp.OrderByUserName,
+		Direction: order.ASC,
+	}
 }
 
-var defaultOrderBy = order.By{
-	Field:     urp.OrderByUserName,
-	Direction: order.ASC,
+func getOrderByFields() map[string]string {
+	return map[string]string{
+		"user_name":       urp.OrderByUserName,
+		"user_email":      urp.OrderByUserEmail,
+		"role_name":       urp.OrderByRoleName,
+		"permission_name": urp.OrderByPermissionName,
+	}
 }

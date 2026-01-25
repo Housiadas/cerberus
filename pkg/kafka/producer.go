@@ -54,7 +54,11 @@ func (p *ProducerClient) Produce(_ context.Context, msg *kafka.Message) error {
 
 	e := <-deliveryChan
 
-	m := e.(*kafka.Message)
+	m, ok := e.(*kafka.Message)
+	if !ok {
+		return ErrUnexpectedMessageType
+	}
+
 	if m.TopicPartition.Error != nil {
 		return fmt.Errorf("error delivering message to kafka: %w", m.TopicPartition.Error)
 	}

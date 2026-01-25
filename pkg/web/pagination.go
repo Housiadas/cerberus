@@ -2,7 +2,6 @@ package web
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"math"
 	"strconv"
@@ -114,15 +113,15 @@ func Parse(page string, rowsPerPage string) (Page, error) {
 	}
 
 	if number <= 0 {
-		return Page{}, errors.New("page value too small, must be larger than 0")
+		return Page{}, ErrPageTooSmall
 	}
 
 	if rows <= 0 {
-		return Page{}, errors.New("rows value too small, must be larger than 0")
+		return Page{}, ErrRowsTooSmall
 	}
 
 	if rows > rowsPerPageMax {
-		return Page{}, errors.New("rows value too large, must be less than 100")
+		return Page{}, ErrRowsTooLarge
 	}
 
 	p := Page{

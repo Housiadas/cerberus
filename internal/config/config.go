@@ -15,12 +15,18 @@ type Config struct {
 	Version Version
 	Rest    Rest
 	DB      DB
+	Vault   Vault
 	Tempo   Tempo
 	Cors    CorsSettings
 }
 
 // LoadConfig reads configuration from file or environment variables.
-func LoadConfig() (config Config, err error) {
+func LoadConfig() (Config, error) {
+	var (
+		config Config
+		err    error
+	)
+
 	viper.SetConfigFile(filepath.Join(getConfigDir(), "config.yaml"))
 	viper.AutomaticEnv()
 
@@ -38,7 +44,11 @@ func LoadConfig() (config Config, err error) {
 }
 
 func getConfigDir() string {
-	_, file, _, _ := runtime.Caller(0)
+	_, file, _, ok := runtime.Caller(0)
+	if !ok {
+		panic("failed to get caller information")
+	}
+
 	basepath := filepath.Dir(file)
 
 	return filepath.Join(basepath, "../../")

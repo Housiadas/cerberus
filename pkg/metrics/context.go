@@ -5,7 +5,9 @@ import (
 	"runtime"
 )
 
-const CtxKey = "metricsCtx"
+type ctxType string
+
+const CtxKey ctxType = "metrics"
 
 // Set sets the metrics data into the context.
 func Set(ctx context.Context) context.Context {

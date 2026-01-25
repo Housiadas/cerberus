@@ -14,14 +14,14 @@ type Money struct {
 // with the rules for money.
 func Parse(value float64) (Money, error) {
 	if value < 0 || value > 1_000_000 {
-		return Money{}, fmt.Errorf("invalid money %.2f", value)
+		return Money{}, fmt.Errorf("%w: %.2f", ErrInvalidMoney, value)
 	}
 
 	return Money{value}, nil
 }
 
-// MustParse parses the string value and returns a money if the value
-// complies with the rules for money. If an error occurs the function panics.
+// MustParse parses the string value and returns money if the value
+// complies with the rules for money. If an error occurs, the function panics.
 func MustParse(value float64) Money {
 	money, err := Parse(value)
 	if err != nil {

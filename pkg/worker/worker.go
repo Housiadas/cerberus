@@ -3,7 +3,6 @@ package worker
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"sync"
 	"time"
@@ -27,7 +26,7 @@ type Worker struct {
 // represents the maximum number of G's that can be executing at any given time.
 func New(maxRunningJobs int) (*Worker, error) {
 	if maxRunningJobs <= 0 {
-		return nil, errors.New("max running jobs must be greater than 0")
+		return nil, ErrMaxRunningJobsInvalid
 	}
 
 	sem := make(chan bool, maxRunningJobs)
@@ -93,7 +92,7 @@ func (w *Worker) Start(ctx context.Context, jobFn JobFn) (string, error) {
 	// The shutdown is the first to handle that event as a priority.
 	select {
 	case <-w.isShutdown:
-		return "", errors.New("shutting down")
+		return "", ErrShuttingDown
 	case <-ctx.Done():
 		//nolint:wrapcheck
 		return "", ctx.Err()
@@ -146,7 +145,7 @@ func (w *Worker) Stop(workKey string) error {
 
 	cancel, exists := w.running[workKey]
 	if !exists {
-		return fmt.Errorf("work[%s] is not running", workKey)
+		return fmt.Errorf("%w: %s", ErrWorkNotRunning, workKey)
 	}
 
 	// Call cancel to stop the work.

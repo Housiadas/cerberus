@@ -28,7 +28,7 @@ var (
 	//go:embed query/role_query.sql
 	roleQuerySQL string
 	//go:embed query/role_query_by_id.sql
-	roleQueryByIdSQL string
+	roleQueryByIDSQL string
 	//go:embed query/role_count.sql
 	roleCountSQL string
 )
@@ -49,7 +49,7 @@ func NewStore(log logger.Logger, db *sqlx.DB) *Store {
 
 // NewWithTx constructs a new Store value replacing the sqlx DB
 // value with a sqlx DB value that is currently inside a transaction.
-func (s *Store) NewWithTx(tx pgsql.CommitRollbacker) (*Store, error) {
+func (s *Store) NewWithTx(tx pgsql.CommitRollbacker) (role.Storer, error) {
 	ec, err := pgsql.GetExtContext(tx)
 	if err != nil {
 		return nil, fmt.Errorf("role transaction init error: %w", err)
@@ -103,7 +103,7 @@ func (s *Store) QueryByID(ctx context.Context, roleID uuid.UUID) (role.Role, err
 
 	var dbRole roleDB
 
-	err := pgsql.NamedQueryStruct(ctx, s.log, s.db, roleQueryByIdSQL, data, &dbRole)
+	err := pgsql.NamedQueryStruct(ctx, s.log, s.db, roleQueryByIDSQL, data, &dbRole)
 	if err != nil {
 		if errors.Is(err, pgsql.ErrDBNotFound) {
 			return role.Role{}, fmt.Errorf("db: %w", role.ErrNotFound)

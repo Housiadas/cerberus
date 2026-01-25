@@ -112,7 +112,9 @@ func (s *Store) writeCache(bus user.User) {
 	s.cache.Set(bus.Email.Address, bus)
 }
 
-// deleteCache performs a safe removal from the cache for the specified user.
+// deleteCache performs a safe removal from the cache
+//
+//nolint:unused
 func (s *Store) deleteCache(bus user.User) {
 	s.cache.Delete(bus.ID.String())
 	s.cache.Delete(bus.Email.Address)
