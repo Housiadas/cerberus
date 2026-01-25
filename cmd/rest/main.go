@@ -19,6 +19,7 @@ import (
 	"github.com/Housiadas/cerberus/pkg/otel"
 	"github.com/Housiadas/cerberus/pkg/pgsql"
 	"github.com/Housiadas/cerberus/pkg/vault"
+	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
 //nolint:gochecknoglobals
