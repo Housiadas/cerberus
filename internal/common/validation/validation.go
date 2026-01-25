@@ -28,6 +28,7 @@ func Check(val any) error {
 			msg := formatValidationError(verror)
 			fields.Add(
 				verror.Field(),
+				//nolint:err113 // Dynamic validation messages are required
 				errors.New(msg),
 			)
 		}

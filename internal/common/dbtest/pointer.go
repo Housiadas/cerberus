@@ -4,7 +4,6 @@ import (
 	"github.com/Housiadas/cerberus/internal/core/domain/money"
 	"github.com/Housiadas/cerberus/internal/core/domain/name"
 	"github.com/Housiadas/cerberus/internal/core/domain/password"
-	"github.com/Housiadas/cerberus/internal/core/domain/quantity"
 )
 
 // StringPointer is a helper to get a *string from a string. It is in the tests

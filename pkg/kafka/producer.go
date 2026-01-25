@@ -56,7 +56,7 @@ func (p *ProducerClient) Produce(_ context.Context, msg *kafka.Message) error {
 
 	m, ok := e.(*kafka.Message)
 	if !ok {
-		return fmt.Errorf("expected *kafka.Message, got %T", e)
+		return ErrUnexpectedMessageType
 	}
 
 	if m.TopicPartition.Error != nil {

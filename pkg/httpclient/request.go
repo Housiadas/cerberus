@@ -67,7 +67,7 @@ func (cln *Client) Request(
 		return fmt.Errorf("copy error: %w", err)
 	}
 
-	return parseResponse(statusCode, data, result, err)
+	return parseResponse(statusCode, data, result)
 }
 
 func setHeaders(req *http.Request, headers map[string]string) {
@@ -80,7 +80,7 @@ func setHeaders(req *http.Request, headers map[string]string) {
 	}
 }
 
-func parseResponse(statusCode int, data []byte, result any, err error) error {
+func parseResponse(statusCode int, data []byte, result any) error {
 	switch statusCode {
 	case http.StatusNoContent:
 		return nil
@@ -88,7 +88,7 @@ func parseResponse(statusCode int, data []byte, result any, err error) error {
 	case http.StatusOK:
 		err := json.Unmarshal(data, result)
 		if err != nil {
-			return err
+			return fmt.Errorf("unmarshal response: %w", err)
 		}
 
 		return nil
@@ -96,9 +96,9 @@ func parseResponse(statusCode int, data []byte, result any, err error) error {
 	case http.StatusUnauthorized:
 		var errResult *errs.Error
 
-		err = json.Unmarshal(data, &errResult)
+		err := json.Unmarshal(data, &errResult)
 		if err != nil {
-			return err
+			return fmt.Errorf("unmarshal error response: %w", err)
 		}
 
 		return errResult

@@ -17,7 +17,6 @@ const (
 )
 
 // Use strong, random secrets in production (store in env vars).
-// todo remove
 //
 //nolint:gochecknoglobals
 var accessTokenSecret = []byte("your-256-bit-access-secret")

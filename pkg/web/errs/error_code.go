@@ -25,7 +25,7 @@ func (ec *ErrCode) UnmarshalText(data []byte) error {
 
 	v, exists := codeNumbers[errName]
 	if !exists {
-		return fmt.Errorf("err code %q does not exist", errName)
+		return fmt.Errorf("%w: %q", ErrCodeNotExist, errName)
 	}
 
 	*ec = v

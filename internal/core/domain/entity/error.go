@@ -2,6 +2,4 @@ package entity
 
 import "errors"
 
-var (
-	ErrInvalidEntity = errors.New("invalid entity")
-)
+var ErrInvalidEntity = errors.New("invalid entity")
