@@ -4,17 +4,14 @@
 - Docker
 - Docker Compose
 
-## Go Libraries
-- [go-chi/chi](https://github.com/go-chi/chi)
-- [spf13/viper](https://github.com/spf13/viper)
-- [swaggo/swag](https://github.com/swaggo/swag)
-- [stretchr/testify](https://github.com/stretchr/testify)
-- [testcontainers/testcontainers-go](https://github.com/testcontainers/testcontainers-go)
-- [vektra/mockery](https://github.com/vektra/mockery)
-- [golang-migrate](https://github.com/golang-migrate/migrate)
+# Config file
+- config.ymal using the viper library
+- Add changes to config.ymal.dist for any extra configuration
 
 # Code style
 - Respect golangci linters and formatters that are available in the golangci.yaml file
+- Use wrapped static errors instead of fmt.Errorf
+- Avoid inline error handling
 
 # Architecture Principles
 Inspired by Clean Architecture and Hexagonal architecture
@@ -28,4 +25,3 @@ The `internal` directory is organized as follows:
 - `core`, holds the domain logic
 
 The `usecases` directory is responsible for combaning different domain areas and business rules
-

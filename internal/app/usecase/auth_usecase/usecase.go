@@ -16,14 +16,10 @@ const (
 	refreshTokenTTL = 7 * 24 * time.Hour
 )
 
-// Use strong, random secrets in production (store in env vars).
-//
-//nolint:gochecknoglobals
-var accessTokenSecret = []byte("your-256-bit-access-secret")
-
 // Config represents information required to initialize auth.
 type Config struct {
 	Issuer              string
+	AccessTokenSecret   []byte
 	Log                 logger.Logger
 	UserUsecase         *user_usecase.UseCase
 	RefreshTokenUsecase *refresh_token_usecase.UseCase
@@ -54,7 +50,7 @@ func NewUseCase(cfg Config) *UseCase {
 	return &UseCase{
 		log:    cfg.Log,
 		issuer: cfg.Issuer,
-		secret: accessTokenSecret,
+		secret: cfg.AccessTokenSecret,
 		method: jwt.GetSigningMethod(jwt.SigningMethodHS256.Name),
 		parser: jwt.NewParser(
 			jwt.WithValidMethods([]string{jwt.SigningMethodHS256.Name}),

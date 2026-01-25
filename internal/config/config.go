@@ -15,6 +15,7 @@ type Config struct {
 	Version Version
 	Rest    Rest
 	DB      DB
+	Vault   Vault
 	Tempo   Tempo
 	Cors    CorsSettings
 }

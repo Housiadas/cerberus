@@ -64,12 +64,13 @@ type Usecase struct {
 
 // Config represents the configuration for the handler.
 type Config struct {
-	ServiceName string
-	Build       string
-	Cors        config.CorsSettings
-	DB          *sqlx.DB
-	Log         logger.Logger
-	Tracer      trace.Tracer
+	ServiceName       string
+	Build             string
+	Cors              config.CorsSettings
+	DB                *sqlx.DB
+	Log               logger.Logger
+	Tracer            trace.Tracer
+	AccessTokenSecret []byte
 }
 
 func New(cfg Config) *Handler {
@@ -103,6 +104,7 @@ func New(cfg Config) *Handler {
 	refreshTokenUsecase := refresh_token_usecase.NewUseCase(refreshTokenService)
 	authUsecase := auth_usecase.NewUseCase(auth_usecase.Config{
 		Issuer:              cfg.ServiceName,
+		AccessTokenSecret:   cfg.AccessTokenSecret,
 		Log:                 cfg.Log,
 		UserUsecase:         userUsecase,
 		RefreshTokenUsecase: refreshTokenUsecase,

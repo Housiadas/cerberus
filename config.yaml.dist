@@ -19,6 +19,9 @@ db:
   disableTLS: true
   postgresImage: "postgres:17.5"
   postgresContainerName: "db-container"
+vault:
+  address: "http://localhost:8200"
+  token: "dev-root-token"
 cors:
   allowedOrigins: "*"
   allowedMethods: "GET;POST;PUT;DELETE;OPTIONS;PATCH"
