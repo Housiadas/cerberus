@@ -3,9 +3,9 @@ package audit_usecase
 import (
 	"encoding/json"
 	"fmt"
-	"time"
 
 	"github.com/Housiadas/cerberus/internal/core/domain/audit"
+	"github.com/Housiadas/cerberus/pkg/clock"
 	"github.com/Housiadas/cerberus/pkg/web"
 )
 
@@ -47,7 +47,7 @@ func toAppAudit(aud audit.Audit) Audit {
 		Action:    aud.Action,
 		Data:      string(aud.Data),
 		Message:   aud.Message,
-		Timestamp: aud.Timestamp.UTC().Format(time.RFC3339),
+		Timestamp: clock.Format(&aud.Timestamp),
 	}
 }
 

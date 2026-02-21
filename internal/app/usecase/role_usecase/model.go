@@ -3,10 +3,10 @@ package role_usecase
 import (
 	"encoding/json"
 	"fmt"
-	"time"
 
 	"github.com/Housiadas/cerberus/internal/core/domain/name"
 	"github.com/Housiadas/cerberus/internal/core/domain/role"
+	"github.com/Housiadas/cerberus/pkg/clock"
 	"github.com/Housiadas/cerberus/pkg/web"
 )
 
@@ -39,8 +39,8 @@ func toAppRole(r role.Role) Role {
 	return Role{
 		ID:        r.ID.String(),
 		Name:      r.Name.String(),
-		CreatedAt: r.CreatedAt.UTC().Format(time.RFC3339),
-		UpdatedAt: r.UpdatedAt.UTC().Format(time.RFC3339),
+		CreatedAt: clock.Format(&r.CreatedAt),
+		UpdatedAt: clock.Format(&r.UpdatedAt),
 	}
 }
 

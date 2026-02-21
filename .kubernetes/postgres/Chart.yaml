@@ -1,0 +1,6 @@
+apiVersion: v2
+name: cerberus-postgres
+description: PostgreSQL database for Cerberus
+type: application
+version: 0.1.0
+appVersion: "17.5"

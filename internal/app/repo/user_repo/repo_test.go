@@ -7,7 +7,6 @@ import (
 	"net/mail"
 	"sort"
 	"testing"
-	"time"
 
 	"github.com/Housiadas/cerberus/internal/app/repo/user_repo"
 	"github.com/Housiadas/cerberus/internal/common/dbtest"
@@ -122,11 +121,11 @@ func queryUser(service *user_service.Service, sd unitest.SeedData) []unitest.Tab
 				expResp := exp.([]user.User)
 
 				for i := range gotResp {
-					if gotResp[i].CreatedAt.UTC().Format(time.RFC3339) == expResp[i].CreatedAt.UTC().Format(time.RFC3339) {
+					if clock.Format(&gotResp[i].CreatedAt) == clock.Format(&expResp[i].CreatedAt) {
 						expResp[i].CreatedAt = gotResp[i].CreatedAt
 					}
 
-					if gotResp[i].UpdatedAt.UTC().Format(time.RFC3339) == expResp[i].UpdatedAt.UTC().Format(time.RFC3339) {
+					if clock.Format(&gotResp[i].UpdatedAt) == clock.Format(&expResp[i].UpdatedAt) {
 						expResp[i].UpdatedAt = gotResp[i].UpdatedAt
 					}
 				}
@@ -153,11 +152,11 @@ func queryUser(service *user_service.Service, sd unitest.SeedData) []unitest.Tab
 
 				expResp := exp.(user.User)
 
-				if gotResp.CreatedAt.UTC().Format(time.RFC3339) == expResp.CreatedAt.UTC().Format(time.RFC3339) {
+				if clock.Format(&gotResp.CreatedAt) == clock.Format(&expResp.CreatedAt) {
 					expResp.CreatedAt = gotResp.CreatedAt
 				}
 
-				if gotResp.UpdatedAt.UTC().Format(time.RFC3339) == expResp.UpdatedAt.UTC().Format(time.RFC3339) {
+				if clock.Format(&gotResp.UpdatedAt) == clock.Format(&expResp.UpdatedAt) {
 					expResp.UpdatedAt = gotResp.UpdatedAt
 				}
 

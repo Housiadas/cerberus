@@ -19,7 +19,7 @@ This document describes the project structure and architecture for claude code.
 - `pkg`, holds shared libraries that are not specific to any project
 - `test` holds integration tests
 
-## Architecture Principles
+## Architectural Principles
 Inspired by Clean Architecture and Hexagonal architecture
 
 - `cmd`, holds the application entry points

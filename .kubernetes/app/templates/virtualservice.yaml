@@ -1,0 +1,20 @@
+apiVersion: networking.istio.io/v1
+kind: VirtualService
+metadata:
+  name: {{ include "app.fullname" . }}
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "app.labels" . | nindent 4 }}
+spec:
+  hosts:
+    - {{ include "app.fullname" . }}
+    - "cerberus.local"
+  gateways:
+    - {{ include "app.fullname" . }}-gateway
+    - mesh
+  http:
+    - route:
+        - destination:
+            host: {{ include "app.fullname" . }}
+            port:
+              number: {{ .Values.service.apiPort }}

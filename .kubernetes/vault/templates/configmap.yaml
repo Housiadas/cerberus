@@ -1,0 +1,26 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "vault.fullname" . }}-init
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "vault.labels" . | nindent 4 }}
+data:
+  init.sh: |
+    #!/bin/sh
+    export VAULT_ADDR='http://127.0.0.1:8200'
+    export VAULT_TOKEN='{{ .Values.devToken }}'
+
+    until vault status > /dev/null 2>&1; do
+      echo "Waiting for Vault to be ready..."
+      sleep 1
+    done
+
+    echo "Vault is ready, initializing secrets..."
+
+    vault secrets enable -path=secret -version=2 kv 2>/dev/null || true
+
+    vault kv put secret/cerberus/jwt \
+      access_token_secret="your-256-bit-access-secret-from-vault"
+
+    echo "Secrets initialized successfully!"

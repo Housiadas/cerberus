@@ -1,0 +1,11 @@
+namespace: "cerberus"
+
+replicaCount: 1
+
+image:
+  repository: grafana/grafana
+  tag: "11.6.0"
+  pullPolicy: IfNotPresent
+
+service:
+  port: 3000

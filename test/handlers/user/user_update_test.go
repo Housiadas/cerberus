@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"net/http"
 	"testing"
-	"time"
 
+	"github.com/Housiadas/cerberus/pkg/clock"
 	"github.com/google/go-cmp/cmp"
 	"github.com/stretchr/testify/require"
 
@@ -45,8 +45,8 @@ func Test_API_User_Update_200(t *testing.T) {
 				Email:      "chris@housi2.com",
 				Department: "IT0",
 				Enabled:    true,
-				CreatedAt:  sd.Users[0].CreatedAt.UTC().Format(time.RFC3339),
-				UpdatedAt:  sd.Users[0].UpdatedAt.UTC().Format(time.RFC3339),
+				CreatedAt:  clock.Format(&sd.Users[0].CreatedAt),
+				UpdatedAt:  clock.Format(&sd.Users[0].UpdatedAt),
 			},
 			AssertFunc: func(got any, exp any) string {
 				gotResp, exists := got.(*user_usecase.User)

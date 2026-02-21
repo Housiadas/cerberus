@@ -1,0 +1,6 @@
+apiVersion: v2
+name: cerberus-tempo
+description: Grafana Tempo for Cerberus distributed tracing
+type: application
+version: 0.1.0
+appVersion: "latest"

@@ -6,8 +6,17 @@ UID			:= $(shell id -u)
 GID			:= $(shell id -g)
 GO_VERSION	:= 1.26
 
+K8S_NAMESPACE 	:= "cerberus"
+K8S_DIR 		:= ".kubernetes"
+K8S_APP     	:= "cerberus-app"
+K8S_TEMPO     	:= "cerberus-tempo"
+K8S_VAULT     	:= "cerberus-vault"
+K8S_GRAFANA     := "cerberus-grafana"
+K8S_POSTGRES    := "cerberus-postgres"
+
 INPUT			?= $(shell bash -c 'read -p "Insert name: " name; echo $$name')
 INPUT_TOOL		?= $(shell bash -c 'read -p "Insert tool: " name; echo $$name')
+
 CURRENT_TIME	:= $(shell date --iso-8601=seconds)
 GIT_VERSION		:= $(shell git describe --always --dirty --tags --long)
 LINKER_FLAGS	:= "-s -X main.buildTime=${CURRENT_TIME} -X main.version=${GIT_VERSION}"
@@ -255,7 +264,72 @@ grafana:
 statsviz:
 	open http://localhost:4010/debug/statsviz
 
-## kafka/ui: Open kafka ui
-.PHONY: kafka/ui
-kafka/ui:
-	open http://localhost:8080
+## ================== #
+## Kubernetes
+## ================== #
+
+## k8s/setup: Setup minikube with Istio and create namespace
+.PHONY: k8s/setup
+k8s/setup:
+	minikube start --driver=docker --memory=4096 --cpus=2 --container-runtime=containerd
+	make k8s/setup/istio
+	kubectl label namespace default istio-injection=enabled --overwrite
+	kubectl create namespace $(K8S_NAMESPACE) --dry-run=client -o yaml | kubectl apply -f -
+	kubectl label namespace $(K8S_NAMESPACE) istio-injection=enabled --overwrite
+
+## k8s/setup/istio: Setup istio in the k8s cluster
+.PHONY: k8s/setup/istio
+k8s/setup/istio:
+	istioctl install --set profile=demo \
+      --set components.ingressGateways[0].k8s.resources.requests.cpu=10m \
+      --set components.ingressGateways[0].k8s.resources.requests.memory=40Mi \
+      --set components.egressGateways[0].k8s.resources.requests.cpu=10m \
+      --set components.egressGateways[0].k8s.resources.requests.memory=40Mi \
+      -y
+
+## k8s/build: Build Docker images into minikube's Docker daemon
+.PHONY: k8s/build
+k8s/build:
+	eval $$(minikube docker-env) && \
+	docker build --target application \
+		-t cerberus-app:local \
+		--build-arg GO_VERSION=$(GO_VERSION) \
+		-f .docker/app/Dockerfile . && \
+	docker build \
+		-t cerberus-migrate:local \
+		--build-arg UID=$(UID) \
+		--build-arg GID=$(GID) \
+		-f .docker/migrate/Dockerfile .
+
+## k8s/deploy: Deploy all helm charts to minikube
+.PHONY: k8s/deploy
+k8s/deploy:
+	helm upgrade --install $(K8S_POSTGRES) $(K8S_DIR)/postgres -n $(K8S_NAMESPACE) --create-namespace --wait
+	helm upgrade --install $(K8S_VAULT) $(K8S_DIR)/vault -n $(K8S_NAMESPACE) --wait
+	helm upgrade --install $(K8S_TEMPO) $(K8S_DIR)/tempo -n $(K8S_NAMESPACE) --wait
+	helm upgrade --install $(K8S_GRAFANA) $(K8S_DIR)/grafana -n $(K8S_NAMESPACE) --wait
+	helm upgrade --install $(K8S_APP) $(K8S_DIR)/app -n $(K8S_NAMESPACE) --wait
+
+## k8s/undeploy: Uninstall all helm charts
+.PHONY: k8s/undeploy
+k8s/undeploy:
+	-helm uninstall $(K8S_APP) -n $(K8S_NAMESPACE)
+	-helm uninstall $(K8S_GRAFANA) -n $(K8S_NAMESPACE)
+	-helm uninstall $(K8S_TEMPO) -n $(K8S_NAMESPACE)
+	-helm uninstall $(K8S_VAULT) -n $(K8S_NAMESPACE)
+	-helm uninstall $(K8S_POSTGRES)  -n $(K8S_NAMESPACE)
+
+## k8s/status: Show status of all pods and services
+.PHONY: k8s/status
+k8s/status:
+	kubectl get pods,svc,virtualservices -n $(NAMESPACE)
+
+## k8s/tunnel: Open minikube tunnel for Istio ingress gateway
+.PHONY: k8s/tunnel
+k8s/tunnel:
+	minikube tunnel
+
+## k8s/clean: Cleanup minikube
+.PHONY: k8s/clean
+k8s/clean:
+	minikube delete --all --purge

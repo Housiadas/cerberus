@@ -1,0 +1,19 @@
+namespace: "cerberus"
+
+replicaCount: 1
+
+image:
+  repository: "postgres"
+  tag: "17.5"
+  pullPolicy: IfNotPresent
+
+service:
+  port: 5432
+
+db:
+  user: housi
+  password: secret123
+  name: housi_db
+
+storage:
+  size: 1Gi
