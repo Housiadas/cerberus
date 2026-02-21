@@ -14,7 +14,6 @@ spec:
     metadata:
       labels:
         {{- include "tempo.selectorLabels" . | nindent 8 }}
-        sidecar.istio.io/inject: "true"
     spec:
       containers:
         - name: tempo

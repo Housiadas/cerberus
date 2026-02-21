@@ -14,7 +14,6 @@ spec:
     metadata:
       labels:
         {{- include "app.selectorLabels" . | nindent 8 }}
-        sidecar.istio.io/inject: "true"
     spec:
       initContainers:
         - name: migrate
@@ -23,9 +22,9 @@ spec:
           command:
             - "migrate"
             - "-path"
-            - "/migrations"
+            - ".migrations"
             - "-database"
-            - "postgres://{{ .Values.db.user }}:{{ .Values.db.password }}@{{ .Values.db.host }}/{{ .Values.db.name }}?sslmode=disable"
+            - "postgres://{{ .Values.env.db.user }}:{{ .Values.env.db.password }}@{{ .Values.env.db.host }}/{{ .Values.env.db.name }}?sslmode=disable"
             - "up"
       containers:
         - name: cerberus

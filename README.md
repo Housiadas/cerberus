@@ -32,11 +32,10 @@ The `usecases` directory is responsible for combaning different domain areas and
 ### Prerequisites
 - [minikube](https://minikube.sigs.k8s.io/docs/start/)
 - [Helm](https://helm.sh/docs/intro/install/)
-- [istioctl](https://istio.io/latest/docs/setup/getting-started/#download)
 - [kubectl](https://kubernetes.io/docs/tasks/tools/)
 
 ### Setup
-Start minikube, install Istio, and create the `cerberus` namespace:
+Start minikube and create the `cerberus` namespace:
 ```bash
 make k8s/setup
 ```
@@ -59,15 +58,11 @@ make k8s/status
 ```
 
 ### Access Services
-Open the minikube tunnel to expose the Istio ingress gateway:
+Use minikube service to access NodePort services:
 ```bash
-make k8s/tunnel
+minikube service cerberus-app -n cerberus
+minikube service cerberus-grafana -n cerberus
 ```
-Then access:
-- **API**: `http://cerberus.local`
-- **Grafana**: `http://grafana.cerberus.local`
-
-Add these hosts to `/etc/hosts` pointing to `127.0.0.1` when using minikube tunnel.
 
 ### Teardown
 ```bash
@@ -85,7 +80,7 @@ Each service has its own Helm chart under `.kubernetes/`:
 | `grafana/` | Grafana 11.6.0 | 3000 |
 | `app/` | Cerberus REST API | 4000, 4010 |
 
-All services run in the `cerberus` namespace with Istio sidecar injection enabled.
+All services run in the `cerberus` namespace
 
 ### Useful Links
 - [go-chi/chi](https://github.com/go-chi/chi)

@@ -268,24 +268,11 @@ statsviz:
 ## Kubernetes
 ## ================== #
 
-## k8s/setup: Setup minikube with Istio and create namespace
+## k8s/setup: Setup minikube and create namespace
 .PHONY: k8s/setup
 k8s/setup:
-	minikube start --driver=docker --memory=4096 --cpus=2 --container-runtime=containerd
-	make k8s/setup/istio
-	kubectl label namespace default istio-injection=enabled --overwrite
+	minikube start --driver=docker --memory=4096 --cpus=2
 	kubectl create namespace $(K8S_NAMESPACE) --dry-run=client -o yaml | kubectl apply -f -
-	kubectl label namespace $(K8S_NAMESPACE) istio-injection=enabled --overwrite
-
-## k8s/setup/istio: Setup istio in the k8s cluster
-.PHONY: k8s/setup/istio
-k8s/setup/istio:
-	istioctl install --set profile=demo \
-      --set components.ingressGateways[0].k8s.resources.requests.cpu=10m \
-      --set components.ingressGateways[0].k8s.resources.requests.memory=40Mi \
-      --set components.egressGateways[0].k8s.resources.requests.cpu=10m \
-      --set components.egressGateways[0].k8s.resources.requests.memory=40Mi \
-      -y
 
 ## k8s/build: Build Docker images into minikube's Docker daemon
 .PHONY: k8s/build
@@ -313,21 +300,26 @@ k8s/deploy:
 ## k8s/undeploy: Uninstall all helm charts
 .PHONY: k8s/undeploy
 k8s/undeploy:
-	-helm uninstall $(K8S_APP) -n $(K8S_NAMESPACE)
-	-helm uninstall $(K8S_GRAFANA) -n $(K8S_NAMESPACE)
-	-helm uninstall $(K8S_TEMPO) -n $(K8S_NAMESPACE)
-	-helm uninstall $(K8S_VAULT) -n $(K8S_NAMESPACE)
-	-helm uninstall $(K8S_POSTGRES)  -n $(K8S_NAMESPACE)
+	helm uninstall $(K8S_APP) -n $(K8S_NAMESPACE)
+	helm uninstall $(K8S_GRAFANA) -n $(K8S_NAMESPACE)
+	helm uninstall $(K8S_TEMPO) -n $(K8S_NAMESPACE)
+	helm uninstall $(K8S_VAULT) -n $(K8S_NAMESPACE)
+	helm uninstall $(K8S_POSTGRES)  -n $(K8S_NAMESPACE)
 
 ## k8s/status: Show status of all pods and services
 .PHONY: k8s/status
 k8s/status:
-	kubectl get pods,svc,virtualservices -n $(NAMESPACE)
+	kubectl get pods,svc -n $(K8S_NAMESPACE)
 
-## k8s/tunnel: Open minikube tunnel for Istio ingress gateway
+## k8s/tunnel: Open NodePort services via minikube
 .PHONY: k8s/tunnel
 k8s/tunnel:
-	minikube tunnel
+	@echo "Access app:     minikube service $(K8S_APP) -n $(K8S_NAMESPACE)"
+	@echo "Access grafana: minikube service $(K8S_GRAFANA) -n $(K8S_NAMESPACE)"
+
+## k8s/pods: Get all pods
+k8s/pods:
+	minikube kubectl -- get pods -A
 
 ## k8s/clean: Cleanup minikube
 .PHONY: k8s/clean

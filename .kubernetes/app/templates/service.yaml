@@ -6,7 +6,7 @@ metadata:
   labels:
     {{- include "app.labels" . | nindent 4 }}
 spec:
-  type: ClusterIP
+  type: NodePort
   ports:
     - port: {{ .Values.service.apiPort }}
       targetPort: {{ .Values.service.apiPort }}
