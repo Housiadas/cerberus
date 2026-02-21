@@ -74,8 +74,8 @@ func toAppUser(bus user.User) User {
 		PasswordHash: bus.PasswordHash,
 		Department:   bus.Department.String(),
 		Enabled:      bus.Enabled,
-		CreatedAt:    bus.CreatedAt.Format(time.RFC3339),
-		UpdatedAt:    bus.UpdatedAt.Format(time.RFC3339),
+		CreatedAt:    bus.CreatedAt.UTC().Format(time.RFC3339),
+		UpdatedAt:    bus.UpdatedAt.UTC().Format(time.RFC3339),
 	}
 }
 

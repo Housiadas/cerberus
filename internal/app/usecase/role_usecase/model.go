@@ -39,8 +39,8 @@ func toAppRole(r role.Role) Role {
 	return Role{
 		ID:        r.ID.String(),
 		Name:      r.Name.String(),
-		CreatedAt: r.CreatedAt.Format(time.RFC3339),
-		UpdatedAt: r.UpdatedAt.Format(time.RFC3339),
+		CreatedAt: r.CreatedAt.UTC().Format(time.RFC3339),
+		UpdatedAt: r.UpdatedAt.UTC().Format(time.RFC3339),
 	}
 }
 

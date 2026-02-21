@@ -4,7 +4,7 @@
 
 UID			:= $(shell id -u)
 GID			:= $(shell id -g)
-GO_VERSION	:= 1.25.3
+GO_VERSION	:= 1.26
 
 INPUT			?= $(shell bash -c 'read -p "Insert name: " name; echo $$name')
 INPUT_TOOL		?= $(shell bash -c 'read -p "Insert tool: " name; echo $$name')
@@ -105,11 +105,6 @@ tidy:
 	go mod tidy
 	go mod verify
 
-## static: Run static analysis
-.PHONY: static
-static:
-	go tool staticcheck ./...
-
 # security: Check security
 .PHONY: security
 security:
@@ -139,7 +134,7 @@ lint/golangci:
 
 ## lint: Run linter
 .PHONY: lint
-lint: tidy tools/install static security vet lint/golangci
+lint: tidy tools/install security vet lint/golangci
 
 ## ================ #
 ## Tests

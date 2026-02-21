@@ -37,8 +37,8 @@ func toAppPermission(p permission.Permission) Permission {
 	return Permission{
 		ID:        p.ID.String(),
 		Name:      p.Name.String(),
-		CreatedAt: p.CreatedAt.Format(time.RFC3339),
-		UpdatedAt: p.UpdatedAt.Format(time.RFC3339),
+		CreatedAt: p.CreatedAt.UTC().Format(time.RFC3339),
+		UpdatedAt: p.UpdatedAt.UTC().Format(time.RFC3339),
 	}
 }
 

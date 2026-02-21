@@ -38,8 +38,8 @@ func toAppToken(r refresh_token.RefreshToken) RefreshToken {
 		ID:        r.ID.String(),
 		UserID:    r.UserID.String(),
 		Token:     r.Token,
-		ExpiresAt: r.ExpiresAt.Format(time.RFC3339),
-		CreatedAt: r.CreatedAt.Format(time.RFC3339),
+		ExpiresAt: r.ExpiresAt.UTC().Format(time.RFC3339),
+		CreatedAt: r.CreatedAt.UTC().Format(time.RFC3339),
 		Revoked:   r.Revoked,
 	}
 }

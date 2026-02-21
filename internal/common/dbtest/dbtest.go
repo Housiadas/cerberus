@@ -37,7 +37,7 @@ func New(t *testing.T, testName string) *sqlx.DB {
 		postgres.BasicWaitStrategies(),
 		postgres.WithSQLDriver("pgx"),
 	)
-	testcontainers.CleanupContainer(t, ctr)
+	defer testcontainers.CleanupContainer(t, ctr)
 	require.NoError(t, err)
 
 	// database url
