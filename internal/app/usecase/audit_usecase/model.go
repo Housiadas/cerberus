@@ -47,7 +47,7 @@ func toAppAudit(aud audit.Audit) Audit {
 		Action:    aud.Action,
 		Data:      string(aud.Data),
 		Message:   aud.Message,
-		Timestamp: aud.Timestamp.Format(time.RFC3339),
+		Timestamp: aud.Timestamp.UTC().Format(time.RFC3339),
 	}
 }
 

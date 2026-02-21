@@ -122,11 +122,11 @@ func queryUser(service *user_service.Service, sd unitest.SeedData) []unitest.Tab
 				expResp := exp.([]user.User)
 
 				for i := range gotResp {
-					if gotResp[i].CreatedAt.Format(time.RFC3339) == expResp[i].CreatedAt.Format(time.RFC3339) {
+					if gotResp[i].CreatedAt.UTC().Format(time.RFC3339) == expResp[i].CreatedAt.UTC().Format(time.RFC3339) {
 						expResp[i].CreatedAt = gotResp[i].CreatedAt
 					}
 
-					if gotResp[i].UpdatedAt.Format(time.RFC3339) == expResp[i].UpdatedAt.Format(time.RFC3339) {
+					if gotResp[i].UpdatedAt.UTC().Format(time.RFC3339) == expResp[i].UpdatedAt.UTC().Format(time.RFC3339) {
 						expResp[i].UpdatedAt = gotResp[i].UpdatedAt
 					}
 				}
@@ -153,11 +153,11 @@ func queryUser(service *user_service.Service, sd unitest.SeedData) []unitest.Tab
 
 				expResp := exp.(user.User)
 
-				if gotResp.CreatedAt.Format(time.RFC3339) == expResp.CreatedAt.Format(time.RFC3339) {
+				if gotResp.CreatedAt.UTC().Format(time.RFC3339) == expResp.CreatedAt.UTC().Format(time.RFC3339) {
 					expResp.CreatedAt = gotResp.CreatedAt
 				}
 
-				if gotResp.UpdatedAt.Format(time.RFC3339) == expResp.UpdatedAt.Format(time.RFC3339) {
+				if gotResp.UpdatedAt.UTC().Format(time.RFC3339) == expResp.UpdatedAt.UTC().Format(time.RFC3339) {
 					expResp.UpdatedAt = gotResp.UpdatedAt
 				}
 
