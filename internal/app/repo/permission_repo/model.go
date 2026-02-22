@@ -1,6 +1,7 @@
 package permission_repo
 
 import (
+	"database/sql"
 	"fmt"
 	"time"
 
@@ -10,10 +11,11 @@ import (
 )
 
 type permissionDB struct {
-	ID        uuid.UUID `db:"id"`
-	Name      string    `db:"name"`
-	CreatedAt time.Time `db:"created_at"`
-	UpdatedAt time.Time `db:"updated_at"`
+	ID        uuid.UUID    `db:"id"`
+	Name      string       `db:"name"`
+	CreatedAt time.Time    `db:"created_at"`
+	UpdatedAt time.Time    `db:"updated_at"`
+	DeletedAt sql.NullTime `db:"deleted_at"`
 }
 
 func toPermissionDB(p permission.Permission) permissionDB {
@@ -22,6 +24,7 @@ func toPermissionDB(p permission.Permission) permissionDB {
 		Name:      p.Name.String(),
 		CreatedAt: p.CreatedAt.UTC(),
 		UpdatedAt: p.UpdatedAt.UTC(),
+		DeletedAt: toNullTime(p.DeletedAt),
 	}
 }
 
@@ -36,9 +39,28 @@ func toPermissionDomain(db permissionDB) (permission.Permission, error) {
 		Name:      nme,
 		CreatedAt: db.CreatedAt.In(time.UTC),
 		UpdatedAt: db.UpdatedAt.In(time.UTC),
+		DeletedAt: fromNullTime(db.DeletedAt),
 	}
 
 	return bus, nil
+}
+
+func toNullTime(t *time.Time) sql.NullTime {
+	if t == nil {
+		return sql.NullTime{}
+	}
+
+	return sql.NullTime{Time: t.UTC(), Valid: true}
+}
+
+func fromNullTime(nt sql.NullTime) *time.Time {
+	if !nt.Valid {
+		return nil
+	}
+
+	t := nt.Time.In(time.UTC)
+
+	return &t
 }
 
 func toPermissionsDomain(dbs []permissionDB) ([]permission.Permission, error) {

@@ -9,7 +9,7 @@ import (
 )
 
 func applyFilter(filter user.QueryFilter, data map[string]any, buf *bytes.Buffer) {
-	var wc []string
+	wc := []string{"deleted_at IS NULL"}
 
 	if filter.ID != nil {
 		data["id"] = *filter.ID
@@ -41,8 +41,6 @@ func applyFilter(filter user.QueryFilter, data map[string]any, buf *bytes.Buffer
 		wc = append(wc, "created_at <= :end_created_at")
 	}
 
-	if len(wc) > 0 {
-		buf.WriteString(" WHERE ")
-		buf.WriteString(strings.Join(wc, " AND "))
-	}
+	buf.WriteString(" WHERE ")
+	buf.WriteString(strings.Join(wc, " AND "))
 }

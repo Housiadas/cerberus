@@ -17,3 +17,13 @@
 - Make sure that tests are running correctly (PASS)
 - Make changes if need.
 - Mock extra interfaces with mockery if need (.mockery.yaml)
+
+## Soft deletes
+- Add deleted_at field to all SQL files
+- Update all domain and services under core
+- Update all usecases
+- Update all repositories
+- Update all sql queries under repo package
+- Update all queries like fetch 
+where delete_at not Null in order to exluded them from fetching
+The goal is to create the soft delete feature

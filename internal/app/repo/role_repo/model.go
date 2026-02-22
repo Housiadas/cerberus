@@ -1,6 +1,7 @@
 package role_repo
 
 import (
+	"database/sql"
 	"fmt"
 	"time"
 
@@ -10,10 +11,11 @@ import (
 )
 
 type roleDB struct {
-	ID        uuid.UUID `db:"user_id"`
-	Name      string    `db:"name"`
-	CreatedAt time.Time `db:"created_at"`
-	UpdatedAt time.Time `db:"updated_at"`
+	ID        uuid.UUID    `db:"user_id"`
+	Name      string       `db:"name"`
+	CreatedAt time.Time    `db:"created_at"`
+	UpdatedAt time.Time    `db:"updated_at"`
+	DeletedAt sql.NullTime `db:"deleted_at"`
 }
 
 func toRoleDB(rl role.Role) roleDB {
@@ -22,6 +24,7 @@ func toRoleDB(rl role.Role) roleDB {
 		Name:      rl.Name.String(),
 		CreatedAt: rl.CreatedAt.UTC(),
 		UpdatedAt: rl.UpdatedAt.UTC(),
+		DeletedAt: toNullTime(rl.DeletedAt),
 	}
 }
 
@@ -36,9 +39,28 @@ func toRoleDomain(db roleDB) (role.Role, error) {
 		Name:      nme,
 		CreatedAt: db.CreatedAt.In(time.UTC),
 		UpdatedAt: db.UpdatedAt.In(time.UTC),
+		DeletedAt: fromNullTime(db.DeletedAt),
 	}
 
 	return bus, nil
+}
+
+func toNullTime(t *time.Time) sql.NullTime {
+	if t == nil {
+		return sql.NullTime{}
+	}
+
+	return sql.NullTime{Time: t.UTC(), Valid: true}
+}
+
+func fromNullTime(nt sql.NullTime) *time.Time {
+	if !nt.Valid {
+		return nil
+	}
+
+	t := nt.Time.In(time.UTC)
+
+	return &t
 }
 
 func toRolesDomain(dbs []roleDB) ([]role.Role, error) {

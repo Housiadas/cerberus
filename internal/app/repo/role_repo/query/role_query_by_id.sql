@@ -3,5 +3,6 @@ SELECT
     name,
     created_at,
     updated_at
-FROM users
+FROM roles
 WHERE id = :id
+AND deleted_at IS NULL
