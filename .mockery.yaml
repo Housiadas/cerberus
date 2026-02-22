@@ -17,6 +17,21 @@ packages:
   github.com/Housiadas/cerberus/internal/core/domain/user:
     config:
       all: true
+  github.com/Housiadas/cerberus/internal/core/domain/audit:
+    config:
+      all: true
+  github.com/Housiadas/cerberus/internal/core/domain/role:
+    config:
+      all: true
+  github.com/Housiadas/cerberus/internal/core/domain/permission:
+    config:
+      all: true
+  github.com/Housiadas/cerberus/internal/core/domain/refresh_token:
+    config:
+      all: true
+  github.com/Housiadas/cerberus/internal/core/domain/user_roles_permissions:
+    config:
+      all: true
   # pkg directory
   github.com/Housiadas/cerberus/pkg/clock:
     config:

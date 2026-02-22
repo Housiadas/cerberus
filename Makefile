@@ -255,7 +255,7 @@ mockery:
 	docker run --rm \
 	-v "$(shell pwd)":/src \
 	-w /src \
-	vektra/mockery:3
+	vektra/mockery:3.6
 
 ## metrics: See metrics
 .PHONY: metrics
