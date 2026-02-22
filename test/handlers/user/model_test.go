@@ -1,8 +1,8 @@
 package user_test
 
 import (
-	"github.com/Housiadas/cerberus/internal/app/usecase/user_usecase"
 	"github.com/Housiadas/cerberus/internal/core/domain/user"
+	"github.com/Housiadas/cerberus/internal/usecase/user_usecase"
 	"github.com/Housiadas/cerberus/pkg/clock"
 )
 

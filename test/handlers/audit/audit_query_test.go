@@ -6,10 +6,10 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/Housiadas/cerberus/internal/usecase/audit_usecase"
 	"github.com/google/go-cmp/cmp"
 	"github.com/stretchr/testify/require"
 
-	"github.com/Housiadas/cerberus/internal/app/usecase/audit_usecase"
 	"github.com/Housiadas/cerberus/internal/common/apitest"
 	"github.com/Housiadas/cerberus/pkg/web"
 	"github.com/Housiadas/cerberus/pkg/web/errs"

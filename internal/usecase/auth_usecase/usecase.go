@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/Housiadas/cerberus/internal/app/usecase/refresh_token_usecase"
-	"github.com/Housiadas/cerberus/internal/app/usecase/user_usecase"
+	"github.com/Housiadas/cerberus/internal/usecase/refresh_token_usecase"
+	"github.com/Housiadas/cerberus/internal/usecase/user_usecase"
 	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/golang-jwt/jwt/v5"
 )

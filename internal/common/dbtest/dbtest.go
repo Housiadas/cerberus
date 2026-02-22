@@ -28,6 +28,7 @@ func New(t *testing.T, testName string) *sqlx.DB {
 
 	// Start the postgres container and run any migrations on it
 	ctx := context.Background()
+
 	ctr, err := postgres.Run(
 		ctx,
 		cfg.PostgresImage,
@@ -38,6 +39,7 @@ func New(t *testing.T, testName string) *sqlx.DB {
 		postgres.WithSQLDriver("pgx"),
 	)
 	defer testcontainers.CleanupContainer(t, ctr)
+
 	require.NoError(t, err)
 
 	// database url

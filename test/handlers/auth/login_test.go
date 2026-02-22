@@ -4,10 +4,10 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/Housiadas/cerberus/internal/usecase/auth_usecase"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/Housiadas/cerberus/internal/app/usecase/auth_usecase"
 	"github.com/Housiadas/cerberus/internal/common/apitest"
 	"github.com/Housiadas/cerberus/internal/core/domain/user"
 	"github.com/Housiadas/cerberus/pkg/web/errs"
