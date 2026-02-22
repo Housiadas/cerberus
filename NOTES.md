@@ -27,3 +27,18 @@
 - Update all queries like fetch 
 where delete_at not Null in order to exluded them from fetching
 The goal is to create the soft delete feature
+
+## Transactional Outbox Pattern 
+- Create the transactional outbox pattern
+- Use tables in the database
+- Create migrations
+- Create outbox domain
+- Create events domain that will have
+- Make changes for the user domain
+- Use Tx transaction 
+- Produce messages to kafka in batched and mark rows as proceed
+- Add confluent kafka in compose.yaml for local env
+- Make changes to kafka package in pkg if need it
+- Use mockery for any changes
+- Add tests for all the cases
+- Run make lint, make test

@@ -32,7 +32,13 @@ packages:
   github.com/Housiadas/cerberus/internal/core/domain/user_roles_permissions:
     config:
       all: true
+  github.com/Housiadas/cerberus/internal/core/domain/outbox:
+    config:
+      all: true
   # pkg directory
+  github.com/Housiadas/cerberus/pkg/kafka:
+    config:
+      all: true
   github.com/Housiadas/cerberus/pkg/clock:
     config:
       all: true

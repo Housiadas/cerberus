@@ -4,12 +4,19 @@ import (
 	"bytes"
 	"context"
 	"testing"
+	"time"
 
 	"github.com/Housiadas/cerberus/internal/app/handler"
+	"github.com/Housiadas/cerberus/internal/app/relay"
+	"github.com/Housiadas/cerberus/internal/app/repo/outbox_repo"
 	"github.com/Housiadas/cerberus/internal/common/dbtest"
+	"github.com/Housiadas/cerberus/internal/common/kafkatest"
 	cfg "github.com/Housiadas/cerberus/internal/config"
+	"github.com/Housiadas/cerberus/internal/core/service/outbox_service"
+	"github.com/Housiadas/cerberus/pkg/clock"
 	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/Housiadas/cerberus/pkg/otel"
+	"github.com/Housiadas/cerberus/pkg/uuidgen"
 	"github.com/stretchr/testify/require"
 )
 
@@ -54,11 +61,27 @@ func StartTest(t *testing.T, testName string) (*Test, error) {
 		AccessTokenSecret: []byte("test-256-bit-access-secret"),
 	})
 
+	// Initialize Kafka producer via testcontainers
+	kafkaProducer := kafkatest.New(t)
+
+	// Start outbox relay
+	outboxRepo := outbox_repo.NewStore(log, db)
+	outboxSvc := outbox_service.New(log, outboxRepo, uuidgen.NewV7(), clock.NewClock())
+	outboxRelay := relay.New(log, outboxSvc, kafkaProducer, 1*time.Second, 100)
+
+	relayCtx, relayCancel := context.WithCancel(ctx)
+
+	go outboxRelay.Start(relayCtx)
+
 	// initialize apitest services
 	c := newCore(log, db)
 
 	// initialize usecase
 	u := Usecase{Auth: h.Usecase.Auth}
+
+	t.Cleanup(func() {
+		relayCancel()
+	})
 
 	return New(db, h.Routes(), c, u), nil
 }

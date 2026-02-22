@@ -3,6 +3,7 @@ package handler
 import (
 	"github.com/Housiadas/cerberus/internal/app/middleware"
 	"github.com/Housiadas/cerberus/internal/app/repo/audit_repo"
+	"github.com/Housiadas/cerberus/internal/app/repo/outbox_repo"
 	"github.com/Housiadas/cerberus/internal/app/repo/permission_repo"
 	"github.com/Housiadas/cerberus/internal/app/repo/refresh_token_repo"
 	"github.com/Housiadas/cerberus/internal/app/repo/role_repo"
@@ -10,6 +11,7 @@ import (
 	"github.com/Housiadas/cerberus/internal/app/repo/user_roles_permissions_repo"
 	"github.com/Housiadas/cerberus/internal/config"
 	"github.com/Housiadas/cerberus/internal/core/service/audit_service"
+	"github.com/Housiadas/cerberus/internal/core/service/outbox_service"
 	"github.com/Housiadas/cerberus/internal/core/service/permission_service"
 	"github.com/Housiadas/cerberus/internal/core/service/refresh_token_service"
 	"github.com/Housiadas/cerberus/internal/core/service/role_service"
@@ -81,6 +83,7 @@ func New(cfg Config) *Handler {
 
 	// repos
 	auditRepo := audit_repo.NewStore(cfg.Log, cfg.DB)
+	outboxRepo := outbox_repo.NewStore(cfg.Log, cfg.DB)
 	userRepo := user_repo.NewStore(cfg.Log, cfg.DB)
 	roleRepo := role_repo.NewStore(cfg.Log, cfg.DB)
 	permissionRepo := permission_repo.NewStore(cfg.Log, cfg.DB)
@@ -89,6 +92,7 @@ func New(cfg Config) *Handler {
 
 	// services
 	auditService := audit_service.New(cfg.Log, auditRepo)
+	outboxSvc := outbox_service.New(cfg.Log, outboxRepo, uuidGen, clk)
 	userService := user_service.New(cfg.Log, userRepo, uuidGen, clk, hash)
 	roleService := role_service.New(cfg.Log, roleRepo)
 	permissionService := permission_service.New(cfg.Log, permissionRepo)
@@ -100,7 +104,7 @@ func New(cfg Config) *Handler {
 
 	// usecase
 	auditUsecase := audit_usecase.NewUseCase(auditService)
-	userUsecase := user_usecase.NewUseCase(userService)
+	userUsecase := user_usecase.NewUseCase(userService, outboxSvc)
 	refreshTokenUsecase := refresh_token_usecase.NewUseCase(refreshTokenService)
 	authUsecase := auth_usecase.NewUseCase(auth_usecase.Config{
 		Issuer:              cfg.ServiceName,
