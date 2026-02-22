@@ -1,4 +1,5 @@
-// Package command contains the functionality for the set of commands currently supported by the CLI tooling.
+// Package command contains the functionality
+// for the set of commands currently supported by the Worker
 package command
 
 import (

@@ -40,8 +40,8 @@ func (h *Handler) readiness(
 	return data
 }
 
-// liveness returns simple status info if the usecase is alive. If the
-// cli is deployed to a Kubernetes cluster, it will also return pod, node, and
+// liveness returns simple status info if the usecase is alive.
+// If the app is deployed to a Kubernetes cluster, it will also return pod, node, and
 // namespace details via the Downward API. The Kubernetes environment variables
 // need to be set within your Pod/Deployment manifest.
 //

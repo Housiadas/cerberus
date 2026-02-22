@@ -18,13 +18,11 @@ import (
 	"github.com/google/uuid"
 )
 
-// UseCase manages the set of cli layer api functions for the user core.
 type UseCase struct {
 	userCore  *user_service.Service
 	outboxSvc *outbox_service.Service
 }
 
-// NewUseCase constructs a user cli API for use.
 func NewUseCase(userBus *user_service.Service, outboxSvc *outbox_service.Service) *UseCase {
 	return &UseCase{
 		userCore:  userBus,

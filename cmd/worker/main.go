@@ -37,7 +37,7 @@ func run() error {
 	// -------------------------------------------------------------------------
 	// Initialize Service
 	// -------------------------------------------------------------------------
-	log := logger.New(io.Discard, logger.LevelInfo, "CLI", "", "")
+	log := logger.New(io.Discard, logger.LevelInfo, "WORKER", "", "")
 
 	// -------------------------------------------------------------------------
 	// Initialize commands
