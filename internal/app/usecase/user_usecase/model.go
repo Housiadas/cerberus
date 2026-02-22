@@ -4,12 +4,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/mail"
-	"time"
 
 	"github.com/Housiadas/cerberus/internal/common/validation"
 	"github.com/Housiadas/cerberus/internal/core/domain/name"
 	"github.com/Housiadas/cerberus/internal/core/domain/password"
 	"github.com/Housiadas/cerberus/internal/core/domain/user"
+	"github.com/Housiadas/cerberus/pkg/clock"
 	"github.com/Housiadas/cerberus/pkg/web"
 	"github.com/Housiadas/cerberus/pkg/web/errs"
 )
@@ -74,8 +74,8 @@ func toAppUser(bus user.User) User {
 		PasswordHash: bus.PasswordHash,
 		Department:   bus.Department.String(),
 		Enabled:      bus.Enabled,
-		CreatedAt:    bus.CreatedAt.UTC().Format(time.RFC3339),
-		UpdatedAt:    bus.UpdatedAt.UTC().Format(time.RFC3339),
+		CreatedAt:    clock.Format(&bus.CreatedAt),
+		UpdatedAt:    clock.Format(&bus.UpdatedAt),
 	}
 }
 

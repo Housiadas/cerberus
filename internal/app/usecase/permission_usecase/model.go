@@ -3,10 +3,10 @@ package permission_usecase
 import (
 	"encoding/json"
 	"fmt"
-	"time"
 
 	"github.com/Housiadas/cerberus/internal/core/domain/name"
 	"github.com/Housiadas/cerberus/internal/core/domain/permission"
+	"github.com/Housiadas/cerberus/pkg/clock"
 	"github.com/Housiadas/cerberus/pkg/web"
 )
 
@@ -37,8 +37,8 @@ func toAppPermission(p permission.Permission) Permission {
 	return Permission{
 		ID:        p.ID.String(),
 		Name:      p.Name.String(),
-		CreatedAt: p.CreatedAt.UTC().Format(time.RFC3339),
-		UpdatedAt: p.UpdatedAt.UTC().Format(time.RFC3339),
+		CreatedAt: clock.Format(&p.CreatedAt),
+		UpdatedAt: clock.Format(&p.UpdatedAt),
 	}
 }
 

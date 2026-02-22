@@ -1,0 +1,16 @@
+namespace: "cerberus"
+
+replicaCount: 1
+
+image:
+  repository: "grafana/tempo"
+  tag: "latest"
+  pullPolicy: IfNotPresent
+
+service:
+  httpPort: 3200
+  otlpGrpcPort: 4317
+  otlpHttpPort: 4318
+
+storage:
+  size: 1Gi

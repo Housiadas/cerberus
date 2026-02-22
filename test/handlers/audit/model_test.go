@@ -1,10 +1,9 @@
 package audit_test
 
 import (
-	"time"
-
 	"github.com/Housiadas/cerberus/internal/app/usecase/audit_usecase"
 	"github.com/Housiadas/cerberus/internal/core/domain/audit"
+	"github.com/Housiadas/cerberus/pkg/clock"
 )
 
 func toAppAudit(bus audit.Audit) audit_usecase.Audit {
@@ -17,7 +16,7 @@ func toAppAudit(bus audit.Audit) audit_usecase.Audit {
 		Action:    bus.Action,
 		Data:      string(bus.Data),
 		Message:   bus.Message,
-		Timestamp: bus.Timestamp.UTC().Format(time.RFC3339),
+		Timestamp: clock.Format(&bus.Timestamp),
 	}
 }
 

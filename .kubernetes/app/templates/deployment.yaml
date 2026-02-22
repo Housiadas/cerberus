@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "app.fullname" . }}
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "app.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "app.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "app.selectorLabels" . | nindent 8 }}
+    spec:
+      initContainers:
+        - name: migrate
+          image: "{{ .Values.migrateImage.repository }}:{{ .Values.migrateImage.tag }}"
+          imagePullPolicy: {{ .Values.migrateImage.pullPolicy }}
+          command:
+            - "migrate"
+            - "-path"
+            - ".migrations"
+            - "-database"
+            - "postgres://{{ .Values.env.db.user }}:{{ .Values.env.db.password }}@{{ .Values.env.db.host }}/{{ .Values.env.db.name }}?sslmode=disable"
+            - "up"
+      containers:
+        - name: cerberus
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - containerPort: {{ .Values.service.apiPort }}
+              protocol: TCP
+              name: http-api
+            - containerPort: {{ .Values.service.debugPort }}
+              protocol: TCP
+              name: http-debug
+          readinessProbe:
+            httpGet:
+              path: /readiness
+              port: {{ .Values.service.debugPort }}
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /liveness
+              port: {{ .Values.service.debugPort }}
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          volumeMounts:
+            - name: config
+              mountPath: /app/config.yaml
+              subPath: config.yaml
+      volumes:
+        - name: config
+          configMap:
+            name: {{ include "app.fullname" . }}-config

@@ -130,7 +130,7 @@ func Test_API_User_Create_400(t *testing.T) {
 				PasswordConfirm: "123",
 			},
 			GotResp: &errs.Error{},
-			ExpResp: errs.Errorf(errs.InvalidArgument, "validate: [{\"field\":\"name\",\"error\":\"invalid name \\\"Bi\\\"\"}]"),
+			ExpResp: errs.Errorf(errs.InvalidArgument, "validate: [{\"field\":\"name\",\"error\":\"invalid name value: \\\"Bi\\\"\"}]"),
 			AssertFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},

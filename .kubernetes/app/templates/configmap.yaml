@@ -1,0 +1,37 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "app.fullname" . }}-config
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "app.labels" . | nindent 4 }}
+data:
+  config.yaml: |
+    app:
+      name: "Cerberus"
+    rest:
+      api: "0.0.0.0:{{ .Values.service.apiPort }}"
+      debug: "0.0.0.0:{{ .Values.service.debugPort }}"
+      readTimeout: {{ .Values.env.rest.readTimeout | quote }}
+      writeTimeout: {{ .Values.env.rest.writeTimeout | quote }}
+      idleTimeout: {{ .Values.env.rest.idleTimeout | quote }}
+      shutdownTimeout: {{ .Values.env.rest.shutdownTimeout | quote }}
+    db:
+      user: {{ .Values.env.db.user | quote }}
+      password: {{ .Values.env.db.password | quote }}
+      name: {{ .Values.env.db.name | quote }}
+      port: {{ .Values.env.db.port | quote }}
+      host: {{ .Values.env.db.host | quote }}
+      maxOpenConnections: {{ .Values.env.db.maxOpenConnections | quote }}
+      maxIdleConnections: {{ .Values.env.db.maxIdleConnections | quote }}
+      connectionIdleTime: {{ .Values.env.db.connectionIdleTime | quote }}
+      disableTLS: {{ .Values.env.db.disableTLS }}
+    vault:
+      address: {{ .Values.env.vault.address | quote }}
+      token: {{ .Values.env.vault.token | quote }}
+    cors:
+      allowedOrigins: {{ .Values.env.cors.allowedOrigins | quote }}
+      allowedMethods: {{ .Values.env.cors.allowedMethods | quote }}
+      allowedHeaders: {{ .Values.env.cors.allowedHeaders | quote }}
+      exposedHeaders: {{ .Values.env.cors.exposedHeaders | quote }}
+      maxAge: {{ .Values.env.cors.maxAge | quote }}

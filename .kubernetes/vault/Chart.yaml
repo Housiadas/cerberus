@@ -1,0 +1,6 @@
+apiVersion: v2
+name: cerberus-vault
+description: Hashicorp Vault for Cerberus secrets management
+type: application
+version: 0.1.0
+appVersion: "1.21"

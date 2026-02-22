@@ -1,13 +1,6 @@
 # Cerberus
 A monitoring system built with Go `v1.26`.
 
-## Stack
-- Go
-- PostgreSQL
-- Hashicorp Vault
-- Docker
-- Docker Compose
-
 ## Project Structure
 
 - `.docker` holds docker related files
@@ -19,7 +12,7 @@ A monitoring system built with Go `v1.26`.
 - `pkg` holds shared code and libraries
 - `test` holds integration tests
 
-## Architecture Principles
+## Architectural Principles
 Inspired by Clean Architecture and Hexagonal architecture
 
 - `cmd`, holds the application entry points
@@ -31,6 +24,63 @@ The `internal` directory is organized as follows:
 - `core`, holds the domain logic, separated to domain (models) and services
 
 The `usecases` directory is responsible for combaning different domain areas and business rules
+
+## Development
+
+## Kubernetes Deployment (Minikube)
+
+### Prerequisites
+- [minikube](https://minikube.sigs.k8s.io/docs/start/)
+- [Helm](https://helm.sh/docs/intro/install/)
+- [kubectl](https://kubernetes.io/docs/tasks/tools/)
+
+### Setup
+Start minikube and create the `cerberus` namespace:
+```bash
+make k8s/setup
+```
+
+### Build Images
+Build the application and migration Docker images inside minikube's Docker daemon:
+```bash
+make k8s/build
+```
+
+### Deploy
+Deploy all services (PostgreSQL, Vault, Tempo, Grafana, App) via Helm:
+```bash
+make k8s/deploy
+```
+
+### Check Status
+```bash
+make k8s/status
+```
+
+### Access Services
+Use minikube service to access NodePort services:
+```bash
+minikube service cerberus-app -n cerberus
+minikube service cerberus-grafana -n cerberus
+```
+
+### Teardown
+```bash
+make k8s/undeploy
+```
+
+### Helm Charts
+Each service has its own Helm chart under `.kubernetes/`:
+
+| Chart | Service | Ports |
+|-------|---------|-------|
+| `postgres/` | PostgreSQL 17.5 | 5432 |
+| `vault/` | Hashicorp Vault 1.21 | 8200 |
+| `tempo/` | Grafana Tempo | 3200, 4317, 4318 |
+| `grafana/` | Grafana 11.6.0 | 3000 |
+| `app/` | Cerberus REST API | 4000, 4010 |
+
+All services run in the `cerberus` namespace
 
 ### Useful Links
 - [go-chi/chi](https://github.com/go-chi/chi)

@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/Housiadas/cerberus/internal/core/domain/refresh_token"
+	"github.com/Housiadas/cerberus/pkg/clock"
 	"github.com/Housiadas/cerberus/pkg/web"
 	"github.com/Housiadas/cerberus/pkg/web/errs"
 	"github.com/google/uuid"
@@ -38,8 +39,8 @@ func toAppToken(r refresh_token.RefreshToken) RefreshToken {
 		ID:        r.ID.String(),
 		UserID:    r.UserID.String(),
 		Token:     r.Token,
-		ExpiresAt: r.ExpiresAt.UTC().Format(time.RFC3339),
-		CreatedAt: r.CreatedAt.UTC().Format(time.RFC3339),
+		ExpiresAt: clock.Format(&r.ExpiresAt),
+		CreatedAt: clock.Format(&r.CreatedAt),
 		Revoked:   r.Revoked,
 	}
 }

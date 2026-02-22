@@ -1,0 +1,45 @@
+namespace: "cerberus"
+
+replicaCount: 1
+
+image:
+  repository: cerberus-app
+  tag: "local"
+  pullPolicy: IfNotPresent
+
+migrateImage:
+  repository: cerberus-migrate
+  tag: "local"
+  pullPolicy: IfNotPresent
+
+service:
+  apiPort: 4000
+  debugPort: 4010
+
+env:
+  db:
+    user: housi
+    password: secret123
+    name: housi_db
+    host: "cerberus-postgres:5432"
+    port: "5432"
+    maxOpenConnections: "25"
+    maxIdleConnections: "25"
+    connectionIdleTime: "30s"
+    disableTLS: true
+  vault:
+    address: "http://cerberus-vault:8200"
+    token: "dev-root-token"
+  tempo:
+    host: "cerberus-tempo"
+  rest:
+    readTimeout: "5s"
+    writeTimeout: "10s"
+    idleTimeout: "120s"
+    shutdownTimeout: "20s"
+  cors:
+    allowedOrigins: "*"
+    allowedMethods: "GET;POST;PUT;DELETE;OPTIONS;PATCH"
+    allowedHeaders: "*"
+    exposedHeaders: "*"
+    maxAge: "86400"

@@ -1,10 +1,9 @@
 package auth_test
 
 import (
-	"time"
-
 	"github.com/Housiadas/cerberus/internal/app/usecase/user_usecase"
 	"github.com/Housiadas/cerberus/internal/core/domain/user"
+	"github.com/Housiadas/cerberus/pkg/clock"
 )
 
 func toAppUser(bus user.User) user_usecase.User {
@@ -15,8 +14,8 @@ func toAppUser(bus user.User) user_usecase.User {
 		PasswordHash: nil, // This field is not marshaled.
 		Department:   bus.Department.String(),
 		Enabled:      bus.Enabled,
-		CreatedAt:    bus.CreatedAt.UTC().Format(time.RFC3339),
-		UpdatedAt:    bus.UpdatedAt.UTC().Format(time.RFC3339),
+		CreatedAt:    clock.Format(&bus.CreatedAt),
+		UpdatedAt:    clock.Format(&bus.UpdatedAt),
 	}
 }
 
