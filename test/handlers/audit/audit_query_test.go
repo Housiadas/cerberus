@@ -30,20 +30,21 @@ func Test_API_Audit_Query_200(t *testing.T) {
 
 	table := []apitest.Table{
 		{
-			Name:       "basic",
-			URL:        "/api/v1/audits?page=1&rows=10&orderBy=obj_name,ASC&obj_name=ObjName",
-			StatusCode: http.StatusOK,
-			Method:     http.MethodGet,
-			GotResp:    &web.Result[audit_usecase.Audit]{},
+			Name:        "basic",
+			URL:         "/api/v1/audits?page=1&rows=10&orderBy=obj_name,ASC&obj_name=ObjName",
+			StatusCode:  http.StatusOK,
+			Method:      http.MethodGet,
+			AccessToken: &sd.Users[0].AccessToken.Token,
+			GotResp:     &web.Result[audit_usecase.Audit]{},
 			ExpResp: &web.Result[audit_usecase.Audit]{
 				Metadata: web.Metadata{
 					FirstPage:   1,
 					CurrentPage: 1,
 					LastPage:    1,
 					RowsPerPage: 10,
-					Total:       len(sd.Admins[0].Audits),
+					Total:       len(sd.Users[0].Audits),
 				},
-				Data: toAppAudits(sd.Admins[0].Audits),
+				Data: toAppAudits(sd.Users[0].Audits),
 			},
 			AssertFunc: func(got any, exp any) string {
 				gotResp, exists := got.(*web.Result[audit_usecase.Audit])
@@ -76,28 +77,30 @@ func Test_API_Audit_Query_400(t *testing.T) {
 	test, err := apitest.StartTest(t, "Test_API_Audit")
 	require.NoError(t, err)
 
-	_, err = insertSeedData(test)
+	sd, err := insertSeedData(test)
 	require.NoError(t, err)
 
 	table := []apitest.Table{
 		{
-			Name:       "bad-query-filter",
-			URL:        "/api/v1/audits?page=1&rows=10&obj_id=123",
-			StatusCode: http.StatusBadRequest,
-			Method:     http.MethodGet,
-			GotResp:    &errs.Error{},
-			ExpResp:    errs.Errorf(errs.InvalidArgument, "[{\"field\":\"obj_id\",\"error\":\"invalid UUID length: 3\"}]"),
+			Name:        "bad-query-filter",
+			URL:         "/api/v1/audits?page=1&rows=10&obj_id=123",
+			StatusCode:  http.StatusBadRequest,
+			Method:      http.MethodGet,
+			AccessToken: &sd.Users[0].AccessToken.Token,
+			GotResp:     &errs.Error{},
+			ExpResp:     errs.Errorf(errs.InvalidArgument, "[{\"field\":\"obj_id\",\"error\":\"invalid UUID length: 3\"}]"),
 			AssertFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},
 		},
 		{
-			Name:       "bad-order-by-value",
-			URL:        "/api/v1/audits?page=1&rows=10&orderBy=ser_id,ASC",
-			StatusCode: http.StatusBadRequest,
-			Method:     http.MethodGet,
-			GotResp:    &errs.Error{},
-			ExpResp:    errs.Errorf(errs.InvalidArgument, "[{\"field\":\"order\",\"error\":\"unknown order: ser_id\"}]"),
+			Name:        "bad-order-by-value",
+			URL:         "/api/v1/audits?page=1&rows=10&orderBy=ser_id,ASC",
+			StatusCode:  http.StatusBadRequest,
+			Method:      http.MethodGet,
+			AccessToken: &sd.Users[0].AccessToken.Token,
+			GotResp:     &errs.Error{},
+			ExpResp:     errs.Errorf(errs.InvalidArgument, "[{\"field\":\"order\",\"error\":\"unknown order: ser_id\"}]"),
 			AssertFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},

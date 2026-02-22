@@ -27,15 +27,16 @@ func LoadConfig() (Config, error) {
 		err    error
 	)
 
-	viper.SetConfigFile(filepath.Join(getConfigDir(), "config.yaml"))
-	viper.AutomaticEnv()
+	v := viper.New()
+	v.SetConfigFile(filepath.Join(getConfigDir(), "config.yaml"))
+	v.AutomaticEnv()
 
-	err = viper.ReadInConfig()
+	err = v.ReadInConfig()
 	if err != nil {
 		return Config{}, fmt.Errorf("viper unable to read config file: %w", err)
 	}
 
-	err = viper.Unmarshal(&config)
+	err = v.Unmarshal(&config)
 	if err != nil {
 		return Config{}, fmt.Errorf("viper unable to decode into struct: %w", err)
 	}

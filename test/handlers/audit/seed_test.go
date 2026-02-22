@@ -21,18 +21,24 @@ func insertSeedData(test *apitest.Test) (apitest.SeedData, error) {
 		ctx, 2, usrs[0].ID, entity.New(entity.UserEntity), "create", test.Core.Audit,
 	)
 	if err != nil {
-		return apitest.SeedData{}, fmt.Errorf("seeding users : %w", err)
+		return apitest.SeedData{}, fmt.Errorf("seeding audits : %w", err)
+	}
+
+	tkn, err := test.Usecase.Auth.GenerateAccessToken(ctx, usrs[0].ID.String())
+	if err != nil {
+		return apitest.SeedData{}, fmt.Errorf("seeding token : %w", err)
 	}
 
 	tu1 := apitest.User{
-		User:   usrs[0],
-		Audits: audits,
+		User:        usrs[0],
+		AccessToken: tkn,
+		Audits:      audits,
 	}
 
 	// -------------------------------------------------------------------------
 
 	sd := apitest.SeedData{
-		Admins: []apitest.User{tu1},
+		Users: []apitest.User{tu1},
 	}
 
 	return sd, nil

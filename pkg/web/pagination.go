@@ -31,8 +31,11 @@ func NewResult[T any](data []T, total int, page Page) Result[T] {
 // Encode implements the encoder interface.
 func (r Result[T]) Encode() ([]byte, string, error) {
 	data, err := json.Marshal(r)
+	if err != nil {
+		return nil, "", fmt.Errorf("page result encode error: %w", err)
+	}
 
-	return data, ContentTypeJSON, fmt.Errorf("page result encode error: %w", err)
+	return data, ContentTypeJSON, nil
 }
 
 // ============================================================================
