@@ -20,6 +20,7 @@ type userDB struct {
 	Enabled      bool           `db:"enabled"`
 	CreatedAt    time.Time      `db:"created_at"`
 	UpdatedAt    time.Time      `db:"updated_at"`
+	DeletedAt    sql.NullTime   `db:"deleted_at"`
 }
 
 func toUserDB(usr user.User) userDB {
@@ -35,6 +36,7 @@ func toUserDB(usr user.User) userDB {
 		Enabled:   usr.Enabled,
 		CreatedAt: usr.CreatedAt.UTC(),
 		UpdatedAt: usr.UpdatedAt.UTC(),
+		DeletedAt: toNullTime(usr.DeletedAt),
 	}
 }
 
@@ -62,9 +64,28 @@ func toUserDomain(db userDB) (user.User, error) {
 		Department:   department,
 		CreatedAt:    db.CreatedAt.In(time.UTC),
 		UpdatedAt:    db.UpdatedAt.In(time.UTC),
+		DeletedAt:    fromNullTime(db.DeletedAt),
 	}
 
 	return bus, nil
+}
+
+func toNullTime(t *time.Time) sql.NullTime {
+	if t == nil {
+		return sql.NullTime{}
+	}
+
+	return sql.NullTime{Time: t.UTC(), Valid: true}
+}
+
+func fromNullTime(nt sql.NullTime) *time.Time {
+	if !nt.Valid {
+		return nil
+	}
+
+	t := nt.Time.In(time.UTC)
+
+	return &t
 }
 
 func toUsersDomain(dbs []userDB) ([]user.User, error) {

@@ -9,7 +9,7 @@ import (
 )
 
 func applyFilter(filter permission.QueryFilter, data map[string]any, buf *bytes.Buffer) {
-	var wc []string
+	wc := []string{"deleted_at IS NULL"}
 
 	if filter.Name != nil {
 		data["name"] = fmt.Sprintf("%%%s%%", *filter.Name)
@@ -17,8 +17,6 @@ func applyFilter(filter permission.QueryFilter, data map[string]any, buf *bytes.
 		wc = append(wc, "name LIKE :name")
 	}
 
-	if len(wc) > 0 {
-		buf.WriteString(" WHERE ")
-		buf.WriteString(strings.Join(wc, " AND "))
-	}
+	buf.WriteString(" WHERE ")
+	buf.WriteString(strings.Join(wc, " AND "))
 }

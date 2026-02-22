@@ -17,6 +17,7 @@ type Permission struct {
 	Name      name.Name
 	CreatedAt time.Time
 	UpdatedAt time.Time
+	DeletedAt *time.Time
 }
 
 type NewPermission struct {

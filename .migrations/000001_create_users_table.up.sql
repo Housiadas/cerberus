@@ -9,6 +9,7 @@ CREATE TABLE users
     enabled       BOOLEAN     NOT NULL,
     created_at    TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at    TIMESTAMP   NOT NULL,
+    deleted_at    TIMESTAMP   NULL DEFAULT NULL,
     last_login    TIMESTAMP,
 
     PRIMARY KEY (id)

@@ -27,6 +27,7 @@ type User struct {
 	Enabled      bool
 	CreatedAt    time.Time
 	UpdatedAt    time.Time
+	DeletedAt    *time.Time
 }
 
 // NewUser contains information needed to create a new user.

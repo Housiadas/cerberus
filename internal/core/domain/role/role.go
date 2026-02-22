@@ -17,6 +17,7 @@ type Role struct {
 	Name      name.Name
 	CreatedAt time.Time
 	UpdatedAt time.Time
+	DeletedAt *time.Time
 }
 
 type NewRole struct {

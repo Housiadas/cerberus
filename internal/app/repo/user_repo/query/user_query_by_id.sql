@@ -9,3 +9,4 @@ SELECT
     updated_at
 FROM users
 WHERE id = :id
+AND deleted_at IS NULL

@@ -5,6 +5,7 @@ CREATE TABLE role_permissions
     permission_id   UUID            NOT NULL,
     created_at      TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at      TIMESTAMP       NOT NULL,
+    deleted_at      TIMESTAMP       NULL DEFAULT NULL,
 
     FOREIGN KEY (role_id)       REFERENCES roles(id) ON DELETE CASCADE,
     FOREIGN KEY (permission_id) REFERENCES permissions(id) ON DELETE CASCADE,
