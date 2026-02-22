@@ -8,9 +8,9 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/Housiadas/cerberus/internal/app/usecase/auth_usecase"
-	"github.com/Housiadas/cerberus/internal/app/usecase/user_roles_permissions_usecase"
-	"github.com/Housiadas/cerberus/internal/app/usecase/user_usecase"
+	"github.com/Housiadas/cerberus/internal/usecase/auth_usecase"
+	"github.com/Housiadas/cerberus/internal/usecase/user_roles_permissions_usecase"
+	"github.com/Housiadas/cerberus/internal/usecase/user_usecase"
 	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/Housiadas/cerberus/pkg/pgsql"
 	"github.com/Housiadas/cerberus/pkg/web"

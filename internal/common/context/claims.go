@@ -3,7 +3,7 @@ package context
 import (
 	"context"
 
-	"github.com/Housiadas/cerberus/internal/app/usecase/auth_usecase"
+	"github.com/Housiadas/cerberus/internal/usecase/auth_usecase"
 )
 
 const (

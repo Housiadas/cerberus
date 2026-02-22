@@ -8,3 +8,12 @@
 - Add commands in the Makefile to deploy the applications and run it
 - Use minikube
 - Use NodePort services for app and grafana to expose them via minikube service
+
+## Unit tests task
+
+- Add unit tests in the service package under core
+- Add unit tests like the create_test.go under user_service
+- Add tests for all the services
+- Make sure that tests are running correctly (PASS)
+- Make changes if need.
+- Mock extra interfaces with mockery if need (.mockery.yaml)

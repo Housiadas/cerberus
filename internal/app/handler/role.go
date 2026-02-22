@@ -4,7 +4,7 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/Housiadas/cerberus/internal/app/usecase/role_usecase"
+	"github.com/Housiadas/cerberus/internal/usecase/role_usecase"
 	"github.com/Housiadas/cerberus/pkg/web"
 	"github.com/Housiadas/cerberus/pkg/web/errs"
 )

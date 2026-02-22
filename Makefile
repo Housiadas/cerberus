@@ -22,8 +22,8 @@ GIT_VERSION		:= $(shell git describe --always --dirty --tags --long)
 LINKER_FLAGS	:= "-s -X main.buildTime=${CURRENT_TIME} -X main.version=${GIT_VERSION}"
 
 DOCKER_COMPOSE_LOCAL	:= docker compose -f ./compose.yaml
-MIGRATION_DB_DSN 		:= "postgres://housi:secret123@db:5432/housi_db?sslmode=disable"
-MIGRATE 				:= $(DOCKER_COMPOSE_LOCAL) run --rm migrate
+MIGRATION_DB_DSN		:= "postgres://housi:secret123@db:5432/housi_db?sslmode=disable"
+MIGRATE					:= $(DOCKER_COMPOSE_LOCAL) run --rm migrate
 
 .PHONY: help
 help:
@@ -134,16 +134,16 @@ fmt:
 fmt/yaml:
 	go tool yamlfmt .
 
-## lint/golangci: Run golangci
-.PHONY: lint/golangci
-lint/golangci:
-	docker run -t --rm \
-    -v $(PWD):/app -w /app \
-    golangci/golangci-lint:v2.8.0 golangci-lint run
-
 ## lint: Run linter
 .PHONY: lint
-lint: tidy tools/install security vet lint/golangci
+lint: tidy tools/install security vet golangci
+
+## golangci: Run golangci
+.PHONY: golangci
+golangci:
+	docker run -t --rm \
+    -v $(PWD):/app -w /app \
+    golangci/golangci-lint:v2.10.1 golangci-lint run
 
 ## ================ #
 ## Tests
@@ -154,13 +154,22 @@ lint: tidy tools/install security vet lint/golangci
 test:
 	CGO_ENABLED=1 go test -v -cover -short -race -json -p 4 ./... | go tool tparse --all
 
-## coverage: Inspect coverage
-.PHONY: coverage
-coverage:
-	go test -cover -v -coverpkg=./... ./...
+## coverage/run: Run tests and generate filtered coverage profile
+.PHONY: coverage/run
+coverage/run:
 	go test -coverprofile=coverage.out -coverpkg=./... ./...
-	grep -Ev "test/|gen/|debug/|dbtest|unitest" coverage.out > filtered.out
+	grep -Evf .coverignore coverage.out > filtered.out
+
+## coverage: Per-function coverage summary
+.PHONY: coverage
+coverage: coverage/run
 	go tool cover -func=filtered.out
+
+## coverage/html: Interactive HTML report in browser
+.PHONY: coverage/html
+coverage/html: coverage/run
+	go tool cover -html=filtered.out -o coverage.html
+	xdg-open coverage.html
 
 ## ================== #
 ## Modules support
@@ -246,7 +255,7 @@ mockery:
 	docker run --rm \
 	-v "$(shell pwd)":/src \
 	-w /src \
-	vektra/mockery:3
+	vektra/mockery:3.6
 
 ## metrics: See metrics
 .PHONY: metrics

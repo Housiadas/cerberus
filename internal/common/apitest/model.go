@@ -1,9 +1,9 @@
 package apitest
 
 import (
-	"github.com/Housiadas/cerberus/internal/app/usecase/auth_usecase"
 	"github.com/Housiadas/cerberus/internal/core/domain/audit"
 	"github.com/Housiadas/cerberus/internal/core/domain/user"
+	"github.com/Housiadas/cerberus/internal/usecase/auth_usecase"
 )
 
 // User extends the dbtest user for api test support.

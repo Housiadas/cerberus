@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/Housiadas/cerberus/internal/app/usecase/user_usecase"
+	"github.com/Housiadas/cerberus/internal/usecase/user_usecase"
 )
 
 func (u *UseCase) Login(ctx context.Context, authLogin LoginReq) (Token, error) {

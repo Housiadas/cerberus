@@ -4,10 +4,10 @@ package apitest
 import (
 	"net/http"
 
-	"github.com/Housiadas/cerberus/internal/app/usecase/auth_usecase"
 	"github.com/Housiadas/cerberus/internal/core/service/audit_service"
 	"github.com/Housiadas/cerberus/internal/core/service/role_service"
 	"github.com/Housiadas/cerberus/internal/core/service/user_service"
+	"github.com/Housiadas/cerberus/internal/usecase/auth_usecase"
 	"github.com/jmoiron/sqlx"
 )
 
