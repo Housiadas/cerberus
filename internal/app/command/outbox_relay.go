@@ -1,0 +1,64 @@
+package command
+
+import (
+	"context"
+	"fmt"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
+
+	"github.com/Housiadas/cerberus/internal/app/relay"
+	"github.com/Housiadas/cerberus/internal/app/repo/outbox_repo"
+	"github.com/Housiadas/cerberus/internal/core/service/outbox_service"
+	"github.com/Housiadas/cerberus/pkg/clock"
+	"github.com/Housiadas/cerberus/pkg/kafka"
+	"github.com/Housiadas/cerberus/pkg/pgsql"
+	"github.com/Housiadas/cerberus/pkg/uuidgen"
+)
+
+const (
+	batchSize = 100
+)
+
+// OutboxRelay starts the outbox relay process that polls the outbox table
+// and publishes events to Kafka.
+func (cmd *Command) OutboxRelay() error {
+	db, err := pgsql.Open(cmd.DB)
+	if err != nil {
+		return fmt.Errorf("connect database: %w", err)
+	}
+	defer db.Close()
+
+	kafkaProducer, err := kafka.NewProducer(kafka.ProducerConfig{
+		Brokers:          cmd.Kafka.Brokers,
+		AddressFamily:    cmd.Kafka.AddressFamily,
+		SecurityProtocol: cmd.Kafka.SecurityProtocol,
+		LogLevel:         cmd.Kafka.LogLevel,
+		MaxMessageBytes:  cmd.Kafka.MaxMessageBytes,
+	})
+	if err != nil {
+		return fmt.Errorf("creating Kafka producer: %w", err)
+	}
+	defer kafkaProducer.Close()
+
+	outboxRepo := outbox_repo.NewStore(cmd.Log, db)
+	outboxSvc := outbox_service.New(cmd.Log, outboxRepo, uuidgen.NewV7(), clock.NewClock())
+
+	outboxRelay := relay.New(cmd.Log, outboxSvc, kafkaProducer, 5*time.Second, batchSize)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	shutdown := make(chan os.Signal, 1)
+	signal.Notify(shutdown, syscall.SIGINT, syscall.SIGTERM)
+
+	go outboxRelay.Start(ctx)
+
+	cmd.Log.Info(ctx, "startup", "status", "outbox relay started")
+
+	sig := <-shutdown
+	cmd.Log.Info(ctx, "shutdown", "status", "outbox relay stopping", "signal", sig)
+
+	return nil
+}

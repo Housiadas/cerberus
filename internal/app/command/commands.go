@@ -3,15 +3,15 @@
 package command
 
 import (
-	"errors"
-
 	"github.com/Housiadas/cerberus/internal/config"
 	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/Housiadas/cerberus/pkg/pgsql"
 )
 
-// ErrHelp provides the context that help was given.
-var ErrHelp = errors.New("help provided")
+const (
+	UserAdd     = "user-add"
+	OutboxRelay = "outbox-relay"
+)
 
 type Config struct {
 	DB      config.DB
@@ -47,5 +47,6 @@ func New(
 			Build: build,
 			Desc:  serviceName,
 		},
+		Kafka: cfg.Kafka,
 	}
 }

@@ -1,14 +1,16 @@
 package main
 
 import (
+	"context"
 	"errors"
 	"fmt"
-	"io"
 	"os"
 
 	"github.com/Housiadas/cerberus/internal/app/command"
 	"github.com/Housiadas/cerberus/internal/config"
+	ctxPck "github.com/Housiadas/cerberus/internal/utils/context"
 	"github.com/Housiadas/cerberus/pkg/logger"
+	"github.com/Housiadas/cerberus/pkg/otel"
 )
 
 //nolint:gochecknoglobals
@@ -35,14 +37,19 @@ func run() error {
 	}
 
 	// -------------------------------------------------------------------------
-	// Initialize Service
+	// Initialize Logger
 	// -------------------------------------------------------------------------
-	log := logger.New(io.Discard, logger.LevelInfo, "WORKER", "", "")
+	var log *logger.Service
+
+	ctx := context.Background()
+	traceIDFn := otel.GetTraceID(ctx)
+	requestIDFn := ctxPck.GetRequestID(ctx)
+	log = logger.New(os.Stdout, logger.LevelInfo, "Worker", traceIDFn, requestIDFn)
 
 	// -------------------------------------------------------------------------
 	// Initialize commands
 	// -------------------------------------------------------------------------
-	cmd := command.New(c, log, build, "CMD")
+	cmd := command.New(c, log, build, "Worker")
 
 	return processCommands(os.Args, cmd)
 }
@@ -50,21 +57,25 @@ func run() error {
 // processCommands handles the execution of the commands specified on the command line.
 func processCommands(args []string, cmd *command.Command) error {
 	switch args[1] {
-	case "useradd":
+	case command.UserAdd:
 		name := args[2]
 		email := args[3]
-
 		password := args[4]
 
 		err := cmd.UserAdd(name, email, password)
 		if err != nil {
 			return fmt.Errorf("adding user: %w", err)
 		}
+	case command.OutboxRelay:
+		err := cmd.OutboxRelay()
+		if err != nil {
+			return fmt.Errorf("outbox relay: %w", err)
+		}
 
 	default:
-		fmt.Println("seed:       add data to the database")
-		fmt.Println("useradd:    add a new user to the database")
-		fmt.Println("provide a command to get more help.")
+		fmt.Println("useradd:       add a new user to the database")
+		fmt.Println("outbox-relay:  start the outbox relay process")
+		fmt.Println("provide a command")
 
 		return command.ErrHelp
 	}

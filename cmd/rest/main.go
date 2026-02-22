@@ -9,25 +9,17 @@ import (
 	"os/signal"
 	"runtime"
 	"syscall"
-	"time"
 
 	_ "github.com/Housiadas/cerberus/docs"
 	"github.com/Housiadas/cerberus/internal/app/handler"
-	"github.com/Housiadas/cerberus/internal/app/relay"
-	"github.com/Housiadas/cerberus/internal/app/repo/outbox_repo"
 	"github.com/Housiadas/cerberus/internal/config"
-	"github.com/Housiadas/cerberus/internal/core/service/outbox_service"
 	ctxPck "github.com/Housiadas/cerberus/internal/utils/context"
-	"github.com/Housiadas/cerberus/pkg/clock"
 	"github.com/Housiadas/cerberus/pkg/debug"
-	"github.com/Housiadas/cerberus/pkg/kafka"
 	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/Housiadas/cerberus/pkg/otel"
 	"github.com/Housiadas/cerberus/pkg/pgsql"
-	"github.com/Housiadas/cerberus/pkg/uuidgen"
 	"github.com/Housiadas/cerberus/pkg/vault"
 	_ "github.com/jackc/pgx/v5/stdlib"
-	"github.com/jmoiron/sqlx"
 )
 
 //nolint:gochecknoglobals
@@ -71,7 +63,6 @@ func main() {
 	}
 }
 
-//nolint:cyclop
 func run(ctx context.Context, log *logger.Service) error {
 	// -------------------------------------------------------------------------
 	// Initialize Configuration
@@ -184,15 +175,6 @@ func run(ctx context.Context, log *logger.Service) error {
 	}()
 
 	// -------------------------------------------------------------------------
-	// Start Kafka Producer & Outbox Relay
-	// -------------------------------------------------------------------------
-	cleanupRelay, err := startOutboxRelay(ctx, log, db, cfg.Kafka)
-	if err != nil {
-		return fmt.Errorf("starting outbox relay: %w", err)
-	}
-	defer cleanupRelay()
-
-	// -------------------------------------------------------------------------
 	// Start API Rest Server
 	// -------------------------------------------------------------------------
 	log.Info(ctx, "startup", "status", "Rest server starting")
@@ -248,61 +230,4 @@ func run(ctx context.Context, log *logger.Service) error {
 	}
 
 	return nil
-}
-
-func initKafkaProducer(
-	ctx context.Context,
-	log *logger.Service,
-	cfg config.Kafka,
-) (kafka.Producer, error) {
-	log.Info(ctx, "startup", "status", "initializing Kafka producer")
-
-	kafkaProducer, err := kafka.NewProducer(kafka.ProducerConfig{
-		Brokers:          cfg.Brokers,
-		AddressFamily:    cfg.AddressFamily,
-		SecurityProtocol: cfg.SecurityProtocol,
-		LogLevel:         cfg.LogLevel,
-		MaxMessageBytes:  cfg.MaxMessageBytes,
-	})
-	if err != nil {
-		log.Error(
-			ctx,
-			"startup",
-			"status",
-			"Kafka producer init failed",
-			"msg",
-			err,
-		)
-
-		return nil, fmt.Errorf("creating Kafka producer: %w", err)
-	}
-
-	return kafkaProducer, nil
-}
-
-func startOutboxRelay(
-	ctx context.Context,
-	log *logger.Service,
-	db *sqlx.DB,
-	cfg config.Kafka,
-) (func(), error) {
-	kafkaProd, err := initKafkaProducer(ctx, log, cfg)
-	if err != nil {
-		return nil, fmt.Errorf("initializing Kafka producer: %w", err)
-	}
-
-	outboxRepo := outbox_repo.NewStore(log, db)
-	outboxSvc := outbox_service.New(log, outboxRepo, uuidgen.NewV7(), clock.NewClock())
-
-	relayCtx, relayCancel := context.WithCancel(ctx)
-
-	outboxRelay := relay.New(log, outboxSvc, kafkaProd, 5*time.Second, 100)
-	go outboxRelay.Start(relayCtx)
-
-	cleanup := func() {
-		relayCancel()
-		kafkaProd.Close()
-	}
-
-	return cleanup, nil
 }
