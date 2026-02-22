@@ -15,9 +15,9 @@ import (
 	"github.com/Housiadas/cerberus/internal/app/handler"
 	"github.com/Housiadas/cerberus/internal/app/relay"
 	"github.com/Housiadas/cerberus/internal/app/repo/outbox_repo"
-	ctxPck "github.com/Housiadas/cerberus/internal/common/context"
 	"github.com/Housiadas/cerberus/internal/config"
 	"github.com/Housiadas/cerberus/internal/core/service/outbox_service"
+	ctxPck "github.com/Housiadas/cerberus/internal/utils/context"
 	"github.com/Housiadas/cerberus/pkg/clock"
 	"github.com/Housiadas/cerberus/pkg/debug"
 	"github.com/Housiadas/cerberus/pkg/kafka"
@@ -71,6 +71,7 @@ func main() {
 	}
 }
 
+//nolint:cyclop
 func run(ctx context.Context, log *logger.Service) error {
 	// -------------------------------------------------------------------------
 	// Initialize Configuration

@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/Housiadas/cerberus/internal/common/validation"
+	"github.com/Housiadas/cerberus/internal/utils/validation"
 	"github.com/Housiadas/cerberus/pkg/web"
 )
 

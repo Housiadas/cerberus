@@ -3,7 +3,7 @@ package middleware
 import (
 	"net/http"
 
-	"github.com/Housiadas/cerberus/internal/common/context"
+	"github.com/Housiadas/cerberus/internal/utils/context"
 )
 
 func (m *Middleware) APIVersion(version string) func(next http.Handler) http.Handler {

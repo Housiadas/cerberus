@@ -4,7 +4,7 @@ import (
 	"context"
 	"net/http"
 
-	ctxPck "github.com/Housiadas/cerberus/internal/common/context"
+	ctxPck "github.com/Housiadas/cerberus/internal/utils/context"
 	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/google/uuid"

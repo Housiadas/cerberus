@@ -7,7 +7,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/Housiadas/cerberus/internal/common/apitest"
+	"github.com/Housiadas/cerberus/internal/utils/apitest"
 )
 
 func Test_API_User_Delete_200(t *testing.T) {

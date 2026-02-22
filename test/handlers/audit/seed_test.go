@@ -4,10 +4,10 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/Housiadas/cerberus/internal/common/apitest"
 	"github.com/Housiadas/cerberus/internal/core/domain/entity"
 	"github.com/Housiadas/cerberus/internal/core/service/audit_service"
 	"github.com/Housiadas/cerberus/internal/core/service/user_service"
+	"github.com/Housiadas/cerberus/internal/utils/apitest"
 )
 
 func insertSeedData(test *apitest.Test) (apitest.SeedData, error) {

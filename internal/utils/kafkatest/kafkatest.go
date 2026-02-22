@@ -13,7 +13,7 @@ import (
 
 const (
 	KafkaImage     = "confluentinc/confluent-local:7.5.0"
-	KafkaClusterId = "test-cluster"
+	KafkaClusterID = "test-cluster"
 )
 
 // New starts a Kafka container using testcontainers and returns
@@ -29,7 +29,7 @@ func New(t *testing.T) kafka.Producer {
 	ctr, err := tcKafka.Run(
 		ctx,
 		KafkaImage,
-		tcKafka.WithClusterID(KafkaClusterId),
+		tcKafka.WithClusterID(KafkaClusterID),
 	)
 	defer testcontainers.CleanupContainer(t, ctr)
 
