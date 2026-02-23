@@ -47,10 +47,11 @@ func TestRelay_ProcessBatch_Successful(t *testing.T) {
 
 	mLogger := logger.NewMockLogger(t)
 	mLogger.EXPECT().Info(mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Maybe()
+	mLogger.EXPECT().Info(mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Maybe()
 
 	mStorer := outbox.NewMockStorer(t)
-	mStorer.EXPECT().QueryUnprocessed(mock.Anything, 100).Return(entries, nil).Once()
-	mStorer.EXPECT().QueryUnprocessed(mock.Anything, 100).Return(nil, nil).Maybe()
+	mStorer.EXPECT().QueryUnprocessed(mock.Anything, 100, 5).Return(entries, nil).Once()
+	mStorer.EXPECT().QueryUnprocessed(mock.Anything, 100, 5).Return(nil, nil).Maybe()
 	mStorer.EXPECT().MarkProcessed(mock.Anything, []uuid.UUID{id1, id2}, mTime).Return(nil).Once()
 
 	mUuidGen := uuidgen.NewMockGenerator(t)
@@ -61,8 +62,9 @@ func TestRelay_ProcessBatch_Successful(t *testing.T) {
 
 	mProducer := kafka.NewMockProducer(t)
 	mProducer.EXPECT().Produce(mock.Anything, mock.AnythingOfType("*kafka.Message")).Return(nil).Times(2)
+	mProducer.EXPECT().Flush(mock.AnythingOfType("int")).Return(0).Maybe()
 
-	r := relay.New(mLogger, outboxSvc, mProducer, 50*time.Millisecond, 100)
+	r := relay.New(mLogger, outboxSvc, mProducer, 50*time.Millisecond, 100, 5)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 150*time.Millisecond)
 	defer cancel()
@@ -98,13 +100,15 @@ func TestRelay_ProcessBatch_PartialFailure(t *testing.T) {
 
 	mLogger := logger.NewMockLogger(t)
 	mLogger.EXPECT().Info(mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Maybe()
+	mLogger.EXPECT().Info(mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Maybe()
 	mLogger.EXPECT().Error(mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Maybe()
 
 	mStorer := outbox.NewMockStorer(t)
-	mStorer.EXPECT().QueryUnprocessed(mock.Anything, 100).Return(entries, nil).Once()
-	mStorer.EXPECT().QueryUnprocessed(mock.Anything, 100).Return(nil, nil).Maybe()
+	mStorer.EXPECT().QueryUnprocessed(mock.Anything, 100, 5).Return(entries, nil).Once()
+	mStorer.EXPECT().QueryUnprocessed(mock.Anything, 100, 5).Return(nil, nil).Maybe()
 	// Only id2 should be marked processed since id1 fails
 	mStorer.EXPECT().MarkProcessed(mock.Anything, []uuid.UUID{id2}, mTime).Return(nil).Once()
+	mStorer.EXPECT().IncrementRetryCount(mock.Anything, []uuid.UUID{id1}).Return(nil).Once()
 
 	mUuidGen := uuidgen.NewMockGenerator(t)
 	mClock := clock.NewMockClock(t)
@@ -120,8 +124,9 @@ func TestRelay_ProcessBatch_PartialFailure(t *testing.T) {
 	mProducer.EXPECT().Produce(mock.Anything, mock.MatchedBy(func(msg *ckafka.Message) bool {
 		return string(msg.Key) == uuid.MustParse("bbbbbbbb-bbbb-7bbb-bbbb-bbbbbbbbbbbb").String()
 	})).Return(nil).Once()
+	mProducer.EXPECT().Flush(mock.AnythingOfType("int")).Return(0).Maybe()
 
-	r := relay.New(mLogger, outboxSvc, mProducer, 50*time.Millisecond, 100)
+	r := relay.New(mLogger, outboxSvc, mProducer, 50*time.Millisecond, 100, 5)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 150*time.Millisecond)
 	defer cancel()
@@ -132,9 +137,10 @@ func TestRelay_ProcessBatch_PartialFailure(t *testing.T) {
 func TestRelay_ProcessBatch_Empty(t *testing.T) {
 	mLogger := logger.NewMockLogger(t)
 	mLogger.EXPECT().Info(mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Maybe()
+	mLogger.EXPECT().Info(mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Maybe()
 
 	mStorer := outbox.NewMockStorer(t)
-	mStorer.EXPECT().QueryUnprocessed(mock.Anything, 100).Return(nil, nil).Maybe()
+	mStorer.EXPECT().QueryUnprocessed(mock.Anything, 100, 5).Return(nil, nil).Maybe()
 
 	mUuidGen := uuidgen.NewMockGenerator(t)
 	mClock := clock.NewMockClock(t)
@@ -142,9 +148,9 @@ func TestRelay_ProcessBatch_Empty(t *testing.T) {
 	outboxSvc := outbox_service.New(mLogger, mStorer, mUuidGen, mClock)
 
 	mProducer := kafka.NewMockProducer(t)
-	// Producer should never be called
+	mProducer.EXPECT().Flush(mock.AnythingOfType("int")).Return(0).Maybe()
 
-	r := relay.New(mLogger, outboxSvc, mProducer, 50*time.Millisecond, 100)
+	r := relay.New(mLogger, outboxSvc, mProducer, 50*time.Millisecond, 100, 5)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 150*time.Millisecond)
 	defer cancel()
@@ -153,4 +159,49 @@ func TestRelay_ProcessBatch_Empty(t *testing.T) {
 
 	// No produce calls expected - validated by mock
 	assert.True(t, true)
+}
+
+func TestRelay_ProcessBatch_AllFailed_DeadLetter(t *testing.T) {
+	mTime := time.Date(2026, 1, 1, 10, 30, 0, 0, time.UTC)
+	id1 := uuid.MustParse("11111111-1111-7111-1111-111111111111")
+
+	entries := []outbox.Outbox{
+		{
+			ID:          id1,
+			EventType:   "user.created",
+			AggregateID: uuid.MustParse("aaaaaaaa-aaaa-7aaa-aaaa-aaaaaaaaaaaa"),
+			Topic:       "user-events",
+			Payload:     json.RawMessage(`{"name":"John"}`),
+			CreatedAt:   mTime,
+		},
+	}
+
+	mLogger := logger.NewMockLogger(t)
+	mLogger.EXPECT().Info(mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Maybe()
+	mLogger.EXPECT().Info(mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Maybe()
+	mLogger.EXPECT().Error(mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Maybe()
+
+	mStorer := outbox.NewMockStorer(t)
+	mStorer.EXPECT().QueryUnprocessed(mock.Anything, 100, 5).Return(entries, nil).Once()
+	mStorer.EXPECT().QueryUnprocessed(mock.Anything, 100, 5).Return(nil, nil).Maybe()
+	mStorer.EXPECT().IncrementRetryCount(mock.Anything, []uuid.UUID{id1}).Return(nil).Once()
+
+	mUuidGen := uuidgen.NewMockGenerator(t)
+	mClock := clock.NewMockClock(t)
+	mClock.EXPECT().Now().Return(mTime).Maybe()
+
+	outboxSvc := outbox_service.New(mLogger, mStorer, mUuidGen, mClock)
+
+	mProducer := kafka.NewMockProducer(t)
+	mProducer.EXPECT().Produce(mock.Anything, mock.AnythingOfType("*kafka.Message")).Return(errors.New("produce error")).Once()
+	mProducer.EXPECT().Flush(mock.AnythingOfType("int")).Return(0).Maybe()
+
+	r := relay.New(mLogger, outboxSvc, mProducer, 50*time.Millisecond, 100, 5)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 150*time.Millisecond)
+	defer cancel()
+
+	r.Start(ctx)
+
+	// MarkProcessed should NOT be called — validated by mock expectations
 }

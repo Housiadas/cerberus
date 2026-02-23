@@ -21,6 +21,8 @@ var (
 	outboxQueryUnprocessedSQL string
 	//go:embed query/outbox_mark_processed.sql
 	outboxMarkProcessedSQL string
+	//go:embed query/outbox_increment_retry.sql
+	outboxIncrementRetrySQL string
 )
 
 // Store manages the set of APIs for outbox database access.
@@ -63,12 +65,18 @@ func (s *Store) Create(ctx context.Context, o outbox.Outbox) error {
 	return nil
 }
 
-// QueryUnprocessed retrieves unprocessed outbox entries.
-func (s *Store) QueryUnprocessed(ctx context.Context, limit int) ([]outbox.Outbox, error) {
+// QueryUnprocessed retrieves unprocessed outbox entries below the max retry threshold.
+func (s *Store) QueryUnprocessed(
+	ctx context.Context,
+	limit int,
+	maxRetries int,
+) ([]outbox.Outbox, error) {
 	data := struct {
-		Limit int `db:"limit"`
+		Limit      int `db:"limit"`
+		MaxRetries int `db:"max_retries"`
 	}{
-		Limit: limit,
+		Limit:      limit,
+		MaxRetries: maxRetries,
 	}
 
 	var dbRows []outboxDB
@@ -97,6 +105,34 @@ func (s *Store) MarkProcessed(ctx context.Context, ids []uuid.UUID, processedAt 
 	}
 
 	named, args, err := sqlx.Named(outboxMarkProcessedSQL, data)
+	if err != nil {
+		return fmt.Errorf("sqlx named error: %w", err)
+	}
+
+	query, args, err := sqlx.In(named, args...)
+	if err != nil {
+		return fmt.Errorf("sqlx in error: %w", err)
+	}
+
+	query = s.dbPool.Rebind(query)
+
+	_, err = s.dbPool.ExecContext(ctx, query, args...)
+	if err != nil {
+		return fmt.Errorf("exec_context: %w", err)
+	}
+
+	return nil
+}
+
+// IncrementRetryCount increments the retry count for the given outbox entry IDs.
+func (s *Store) IncrementRetryCount(ctx context.Context, ids []uuid.UUID) error {
+	data := struct {
+		IDs []uuid.UUID `db:"ids"`
+	}{
+		IDs: ids,
+	}
+
+	named, args, err := sqlx.Named(outboxIncrementRetrySQL, data)
 	if err != nil {
 		return fmt.Errorf("sqlx named error: %w", err)
 	}

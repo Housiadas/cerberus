@@ -97,6 +97,63 @@ func (_c *MockStorer_Create_Call) RunAndReturn(run func(ctx context.Context, o O
 	return _c
 }
 
+// IncrementRetryCount provides a mock function for the type MockStorer
+func (_mock *MockStorer) IncrementRetryCount(ctx context.Context, ids []uuid.UUID) error {
+	ret := _mock.Called(ctx, ids)
+
+	if len(ret) == 0 {
+		panic("no return value specified for IncrementRetryCount")
+	}
+
+	var r0 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, []uuid.UUID) error); ok {
+		r0 = returnFunc(ctx, ids)
+	} else {
+		r0 = ret.Error(0)
+	}
+	return r0
+}
+
+// MockStorer_IncrementRetryCount_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'IncrementRetryCount'
+type MockStorer_IncrementRetryCount_Call struct {
+	*mock.Call
+}
+
+// IncrementRetryCount is a helper method to define mock.On call
+//   - ctx context.Context
+//   - ids []uuid.UUID
+func (_e *MockStorer_Expecter) IncrementRetryCount(ctx interface{}, ids interface{}) *MockStorer_IncrementRetryCount_Call {
+	return &MockStorer_IncrementRetryCount_Call{Call: _e.mock.On("IncrementRetryCount", ctx, ids)}
+}
+
+func (_c *MockStorer_IncrementRetryCount_Call) Run(run func(ctx context.Context, ids []uuid.UUID)) *MockStorer_IncrementRetryCount_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 []uuid.UUID
+		if args[1] != nil {
+			arg1 = args[1].([]uuid.UUID)
+		}
+		run(
+			arg0,
+			arg1,
+		)
+	})
+	return _c
+}
+
+func (_c *MockStorer_IncrementRetryCount_Call) Return(err error) *MockStorer_IncrementRetryCount_Call {
+	_c.Call.Return(err)
+	return _c
+}
+
+func (_c *MockStorer_IncrementRetryCount_Call) RunAndReturn(run func(ctx context.Context, ids []uuid.UUID) error) *MockStorer_IncrementRetryCount_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // MarkProcessed provides a mock function for the type MockStorer
 func (_mock *MockStorer) MarkProcessed(ctx context.Context, ids []uuid.UUID, processedAt time.Time) error {
 	ret := _mock.Called(ctx, ids, processedAt)
@@ -223,8 +280,8 @@ func (_c *MockStorer_NewWithTx_Call) RunAndReturn(run func(tx pgsql.CommitRollba
 }
 
 // QueryUnprocessed provides a mock function for the type MockStorer
-func (_mock *MockStorer) QueryUnprocessed(ctx context.Context, limit int) ([]Outbox, error) {
-	ret := _mock.Called(ctx, limit)
+func (_mock *MockStorer) QueryUnprocessed(ctx context.Context, limit int, maxRetries int) ([]Outbox, error) {
+	ret := _mock.Called(ctx, limit, maxRetries)
 
 	if len(ret) == 0 {
 		panic("no return value specified for QueryUnprocessed")
@@ -232,18 +289,18 @@ func (_mock *MockStorer) QueryUnprocessed(ctx context.Context, limit int) ([]Out
 
 	var r0 []Outbox
 	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, int) ([]Outbox, error)); ok {
-		return returnFunc(ctx, limit)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, int, int) ([]Outbox, error)); ok {
+		return returnFunc(ctx, limit, maxRetries)
 	}
-	if returnFunc, ok := ret.Get(0).(func(context.Context, int) []Outbox); ok {
-		r0 = returnFunc(ctx, limit)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, int, int) []Outbox); ok {
+		r0 = returnFunc(ctx, limit, maxRetries)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]Outbox)
 		}
 	}
-	if returnFunc, ok := ret.Get(1).(func(context.Context, int) error); ok {
-		r1 = returnFunc(ctx, limit)
+	if returnFunc, ok := ret.Get(1).(func(context.Context, int, int) error); ok {
+		r1 = returnFunc(ctx, limit, maxRetries)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -258,11 +315,12 @@ type MockStorer_QueryUnprocessed_Call struct {
 // QueryUnprocessed is a helper method to define mock.On call
 //   - ctx context.Context
 //   - limit int
-func (_e *MockStorer_Expecter) QueryUnprocessed(ctx interface{}, limit interface{}) *MockStorer_QueryUnprocessed_Call {
-	return &MockStorer_QueryUnprocessed_Call{Call: _e.mock.On("QueryUnprocessed", ctx, limit)}
+//   - maxRetries int
+func (_e *MockStorer_Expecter) QueryUnprocessed(ctx interface{}, limit interface{}, maxRetries interface{}) *MockStorer_QueryUnprocessed_Call {
+	return &MockStorer_QueryUnprocessed_Call{Call: _e.mock.On("QueryUnprocessed", ctx, limit, maxRetries)}
 }
 
-func (_c *MockStorer_QueryUnprocessed_Call) Run(run func(ctx context.Context, limit int)) *MockStorer_QueryUnprocessed_Call {
+func (_c *MockStorer_QueryUnprocessed_Call) Run(run func(ctx context.Context, limit int, maxRetries int)) *MockStorer_QueryUnprocessed_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
@@ -272,9 +330,14 @@ func (_c *MockStorer_QueryUnprocessed_Call) Run(run func(ctx context.Context, li
 		if args[1] != nil {
 			arg1 = args[1].(int)
 		}
+		var arg2 int
+		if args[2] != nil {
+			arg2 = args[2].(int)
+		}
 		run(
 			arg0,
 			arg1,
+			arg2,
 		)
 	})
 	return _c
@@ -285,7 +348,7 @@ func (_c *MockStorer_QueryUnprocessed_Call) Return(outboxs []Outbox, err error) 
 	return _c
 }
 
-func (_c *MockStorer_QueryUnprocessed_Call) RunAndReturn(run func(ctx context.Context, limit int) ([]Outbox, error)) *MockStorer_QueryUnprocessed_Call {
+func (_c *MockStorer_QueryUnprocessed_Call) RunAndReturn(run func(ctx context.Context, limit int, maxRetries int) ([]Outbox, error)) *MockStorer_QueryUnprocessed_Call {
 	_c.Call.Return(run)
 	return _c
 }

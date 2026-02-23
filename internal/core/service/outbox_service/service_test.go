@@ -145,13 +145,13 @@ func TestService_QueryUnprocessed_Successful(t *testing.T) {
 	mLogger := logger.NewMockLogger(t)
 
 	mStorer := outbox.NewMockStorer(t)
-	mStorer.EXPECT().QueryUnprocessed(ctx, 10).Return(expected, nil)
+	mStorer.EXPECT().QueryUnprocessed(ctx, 10, 5).Return(expected, nil)
 
 	mUuidGen := uuidgen.NewMockGenerator(t)
 	mClock := clock.NewMockClock(t)
 
 	sut := outbox_service.New(mLogger, mStorer, mUuidGen, mClock)
-	entries, err := sut.QueryUnprocessed(ctx, 10)
+	entries, err := sut.QueryUnprocessed(ctx, 10, 5)
 
 	assert.NoError(t, err)
 	assert.Len(t, entries, 1)
@@ -164,13 +164,13 @@ func TestService_QueryUnprocessed_Error(t *testing.T) {
 	mLogger := logger.NewMockLogger(t)
 
 	mStorer := outbox.NewMockStorer(t)
-	mStorer.EXPECT().QueryUnprocessed(ctx, 10).Return(nil, errors.New("query error"))
+	mStorer.EXPECT().QueryUnprocessed(ctx, 10, 5).Return(nil, errors.New("query error"))
 
 	mUuidGen := uuidgen.NewMockGenerator(t)
 	mClock := clock.NewMockClock(t)
 
 	sut := outbox_service.New(mLogger, mStorer, mUuidGen, mClock)
-	_, err := sut.QueryUnprocessed(ctx, 10)
+	_, err := sut.QueryUnprocessed(ctx, 10, 5)
 
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "query error")

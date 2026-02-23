@@ -67,7 +67,7 @@ func StartTest(t *testing.T, testName string) (*Test, error) {
 	// Start outbox relay
 	outboxRepo := outbox_repo.NewStore(log, db)
 	outboxSvc := outbox_service.New(log, outboxRepo, uuidgen.NewV7(), clock.NewClock())
-	outboxRelay := relay.New(log, outboxSvc, kafkaProducer, 1*time.Second, 100)
+	outboxRelay := relay.New(log, outboxSvc, kafkaProducer, 1*time.Second, 100, 5)
 
 	relayCtx, relayCancel := context.WithCancel(ctx)
 

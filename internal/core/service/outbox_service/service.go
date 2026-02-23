@@ -85,14 +85,29 @@ func (s *Service) Create(ctx context.Context, no outbox.NewOutbox) error {
 	return nil
 }
 
-// QueryUnprocessed returns unprocessed outbox entries up to the given limit.
-func (s *Service) QueryUnprocessed(ctx context.Context, limit int) ([]outbox.Outbox, error) {
-	entries, err := s.storer.QueryUnprocessed(ctx, limit)
+// QueryUnprocessed returns unprocessed outbox entries up to the given limit,
+// excluding entries that have reached the maximum retry count.
+func (s *Service) QueryUnprocessed(
+	ctx context.Context,
+	limit int,
+	maxRetries int,
+) ([]outbox.Outbox, error) {
+	entries, err := s.storer.QueryUnprocessed(ctx, limit, maxRetries)
 	if err != nil {
 		return nil, fmt.Errorf("query unprocessed: %w", err)
 	}
 
 	return entries, nil
+}
+
+// IncrementRetryCount increments the retry count for the given outbox entry IDs.
+func (s *Service) IncrementRetryCount(ctx context.Context, ids []uuid.UUID) error {
+	err := s.storer.IncrementRetryCount(ctx, ids)
+	if err != nil {
+		return fmt.Errorf("increment retry count: %w", err)
+	}
+
+	return nil
 }
 
 // MarkProcessed marks the given outbox entries as processed.

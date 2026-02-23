@@ -239,6 +239,57 @@ func (_c *MockProducer_Close_Call) RunAndReturn(run func()) *MockProducer_Close_
 	return _c
 }
 
+// Flush provides a mock function for the type MockProducer
+func (_mock *MockProducer) Flush(timeoutMs int) int {
+	ret := _mock.Called(timeoutMs)
+
+	if len(ret) == 0 {
+		panic("no return value specified for Flush")
+	}
+
+	var r0 int
+	if returnFunc, ok := ret.Get(0).(func(int) int); ok {
+		r0 = returnFunc(timeoutMs)
+	} else {
+		r0 = ret.Get(0).(int)
+	}
+	return r0
+}
+
+// MockProducer_Flush_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Flush'
+type MockProducer_Flush_Call struct {
+	*mock.Call
+}
+
+// Flush is a helper method to define mock.On call
+//   - timeoutMs int
+func (_e *MockProducer_Expecter) Flush(timeoutMs interface{}) *MockProducer_Flush_Call {
+	return &MockProducer_Flush_Call{Call: _e.mock.On("Flush", timeoutMs)}
+}
+
+func (_c *MockProducer_Flush_Call) Run(run func(timeoutMs int)) *MockProducer_Flush_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 int
+		if args[0] != nil {
+			arg0 = args[0].(int)
+		}
+		run(
+			arg0,
+		)
+	})
+	return _c
+}
+
+func (_c *MockProducer_Flush_Call) Return(n int) *MockProducer_Flush_Call {
+	_c.Call.Return(n)
+	return _c
+}
+
+func (_c *MockProducer_Flush_Call) RunAndReturn(run func(timeoutMs int) int) *MockProducer_Flush_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // Produce provides a mock function for the type MockProducer
 func (_mock *MockProducer) Produce(ctx context.Context, msg *kafka.Message) error {
 	ret := _mock.Called(ctx, msg)

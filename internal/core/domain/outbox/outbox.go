@@ -15,6 +15,7 @@ type Outbox struct {
 	AggregateID uuid.UUID
 	Topic       string
 	Payload     json.RawMessage
+	RetryCount  int
 	CreatedAt   time.Time
 	ProcessedAt *time.Time
 }

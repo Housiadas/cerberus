@@ -13,13 +13,18 @@ import (
 	"github.com/google/uuid"
 )
 
+const (
+	flushTimeoutMs = 10_000
+)
+
 // Relay polls the outbox table and produces messages to Kafka.
 type Relay struct {
-	log       logger.Logger
-	outboxSvc *outbox_service.Service
-	producer  kafka.Producer
-	interval  time.Duration
-	batchSize int
+	log        logger.Logger
+	outboxSvc  *outbox_service.Service
+	producer   kafka.Producer
+	interval   time.Duration
+	batchSize  int
+	maxRetries int
 }
 
 // New constructs a new Relay.
@@ -29,13 +34,15 @@ func New(
 	producer kafka.Producer,
 	interval time.Duration,
 	batchSize int,
+	maxRetries int,
 ) *Relay {
 	return &Relay{
-		log:       log,
-		outboxSvc: outboxSvc,
-		producer:  producer,
-		interval:  interval,
-		batchSize: batchSize,
+		log:        log,
+		outboxSvc:  outboxSvc,
+		producer:   producer,
+		interval:   interval,
+		batchSize:  batchSize,
+		maxRetries: maxRetries,
 	}
 }
 
@@ -53,11 +60,15 @@ func (r *Relay) Start(ctx context.Context) {
 		r.interval.String(),
 		"batchSize",
 		r.batchSize,
+		"maxRetries",
+		r.maxRetries,
 	)
 
 	for {
 		select {
 		case <-ctx.Done():
+			r.log.Info(ctx, "relay", "status", "shutting down, flushing producer")
+			r.producer.Flush(flushTimeoutMs)
 			r.log.Info(ctx, "relay", "status", "stopped")
 
 			return
@@ -68,7 +79,7 @@ func (r *Relay) Start(ctx context.Context) {
 }
 
 func (r *Relay) processBatch(ctx context.Context) {
-	entries, err := r.outboxSvc.QueryUnprocessed(ctx, r.batchSize)
+	entries, err := r.outboxSvc.QueryUnprocessed(ctx, r.batchSize, r.maxRetries)
 	if err != nil {
 		r.log.Error(ctx, "relay", "status", "query unprocessed error", "msg", err)
 
@@ -79,7 +90,10 @@ func (r *Relay) processBatch(ctx context.Context) {
 		return
 	}
 
-	var processedIDs []uuid.UUID
+	var (
+		failedIDs    []uuid.UUID
+		processedIDs []uuid.UUID
+	)
 
 	for _, entry := range entries {
 		msg := &ckafka.Message{
@@ -93,12 +107,42 @@ func (r *Relay) processBatch(ctx context.Context) {
 
 		err := r.producer.Produce(ctx, msg)
 		if err != nil {
-			r.log.Error(ctx, "relay", "status", "produce error", "event_id", entry.ID, "msg", err)
+			r.log.Error(
+				ctx,
+				"relay",
+				"status", "produce error",
+				"event_id", entry.ID,
+				"msg", err,
+			)
+			failedIDs = append(failedIDs, entry.ID)
 
 			continue
 		}
 
 		processedIDs = append(processedIDs, entry.ID)
+	}
+
+	//r.producer.Flush(flushTimeoutMs)
+
+	r.log.Info(
+		ctx,
+		"relay",
+		"status", "batch processed",
+		"total", len(entries),
+		"produced", len(processedIDs),
+		"failed", len(failedIDs),
+	)
+
+	if len(failedIDs) > 0 {
+		err := r.outboxSvc.IncrementRetryCount(ctx, failedIDs)
+		if err != nil {
+			r.log.Error(
+				ctx,
+				"relay",
+				"status", "increment retry count error",
+				"msg", err,
+			)
+		}
 	}
 
 	if len(processedIDs) == 0 {

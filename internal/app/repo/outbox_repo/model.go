@@ -15,6 +15,7 @@ type outboxDB struct {
 	AggregateID uuid.UUID       `db:"aggregate_id"`
 	Topic       string          `db:"topic"`
 	Payload     json.RawMessage `db:"payload"`
+	RetryCount  int             `db:"retry_count"`
 	CreatedAt   time.Time       `db:"created_at"`
 	ProcessedAt sql.NullTime    `db:"processed_at"`
 }
@@ -26,6 +27,7 @@ func toOutboxDB(o outbox.Outbox) outboxDB {
 		AggregateID: o.AggregateID,
 		Topic:       o.Topic,
 		Payload:     o.Payload,
+		RetryCount:  o.RetryCount,
 		CreatedAt:   o.CreatedAt.UTC(),
 		ProcessedAt: toNullTime(o.ProcessedAt),
 	}
@@ -38,6 +40,7 @@ func toOutboxDomain(db outboxDB) outbox.Outbox {
 		AggregateID: db.AggregateID,
 		Topic:       db.Topic,
 		Payload:     db.Payload,
+		RetryCount:  db.RetryCount,
 		CreatedAt:   db.CreatedAt.In(time.UTC),
 		ProcessedAt: fromNullTime(db.ProcessedAt),
 	}

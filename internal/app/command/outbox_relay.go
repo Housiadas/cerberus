@@ -18,7 +18,8 @@ import (
 )
 
 const (
-	batchSize = 100
+	batchSize  = 100
+	maxRetries = 3
 )
 
 // OutboxRelay starts the outbox relay process that polls the outbox table
@@ -45,7 +46,14 @@ func (cmd *Command) OutboxRelay() error {
 	outboxRepo := outbox_repo.NewStore(cmd.Log, db)
 	outboxSvc := outbox_service.New(cmd.Log, outboxRepo, uuidgen.NewV7(), clock.NewClock())
 
-	outboxRelay := relay.New(cmd.Log, outboxSvc, kafkaProducer, 5*time.Second, batchSize)
+	outboxRelay := relay.New(
+		cmd.Log,
+		outboxSvc,
+		kafkaProducer,
+		3*time.Second,
+		batchSize,
+		maxRetries,
+	)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -53,12 +61,22 @@ func (cmd *Command) OutboxRelay() error {
 	shutdown := make(chan os.Signal, 1)
 	signal.Notify(shutdown, syscall.SIGINT, syscall.SIGTERM)
 
-	go outboxRelay.Start(ctx)
+	done := make(chan struct{})
+
+	go func() {
+		outboxRelay.Start(ctx)
+		close(done)
+	}()
 
 	cmd.Log.Info(ctx, "startup", "status", "outbox relay started")
 
 	sig := <-shutdown
 	cmd.Log.Info(ctx, "shutdown", "status", "outbox relay stopping", "signal", sig)
+
+	cancel()
+	<-done
+
+	cmd.Log.Info(ctx, "shutdown", "status", "outbox relay stopped")
 
 	return nil
 }

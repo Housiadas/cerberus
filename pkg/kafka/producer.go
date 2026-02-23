@@ -9,6 +9,7 @@ import (
 
 type Producer interface {
 	Produce(ctx context.Context, msg *kafka.Message) error
+	Flush(timeoutMs int) int
 	Close()
 }
 
@@ -60,10 +61,14 @@ func (p *ProducerClient) Produce(_ context.Context, msg *kafka.Message) error {
 	}
 
 	if m.TopicPartition.Error != nil {
-		return fmt.Errorf("error delivering message to kafka: %w", m.TopicPartition.Error)
+		return fmt.Errorf("error delivering message to Kafka: %w", m.TopicPartition.Error)
 	}
 
 	return nil
+}
+
+func (p *ProducerClient) Flush(timeoutMs int) int {
+	return p.producer.Flush(timeoutMs)
 }
 
 func (p *ProducerClient) Close() {

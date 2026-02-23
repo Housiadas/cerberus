@@ -12,6 +12,7 @@ import (
 type Storer interface {
 	NewWithTx(tx pgsql.CommitRollbacker) (Storer, error)
 	Create(ctx context.Context, o Outbox) error
-	QueryUnprocessed(ctx context.Context, limit int) ([]Outbox, error)
+	QueryUnprocessed(ctx context.Context, limit int, maxRetries int) ([]Outbox, error)
 	MarkProcessed(ctx context.Context, ids []uuid.UUID, processedAt time.Time) error
+	IncrementRetryCount(ctx context.Context, ids []uuid.UUID) error
 }
