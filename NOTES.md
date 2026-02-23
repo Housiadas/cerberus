@@ -42,3 +42,20 @@ The goal is to create the soft delete feature
 - Use mockery for any changes
 - Add tests for all the cases
 - Run make lint, make test
+
+## Replace swaggo with oapi-codegen
+- Add https://github.com/oapi-codegen/oapi-codegen
+- Remove swaggo from go.mod
+- Run make generate-api-docs
+- Run make lint,
+- Add oapi-codegen to tools
+- Create yml 
+```
+  package: rest/main
+  generate:
+  std-http-server: true
+  models: true
+  strict-server: true
+  output: docs/rest.gen.go
+```
+- Remove everything related to swaggo and replace with oapi-codegen
