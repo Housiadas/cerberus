@@ -1,9 +1,6 @@
 package audit_usecase
 
 import (
-	"encoding/json"
-	"fmt"
-
 	"github.com/Housiadas/cerberus/internal/core/domain/audit"
 	"github.com/Housiadas/cerberus/pkg/clock"
 	"github.com/Housiadas/cerberus/pkg/web"
@@ -25,16 +22,6 @@ type Audit struct {
 type AuditPageResult struct {
 	Data     []Audit      `json:"data"`
 	Metadata web.Metadata `json:"metadata"`
-}
-
-// Encode implements the encoder interface.
-func (app Audit) Encode() ([]byte, string, error) {
-	data, err := json.Marshal(app)
-	if err != nil {
-		return nil, web.ContentTypeJSON, fmt.Errorf("audit encode error: %w", err)
-	}
-
-	return data, web.ContentTypeJSON, nil
 }
 
 func toAppAudit(aud audit.Audit) Audit {

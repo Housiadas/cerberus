@@ -1,7 +1,6 @@
 package role_usecase
 
 import (
-	"encoding/json"
 	"fmt"
 
 	"github.com/Housiadas/cerberus/internal/core/domain/name"
@@ -23,16 +22,6 @@ type Role struct {
 type RolePageResult struct {
 	Data     []Role       `json:"data"`
 	Metadata web.Metadata `json:"metadata"`
-}
-
-// Encode implements the encoder interface.
-func (r Role) Encode() ([]byte, string, error) {
-	data, err := json.Marshal(r)
-	if err != nil {
-		return nil, web.ContentTypeJSON, fmt.Errorf("role encode error: %w", err)
-	}
-
-	return data, web.ContentTypeJSON, nil
 }
 
 func toAppRole(r role.Role) Role {
@@ -60,16 +49,6 @@ type NewRole struct {
 	Name string `json:"name" validate:"required"`
 }
 
-// Decode implements the decoder interface.
-func (role *NewRole) Decode(data []byte) error {
-	err := json.Unmarshal(data, role)
-	if err != nil {
-		return fmt.Errorf("new role decode error: %w", err)
-	}
-
-	return nil
-}
-
 func toBusNewRole(rl NewRole) (role.NewRole, error) {
 	nme, err := name.Parse(rl.Name)
 	if err != nil {
@@ -86,16 +65,6 @@ func toBusNewRole(rl NewRole) (role.NewRole, error) {
 // UpdateRole defines the data needed to update a role.
 type UpdateRole struct {
 	Name *string `json:"name"`
-}
-
-// Decode implements the decoder interface.
-func (app *UpdateRole) Decode(data []byte) error {
-	err := json.Unmarshal(data, app)
-	if err != nil {
-		return fmt.Errorf("update role decode error: %w", err)
-	}
-
-	return nil
 }
 
 func toBusUpdateUser(app UpdateRole) (role.UpdateRole, error) {

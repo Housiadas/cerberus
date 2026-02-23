@@ -1,7 +1,6 @@
 package user_usecase
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/mail"
 
@@ -20,16 +19,6 @@ import (
 type AuthenticateUser struct {
 	Email    string `json:"email"    validate:"required"`
 	Password string `json:"password" validate:"required"`
-}
-
-// Encode implements the encoder interface.
-func (app *AuthenticateUser) Encode() ([]byte, string, error) {
-	data, err := json.Marshal(app)
-	if err != nil {
-		return nil, web.ContentTypeJSON, fmt.Errorf("auth user encode error: %w", err)
-	}
-
-	return data, web.ContentTypeJSON, nil
 }
 
 // Validate checks the data in the model is considered clean.
@@ -54,16 +43,6 @@ type User struct {
 	Enabled      bool   `json:"enabled"`
 	CreatedAt    string `json:"createdAt"`
 	UpdatedAt    string `json:"updatedAt"`
-}
-
-// Encode implements the encoder interface.
-func (app User) Encode() ([]byte, string, error) {
-	data, err := json.Marshal(app)
-	if err != nil {
-		return nil, web.ContentTypeJSON, fmt.Errorf("user encode error: %w", err)
-	}
-
-	return data, web.ContentTypeJSON, nil
 }
 
 func toAppUser(bus user.User) User {
@@ -104,16 +83,6 @@ type NewUser struct {
 	Department      string `json:"department"`
 	Password        string `json:"password"        validate:"required"`
 	PasswordConfirm string `json:"passwordConfirm" validate:"required"`
-}
-
-// Decode implements the decoder interface.
-func (app *NewUser) Decode(data []byte) error {
-	err := json.Unmarshal(data, app)
-	if err != nil {
-		return fmt.Errorf("new user decode error: %w", err)
-	}
-
-	return nil
 }
 
 // Validate checks the data in the model is considered clean.
@@ -170,16 +139,6 @@ type UpdateUserRole struct {
 	Roles []string `json:"roles" validate:"required"`
 }
 
-// Decode implements the decoder interface.
-func (app *UpdateUserRole) Decode(data []byte) error {
-	err := json.Unmarshal(data, app)
-	if err != nil {
-		return fmt.Errorf("update user role decode error: %w", err)
-	}
-
-	return nil
-}
-
 // UpdateUser defines the data needed to update a user.
 type UpdateUser struct {
 	Name            *string `json:"name"`
@@ -188,16 +147,6 @@ type UpdateUser struct {
 	Password        *string `json:"password"`
 	PasswordConfirm *string `json:"passwordConfirm"`
 	Enabled         *bool   `json:"enabled"`
-}
-
-// Decode implements the decoder interface.
-func (app *UpdateUser) Decode(data []byte) error {
-	err := json.Unmarshal(data, app)
-	if err != nil {
-		return fmt.Errorf("update user decode error: %w", err)
-	}
-
-	return nil
 }
 
 func toBusUpdateUser(app UpdateUser) (user.UpdateUser, error) {
