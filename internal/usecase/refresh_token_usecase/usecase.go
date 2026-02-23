@@ -9,12 +9,10 @@ import (
 	"github.com/google/uuid"
 )
 
-// UseCase manages the set of cli layer api functions for the user core.
 type UseCase struct {
 	refreshTokenService *refresh_token_service.Service
 }
 
-// NewUseCase constructs a user cli API for use.
 func NewUseCase(refreshTokenService *refresh_token_service.Service) *UseCase {
 	return &UseCase{
 		refreshTokenService: refreshTokenService,

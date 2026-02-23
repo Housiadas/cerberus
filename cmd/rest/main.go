@@ -12,8 +12,8 @@ import (
 
 	_ "github.com/Housiadas/cerberus/docs"
 	"github.com/Housiadas/cerberus/internal/app/handler"
-	ctxPck "github.com/Housiadas/cerberus/internal/common/context"
 	"github.com/Housiadas/cerberus/internal/config"
+	ctxPck "github.com/Housiadas/cerberus/internal/utils/context"
 	"github.com/Housiadas/cerberus/pkg/debug"
 	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/Housiadas/cerberus/pkg/otel"
@@ -106,7 +106,6 @@ func run(ctx context.Context, log *logger.Service) error {
 	if err != nil {
 		return fmt.Errorf("connecting to db: %w", err)
 	}
-
 	defer db.Close()
 
 	// -------------------------------------------------------------------------

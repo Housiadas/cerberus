@@ -3,7 +3,7 @@ package middleware
 import (
 	"net/http"
 
-	ctxPck "github.com/Housiadas/cerberus/internal/common/context"
+	ctxPck "github.com/Housiadas/cerberus/internal/utils/context"
 	"github.com/Housiadas/cerberus/pkg/web/errs"
 )
 

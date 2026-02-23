@@ -1,4 +1,4 @@
-// Package system_usecase maintains the cli layer http for the check core.
+// Package system_usecase maintains the usecase layer http for the check core.
 package system_usecase
 
 import (
@@ -13,14 +13,12 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-// UseCase manages the set of cli layer api functions for the check core.
 type UseCase struct {
 	build string
 	log   logger.Logger
 	db    *sqlx.DB
 }
 
-// NewUseCase constructs a check cli API for use.
 func NewUseCase(build string, log logger.Logger, db *sqlx.DB) *UseCase {
 	return &UseCase{
 		build: build,
@@ -46,8 +44,8 @@ func (a *UseCase) Readiness(ctx context.Context) error {
 	return nil
 }
 
-// Liveness returns simple status info if the usecase is alive. If the
-// cli is deployed to a Kubernetes cluster, it will also return pod, node, and
+// Liveness returns simple status info if the usecase is alive.
+// If the app is deployed to a Kubernetes cluster, it will also return pod, node, and
 // namespace details via the Downward API. The Kubernetes environment variables
 // need to be set within your Pod/Deployment manifest.
 func (a *UseCase) Liveness() Info {

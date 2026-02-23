@@ -1,4 +1,4 @@
-// Package role_usecase maintains the use case layer api the model
+// Package role_usecase maintains the usecase layer api the model
 package role_usecase
 
 import (
@@ -11,12 +11,10 @@ import (
 	"github.com/google/uuid"
 )
 
-// UseCase manages the set of cli layer api functions for the user core.
 type UseCase struct {
 	roleService *role_service.Service
 }
 
-// NewUseCase constructs a user cli API for use.
 func NewUseCase(roleService *role_service.Service) *UseCase {
 	return &UseCase{
 		roleService: roleService,

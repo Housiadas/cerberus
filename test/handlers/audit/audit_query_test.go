@@ -10,7 +10,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/stretchr/testify/require"
 
-	"github.com/Housiadas/cerberus/internal/common/apitest"
+	"github.com/Housiadas/cerberus/internal/utils/apitest"
 	"github.com/Housiadas/cerberus/pkg/web"
 	"github.com/Housiadas/cerberus/pkg/web/errs"
 )

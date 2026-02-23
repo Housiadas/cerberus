@@ -25,7 +25,7 @@ func (cmd *Command) UserAdd(name, email, pass string) error {
 		return ErrHelp
 	}
 
-	db, err := pgsql.Open(cmd.DB)
+	db, err := pgsql.Open(cmd.db)
 	if err != nil {
 		return fmt.Errorf("connect database: %w", err)
 	}
@@ -37,7 +37,7 @@ func (cmd *Command) UserAdd(name, email, pass string) error {
 	hash := hasher.NewBcrypt()
 	clk := clock.NewClock()
 	uuidGen := uuidgen.NewV7()
-	userBus := user_service.New(cmd.Log, user_repo.NewStore(cmd.Log, db), uuidGen, clk, hash)
+	userBus := user_service.New(cmd.log, user_repo.NewStore(cmd.log, db), uuidGen, clk, hash)
 
 	addr, err := mail.ParseAddress(email)
 	if err != nil {

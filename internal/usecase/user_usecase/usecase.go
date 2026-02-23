@@ -7,7 +7,10 @@ import (
 	"fmt"
 	"net/mail"
 
+	"github.com/Housiadas/cerberus/internal/core/domain/event"
+	"github.com/Housiadas/cerberus/internal/core/domain/outbox"
 	"github.com/Housiadas/cerberus/internal/core/domain/user"
+	"github.com/Housiadas/cerberus/internal/core/service/outbox_service"
 	"github.com/Housiadas/cerberus/internal/core/service/user_service"
 	"github.com/Housiadas/cerberus/pkg/order"
 	"github.com/Housiadas/cerberus/pkg/web"
@@ -15,15 +18,15 @@ import (
 	"github.com/google/uuid"
 )
 
-// UseCase manages the set of cli layer api functions for the user core.
 type UseCase struct {
-	userCore *user_service.Service
+	userCore  *user_service.Service
+	outboxSvc *outbox_service.Service
 }
 
-// NewUseCase constructs a user cli API for use.
-func NewUseCase(userBus *user_service.Service) *UseCase {
+func NewUseCase(userBus *user_service.Service, outboxSvc *outbox_service.Service) *UseCase {
 	return &UseCase{
-		userCore: userBus,
+		userCore:  userBus,
+		outboxSvc: outboxSvc,
 	}
 }
 
@@ -41,6 +44,16 @@ func (a *UseCase) Create(ctx context.Context, app NewUser) (User, error) {
 		}
 
 		return User{}, errs.Errorf(errs.Internal, "create: usr[%+v]: %s", usr, err)
+	}
+
+	err = a.outboxSvc.Create(ctx, outbox.NewOutbox{
+		EventType:   event.UserCreated,
+		AggregateID: usr.ID,
+		Topic:       event.UserTopic,
+		Payload:     usr,
+	})
+	if err != nil {
+		return User{}, errs.Errorf(errs.Internal, "outbox create: %s", err)
 	}
 
 	return toAppUser(usr), nil
@@ -76,6 +89,16 @@ func (a *UseCase) Update(ctx context.Context, res UpdateUser, userID string) (Us
 		)
 	}
 
+	err = a.outboxSvc.Create(ctx, outbox.NewOutbox{
+		EventType:   event.UserUpdated,
+		AggregateID: updUsr.ID,
+		Topic:       event.UserTopic,
+		Payload:     updUsr,
+	})
+	if err != nil {
+		return User{}, errs.Errorf(errs.Internal, "outbox create: %s", err)
+	}
+
 	return toAppUser(updUsr), nil
 }
 
@@ -100,6 +123,16 @@ func (a *UseCase) Delete(ctx context.Context, userID string) error {
 	err = a.userCore.Delete(ctx, currentUsr)
 	if err != nil {
 		return errs.Errorf(errs.Internal, "delete: userID[%s]: %s", userUUID, err)
+	}
+
+	err = a.outboxSvc.Create(ctx, outbox.NewOutbox{
+		EventType:   event.UserDeleted,
+		AggregateID: currentUsr.ID,
+		Topic:       event.UserTopic,
+		Payload:     currentUsr,
+	})
+	if err != nil {
+		return errs.Errorf(errs.Internal, "outbox create: %s", err)
 	}
 
 	return nil

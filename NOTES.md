@@ -27,3 +27,35 @@
 - Update all queries like fetch 
 where delete_at not Null in order to exluded them from fetching
 The goal is to create the soft delete feature
+
+## Transactional Outbox Pattern 
+- Create the transactional outbox pattern
+- Use tables in the database
+- Create migrations
+- Create outbox domain
+- Create events domain that will have
+- Make changes for the user domain
+- Use Tx transaction 
+- Produce messages to kafka in batched and mark rows as proceed
+- Add confluent kafka in compose.yaml for local env
+- Make changes to kafka package in pkg if need it
+- Use mockery for any changes
+- Add tests for all the cases
+- Run make lint, make test
+
+## Replace swaggo with oapi-codegen
+- Add https://github.com/oapi-codegen/oapi-codegen
+- Remove swaggo from go.mod
+- Run make generate-api-docs
+- Run make lint,
+- Add oapi-codegen to tools
+- Create yml 
+```
+  package: rest/main
+  generate:
+  std-http-server: true
+  models: true
+  strict-server: true
+  output: docs/rest.gen.go
+```
+- Remove everything related to swaggo and replace with oapi-codegen

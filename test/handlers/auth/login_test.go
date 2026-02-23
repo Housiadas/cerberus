@@ -8,8 +8,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/Housiadas/cerberus/internal/common/apitest"
 	"github.com/Housiadas/cerberus/internal/core/domain/user"
+	"github.com/Housiadas/cerberus/internal/utils/apitest"
 	"github.com/Housiadas/cerberus/pkg/web/errs"
 )
 

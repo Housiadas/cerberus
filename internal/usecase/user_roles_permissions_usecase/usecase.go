@@ -1,4 +1,4 @@
-// Package user_roles_permissions_usecase maintains the use case layer api for the view
+// Package user_roles_permissions_usecase maintains the usecase layer api for the view
 package user_roles_permissions_usecase
 
 import (
@@ -11,12 +11,10 @@ import (
 	"github.com/google/uuid"
 )
 
-// UseCase manages the set of cli layer api functions for the view.
 type UseCase struct {
 	service *user_roles_permissions_service.Service
 }
 
-// NewUseCase constructs the API for use.
 func NewUseCase(service *user_roles_permissions_service.Service) *UseCase {
 	return &UseCase{
 		service: service,

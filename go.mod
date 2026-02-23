@@ -20,6 +20,7 @@ require (
 	github.com/swaggo/http-swagger v1.3.4
 	github.com/swaggo/swag v1.16.6
 	github.com/testcontainers/testcontainers-go v0.40.0
+	github.com/testcontainers/testcontainers-go/modules/kafka v0.40.0
 	github.com/testcontainers/testcontainers-go/modules/postgres v0.40.0
 	github.com/viccon/sturdyc v1.1.5
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.65.0

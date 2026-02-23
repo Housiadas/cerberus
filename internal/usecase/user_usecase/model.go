@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"net/mail"
 
-	"github.com/Housiadas/cerberus/internal/common/validation"
 	"github.com/Housiadas/cerberus/internal/core/domain/name"
 	"github.com/Housiadas/cerberus/internal/core/domain/password"
 	"github.com/Housiadas/cerberus/internal/core/domain/user"
+	"github.com/Housiadas/cerberus/internal/utils/validation"
 	"github.com/Housiadas/cerberus/pkg/clock"
 	"github.com/Housiadas/cerberus/pkg/web"
 	"github.com/Housiadas/cerberus/pkg/web/errs"

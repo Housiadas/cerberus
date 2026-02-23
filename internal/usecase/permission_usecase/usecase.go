@@ -1,4 +1,4 @@
-// Package permission_usecase maintains the use case layer api the model
+// Package permission_usecase maintains the usecase layer api the model
 package permission_usecase
 
 import (
@@ -11,12 +11,10 @@ import (
 	"github.com/google/uuid"
 )
 
-// UseCase manages the set of cli layer api functions for the permission core.
 type UseCase struct {
 	permissionService *permission_service.Service
 }
 
-// NewUseCase constructs a permission cli API for use.
 func NewUseCase(permissionService *permission_service.Service) *UseCase {
 	return &UseCase{
 		permissionService: permissionService,

@@ -1,6 +1,8 @@
+docs/
 test/
 apitest/
 debug/
 dbtest/
+kafkatest/
 unitest/
 mock.go
