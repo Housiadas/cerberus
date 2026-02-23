@@ -244,10 +244,10 @@ tools/update:
 generate:
 	go generate ./...
 
-## swagger: Generate swagger docs
-.PHONY: swagger
-swagger:
-	docker run --rm -v $(PWD):/code ghcr.io/swaggo/swag:v1.16.3 init --g cmd/rest/main.go
+## generate/api: Generate API code from OpenAPI spec
+.PHONY: generate/api
+generate/api:
+	go generate ./internal/app/handler/...
 
 ## mockery: Generate mocks
 .PHONY: mockery

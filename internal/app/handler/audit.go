@@ -2,51 +2,36 @@ package handler
 
 import (
 	"context"
-	"net/http"
 
+	"github.com/Housiadas/cerberus/internal/app/handler/openapi"
 	"github.com/Housiadas/cerberus/internal/usecase/audit_usecase"
-	"github.com/Housiadas/cerberus/pkg/web"
-	"github.com/Housiadas/cerberus/pkg/web/errs"
+	"github.com/Housiadas/cerberus/internal/utils/pntr"
 )
 
-// Audit godoc
-//
-//	@Summary		Query Audits
-//	@Description	Search audits in database based on criteria
-//	@Tags			Audit
-//	@Accept			json
-//	@Produce		json
-//	@Success		200	{object}	audit_usecase.AuditPageResult
-//	@Failure		500	{object}	errs.Error
-//	@Router			/v1/audits [get].
-func (h *Handler) auditQuery(
+func (h *Handler) ListAudits(
 	ctx context.Context,
-	_ http.ResponseWriter,
-	r *http.Request,
-) web.Encoder {
-	qp := auditParseQueryParams(r)
+	request openapi.ListAuditsRequestObject,
+) (openapi.ListAuditsResponseObject, error) {
+	qp := audit_usecase.AppQueryParams{
+		Page:      pntr.DerefStr(request.Params.Page),
+		Rows:      pntr.DerefStr(request.Params.Rows),
+		OrderBy:   pntr.DerefStr(request.Params.OrderBy),
+		ObjID:     pntr.DerefStr(request.Params.ObjId),
+		ObjEntity: pntr.DerefStr(request.Params.ObjDomain),
+		ObjName:   pntr.DerefStr(request.Params.ObjName),
+		ActorID:   pntr.DerefStr(request.Params.ActorId),
+		Action:    pntr.DerefStr(request.Params.Action),
+		Since:     pntr.DerefStr(request.Params.Since),
+		Until:     pntr.DerefStr(request.Params.Until),
+	}
 
-	audits, err := h.Usecase.Audit.Query(ctx, qp)
+	result, err := h.Usecase.Audit.Query(ctx, qp)
 	if err != nil {
-		return errs.AsErr(err)
+		return nil, err
 	}
 
-	return audits
-}
-
-func auditParseQueryParams(r *http.Request) audit_usecase.AppQueryParams {
-	values := r.URL.Query()
-
-	return audit_usecase.AppQueryParams{
-		Page:      values.Get("page"),
-		Rows:      values.Get("rows"),
-		OrderBy:   values.Get("orderBy"),
-		ObjID:     values.Get("obj_id"),
-		ObjEntity: values.Get("obj_domain"),
-		ObjName:   values.Get("obj_name"),
-		ActorID:   values.Get("actor_id"),
-		Action:    values.Get("action"),
-		Since:     values.Get("since"),
-		Until:     values.Get("until"),
-	}
+	return openapi.ListAudits200JSONResponse{
+		Data:     new(result.Data),
+		Metadata: new(result.Metadata),
+	}, nil
 }

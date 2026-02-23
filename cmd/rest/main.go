@@ -10,7 +10,6 @@ import (
 	"runtime"
 	"syscall"
 
-	_ "github.com/Housiadas/cerberus/docs"
 	"github.com/Housiadas/cerberus/internal/app/handler"
 	"github.com/Housiadas/cerberus/internal/config"
 	ctxPck "github.com/Housiadas/cerberus/internal/utils/context"
@@ -25,22 +24,6 @@ import (
 //nolint:gochecknoglobals
 var build = "develop"
 
-// @title						Cerberus
-// @description				This is a monitoring system.
-//
-// @contact.name				API Support
-// @contact.url				http://www.swagger.io/support
-// @contact.email				support@swagger.io
-//
-// @license.name				Apache 2.0
-// @license.url				http://www.apache.org/licenses/LICENSE-2.0.html
-//
-// @query.collection.format	multi
-//
-// @externalDocs.description	OpenAPI
-//
-// @externalDocs.url			https://swagger.io/resources/open-api/
-// @host						localhost:4000.
 func main() {
 	// -------------------------------------------------------------------------
 	// Initialize Logger

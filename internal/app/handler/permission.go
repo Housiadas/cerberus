@@ -2,135 +2,67 @@ package handler
 
 import (
 	"context"
-	"net/http"
 
+	"github.com/Housiadas/cerberus/internal/app/handler/openapi"
 	"github.com/Housiadas/cerberus/internal/usecase/permission_usecase"
-	"github.com/Housiadas/cerberus/pkg/web"
-	"github.com/Housiadas/cerberus/pkg/web/errs"
+	"github.com/Housiadas/cerberus/internal/utils/pntr"
 )
 
-// Permission godoc
-//
-//	@Summary		Crete Permission
-//	@Description	Create a new Permission
-//	@Tags			Permissions
-//	@Accept			json
-//	@Produce		json
-//	@Param			request	body		permission_usecase.NewPermission	true	"Permission data"
-//	@Success		200		{object}	permission_usecase.Permission
-//	@Failure		500		{object}	errs.Error
-//	@Router			/v1/permissions [post].
-func (h *Handler) permissionCreate(
+func (h *Handler) ListPermissions(
 	ctx context.Context,
-	_ http.ResponseWriter,
-	r *http.Request,
-) web.Encoder {
-	var ucRole permission_usecase.NewPermission
-
-	err := web.Decode(r, &ucRole)
-	if err != nil {
-		return errs.ParseValidationErrors(err)
+	request openapi.ListPermissionsRequestObject,
+) (openapi.ListPermissionsResponseObject, error) {
+	qp := permission_usecase.AppQueryParams{
+		Page:    pntr.DerefStr(request.Params.Page),
+		Rows:    pntr.DerefStr(request.Params.Rows),
+		OrderBy: pntr.DerefStr(request.Params.OrderBy),
+		ID:      pntr.DerefStr(request.Params.PermissionId),
+		Name:    pntr.DerefStr(request.Params.Name),
 	}
 
-	usr, err := h.Usecase.Permission.Create(ctx, ucRole)
+	result, err := h.Usecase.Permission.Query(ctx, qp)
 	if err != nil {
-		return errs.AsErr(err)
+		return nil, err
 	}
 
-	return usr
+	return openapi.ListPermissions200JSONResponse{
+		Data:     new(result.Data),
+		Metadata: new(result.Metadata),
+	}, nil
 }
 
-// Permission godoc
-//
-//	@Summary		Query Roles
-//	@Description	Search roles
-//	@Tags			Permissions
-//	@Accept			json
-//	@Produce		json
-//	@Success		200	{object}	permission_usecase.PermissionPageResults
-//	@Failure		500	{object}	errs.Error
-//	@Router			/v1/permissions [get].
-func (h *Handler) permissionQuery(
+func (h *Handler) CreatePermission(
 	ctx context.Context,
-	_ http.ResponseWriter,
-	r *http.Request,
-) web.Encoder {
-	qp := permissionParseQueryParams(r)
-
-	roles, err := h.Usecase.Permission.Query(ctx, qp)
+	request openapi.CreatePermissionRequestObject,
+) (openapi.CreatePermissionResponseObject, error) {
+	perm, err := h.Usecase.Permission.Create(ctx, *request.Body)
 	if err != nil {
-		return errs.AsErr(err)
+		return nil, err
 	}
 
-	return roles
+	return openapi.CreatePermission200JSONResponse(perm), nil
 }
 
-// Permission godoc
-//
-//	@Summary		Update Permission
-//	@Description	Update an existing Permission
-//	@Tags			Permissions
-//	@Accept			json
-//	@Produce		json
-//	@Param			request	body		permission_usecase.UpdatePermission	true	"Permission data"
-//	@Success		200		{object}	permission_usecase.Permission
-//	@Failure		500		{object}	errs.Error
-//	@Router			/v1/permissions/{permission_id} [put].
-func (h *Handler) permissionUpdate(
+func (h *Handler) UpdatePermission(
 	ctx context.Context,
-	_ http.ResponseWriter,
-	r *http.Request,
-) web.Encoder {
-	var app permission_usecase.UpdatePermission
-
-	err := web.Decode(r, &app)
+	request openapi.UpdatePermissionRequestObject,
+) (openapi.UpdatePermissionResponseObject, error) {
+	perm, err := h.Usecase.Permission.Update(ctx, *request.Body, request.PermissionId)
 	if err != nil {
-		return errs.ParseValidationErrors(err)
+		return nil, err
 	}
 
-	permissionID := web.Param(r, "permission_id")
-
-	permission, err := h.Usecase.Permission.Update(ctx, app, permissionID)
-	if err != nil {
-		return errs.AsErr(err)
-	}
-
-	return permission
+	return openapi.UpdatePermission200JSONResponse(perm), nil
 }
 
-// Permission godoc
-//
-//	@Summary		Delete a Permission
-//	@Description	Delete a Permission
-//	@Tags			Permissions
-//	@Accept			json
-//	@Produce		json
-//	@Success		204
-//	@Failure		500	{object}	errs.Error
-//	@Router			/v1/permissions/{permission_id} [delete].
-func (h *Handler) permissionDelete(
+func (h *Handler) DeletePermission(
 	ctx context.Context,
-	_ http.ResponseWriter,
-	r *http.Request,
-) web.Encoder {
-	permissionID := web.Param(r, "permission_id")
-
-	err := h.Usecase.Permission.Delete(ctx, permissionID)
+	request openapi.DeletePermissionRequestObject,
+) (openapi.DeletePermissionResponseObject, error) {
+	err := h.Usecase.Permission.Delete(ctx, request.PermissionId)
 	if err != nil {
-		return errs.AsErr(err)
+		return nil, err
 	}
 
-	return nil
-}
-
-func permissionParseQueryParams(r *http.Request) permission_usecase.AppQueryParams {
-	values := r.URL.Query()
-
-	return permission_usecase.AppQueryParams{
-		ID:      values.Get("permission_id"),
-		Name:    values.Get("name"),
-		Page:    values.Get("page"),
-		Rows:    values.Get("rows"),
-		OrderBy: values.Get("orderBy"),
-	}
+	return openapi.DeletePermission204Response{}, nil
 }

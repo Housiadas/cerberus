@@ -2,7 +2,6 @@
 package errs
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"runtime"
@@ -55,16 +54,6 @@ func AsErr(err error) *Error {
 // Error implements the error interface.
 func (e *Error) Error() string {
 	return e.Message
-}
-
-// Encode implements the encoder interface.
-func (e *Error) Encode() ([]byte, string, error) {
-	data, err := json.Marshal(e)
-	if err != nil {
-		return nil, "", fmt.Errorf("error encode issue: %w", err)
-	}
-
-	return data, "application/json", nil
 }
 
 // HTTPStatus implements the web package httpStatus interface so the

@@ -1,24 +1,8 @@
 package system_usecase
 
-import (
-	"encoding/json"
-	"fmt"
-
-	"github.com/Housiadas/cerberus/pkg/web"
-)
-
+// Status represents a readiness status.
 type Status struct {
 	Status string `json:"status"`
-}
-
-// Encode implements the encoder interface.
-func (s Status) Encode() ([]byte, string, error) {
-	data, err := json.Marshal(s)
-	if err != nil {
-		return nil, web.ContentTypeJSON, fmt.Errorf("status encode error: %w", err)
-	}
-
-	return data, web.ContentTypeJSON, nil
 }
 
 // Info represents information about the usecase.
@@ -31,14 +15,4 @@ type Info struct {
 	Node       string `json:"node,omitempty"`
 	Namespace  string `json:"namespace,omitempty"`
 	GOMAXPROCS int    `json:"gomaxprocs,omitempty"`
-}
-
-// Encode implements the encoder interface.
-func (info Info) Encode() ([]byte, string, error) {
-	data, err := json.Marshal(info)
-	if err != nil {
-		return nil, web.ContentTypeJSON, fmt.Errorf("info encode error: %w", err)
-	}
-
-	return data, web.ContentTypeJSON, nil
 }

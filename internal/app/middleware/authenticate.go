@@ -1,46 +1,61 @@
 package middleware
 
 import (
+	"context"
 	"encoding/base64"
 	"net/http"
 	"strings"
 
+	"github.com/Housiadas/cerberus/internal/app/handler/openapi"
+	"github.com/Housiadas/cerberus/internal/usecase/auth_usecase"
 	"github.com/Housiadas/cerberus/internal/usecase/user_usecase"
 	ctxPck "github.com/Housiadas/cerberus/internal/utils/context"
 	"github.com/Housiadas/cerberus/pkg/web/errs"
 )
 
-// AuthenticateBearer is a middleware function that checks authentication,
-// validates user credentials, and attach user data to the request context.
-func (m *Middleware) AuthenticateBearer() func(next http.Handler) http.Handler {
-	return func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			ctx := r.Context()
+// publicOperations lists operations that do not require authentication.
+//
+//nolint:gochecknoglobals
+var publicOperations = map[string]struct{}{
+	"AuthLogin":    {},
+	"AuthRegister": {},
+	"AuthRefresh":  {},
+	"Readiness":    {},
+	"Liveness":     {},
+}
 
+// AuthStrict applies bearer token authentication for protected operations.
+func AuthStrict(authUsecase *auth_usecase.UseCase) openapi.StrictMiddlewareFunc {
+	return func(
+		f openapi.StrictHandlerFunc,
+		operationID string,
+	) openapi.StrictHandlerFunc {
+		if _, ok := publicOperations[operationID]; ok {
+			return f
+		}
+
+		return func(ctx context.Context, w http.ResponseWriter, r *http.Request, request any) (any, error) {
 			bearerToken := r.Header.Get("Authorization")
 			if !strings.HasPrefix(bearerToken, "Bearer ") {
-				err := errs.New(errs.Unauthenticated, ErrInvalidAuthHeader)
-				m.Error(w, err, http.StatusUnauthorized)
-
-				return
+				return nil, errs.New(errs.Unauthenticated, ErrInvalidAuthHeader)
 			}
 
 			jwtUnverified := bearerToken[7:]
 
-			resp, err := m.UseCase.Auth.Validate(ctx, jwtUnverified)
+			resp, err := authUsecase.Validate(ctx, jwtUnverified)
 			if err != nil {
-				m.Error(w, err, http.StatusUnauthorized)
-
-				return
+				return nil, errs.New(errs.Unauthenticated, err)
 			}
 
 			ctx = ctxPck.SetClaims(ctx, resp)
-			next.ServeHTTP(w, r.WithContext(ctx))
-		})
+
+			return f(ctx, w, r.WithContext(ctx), request)
+		}
 	}
 }
 
 // AuthenticateBasic processes basic authentication logic.
+// needs to be changed to openapi-codegen format.
 func (m *Middleware) AuthenticateBasic() func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

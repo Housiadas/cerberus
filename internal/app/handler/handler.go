@@ -1,6 +1,9 @@
+//go:generate go tool oapi-codegen --config ../../../openapi/oapi-codegen.yaml ../../../openapi/openapi.yaml
+
 package handler
 
 import (
+	"github.com/Housiadas/cerberus/internal/app/handler/openapi"
 	"github.com/Housiadas/cerberus/internal/app/middleware"
 	"github.com/Housiadas/cerberus/internal/app/repo/audit_repo"
 	"github.com/Housiadas/cerberus/internal/app/repo/outbox_repo"
@@ -30,10 +33,12 @@ import (
 	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/Housiadas/cerberus/pkg/pgsql"
 	"github.com/Housiadas/cerberus/pkg/uuidgen"
-	"github.com/Housiadas/cerberus/pkg/web"
 	"github.com/jmoiron/sqlx"
 	"go.opentelemetry.io/otel/trace"
 )
+
+// Ensure Handler implements the strict server interface at compile time.
+var _ openapi.StrictServerInterface = (*Handler)(nil)
 
 // Handler contains all the mandatory systems required by handler.
 type Handler struct {
@@ -42,14 +47,8 @@ type Handler struct {
 	Cors        config.CorsSettings
 	DB          *sqlx.DB
 	Log         logger.Logger
-	Web         Web
+	Middleware  *middleware.Middleware
 	Usecase     Usecase
-}
-
-// Web represents the set of usecase for the http.
-type Web struct {
-	Middleware *middleware.Middleware
-	Res        *web.Respond
 }
 
 // Usecase represents the use case layer.
@@ -125,17 +124,14 @@ func New(cfg Config) *Handler {
 		Cors:        cfg.Cors,
 		DB:          cfg.DB,
 		Log:         cfg.Log,
-		Web: Web{
-			Middleware: middleware.New(middleware.Config{
-				Log:                  cfg.Log,
-				Tracer:               cfg.Tracer,
-				Tx:                   pgsql.NewBeginner(cfg.DB),
-				UserUseCase:          userUsecase,
-				AuthUseCase:          authUsecase,
-				UserRolesPermissions: userRolesPermissionsUsecase,
-			}),
-			Res: web.NewRespond(cfg.Log),
-		},
+		Middleware: middleware.New(middleware.Config{
+			Log:                  cfg.Log,
+			Tracer:               cfg.Tracer,
+			Tx:                   pgsql.NewBeginner(cfg.DB),
+			UserUseCase:          userUsecase,
+			AuthUseCase:          authUsecase,
+			UserRolesPermissions: userRolesPermissionsUsecase,
+		}),
 		Usecase: Usecase{
 			Audit:                auditUsecase,
 			Auth:                 authUsecase,

@@ -84,9 +84,9 @@ All services run in the `cerberus` namespace
 
 ### Useful Links
 - [go-chi/chi](https://github.com/go-chi/chi)
+- [oapi-codegen](https://github.com/oapi-codegen/oapi-codegen)
 - [spf13/viper](https://github.com/spf13/viper)
-- [swaggo/swag](https://github.com/swaggo/swag)
-- [stretchr/testify](https://github.com/stretchr/testify)
 - [testcontainers/testcontainers-go](https://github.com/testcontainers/testcontainers-go)
 - [vektra/mockery](https://github.com/vektra/mockery)
+- [stretchr/testify](https://github.com/stretchr/testify)
 - [golang-migrate](https://github.com/golang-migrate/migrate)
