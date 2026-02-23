@@ -42,7 +42,6 @@ type Handler struct {
 	Cors        config.CorsSettings
 	DB          *sqlx.DB
 	Log         logger.Logger
-	Tracer      trace.Tracer
 	Web         Web
 	Usecase     Usecase
 }
@@ -126,7 +125,6 @@ func New(cfg Config) *Handler {
 		Cors:        cfg.Cors,
 		DB:          cfg.DB,
 		Log:         cfg.Log,
-		Tracer:      cfg.Tracer,
 		Web: Web{
 			Middleware: middleware.New(middleware.Config{
 				Log:                  cfg.Log,

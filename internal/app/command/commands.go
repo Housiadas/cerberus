@@ -6,6 +6,7 @@ import (
 	"github.com/Housiadas/cerberus/internal/config"
 	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/Housiadas/cerberus/pkg/pgsql"
+	"go.opentelemetry.io/otel/trace"
 )
 
 const (
@@ -15,25 +16,23 @@ const (
 
 type Config struct {
 	DB      config.DB
-	Version config.Version
 	Kafka   config.Kafka
+	Log     *logger.Service
+	Tracer  trace.Tracer
+	Version config.Version
 }
 
 type Command struct {
-	DB      pgsql.Config
-	Log     *logger.Service
-	Version config.Version
-	Kafka   config.Kafka
+	db      pgsql.Config
+	log     *logger.Service
+	tracer  trace.Tracer
+	kafka   config.Kafka
+	version config.Version
 }
 
-func New(
-	cfg config.Config,
-	log *logger.Service,
-	build string,
-	serviceName string,
-) *Command {
+func New(cfg Config) *Command {
 	return &Command{
-		DB: pgsql.Config{
+		db: pgsql.Config{
 			User:         cfg.DB.User,
 			Password:     cfg.DB.Password,
 			Host:         cfg.DB.Host,
@@ -42,11 +41,11 @@ func New(
 			MaxOpenConns: cfg.DB.MaxOpenConns,
 			DisableTLS:   cfg.DB.DisableTLS,
 		},
-		Log: log,
-		Version: config.Version{
-			Build: build,
-			Desc:  serviceName,
+		log:   cfg.Log,
+		kafka: cfg.Kafka,
+		version: config.Version{
+			Build: cfg.Version.Build,
+			Desc:  cfg.Version.Desc,
 		},
-		Kafka: cfg.Kafka,
 	}
 }

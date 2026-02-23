@@ -9,8 +9,10 @@ import (
 	"github.com/Housiadas/cerberus/internal/core/service/outbox_service"
 	"github.com/Housiadas/cerberus/pkg/kafka"
 	"github.com/Housiadas/cerberus/pkg/logger"
+	"github.com/Housiadas/cerberus/pkg/otel"
 	ckafka "github.com/confluentinc/confluent-kafka-go/v2/kafka"
 	"github.com/google/uuid"
+	"go.opentelemetry.io/otel/attribute"
 )
 
 const (
@@ -122,7 +124,8 @@ func (r *Relay) processBatch(ctx context.Context) {
 		processedIDs = append(processedIDs, entry.ID)
 	}
 
-	//r.producer.Flush(flushTimeoutMs)
+	otel.AddSpan(ctx, "outbox.processedIDs", attribute.Int("processedIDs", len(processedIDs)))
+	r.producer.Flush(flushTimeoutMs)
 
 	r.log.Info(
 		ctx,
@@ -134,6 +137,8 @@ func (r *Relay) processBatch(ctx context.Context) {
 	)
 
 	if len(failedIDs) > 0 {
+		otel.AddSpan(ctx, "outbox.failedIDs", attribute.Int("failedIDs", len(failedIDs)))
+
 		err := r.outboxSvc.IncrementRetryCount(ctx, failedIDs)
 		if err != nil {
 			r.log.Error(
@@ -151,6 +156,10 @@ func (r *Relay) processBatch(ctx context.Context) {
 
 	err = r.outboxSvc.MarkProcessed(ctx, processedIDs)
 	if err != nil {
-		r.log.Error(ctx, "relay", "status", "mark processed error", "msg", err)
+		r.log.Error(ctx,
+			"relay",
+			"status", "mark processed error",
+			"msg", err,
+		)
 	}
 }

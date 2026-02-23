@@ -31,7 +31,7 @@ func run() error {
 	// -------------------------------------------------------------------------
 	// Initialize Configuration
 	// -------------------------------------------------------------------------
-	c, err := config.LoadConfig()
+	cfg, err := config.LoadConfig()
 	if err != nil {
 		return fmt.Errorf("parsing config: %w", err)
 	}
@@ -47,9 +47,37 @@ func run() error {
 	log = logger.New(os.Stdout, logger.LevelInfo, "Worker", traceIDFn, requestIDFn)
 
 	// -------------------------------------------------------------------------
+	// Start Tracing Support
+	// -------------------------------------------------------------------------
+	traceProvider, teardown, err := otel.InitTracing(ctx, otel.Config{
+		ServiceName: cfg.App.Name,
+		Host:        cfg.Tempo.Host,
+		ExcludedRoutes: map[string]struct{}{
+			"/liveness":  {},
+			"/readiness": {},
+		},
+		Probability: cfg.Tempo.Probability,
+	})
+	if err != nil {
+		return fmt.Errorf("error starting tracing: %w", err)
+	}
+	defer teardown(ctx)
+
+	tracer := traceProvider.Tracer(cfg.App.Name)
+
+	// -------------------------------------------------------------------------
 	// Initialize commands
 	// -------------------------------------------------------------------------
-	cmd := command.New(c, log, build, "Worker")
+	cmd := command.New(command.Config{
+		DB:     cfg.DB,
+		Kafka:  cfg.Kafka,
+		Log:    log,
+		Tracer: tracer,
+		Version: config.Version{
+			Desc:  "Worker",
+			Build: build,
+		},
+	})
 
 	return processCommands(os.Args, cmd)
 }
