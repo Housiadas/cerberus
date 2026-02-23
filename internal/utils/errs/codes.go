@@ -17,7 +17,7 @@ var (
 
 	// Unknown error. An example of where this error may be returned is
 	// if a Status value received from another address space belongs to
-	// an error-space that is not known in this address space. Also,
+	// an error-space not known in this address space. Also,
 	// errors raised by APIs that do not return enough error information
 	// may be converted to this error.
 	Unknown = ErrCode{value: 3}
@@ -28,7 +28,7 @@ var (
 	// (e.g., a malformed file name).
 	InvalidArgument = ErrCode{value: 4}
 
-	// DeadlineExceeded means operation expired before completion.
+	// DeadlineExceeded means the operation expired before completion.
 	// For operations that change the state of the system, this error may be
 	// returned even if the operation has completed successfully. For
 	// example, a successful response from a grpc could have been delayed
@@ -57,8 +57,8 @@ var (
 
 	// FailedPrecondition indicates the operation was rejected because the
 	// system is not in a state required for the operation's execution.
-	// For example, a directory to be deleted may be non-empty; a rmdir
-	// operation is applied to a non-directory, etc.
+	// For example, a directory to be deleted may be non-empty;
+	// the rmdir operation is applied to a non-directory, etc.
 	FailedPrecondition = ErrCode{value: 10}
 
 	// Aborted indicates the operation was aborted, typically due to a
@@ -66,8 +66,8 @@ var (
 	// etc.
 	Aborted = ErrCode{value: 11}
 
-	// OutOfRange means operation was attempted past the valid range.
-	// E.g., seeking or reading past the end of file.
+	// OutOfRange means the operation was attempted past the valid range.
+	// E.g., seeking or reading past the end of a file.
 	//
 	// Unlike InvalidArgument, this error indicates a problem that may
 	// be fixed if the system state changes. For example, a 32-bit file
@@ -83,7 +83,7 @@ var (
 	// they are done.
 	OutOfRange = ErrCode{value: 12}
 
-	// Unimplemented indicates operation is not implemented or not
+	// Unimplemented indicates the operation is not implemented or not
 	// supported/enabled in this usecase.
 	Unimplemented = ErrCode{value: 13}
 

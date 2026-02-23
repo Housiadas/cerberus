@@ -2,7 +2,6 @@
 package errs
 
 import (
-	"errors"
 	"fmt"
 	"runtime"
 )
@@ -40,24 +39,12 @@ func Errorf(code ErrCode, format string, v ...any) *Error {
 	}
 }
 
-// AsErr checks for an Error in the error interface value. If it doesn't
-// exist, it will create one from the error.
-func AsErr(err error) *Error {
-	var errsErr *Error
-	if errors.As(err, &errsErr) {
-		return errsErr
-	}
-
-	return New(Internal, err)
-}
-
 // Error implements the error interface.
 func (e *Error) Error() string {
 	return e.Message
 }
 
-// HTTPStatus implements the web package httpStatus interface so the
-// web framework can use the correct http status.
+// HTTPStatus get the http status code
 func (e *Error) HTTPStatus() int {
 	return httpStatus[e.Code]
 }
