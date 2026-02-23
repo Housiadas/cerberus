@@ -91,7 +91,11 @@ func Test_OutboxRelay_ProcessesEntries(t *testing.T) {
 
 	relayCtx, relayCancel := context.WithCancel(ctx)
 
-	go outboxRelay.Start(relayCtx)
+	done := make(chan struct{})
+	go func() {
+		outboxRelay.Start(relayCtx)
+		close(done)
+	}()
 
 	// Wait for the relay to process the entries
 	assert.Eventually(t, func() bool {
@@ -103,6 +107,7 @@ func Test_OutboxRelay_ProcessesEntries(t *testing.T) {
 	}, 10*time.Second, 500*time.Millisecond, "outbox entries should be processed")
 
 	relayCancel()
+	<-done
 }
 
 func Test_OutboxRelay_RetriesFailedEntries(t *testing.T) {
