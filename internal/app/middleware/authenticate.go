@@ -10,7 +10,7 @@ import (
 	"github.com/Housiadas/cerberus/internal/usecase/auth_usecase"
 	"github.com/Housiadas/cerberus/internal/usecase/user_usecase"
 	ctxPck "github.com/Housiadas/cerberus/internal/utils/context"
-	"github.com/Housiadas/cerberus/pkg/web/errs"
+	"github.com/Housiadas/cerberus/internal/utils/errs"
 )
 
 // publicOperations lists operations that do not require authentication.

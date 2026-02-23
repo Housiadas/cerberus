@@ -15,7 +15,8 @@ import (
 	"github.com/Housiadas/cerberus/internal/usecase/role_usecase"
 	"github.com/Housiadas/cerberus/internal/usecase/system_usecase"
 	"github.com/Housiadas/cerberus/internal/usecase/user_usecase"
-	"github.com/Housiadas/cerberus/pkg/web"
+	"github.com/Housiadas/cerberus/internal/utils/page"
+
 	"github.com/go-chi/chi/v5"
 	"github.com/oapi-codegen/runtime"
 	strictnethttp "github.com/oapi-codegen/runtime/strictmiddleware/nethttp"
@@ -50,7 +51,7 @@ type LoginReq = auth_usecase.LoginReq
 type LogoutReq = auth_usecase.LogoutReq
 
 // Metadata defines model for Metadata.
-type Metadata = web.Metadata
+type Metadata = page.Metadata
 
 // NewPermission defines model for NewPermission.
 type NewPermission = permission_usecase.NewPermission

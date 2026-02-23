@@ -7,10 +7,10 @@ import (
 	"time"
 
 	"github.com/Housiadas/cerberus/internal/core/domain/permission"
+	"github.com/Housiadas/cerberus/internal/utils/page"
 	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/Housiadas/cerberus/pkg/order"
 	"github.com/Housiadas/cerberus/pkg/pgsql"
-	"github.com/Housiadas/cerberus/pkg/web"
 	"github.com/google/uuid"
 )
 
@@ -117,7 +117,7 @@ func (s *Service) Query(
 	ctx context.Context,
 	filter permission.QueryFilter,
 	orderBy order.By,
-	pg web.Page,
+	pg page.Page,
 ) ([]permission.Permission, error) {
 	ps, err := s.storer.Query(ctx, filter, orderBy, pg)
 	if err != nil {

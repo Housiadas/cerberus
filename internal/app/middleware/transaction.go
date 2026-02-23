@@ -5,8 +5,8 @@ import (
 	"errors"
 	"net/http"
 
+	"github.com/Housiadas/cerberus/internal/utils/errs"
 	"github.com/Housiadas/cerberus/pkg/pgsql"
-	"github.com/Housiadas/cerberus/pkg/web/errs"
 )
 
 // BeginTransaction starts a transaction for the core call.

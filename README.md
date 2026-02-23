@@ -27,6 +27,10 @@ The `usecases` directory is responsible for combaning different domain areas and
 
 ## Development
 
+### OpenAPI Specification
+The OpenAPI specification is located under
+[openapi](./openapi/openapi.yaml)
+
 ## Kubernetes Deployment (Minikube)
 
 ### Prerequisites

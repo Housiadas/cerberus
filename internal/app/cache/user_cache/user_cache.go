@@ -8,9 +8,9 @@ import (
 	"time"
 
 	"github.com/Housiadas/cerberus/internal/core/domain/user"
+	"github.com/Housiadas/cerberus/internal/utils/page"
 	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/Housiadas/cerberus/pkg/order"
-	"github.com/Housiadas/cerberus/pkg/web"
 	"github.com/google/uuid"
 	"github.com/viccon/sturdyc"
 )
@@ -42,7 +42,7 @@ func (s *Store) Query(
 	ctx context.Context,
 	filter user.QueryFilter,
 	orderBy order.By,
-	page web.Page,
+	page page.Page,
 ) ([]user.User, error) {
 	query, err := s.storer.Query(ctx, filter, orderBy, page)
 	if err != nil {

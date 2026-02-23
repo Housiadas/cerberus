@@ -913,9 +913,9 @@ components:
 
     # ---- Common ----
     Metadata:
-      x-go-type: web.Metadata
+      x-go-type: page.Metadata
       x-go-type-import:
-        path: github.com/Housiadas/cerberus/pkg/web
+        path: github.com/Housiadas/cerberus/internal/utils/page
       type: object
       properties:
         firstPage:

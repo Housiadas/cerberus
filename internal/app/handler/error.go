@@ -5,13 +5,12 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/Housiadas/cerberus/pkg/web"
-	"github.com/Housiadas/cerberus/pkg/web/errs"
+	"github.com/Housiadas/cerberus/internal/utils/errs"
 )
 
 // RequestErrorHandler handles errors during request parsing (e.g. invalid JSON).
 func requestErrorHandler(w http.ResponseWriter, _ *http.Request, err error) {
-	w.Header().Set(web.ContentTypeKey, web.ContentTypeJSON)
+	w.Header().Set(ContentTypeKey, ContentTypeJSON)
 	w.WriteHeader(http.StatusBadRequest)
 
 	//nolint:errchkjson // best-effort error response encoding
@@ -29,7 +28,7 @@ func responseErrorHandler(w http.ResponseWriter, _ *http.Request, err error) {
 
 	statusCode := appErr.HTTPStatus()
 
-	w.Header().Set(web.ContentTypeKey, web.ContentTypeJSON)
+	w.Header().Set(ContentTypeKey, ContentTypeJSON)
 	w.WriteHeader(statusCode)
 
 	//nolint:errchkjson // best-effort error response encoding

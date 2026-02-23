@@ -3,7 +3,6 @@ package handler
 import (
 	"github.com/Housiadas/cerberus/internal/app/handler/openapi"
 	mid "github.com/Housiadas/cerberus/internal/app/middleware"
-	"github.com/Housiadas/cerberus/pkg/web"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
@@ -21,7 +20,7 @@ func (h *Handler) Routes() *chi.Mux {
 		m.Logger(),
 		m.Otel(),
 		m.Metrics(),
-		middleware.SetHeader(web.ContentTypeKey, web.ContentTypeJSON),
+		middleware.SetHeader(ContentTypeKey, ContentTypeJSON),
 		middleware.GetHead,
 		cors.Handler(cors.Options{
 			AllowedOrigins: h.Cors.AllowedOrigins,

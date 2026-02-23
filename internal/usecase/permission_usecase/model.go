@@ -5,8 +5,8 @@ import (
 
 	"github.com/Housiadas/cerberus/internal/core/domain/name"
 	"github.com/Housiadas/cerberus/internal/core/domain/permission"
+	"github.com/Housiadas/cerberus/internal/utils/page"
 	"github.com/Housiadas/cerberus/pkg/clock"
-	"github.com/Housiadas/cerberus/pkg/web"
 )
 
 // Permission represents information about an individual permission.
@@ -18,8 +18,8 @@ type Permission struct {
 }
 
 type PermissionPageResults struct {
-	Data     []Permission `json:"data"`
-	Metadata web.Metadata `json:"metadata"`
+	Data     []Permission  `json:"data"`
+	Metadata page.Metadata `json:"metadata"`
 }
 
 func toAppPermission(p permission.Permission) Permission {

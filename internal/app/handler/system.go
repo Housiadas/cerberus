@@ -5,7 +5,7 @@ import (
 
 	"github.com/Housiadas/cerberus/internal/app/handler/openapi"
 	"github.com/Housiadas/cerberus/internal/usecase/system_usecase"
-	"github.com/Housiadas/cerberus/pkg/web/errs"
+	"github.com/Housiadas/cerberus/internal/utils/errs"
 )
 
 func (h *Handler) Readiness(

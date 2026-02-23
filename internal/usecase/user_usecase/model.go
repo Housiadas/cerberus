@@ -7,10 +7,10 @@ import (
 	"github.com/Housiadas/cerberus/internal/core/domain/name"
 	"github.com/Housiadas/cerberus/internal/core/domain/password"
 	"github.com/Housiadas/cerberus/internal/core/domain/user"
+	"github.com/Housiadas/cerberus/internal/utils/errs"
+	"github.com/Housiadas/cerberus/internal/utils/page"
 	"github.com/Housiadas/cerberus/internal/utils/validation"
 	"github.com/Housiadas/cerberus/pkg/clock"
-	"github.com/Housiadas/cerberus/pkg/web"
-	"github.com/Housiadas/cerberus/pkg/web/errs"
 )
 
 // =============================================================================
@@ -70,8 +70,8 @@ func toAppUsers(users []user.User) []User {
 // =============================================================================
 
 type UserPageResult struct {
-	Data     []User       `json:"data"`
-	Metadata web.Metadata `json:"metadata"`
+	Data     []User        `json:"data"`
+	Metadata page.Metadata `json:"metadata"`
 }
 
 // =============================================================================

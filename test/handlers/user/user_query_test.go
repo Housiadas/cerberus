@@ -6,14 +6,14 @@ import (
 	"sort"
 	"testing"
 
+	"github.com/Housiadas/cerberus/internal/utils/errs"
+	"github.com/Housiadas/cerberus/internal/utils/page"
 	"github.com/google/go-cmp/cmp"
 	"github.com/stretchr/testify/require"
 
 	"github.com/Housiadas/cerberus/internal/core/domain/user"
 	"github.com/Housiadas/cerberus/internal/usecase/user_usecase"
 	"github.com/Housiadas/cerberus/internal/utils/apitest"
-	"github.com/Housiadas/cerberus/pkg/web"
-	"github.com/Housiadas/cerberus/pkg/web/errs"
 )
 
 func Test_API_User_Query_200(t *testing.T) {
@@ -41,10 +41,10 @@ func Test_API_User_Query_200(t *testing.T) {
 			StatusCode:  http.StatusOK,
 			Method:      http.MethodGet,
 			AccessToken: &sd.Users[0].AccessToken.Token,
-			GotResp:     &web.Result[user_usecase.User]{},
-			ExpResp: &web.Result[user_usecase.User]{
+			GotResp:     &page.Result[user_usecase.User]{},
+			ExpResp: &page.Result[user_usecase.User]{
 				Data: toAppUsers(usrs),
-				Metadata: web.Metadata{
+				Metadata: page.Metadata{
 					FirstPage:   1,
 					CurrentPage: 1,
 					LastPage:    1,

@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/Housiadas/cerberus/internal/core/service/refresh_token_service"
-	"github.com/Housiadas/cerberus/pkg/web/errs"
+	"github.com/Housiadas/cerberus/internal/utils/errs"
 	"github.com/google/uuid"
 )
 

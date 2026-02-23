@@ -4,7 +4,6 @@ package middleware
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"net/http"
 
@@ -13,12 +12,13 @@ import (
 	"github.com/Housiadas/cerberus/internal/usecase/user_usecase"
 	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/Housiadas/cerberus/pkg/pgsql"
-	"github.com/Housiadas/cerberus/pkg/web"
 	"go.opentelemetry.io/otel/trace"
 )
 
-// ErrInvalidID represents a condition where the id is not an uuid.
-var ErrInvalidID = errors.New("ID is not in its proper form")
+const (
+	contentTypeKey  = "Content-Type"
+	contentTypeJSON = "application/json"
+)
 
 type Config struct {
 	Log                  logger.Logger
@@ -56,7 +56,7 @@ func New(cfg Config) *Middleware {
 }
 
 func (m *Middleware) Error(w http.ResponseWriter, err error, statusCode int) {
-	w.Header().Set(web.ContentTypeKey, web.ContentTypeJSON)
+	w.Header().Set(contentTypeKey, contentTypeJSON)
 	w.WriteHeader(statusCode)
 
 	err = json.NewEncoder(w).Encode(err)

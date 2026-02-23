@@ -6,7 +6,7 @@ import (
 	"reflect"
 
 	"github.com/Housiadas/cerberus/internal/app/handler/openapi"
-	"github.com/Housiadas/cerberus/pkg/web/errs"
+	"github.com/Housiadas/cerberus/internal/utils/errs"
 )
 
 type validator interface {

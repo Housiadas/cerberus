@@ -4,7 +4,7 @@ import (
 	"net/http"
 
 	ctxPck "github.com/Housiadas/cerberus/internal/utils/context"
-	"github.com/Housiadas/cerberus/pkg/web/errs"
+	"github.com/Housiadas/cerberus/internal/utils/errs"
 )
 
 func (m *Middleware) HasPermission(permissionName string) func(next http.Handler) http.Handler {

@@ -5,9 +5,9 @@ import (
 	"context"
 
 	"github.com/Housiadas/cerberus/internal/core/service/user_roles_permissions_service"
+	"github.com/Housiadas/cerberus/internal/utils/errs"
+	"github.com/Housiadas/cerberus/internal/utils/page"
 	"github.com/Housiadas/cerberus/pkg/order"
-	"github.com/Housiadas/cerberus/pkg/web"
-	"github.com/Housiadas/cerberus/pkg/web/errs"
 	"github.com/google/uuid"
 )
 
@@ -25,33 +25,33 @@ func NewUseCase(service *user_roles_permissions_service.Service) *UseCase {
 func (uc *UseCase) Query(
 	ctx context.Context,
 	qp AppQueryParams,
-) (web.Result[UserRolesPermissions], error) {
-	p, err := web.Parse(qp.Page, qp.Rows)
+) (page.Result[UserRolesPermissions], error) {
+	p, err := page.Parse(qp.Page, qp.Rows)
 	if err != nil {
-		return web.Result[UserRolesPermissions]{}, errs.NewFieldErrors("page", err)
+		return page.Result[UserRolesPermissions]{}, errs.NewFieldErrors("page", err)
 	}
 
 	filter, err := parseFilter(qp)
 	if err != nil {
-		return web.Result[UserRolesPermissions]{}, err
+		return page.Result[UserRolesPermissions]{}, err
 	}
 
 	ob, err := order.Parse(getOrderByFields(), qp.OrderBy, getDefaultOrderBy())
 	if err != nil {
-		return web.Result[UserRolesPermissions]{}, errs.NewFieldErrors("order", err)
+		return page.Result[UserRolesPermissions]{}, errs.NewFieldErrors("order", err)
 	}
 
 	rows, err := uc.service.Query(ctx, filter, ob, p)
 	if err != nil {
-		return web.Result[UserRolesPermissions]{}, errs.Errorf(errs.Internal, "query: %s", err)
+		return page.Result[UserRolesPermissions]{}, errs.Errorf(errs.Internal, "query: %s", err)
 	}
 
 	total, err := uc.service.Count(ctx, filter)
 	if err != nil {
-		return web.Result[UserRolesPermissions]{}, errs.Errorf(errs.Internal, "count: %s", err)
+		return page.Result[UserRolesPermissions]{}, errs.Errorf(errs.Internal, "count: %s", err)
 	}
 
-	return web.NewResult(toManyUserRolesPermissions(rows), total, p), nil
+	return page.NewResult(toManyUserRolesPermissions(rows), total, p), nil
 }
 
 func (uc *UseCase) HasPermission(ctx context.Context, userID, permissionName string) (bool, error) {

@@ -9,10 +9,10 @@ import (
 	"fmt"
 
 	"github.com/Housiadas/cerberus/internal/core/domain/permission"
+	"github.com/Housiadas/cerberus/internal/utils/page"
 	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/Housiadas/cerberus/pkg/order"
 	"github.com/Housiadas/cerberus/pkg/pgsql"
-	"github.com/Housiadas/cerberus/pkg/web"
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 )
@@ -123,7 +123,7 @@ func (s *Store) Query(
 	ctx context.Context,
 	filter permission.QueryFilter,
 	orderBy order.By,
-	page web.Page,
+	page page.Page,
 ) ([]permission.Permission, error) {
 	data := map[string]any{
 		"offset":        (page.Number() - 1) * page.RowsPerPage(),

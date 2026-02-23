@@ -1,4 +1,4 @@
-package web
+package handler
 
 const (
 	ContentTypeKey  = "Content-Type"

@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/Housiadas/cerberus/pkg/web/errs"
+	"github.com/Housiadas/cerberus/internal/utils/errs"
 )
 
 func (u *UseCase) RefreshAccessToken(

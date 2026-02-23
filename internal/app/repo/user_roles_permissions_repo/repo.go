@@ -9,10 +9,10 @@ import (
 
 	"github.com/Housiadas/cerberus/internal/core/domain/name"
 	urp "github.com/Housiadas/cerberus/internal/core/domain/user_roles_permissions"
+	"github.com/Housiadas/cerberus/internal/utils/page"
 	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/Housiadas/cerberus/pkg/order"
 	"github.com/Housiadas/cerberus/pkg/pgsql"
-	"github.com/Housiadas/cerberus/pkg/web"
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 )
@@ -46,7 +46,7 @@ func (s *Store) Query(
 	ctx context.Context,
 	filter urp.QueryFilter,
 	ob order.By,
-	p web.Page,
+	p page.Page,
 ) ([]urp.UserRolesPermissions, error) {
 	data := map[string]any{
 		"offset":        (p.Number() - 1) * p.RowsPerPage(),
