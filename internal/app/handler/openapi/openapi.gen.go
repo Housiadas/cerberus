@@ -16,7 +16,6 @@ import (
 	"github.com/Housiadas/cerberus/internal/usecase/system_usecase"
 	"github.com/Housiadas/cerberus/internal/usecase/user_usecase"
 	"github.com/Housiadas/cerberus/internal/utils/page"
-
 	"github.com/go-chi/chi/v5"
 	"github.com/oapi-codegen/runtime"
 	strictnethttp "github.com/oapi-codegen/runtime/strictmiddleware/nethttp"
