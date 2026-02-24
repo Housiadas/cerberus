@@ -8,8 +8,6 @@ import (
 )
 
 // validate holds the settings and caches for validating request struct values.
-//
-//nolint:gochecknoglobals
 var validate *validator.Validate
 
 //nolint:gochecknoinits

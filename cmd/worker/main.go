@@ -13,7 +13,6 @@ import (
 	"github.com/Housiadas/cerberus/pkg/otel"
 )
 
-//nolint:gochecknoglobals
 var build = "develop"
 
 func main() {

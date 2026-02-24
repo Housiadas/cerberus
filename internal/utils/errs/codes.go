@@ -4,7 +4,6 @@ import (
 	"net/http"
 )
 
-//nolint:gochecknoglobals
 var (
 	// None indicates the operation was successful.
 	None = ErrCode{value: 0}
@@ -119,7 +118,6 @@ var (
 	InternalOnlyLog = ErrCode{value: 19}
 )
 
-//nolint:gochecknoglobals
 var codeNumbers = map[string]ErrCode{
 	"none":                None,
 	"no_content":          NoContent,
@@ -143,7 +141,6 @@ var codeNumbers = map[string]ErrCode{
 	"internal_only_log":   InternalOnlyLog,
 }
 
-//nolint:gochecknoglobals
 var codeNames = map[ErrCode]string{
 	None:               "ok",
 	NoContent:          "ok_no_content",
@@ -167,7 +164,6 @@ var codeNames = map[ErrCode]string{
 	InternalOnlyLog:    "internal_only_log",
 }
 
-//nolint:gochecknoglobals
 var httpStatus = map[ErrCode]int{
 	None:               http.StatusOK,
 	NoContent:          http.StatusNoContent,

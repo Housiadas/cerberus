@@ -14,8 +14,6 @@ import (
 )
 
 // publicOperations lists operations that do not require authentication.
-//
-//nolint:gochecknoglobals
 var publicOperations = map[string]struct{}{
 	"AuthLogin":    {},
 	"AuthRegister": {},

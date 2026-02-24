@@ -21,7 +21,6 @@ import (
 	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
-//nolint:gochecknoglobals
 var build = "develop"
 
 func main() {
