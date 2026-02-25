@@ -14,7 +14,7 @@ type validator interface {
 }
 
 // Validation validates request bodies that implement the validator interface.
-func Validation() openapi.StrictMiddlewareFunc {
+func (m *Middleware) Validation() openapi.StrictMiddlewareFunc {
 	return func(
 		f openapi.StrictHandlerFunc,
 		_ string,

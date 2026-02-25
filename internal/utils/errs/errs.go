@@ -44,7 +44,7 @@ func (e *Error) Error() string {
 	return e.Message
 }
 
-// HTTPStatus get the http status code
+// HTTPStatus get the http status code.
 func (e *Error) HTTPStatus() int {
 	return httpStatus[e.Code]
 }

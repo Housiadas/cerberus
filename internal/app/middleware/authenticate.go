@@ -7,7 +7,6 @@ import (
 	"strings"
 
 	"github.com/Housiadas/cerberus/internal/app/handler/openapi"
-	"github.com/Housiadas/cerberus/internal/usecase/auth_usecase"
 	"github.com/Housiadas/cerberus/internal/usecase/user_usecase"
 	ctxPck "github.com/Housiadas/cerberus/internal/utils/context"
 	"github.com/Housiadas/cerberus/internal/utils/errs"
@@ -23,7 +22,7 @@ var publicOperations = map[string]struct{}{
 }
 
 // AuthStrict applies bearer token authentication for protected operations.
-func AuthStrict(authUsecase *auth_usecase.UseCase) openapi.StrictMiddlewareFunc {
+func (m *Middleware) Authenticate() openapi.StrictMiddlewareFunc {
 	return func(
 		f openapi.StrictHandlerFunc,
 		operationID string,
@@ -40,7 +39,7 @@ func AuthStrict(authUsecase *auth_usecase.UseCase) openapi.StrictMiddlewareFunc 
 
 			jwtUnverified := bearerToken[7:]
 
-			resp, err := authUsecase.Validate(ctx, jwtUnverified)
+			resp, err := m.UseCase.Auth.Validate(ctx, jwtUnverified)
 			if err != nil {
 				return nil, errs.New(errs.Unauthenticated, err)
 			}

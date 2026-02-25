@@ -2,7 +2,6 @@ package handler
 
 import (
 	"github.com/Housiadas/cerberus/internal/app/handler/openapi"
-	mid "github.com/Housiadas/cerberus/internal/app/middleware"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
@@ -17,8 +16,8 @@ func (h *Handler) Routes() *chi.Mux {
 	router.Use(
 		m.Recoverer(),
 		m.RequestID,
-		m.Logger(),
 		m.Otel(),
+		m.Logger(),
 		m.Metrics(),
 		middleware.SetHeader(ContentTypeKey, ContentTypeJSON),
 		middleware.GetHead,
@@ -32,9 +31,11 @@ func (h *Handler) Routes() *chi.Mux {
 		otelchi.Middleware(h.ServiceName, otelchi.WithChiRoutes(router)),
 	)
 
+	// order matter, first goes auth, then permissions etc.
 	si := openapi.NewStrictHandlerWithOptions(h, []openapi.StrictMiddlewareFunc{
-		mid.Validation(),
-		mid.AuthStrict(h.Usecase.Auth),
+		m.Validation(),
+		m.Permission(),
+		m.Authenticate(),
 	}, openapi.StrictHTTPServerOptions{
 		RequestErrorHandlerFunc:  requestErrorHandler,
 		ResponseErrorHandlerFunc: responseErrorHandler,
