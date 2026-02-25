@@ -2,6 +2,7 @@ package handler
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/Housiadas/cerberus/internal/app/handler/openapi"
 	"github.com/Housiadas/cerberus/internal/usecase/user_usecase"
@@ -25,7 +26,7 @@ func (h *Handler) ListUsers(
 
 	result, err := h.Usecase.User.Query(ctx, qp)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("list users: %w", err)
 	}
 
 	return openapi.ListUsers200JSONResponse{
@@ -40,7 +41,7 @@ func (h *Handler) CreateUser(
 ) (openapi.CreateUserResponseObject, error) {
 	usr, err := h.Usecase.User.Create(ctx, *request.Body)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("create user: %w", err)
 	}
 
 	return openapi.CreateUser200JSONResponse(usr), nil
@@ -52,7 +53,7 @@ func (h *Handler) GetUser(
 ) (openapi.GetUserResponseObject, error) {
 	usr, err := h.Usecase.User.QueryByID(ctx, request.UserId)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("get user: %w", err)
 	}
 
 	return openapi.GetUser200JSONResponse(usr), nil
@@ -64,7 +65,7 @@ func (h *Handler) UpdateUser(
 ) (openapi.UpdateUserResponseObject, error) {
 	updUser, err := h.Usecase.User.Update(ctx, *request.Body, request.UserId)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("update user: %w", err)
 	}
 
 	return openapi.UpdateUser200JSONResponse(updUser), nil
@@ -76,7 +77,7 @@ func (h *Handler) DeleteUser(
 ) (openapi.DeleteUserResponseObject, error) {
 	err := h.Usecase.User.Delete(ctx, request.UserId)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("delete user: %w", err)
 	}
 
 	return openapi.DeleteUser204Response{}, nil
@@ -88,7 +89,7 @@ func (h *Handler) CreateUserRole(
 ) (openapi.CreateUserRoleResponseObject, error) {
 	usr, err := h.Usecase.User.Create(ctx, *request.Body)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("create user role: %w", err)
 	}
 
 	return openapi.CreateUserRole200JSONResponse(usr), nil
@@ -100,7 +101,7 @@ func (h *Handler) DeleteUserRole(
 ) (openapi.DeleteUserRoleResponseObject, error) {
 	err := h.Usecase.User.Delete(ctx, request.UserId)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("delete user role: %w", err)
 	}
 
 	return openapi.DeleteUserRole204Response{}, nil

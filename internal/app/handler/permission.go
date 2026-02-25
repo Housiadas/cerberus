@@ -2,6 +2,7 @@ package handler
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/Housiadas/cerberus/internal/app/handler/openapi"
 	"github.com/Housiadas/cerberus/internal/usecase/permission_usecase"
@@ -22,7 +23,7 @@ func (h *Handler) ListPermissions(
 
 	result, err := h.Usecase.Permission.Query(ctx, qp)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("list permissions: %w", err)
 	}
 
 	return openapi.ListPermissions200JSONResponse{
@@ -37,7 +38,7 @@ func (h *Handler) CreatePermission(
 ) (openapi.CreatePermissionResponseObject, error) {
 	perm, err := h.Usecase.Permission.Create(ctx, *request.Body)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("create permission: %w", err)
 	}
 
 	return openapi.CreatePermission200JSONResponse(perm), nil
@@ -49,7 +50,7 @@ func (h *Handler) UpdatePermission(
 ) (openapi.UpdatePermissionResponseObject, error) {
 	perm, err := h.Usecase.Permission.Update(ctx, *request.Body, request.PermissionId)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("update permission: %w", err)
 	}
 
 	return openapi.UpdatePermission200JSONResponse(perm), nil
@@ -61,7 +62,7 @@ func (h *Handler) DeletePermission(
 ) (openapi.DeletePermissionResponseObject, error) {
 	err := h.Usecase.Permission.Delete(ctx, request.PermissionId)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("delete permission: %w", err)
 	}
 
 	return openapi.DeletePermission204Response{}, nil

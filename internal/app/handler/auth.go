@@ -2,6 +2,7 @@ package handler
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/Housiadas/cerberus/internal/app/handler/openapi"
 	ctxPck "github.com/Housiadas/cerberus/internal/utils/context"
@@ -13,7 +14,7 @@ func (h *Handler) AuthLogin(
 ) (openapi.AuthLoginResponseObject, error) {
 	token, err := h.Usecase.Auth.Login(ctx, *request.Body)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("auth login: %w", err)
 	}
 
 	return openapi.AuthLogin200JSONResponse(token), nil
@@ -25,7 +26,7 @@ func (h *Handler) AuthRegister(
 ) (openapi.AuthRegisterResponseObject, error) {
 	usr, err := h.Usecase.User.Create(ctx, *request.Body)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("auth register: %w", err)
 	}
 
 	return openapi.AuthRegister200JSONResponse(usr), nil
@@ -39,7 +40,7 @@ func (h *Handler) AuthLogout(
 
 	err := h.Usecase.Auth.Logout(ctx, claims.Subject, *request.Body)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("auth logout: %w", err)
 	}
 
 	return openapi.AuthLogout204Response{}, nil
@@ -51,7 +52,7 @@ func (h *Handler) AuthRefresh(
 ) (openapi.AuthRefreshResponseObject, error) {
 	token, err := h.Usecase.Auth.RefreshAccessToken(ctx, *request.Body)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("auth refresh: %w", err)
 	}
 
 	return openapi.AuthRefresh200JSONResponse(token), nil

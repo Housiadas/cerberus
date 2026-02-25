@@ -2,6 +2,7 @@ package handler
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/Housiadas/cerberus/internal/app/handler/openapi"
 	"github.com/Housiadas/cerberus/internal/usecase/audit_usecase"
@@ -27,7 +28,7 @@ func (h *Handler) ListAudits(
 
 	result, err := h.Usecase.Audit.Query(ctx, qp)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("list audits: %w", err)
 	}
 
 	return openapi.ListAudits200JSONResponse{

@@ -21,7 +21,7 @@ var publicOperations = map[string]struct{}{
 	"Liveness":     {},
 }
 
-// AuthStrict applies bearer token authentication for protected operations.
+// Authenticate applies bearer token authentication for protected operations.
 func (m *Middleware) Authenticate() openapi.StrictMiddlewareFunc {
 	return func(
 		f openapi.StrictHandlerFunc,

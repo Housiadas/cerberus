@@ -2,6 +2,7 @@ package handler
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/Housiadas/cerberus/internal/app/handler/openapi"
 	"github.com/Housiadas/cerberus/internal/usecase/role_usecase"
@@ -22,7 +23,7 @@ func (h *Handler) ListRoles(
 
 	result, err := h.Usecase.Role.Query(ctx, qp)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("list roles: %w", err)
 	}
 
 	return openapi.ListRoles200JSONResponse{
@@ -37,7 +38,7 @@ func (h *Handler) CreateRole(
 ) (openapi.CreateRoleResponseObject, error) {
 	role, err := h.Usecase.Role.Create(ctx, *request.Body)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("create role: %w", err)
 	}
 
 	return openapi.CreateRole200JSONResponse(role), nil
@@ -49,7 +50,7 @@ func (h *Handler) UpdateRole(
 ) (openapi.UpdateRoleResponseObject, error) {
 	role, err := h.Usecase.Role.Update(ctx, *request.Body, request.RoleId)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("update role: %w", err)
 	}
 
 	return openapi.UpdateRole200JSONResponse(role), nil
@@ -61,7 +62,7 @@ func (h *Handler) DeleteRole(
 ) (openapi.DeleteRoleResponseObject, error) {
 	err := h.Usecase.Role.Delete(ctx, request.RoleId)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("delete role: %w", err)
 	}
 
 	return openapi.DeleteRole204Response{}, nil
@@ -73,7 +74,7 @@ func (h *Handler) CreateRolePermission(
 ) (openapi.CreateRolePermissionResponseObject, error) {
 	role, err := h.Usecase.Role.Create(ctx, *request.Body)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("create role permission: %w", err)
 	}
 
 	return openapi.CreateRolePermission200JSONResponse(role), nil

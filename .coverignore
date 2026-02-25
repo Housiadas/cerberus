@@ -6,3 +6,4 @@ dbtest/
 kafkatest/
 unitest/
 mock.go
+openapi.gen.go

@@ -157,18 +157,18 @@ test:
 ## coverage/run: Run tests and generate filtered coverage profile
 .PHONY: coverage/run
 coverage/run:
-	go test -coverprofile=coverage.out -coverpkg=./... ./...
+	CGO_ENABLED=1 go test -coverprofile=coverage.out -coverpkg=./... ./...
 	grep -Evf .coverignore coverage.out > filtered.out
 
 ## coverage: Per-function coverage summary
 .PHONY: coverage
 coverage: coverage/run
-	go tool cover -func=filtered.out
+	CGO_ENABLED=1 go tool cover -func=filtered.out
 
 ## coverage/html: Interactive HTML report in browser
 .PHONY: coverage/html
 coverage/html: coverage/run
-	go tool cover -html=filtered.out -o coverage.html
+	CGO_ENABLED=1 go tool cover -html=filtered.out -o coverage.html
 	xdg-open coverage.html
 
 ## ================== #
