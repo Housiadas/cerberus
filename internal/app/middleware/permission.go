@@ -48,6 +48,7 @@ func (m *Middleware) Permission() openapi.StrictMiddlewareFunc {
 			userID := claims.Subject
 
 			sfKey := "permissions:" + userID
+
 			result, err, _ := m.permSflight.Do(sfKey, func() (any, error) {
 				return m.UseCase.UserRolesPermissions.QueryPermissionsByUserID(ctx, userID)
 			})
@@ -60,6 +61,7 @@ func (m *Middleware) Permission() openapi.StrictMiddlewareFunc {
 			permissions, ok := result.([]string)
 			if !ok {
 				m.Log.Error(ctx, "error casting permissions", err)
+
 				return nil, errs.New(errs.Internal, ErrCheckingPermission)
 			}
 
