@@ -144,3 +144,53 @@ func TestService_HasPermission_Error(t *testing.T) {
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "permission error")
 }
+
+func TestService_QueryPermissionsByUserID_Successful(t *testing.T) {
+	ctx := context.Background()
+	userID := uuid.MustParse("01234567-89ab-7def-0123-456789abcdef")
+
+	expected := []string{"user:read", "user:write", "role:read:all"}
+
+	mLogger := logger.NewMockLogger(t)
+
+	mStorer := user_roles_permissions.NewMockStorer(t)
+	mStorer.EXPECT().QueryPermissionsByUserID(ctx, userID).Return(expected, nil)
+
+	sut := user_roles_permissions_service.New(mLogger, mStorer)
+	result, err := sut.QueryPermissionsByUserID(ctx, userID)
+
+	assert.NoError(t, err)
+	assert.Equal(t, expected, result)
+}
+
+func TestService_QueryPermissionsByUserID_Empty(t *testing.T) {
+	ctx := context.Background()
+	userID := uuid.MustParse("01234567-89ab-7def-0123-456789abcdef")
+
+	mLogger := logger.NewMockLogger(t)
+
+	mStorer := user_roles_permissions.NewMockStorer(t)
+	mStorer.EXPECT().QueryPermissionsByUserID(ctx, userID).Return([]string{}, nil)
+
+	sut := user_roles_permissions_service.New(mLogger, mStorer)
+	result, err := sut.QueryPermissionsByUserID(ctx, userID)
+
+	assert.NoError(t, err)
+	assert.Empty(t, result)
+}
+
+func TestService_QueryPermissionsByUserID_Error(t *testing.T) {
+	ctx := context.Background()
+	userID := uuid.MustParse("01234567-89ab-7def-0123-456789abcdef")
+
+	mLogger := logger.NewMockLogger(t)
+
+	mStorer := user_roles_permissions.NewMockStorer(t)
+	mStorer.EXPECT().QueryPermissionsByUserID(ctx, userID).Return(nil, errors.New("db error"))
+
+	sut := user_roles_permissions_service.New(mLogger, mStorer)
+	_, err := sut.QueryPermissionsByUserID(ctx, userID)
+
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "db error")
+}
