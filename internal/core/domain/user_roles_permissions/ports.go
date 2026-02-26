@@ -3,8 +3,8 @@ package user_roles_permissions
 import (
 	"context"
 
+	"github.com/Housiadas/cerberus/internal/utils/page"
 	"github.com/Housiadas/cerberus/pkg/order"
-	"github.com/Housiadas/cerberus/pkg/web"
 	"github.com/google/uuid"
 )
 
@@ -14,7 +14,7 @@ type Storer interface {
 		ctx context.Context,
 		filter QueryFilter,
 		orderBy order.By,
-		page web.Page,
+		page page.Page,
 	) ([]UserRolesPermissions, error)
 	Count(ctx context.Context, filter QueryFilter) (int, error)
 	HasPermission(ctx context.Context, userID uuid.UUID, permissionName string) (bool, error)

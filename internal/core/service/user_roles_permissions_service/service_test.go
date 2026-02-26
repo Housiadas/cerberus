@@ -5,6 +5,7 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/Housiadas/cerberus/internal/utils/page"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 
@@ -14,14 +15,13 @@ import (
 	"github.com/Housiadas/cerberus/internal/utils/unitest"
 	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/Housiadas/cerberus/pkg/order"
-	"github.com/Housiadas/cerberus/pkg/web"
 )
 
 func TestService_Query_Successful(t *testing.T) {
 	ctx := context.Background()
 	filter := user_roles_permissions.QueryFilter{}
 	orderBy := order.By{Field: "user_name", Direction: "asc"}
-	page := web.Page{}
+	page := page.Page{}
 
 	expected := []user_roles_permissions.UserRolesPermissions{
 		{
@@ -51,7 +51,7 @@ func TestService_Query_Error(t *testing.T) {
 	ctx := context.Background()
 	filter := user_roles_permissions.QueryFilter{}
 	orderBy := order.By{Field: "user_name", Direction: "asc"}
-	page := web.Page{}
+	page := page.Page{}
 
 	mLogger := logger.NewMockLogger(t)
 

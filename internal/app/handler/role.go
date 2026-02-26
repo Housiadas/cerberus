@@ -2,155 +2,80 @@ package handler
 
 import (
 	"context"
-	"net/http"
+	"fmt"
 
+	"github.com/Housiadas/cerberus/internal/app/handler/openapi"
 	"github.com/Housiadas/cerberus/internal/usecase/role_usecase"
-	"github.com/Housiadas/cerberus/pkg/web"
-	"github.com/Housiadas/cerberus/pkg/web/errs"
+	"github.com/Housiadas/cerberus/internal/utils/pntr"
 )
 
-// Role godoc
-//
-//	@Summary		Crete Role
-//	@Description	Create a new role
-//	@Tags			Roles
-//	@Accept			json
-//	@Produce		json
-//	@Param			request	body		role_usecase.NewRole	true	"Role data"
-//	@Success		200		{object}	role_usecase.Role
-//	@Failure		500		{object}	errs.Error
-//	@Router			/v1/roles [post].
-func (h *Handler) roleCreate(
+func (h *Handler) ListRoles(
 	ctx context.Context,
-	_ http.ResponseWriter,
-	r *http.Request,
-) web.Encoder {
-	var ucRole role_usecase.NewRole
-
-	err := web.Decode(r, &ucRole)
-	if err != nil {
-		return errs.ParseValidationErrors(err)
+	request openapi.ListRolesRequestObject,
+) (openapi.ListRolesResponseObject, error) {
+	qp := role_usecase.AppQueryParams{
+		Page:    pntr.DerefStr(request.Params.Page),
+		Rows:    pntr.DerefStr(request.Params.Rows),
+		OrderBy: pntr.DerefStr(request.Params.OrderBy),
+		ID:      pntr.DerefStr(request.Params.RoleId),
+		Name:    pntr.DerefStr(request.Params.Name),
 	}
 
-	usr, err := h.Usecase.Role.Create(ctx, ucRole)
+	result, err := h.Usecase.Role.Query(ctx, qp)
 	if err != nil {
-		return errs.AsErr(err)
+		return nil, fmt.Errorf("list roles: %w", err)
 	}
 
-	return usr
+	return openapi.ListRoles200JSONResponse{
+		Data:     new(result.Data),
+		Metadata: new(result.Metadata),
+	}, nil
 }
 
-func (h *Handler) rolePermissionCreate(
+func (h *Handler) CreateRole(
 	ctx context.Context,
-	_ http.ResponseWriter,
-	r *http.Request,
-) web.Encoder {
-	var ucRole role_usecase.NewRole
-
-	err := web.Decode(r, &ucRole)
+	request openapi.CreateRoleRequestObject,
+) (openapi.CreateRoleResponseObject, error) {
+	role, err := h.Usecase.Role.Create(ctx, *request.Body)
 	if err != nil {
-		return errs.ParseValidationErrors(err)
+		return nil, fmt.Errorf("create role: %w", err)
 	}
 
-	usr, err := h.Usecase.Role.Create(ctx, ucRole)
-	if err != nil {
-		return errs.AsErr(err)
-	}
-
-	return usr
+	return openapi.CreateRole200JSONResponse(role), nil
 }
 
-// Role godoc
-//
-//	@Summary		Query Roles
-//	@Description	Search roles
-//	@Tags			Roles
-//	@Accept			json
-//	@Produce		json
-//	@Success		200	{object}	role_usecase.RolePageResult
-//	@Failure		500	{object}	errs.Error
-//	@Router			/v1/roles [get].
-func (h *Handler) roleQuery(
+func (h *Handler) UpdateRole(
 	ctx context.Context,
-	_ http.ResponseWriter,
-	r *http.Request,
-) web.Encoder {
-	qp := roleParseQueryParams(r)
-
-	roles, err := h.Usecase.Role.Query(ctx, qp)
+	request openapi.UpdateRoleRequestObject,
+) (openapi.UpdateRoleResponseObject, error) {
+	role, err := h.Usecase.Role.Update(ctx, *request.Body, request.RoleId)
 	if err != nil {
-		return errs.AsErr(err)
+		return nil, fmt.Errorf("update role: %w", err)
 	}
 
-	return roles
+	return openapi.UpdateRole200JSONResponse(role), nil
 }
 
-// Role godoc
-//
-//	@Summary		Update Role
-//	@Description	Update an existing role
-//	@Tags			Roles
-//	@Accept			json
-//	@Produce		json
-//	@Param			request	body		role_usecase.UpdateRole	true	"Role data"
-//	@Success		200		{object}	role_usecase.Role
-//	@Failure		500		{object}	errs.Error
-//	@Router			/v1/roles/{role_id} [put].
-func (h *Handler) roleUpdate(
+func (h *Handler) DeleteRole(
 	ctx context.Context,
-	_ http.ResponseWriter,
-	r *http.Request,
-) web.Encoder {
-	var res role_usecase.UpdateRole
-
-	err := web.Decode(r, &res)
+	request openapi.DeleteRoleRequestObject,
+) (openapi.DeleteRoleResponseObject, error) {
+	err := h.Usecase.Role.Delete(ctx, request.RoleId)
 	if err != nil {
-		return errs.ParseValidationErrors(err)
+		return nil, fmt.Errorf("delete role: %w", err)
 	}
 
-	roleID := web.Param(r, "role_id")
-
-	role, err := h.Usecase.Role.Update(ctx, res, roleID)
-	if err != nil {
-		return errs.AsErr(err)
-	}
-
-	return role
+	return openapi.DeleteRole204Response{}, nil
 }
 
-// Role godoc
-//
-//	@Summary		Delete a role
-//	@Description	Delete a role
-//	@Tags			Roles
-//	@Accept			json
-//	@Produce		json
-//	@Success		204
-//	@Failure		500	{object}	errs.Error
-//	@Router			/v1/roles/{role_id} [delete].
-func (h *Handler) roleDelete(
+func (h *Handler) CreateRolePermission(
 	ctx context.Context,
-	_ http.ResponseWriter,
-	r *http.Request,
-) web.Encoder {
-	roleID := web.Param(r, "role_id")
-
-	err := h.Usecase.Role.Delete(ctx, roleID)
+	request openapi.CreateRolePermissionRequestObject,
+) (openapi.CreateRolePermissionResponseObject, error) {
+	role, err := h.Usecase.Role.Create(ctx, *request.Body)
 	if err != nil {
-		return errs.AsErr(err)
+		return nil, fmt.Errorf("create role permission: %w", err)
 	}
 
-	return nil
-}
-
-func roleParseQueryParams(r *http.Request) role_usecase.AppQueryParams {
-	values := r.URL.Query()
-
-	return role_usecase.AppQueryParams{
-		ID:      values.Get("role_id"),
-		Name:    values.Get("name"),
-		Page:    values.Get("page"),
-		Rows:    values.Get("rows"),
-		OrderBy: values.Get("orderBy"),
-	}
+	return openapi.CreateRolePermission200JSONResponse(role), nil
 }

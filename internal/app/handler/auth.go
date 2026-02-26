@@ -2,136 +2,58 @@ package handler
 
 import (
 	"context"
-	"net/http"
+	"fmt"
 
-	"github.com/Housiadas/cerberus/internal/usecase/auth_usecase"
-	"github.com/Housiadas/cerberus/internal/usecase/user_usecase"
+	"github.com/Housiadas/cerberus/internal/app/handler/openapi"
 	ctxPck "github.com/Housiadas/cerberus/internal/utils/context"
-	"github.com/Housiadas/cerberus/pkg/web"
-	"github.com/Housiadas/cerberus/pkg/web/errs"
 )
 
-// Auth godoc
-//
-//	@Summary		Auth login
-//	@Description	Validate user's credentials
-//	@Tags			Auth
-//	@Accept			json
-//	@Produce		json
-//	@Param			request	body		auth_usecase.LoginReq	true	"Login data"
-//	@Success		200		{object}	auth_usecase.Token
-//	@Failure		500		{object}	errs.Error
-//	@Router			/v1/auth/login [post].
-func (h *Handler) authLogin(
+func (h *Handler) AuthLogin(
 	ctx context.Context,
-	_ http.ResponseWriter,
-	r *http.Request,
-) web.Encoder {
-	var req auth_usecase.LoginReq
-
-	err := web.Decode(r, &req)
+	request openapi.AuthLoginRequestObject,
+) (openapi.AuthLoginResponseObject, error) {
+	token, err := h.Usecase.Auth.Login(ctx, *request.Body)
 	if err != nil {
-		return errs.ParseValidationErrors(err)
+		return nil, fmt.Errorf("auth login: %w", err)
 	}
 
-	token, err := h.Usecase.Auth.Login(ctx, req)
-	if err != nil {
-		return errs.AsErr(err)
-	}
-
-	return token
+	return openapi.AuthLogin200JSONResponse(token), nil
 }
 
-// Auth godoc
-//
-//	@Summary		Auth register
-//	@Description	Register a new user
-//	@Tags			Auth
-//	@Accept			json
-//	@Produce		json
-//	@Param			request	body		user_usecase.NewUser	true	"Login data"
-//	@Success		200		{object}	user_usecase.User
-//	@Failure		500		{object}	errs.Error
-//	@Router			/v1/auth/register [post].
-func (h *Handler) authRegister(
+func (h *Handler) AuthRegister(
 	ctx context.Context,
-	_ http.ResponseWriter,
-	r *http.Request,
-) web.Encoder {
-	var req user_usecase.NewUser
-
-	err := web.Decode(r, &req)
+	request openapi.AuthRegisterRequestObject,
+) (openapi.AuthRegisterResponseObject, error) {
+	usr, err := h.Usecase.User.Create(ctx, *request.Body)
 	if err != nil {
-		return errs.ParseValidationErrors(err)
+		return nil, fmt.Errorf("auth register: %w", err)
 	}
 
-	usr, err := h.Usecase.User.Create(ctx, req)
-	if err != nil {
-		return errs.AsErr(err)
-	}
-
-	return usr
+	return openapi.AuthRegister200JSONResponse(usr), nil
 }
 
-// Auth godoc
-//
-//	@Summary		Logout a user
-//	@Description	Logout a user
-//	@Tags			Auth
-//	@Accept			json
-//	@Produce		json
-//	@Success		204
-//	@Failure		500	{object}	errs.Error
-//	@Router			/v1/auth/logout [post].
-func (h *Handler) authLogout(
+func (h *Handler) AuthLogout(
 	ctx context.Context,
-	_ http.ResponseWriter,
-	r *http.Request,
-) web.Encoder {
-	var req auth_usecase.LogoutReq
-
-	err := web.Decode(r, &req)
-	if err != nil {
-		return errs.ParseValidationErrors(err)
-	}
-
+	request openapi.AuthLogoutRequestObject,
+) (openapi.AuthLogoutResponseObject, error) {
 	claims := ctxPck.GetClaims(ctx)
 
-	err = h.Usecase.Auth.Logout(ctx, claims.Subject, req)
+	err := h.Usecase.Auth.Logout(ctx, claims.Subject, *request.Body)
 	if err != nil {
-		return errs.AsErr(err)
+		return nil, fmt.Errorf("auth logout: %w", err)
 	}
 
-	return nil
+	return openapi.AuthLogout204Response{}, nil
 }
 
-// Auth godoc
-//
-//	@Summary		Auth refresh
-//	@Description	RefreshAccessToken user's JWT tokens
-//	@Tags			Auth
-//	@Accept			json
-//	@Produce		json
-//	@Param			request	body		auth_usecase.RefreshTokenReq	true	"RefreshAccessToken data"
-//	@Success		200		{object}	auth_usecase.Token
-//	@Failure		500		{object}	errs.Error
-//	@Router			/v1/auth/refresh [post].
-func (h *Handler) authRefresh(
+func (h *Handler) AuthRefresh(
 	ctx context.Context,
-	_ http.ResponseWriter,
-	r *http.Request,
-) web.Encoder {
-	var req auth_usecase.RefreshTokenReq
-
-	err := web.Decode(r, &req)
+	request openapi.AuthRefreshRequestObject,
+) (openapi.AuthRefreshResponseObject, error) {
+	token, err := h.Usecase.Auth.RefreshAccessToken(ctx, *request.Body)
 	if err != nil {
-		return errs.ParseValidationErrors(err)
+		return nil, fmt.Errorf("auth refresh: %w", err)
 	}
 
-	token, err := h.Usecase.Auth.RefreshAccessToken(ctx, req)
-	if err != nil {
-		return errs.AsErr(err)
-	}
-
-	return token
+	return openapi.AuthRefresh200JSONResponse(token), nil
 }

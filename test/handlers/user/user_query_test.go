@@ -6,14 +6,14 @@ import (
 	"sort"
 	"testing"
 
+	"github.com/Housiadas/cerberus/internal/utils/errs"
+	"github.com/Housiadas/cerberus/internal/utils/page"
 	"github.com/google/go-cmp/cmp"
 	"github.com/stretchr/testify/require"
 
 	"github.com/Housiadas/cerberus/internal/core/domain/user"
 	"github.com/Housiadas/cerberus/internal/usecase/user_usecase"
 	"github.com/Housiadas/cerberus/internal/utils/apitest"
-	"github.com/Housiadas/cerberus/pkg/web"
-	"github.com/Housiadas/cerberus/pkg/web/errs"
 )
 
 func Test_API_User_Query_200(t *testing.T) {
@@ -26,6 +26,9 @@ func Test_API_User_Query_200(t *testing.T) {
 	require.NoError(t, err)
 
 	usrs := make([]user.User, 0, len(sd.Admins)+len(sd.Users))
+	for _, usr := range sd.Admins {
+		usrs = append(usrs, usr.User)
+	}
 	for _, usr := range sd.Users {
 		usrs = append(usrs, usr.User)
 	}
@@ -40,11 +43,11 @@ func Test_API_User_Query_200(t *testing.T) {
 			URL:         "/api/v1/users?page=1&rows=10&orderBy=user_id,ASC&name=Name",
 			StatusCode:  http.StatusOK,
 			Method:      http.MethodGet,
-			AccessToken: &sd.Users[0].AccessToken.Token,
-			GotResp:     &web.Result[user_usecase.User]{},
-			ExpResp: &web.Result[user_usecase.User]{
+			AccessToken: &sd.Admins[0].AccessToken.Token,
+			GotResp:     &page.Result[user_usecase.User]{},
+			ExpResp: &page.Result[user_usecase.User]{
 				Data: toAppUsers(usrs),
-				Metadata: web.Metadata{
+				Metadata: page.Metadata{
 					FirstPage:   1,
 					CurrentPage: 1,
 					LastPage:    1,
@@ -102,7 +105,7 @@ func Test_API_User_Query_400(t *testing.T) {
 			Name:        "bad-query-filter",
 			URL:         "/api/v1/users?page=1&rows=10&email=a.com",
 			StatusCode:  http.StatusBadRequest,
-			AccessToken: &sd.Users[0].AccessToken.Token,
+			AccessToken: &sd.Admins[0].AccessToken.Token,
 			Method:      http.MethodGet,
 			GotResp:     &errs.Error{},
 			ExpResp:     errs.Errorf(errs.InvalidArgument, "[{\"field\":\"email\",\"error\":\"mail: missing '@' or angle-addr\"}]"),
@@ -115,7 +118,7 @@ func Test_API_User_Query_400(t *testing.T) {
 			URL:         "/api/v1/users?page=1&rows=10&orderBy=ser_id,ASC",
 			StatusCode:  http.StatusBadRequest,
 			Method:      http.MethodGet,
-			AccessToken: &sd.Users[0].AccessToken.Token,
+			AccessToken: &sd.Admins[0].AccessToken.Token,
 			GotResp:     &errs.Error{},
 			ExpResp:     errs.Errorf(errs.InvalidArgument, "[{\"field\":\"order\",\"error\":\"unknown order: ser_id\"}]"),
 			AssertFunc: func(got any, exp any) string {
@@ -125,4 +128,31 @@ func Test_API_User_Query_400(t *testing.T) {
 	}
 
 	test.Run(t, table, "user-query-400")
+}
+
+func Test_API_User_Query_403(t *testing.T) {
+	t.Parallel()
+
+	test, err := apitest.StartTest(t, "Test_API_User")
+	require.NoError(t, err)
+
+	sd, err := insertSeedData(test)
+	require.NoError(t, err)
+
+	table := []apitest.Table{
+		{
+			Name:        "user-list-forbidden",
+			URL:         "/api/v1/users?page=1&rows=10",
+			StatusCode:  http.StatusForbidden,
+			Method:      http.MethodGet,
+			AccessToken: &sd.Users[0].AccessToken.Token,
+			GotResp:     &errs.Error{},
+			ExpResp:     errs.Errorf(errs.PermissionDenied, "permission denied"),
+			AssertFunc: func(got any, exp any) string {
+				return cmp.Diff(got, exp)
+			},
+		},
+	}
+
+	test.Run(t, table, "user-query-403")
 }

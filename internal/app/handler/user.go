@@ -2,198 +2,107 @@ package handler
 
 import (
 	"context"
-	"net/http"
+	"fmt"
 
-	user_usecase "github.com/Housiadas/cerberus/internal/usecase/user_usecase"
-	"github.com/Housiadas/cerberus/pkg/web"
-	"github.com/Housiadas/cerberus/pkg/web/errs"
+	"github.com/Housiadas/cerberus/internal/app/handler/openapi"
+	"github.com/Housiadas/cerberus/internal/usecase/user_usecase"
+	"github.com/Housiadas/cerberus/internal/utils/pntr"
 )
 
-// User godoc
-//
-//	@Summary		Crete User
-//	@Description	Create a new user
-//	@Tags			Users
-//	@Accept			json
-//	@Produce		json
-//	@Param			request	body		user_usecase.NewUser	true	"User data"
-//	@Success		200		{object}	user_usecase.User
-//	@Failure		500		{object}	errs.Error
-//	@Router			/v1/users [post].
-func (h *Handler) userCreate(
+func (h *Handler) ListUsers(
 	ctx context.Context,
-	_ http.ResponseWriter,
-	r *http.Request,
-) web.Encoder {
-	var app user_usecase.NewUser
-
-	err := web.Decode(r, &app)
-	if err != nil {
-		return errs.ParseValidationErrors(err)
+	request openapi.ListUsersRequestObject,
+) (openapi.ListUsersResponseObject, error) {
+	qp := user_usecase.AppQueryParams{
+		Page:             pntr.DerefStr(request.Params.Page),
+		Rows:             pntr.DerefStr(request.Params.Rows),
+		OrderBy:          pntr.DerefStr(request.Params.OrderBy),
+		ID:               pntr.DerefStr(request.Params.UserId),
+		Name:             pntr.DerefStr(request.Params.Name),
+		Email:            pntr.DerefStr(request.Params.Email),
+		StartCreatedDate: pntr.DerefStr(request.Params.StartCreatedDate),
+		EndCreatedDate:   pntr.DerefStr(request.Params.EndCreatedDate),
 	}
 
-	usr, err := h.Usecase.User.Create(ctx, app)
+	result, err := h.Usecase.User.Query(ctx, qp)
 	if err != nil {
-		return errs.AsErr(err)
+		return nil, fmt.Errorf("list users: %w", err)
 	}
 
-	return usr
+	return openapi.ListUsers200JSONResponse{
+		Data:     new(result.Data),
+		Metadata: new(result.Metadata),
+	}, nil
 }
 
-// User godoc
-//
-//	@Summary		Update User
-//	@Description	Update an existing user
-//	@Tags			Users
-//	@Accept			json
-//	@Produce		json
-//	@Param			request	body		user_usecase.UpdateUser	true	"User data"
-//	@Success		200		{object}	user_usecase.User
-//	@Failure		500		{object}	errs.Error
-//	@Router			/v1/users/{user_id} [put].
-func (h *Handler) userUpdate(
+func (h *Handler) CreateUser(
 	ctx context.Context,
-	_ http.ResponseWriter,
-	r *http.Request,
-) web.Encoder {
-	var res user_usecase.UpdateUser
-
-	err := web.Decode(r, &res)
+	request openapi.CreateUserRequestObject,
+) (openapi.CreateUserResponseObject, error) {
+	usr, err := h.Usecase.User.Create(ctx, *request.Body)
 	if err != nil {
-		return errs.ParseValidationErrors(err)
+		return nil, fmt.Errorf("create user: %w", err)
 	}
 
-	userID := web.Param(r, "user_id")
-
-	updUser, err := h.Usecase.User.Update(ctx, res, userID)
-	if err != nil {
-		return errs.AsErr(err)
-	}
-
-	return updUser
+	return openapi.CreateUser200JSONResponse(usr), nil
 }
 
-// User godoc
-//
-//	@Summary		Delete a user
-//	@Description	Delete a user
-//	@Tags			Users
-//	@Accept			json
-//	@Produce		json
-//	@Success		204
-//	@Failure		500	{object}	errs.Error
-//	@Router			/v1/users/{user_id} [delete].
-func (h *Handler) userDelete(
+func (h *Handler) GetUser(
 	ctx context.Context,
-	_ http.ResponseWriter,
-	r *http.Request,
-) web.Encoder {
-	userID := web.Param(r, "user_id")
-
-	err := h.Usecase.User.Delete(ctx, userID)
+	request openapi.GetUserRequestObject,
+) (openapi.GetUserResponseObject, error) {
+	usr, err := h.Usecase.User.QueryByID(ctx, request.UserId)
 	if err != nil {
-		return errs.AsErr(err)
+		return nil, fmt.Errorf("get user: %w", err)
 	}
 
-	return nil
+	return openapi.GetUser200JSONResponse(usr), nil
 }
 
-// User godoc
-//
-//	@Summary		Query Users
-//	@Description	Search users in database based on criteria
-//	@Tags			Users
-//	@Accept			json
-//	@Produce		json
-//	@Success		200	{object}	user_usecase.UserPageResult
-//	@Failure		500	{object}	errs.Error
-//	@Router			/v1/users [get].
-func (h *Handler) userQuery(
+func (h *Handler) UpdateUser(
 	ctx context.Context,
-	_ http.ResponseWriter,
-	r *http.Request,
-) web.Encoder {
-	qp := userParseQueryParams(r)
-
-	usr, err := h.Usecase.User.Query(ctx, qp)
+	request openapi.UpdateUserRequestObject,
+) (openapi.UpdateUserResponseObject, error) {
+	updUser, err := h.Usecase.User.Update(ctx, *request.Body, request.UserId)
 	if err != nil {
-		return errs.AsErr(err)
+		return nil, fmt.Errorf("update user: %w", err)
 	}
 
-	return usr
+	return openapi.UpdateUser200JSONResponse(updUser), nil
 }
 
-// User godoc
-//
-//	@Summary		Find User by id
-//	@Description	Search user in database by id
-//	@Tags			Users
-//	@Accept			json
-//	@Produce		json
-//	@Success		200	{object}	user_usecase.User
-//	@Failure		500	{object}	errs.Error
-//	@Router			/v1/users/{user_id} [get].
-func (h *Handler) userQueryByID(
+func (h *Handler) DeleteUser(
 	ctx context.Context,
-	_ http.ResponseWriter,
-	r *http.Request,
-) web.Encoder {
-	userID := web.Param(r, "user_id")
-
-	usr, err := h.Usecase.User.QueryByID(ctx, userID)
+	request openapi.DeleteUserRequestObject,
+) (openapi.DeleteUserResponseObject, error) {
+	err := h.Usecase.User.Delete(ctx, request.UserId)
 	if err != nil {
-		return errs.AsErr(err)
+		return nil, fmt.Errorf("delete user: %w", err)
 	}
 
-	return usr
+	return openapi.DeleteUser204Response{}, nil
 }
 
-func (h *Handler) userRoleCreate(
+func (h *Handler) CreateUserRole(
 	ctx context.Context,
-	_ http.ResponseWriter,
-	r *http.Request,
-) web.Encoder {
-	var app user_usecase.NewUser
-
-	err := web.Decode(r, &app)
+	request openapi.CreateUserRoleRequestObject,
+) (openapi.CreateUserRoleResponseObject, error) {
+	usr, err := h.Usecase.User.Create(ctx, *request.Body)
 	if err != nil {
-		return errs.ParseValidationErrors(err)
+		return nil, fmt.Errorf("create user role: %w", err)
 	}
 
-	usr, err := h.Usecase.User.Create(ctx, app)
-	if err != nil {
-		return errs.AsErr(err)
-	}
-
-	return usr
+	return openapi.CreateUserRole200JSONResponse(usr), nil
 }
 
-func (h *Handler) userRoleDelete(
+func (h *Handler) DeleteUserRole(
 	ctx context.Context,
-	_ http.ResponseWriter,
-	r *http.Request,
-) web.Encoder {
-	userID := web.Param(r, "user_id")
-
-	err := h.Usecase.User.Delete(ctx, userID)
+	request openapi.DeleteUserRoleRequestObject,
+) (openapi.DeleteUserRoleResponseObject, error) {
+	err := h.Usecase.User.Delete(ctx, request.UserId)
 	if err != nil {
-		return errs.AsErr(err)
+		return nil, fmt.Errorf("delete user role: %w", err)
 	}
 
-	return nil
-}
-
-func userParseQueryParams(r *http.Request) user_usecase.AppQueryParams {
-	values := r.URL.Query()
-
-	return user_usecase.AppQueryParams{
-		Page:             values.Get("page"),
-		Rows:             values.Get("rows"),
-		OrderBy:          values.Get("orderBy"),
-		ID:               values.Get("user_id"),
-		Name:             values.Get("name"),
-		Email:            values.Get("email"),
-		StartCreatedDate: values.Get("start_created_date"),
-		EndCreatedDate:   values.Get("end_created_date"),
-	}
+	return openapi.DeleteUserRole204Response{}, nil
 }

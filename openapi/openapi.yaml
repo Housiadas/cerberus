@@ -1,0 +1,938 @@
+openapi: "3.0.3"
+info:
+  title: Cerberus
+  description: Cerberus backend system
+  version: "1.0.0"
+  contact:
+    name: API Support
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+
+servers:
+  - url: http://localhost:4000
+    description: Local development
+
+security: []
+
+paths:
+  # ---- System ----
+  /readiness:
+    get:
+      operationId: readiness
+      tags: [System]
+      summary: Readiness check
+      description: Checks if the database is ready
+      responses:
+        '200':
+          description: Service is ready
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Status'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
+  /liveness:
+    get:
+      operationId: liveness
+      tags: [System]
+      summary: Liveness check
+      description: Returns service status info
+      responses:
+        '200':
+          description: Service is alive
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Info'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
+  # ---- Auth ----
+  /api/v1/auth/login:
+    post:
+      operationId: authLogin
+      tags: [Auth]
+      summary: Login
+      description: Validate user's credentials
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginReq'
+      responses:
+        '200':
+          description: Successful login
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Token'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
+  /api/v1/auth/register:
+    post:
+      operationId: authRegister
+      tags: [Auth]
+      summary: Register
+      description: Register a new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewUser'
+      responses:
+        '200':
+          description: User registered
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
+  /api/v1/auth/refresh:
+    post:
+      operationId: authRefresh
+      tags: [Auth]
+      summary: Refresh token
+      description: Refresh JWT tokens
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshTokenReq'
+      responses:
+        '200':
+          description: Tokens refreshed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Token'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
+  /api/v1/auth/logout:
+    post:
+      operationId: authLogout
+      tags: [Auth]
+      summary: Logout
+      description: Logout a user
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LogoutReq'
+      responses:
+        '204':
+          description: Logged out
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
+  # ---- Users ----
+  /api/v1/users:
+    get:
+      operationId: listUsers
+      tags: [Users]
+      summary: List users
+      description: Search users based on criteria
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: string
+        - name: rows
+          in: query
+          schema:
+            type: string
+        - name: orderBy
+          in: query
+          schema:
+            type: string
+        - name: user_id
+          in: query
+          schema:
+            type: string
+        - name: name
+          in: query
+          schema:
+            type: string
+        - name: email
+          in: query
+          schema:
+            type: string
+        - name: start_created_date
+          in: query
+          schema:
+            type: string
+        - name: end_created_date
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Users list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserPageResult'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
+    post:
+      operationId: createUser
+      tags: [Users]
+      summary: Create user
+      description: Create a new user
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewUser'
+      responses:
+        '200':
+          description: User created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
+  /api/v1/users/{user_id}:
+    parameters:
+      - name: user_id
+        in: path
+        required: true
+        schema:
+          type: string
+
+    get:
+      operationId: getUser
+      tags: [Users]
+      summary: Get user
+      description: Get user by ID
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: User found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
+    put:
+      operationId: updateUser
+      tags: [Users]
+      summary: Update user
+      description: Update an existing user
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateUser'
+      responses:
+        '200':
+          description: User updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
+    delete:
+      operationId: deleteUser
+      tags: [Users]
+      summary: Delete user
+      description: Delete a user
+      security:
+        - BearerAuth: []
+      responses:
+        '204':
+          description: User deleted
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
+  /api/v1/users/{user_id}/role:
+    parameters:
+      - name: user_id
+        in: path
+        required: true
+        schema:
+          type: string
+
+    post:
+      operationId: createUserRole
+      tags: [Users]
+      summary: Add role to user
+      description: Add a role to a user
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewUser'
+      responses:
+        '200':
+          description: Role added
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
+    delete:
+      operationId: deleteUserRole
+      tags: [Users]
+      summary: Remove role from user
+      description: Remove a role from a user
+      security:
+        - BearerAuth: []
+      responses:
+        '204':
+          description: Role removed
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
+  # ---- Roles ----
+  /api/v1/roles:
+    get:
+      operationId: listRoles
+      tags: [Roles]
+      summary: List roles
+      description: Search roles
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: string
+        - name: rows
+          in: query
+          schema:
+            type: string
+        - name: orderBy
+          in: query
+          schema:
+            type: string
+        - name: role_id
+          in: query
+          schema:
+            type: string
+        - name: name
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Roles list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RolePageResult'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
+    post:
+      operationId: createRole
+      tags: [Roles]
+      summary: Create role
+      description: Create a new role
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewRole'
+      responses:
+        '200':
+          description: Role created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Role'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
+  /api/v1/roles/{role_id}:
+    parameters:
+      - name: role_id
+        in: path
+        required: true
+        schema:
+          type: string
+
+    put:
+      operationId: updateRole
+      tags: [Roles]
+      summary: Update role
+      description: Update an existing role
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateRole'
+      responses:
+        '200':
+          description: Role updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Role'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
+    delete:
+      operationId: deleteRole
+      tags: [Roles]
+      summary: Delete role
+      description: Delete a role
+      security:
+        - BearerAuth: []
+      responses:
+        '204':
+          description: Role deleted
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
+  /api/v1/roles/{role_id}/permission:
+    parameters:
+      - name: role_id
+        in: path
+        required: true
+        schema:
+          type: string
+
+    post:
+      operationId: createRolePermission
+      tags: [Roles]
+      summary: Add permission to role
+      description: Add a permission to a role
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewRole'
+      responses:
+        '200':
+          description: Permission added
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Role'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
+  # ---- Permissions ----
+  /api/v1/permissions:
+    get:
+      operationId: listPermissions
+      tags: [Permissions]
+      summary: List permissions
+      description: Search permissions
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: string
+        - name: rows
+          in: query
+          schema:
+            type: string
+        - name: orderBy
+          in: query
+          schema:
+            type: string
+        - name: permission_id
+          in: query
+          schema:
+            type: string
+        - name: name
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Permissions list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PermissionPageResult'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
+    post:
+      operationId: createPermission
+      tags: [Permissions]
+      summary: Create permission
+      description: Create a new permission
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewPermission'
+      responses:
+        '200':
+          description: Permission created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Permission'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
+  /api/v1/permissions/{permission_id}:
+    parameters:
+      - name: permission_id
+        in: path
+        required: true
+        schema:
+          type: string
+
+    put:
+      operationId: updatePermission
+      tags: [Permissions]
+      summary: Update permission
+      description: Update an existing permission
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdatePermission'
+      responses:
+        '200':
+          description: Permission updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Permission'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
+    delete:
+      operationId: deletePermission
+      tags: [Permissions]
+      summary: Delete permission
+      description: Delete a permission
+      security:
+        - BearerAuth: []
+      responses:
+        '204':
+          description: Permission deleted
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
+  # ---- Audits ----
+  /api/v1/audits:
+    get:
+      operationId: listAudits
+      tags: [Audits]
+      summary: List audits
+      description: Search audits based on criteria
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: string
+        - name: rows
+          in: query
+          schema:
+            type: string
+        - name: orderBy
+          in: query
+          schema:
+            type: string
+        - name: obj_id
+          in: query
+          schema:
+            type: string
+        - name: obj_domain
+          in: query
+          schema:
+            type: string
+        - name: obj_name
+          in: query
+          schema:
+            type: string
+        - name: actor_id
+          in: query
+          schema:
+            type: string
+        - name: action
+          in: query
+          schema:
+            type: string
+        - name: since
+          in: query
+          schema:
+            type: string
+        - name: until
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Audits list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuditPageResult'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+
+  responses:
+    ErrorResponse:
+      description: Error response
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+  schemas:
+    # ---- System ----
+    Status:
+      x-go-type: system_usecase.Status
+      x-go-type-import:
+        path: github.com/Housiadas/cerberus/internal/usecase/system_usecase
+      type: object
+      properties:
+        status:
+          type: string
+
+    Info:
+      x-go-type: system_usecase.Info
+      x-go-type-import:
+        path: github.com/Housiadas/cerberus/internal/usecase/system_usecase
+      type: object
+      properties:
+        status:
+          type: string
+        build:
+          type: string
+        host:
+          type: string
+        name:
+          type: string
+        podIp:
+          type: string
+        node:
+          type: string
+        namespace:
+          type: string
+        gomaxprocs:
+          type: integer
+
+    # ---- Auth ----
+    LoginReq:
+      x-go-type: auth_usecase.LoginReq
+      x-go-type-import:
+        path: github.com/Housiadas/cerberus/internal/usecase/auth_usecase
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+
+    RefreshTokenReq:
+      x-go-type: auth_usecase.RefreshTokenReq
+      x-go-type-import:
+        path: github.com/Housiadas/cerberus/internal/usecase/auth_usecase
+      type: object
+      required: [refreshToken]
+      properties:
+        refreshToken:
+          type: string
+
+    LogoutReq:
+      x-go-type: auth_usecase.LogoutReq
+      x-go-type-import:
+        path: github.com/Housiadas/cerberus/internal/usecase/auth_usecase
+      type: object
+      required: [refreshToken]
+      properties:
+        refreshToken:
+          type: string
+
+    Token:
+      x-go-type: auth_usecase.Token
+      x-go-type-import:
+        path: github.com/Housiadas/cerberus/internal/usecase/auth_usecase
+      type: object
+      properties:
+        accessToken:
+          type: string
+        refreshToken:
+          type: string
+        expiresIn:
+          type: integer
+          format: int64
+
+    # ---- Users ----
+    NewUser:
+      x-go-type: user_usecase.NewUser
+      x-go-type-import:
+        path: github.com/Housiadas/cerberus/internal/usecase/user_usecase
+      type: object
+      required: [name, email, password, passwordConfirm]
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+        department:
+          type: string
+        password:
+          type: string
+        passwordConfirm:
+          type: string
+
+    UpdateUser:
+      x-go-type: user_usecase.UpdateUser
+      x-go-type-import:
+        path: github.com/Housiadas/cerberus/internal/usecase/user_usecase
+      type: object
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+        department:
+          type: string
+        password:
+          type: string
+        passwordConfirm:
+          type: string
+        enabled:
+          type: boolean
+
+    User:
+      x-go-type: user_usecase.User
+      x-go-type-import:
+        path: github.com/Housiadas/cerberus/internal/usecase/user_usecase
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        email:
+          type: string
+        department:
+          type: string
+        enabled:
+          type: boolean
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+
+    UserPageResult:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/User'
+        metadata:
+          $ref: '#/components/schemas/Metadata'
+
+    # ---- Roles ----
+    NewRole:
+      x-go-type: role_usecase.NewRole
+      x-go-type-import:
+        path: github.com/Housiadas/cerberus/internal/usecase/role_usecase
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+
+    UpdateRole:
+      x-go-type: role_usecase.UpdateRole
+      x-go-type-import:
+        path: github.com/Housiadas/cerberus/internal/usecase/role_usecase
+      type: object
+      properties:
+        name:
+          type: string
+
+    Role:
+      x-go-type: role_usecase.Role
+      x-go-type-import:
+        path: github.com/Housiadas/cerberus/internal/usecase/role_usecase
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+
+    RolePageResult:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Role'
+        metadata:
+          $ref: '#/components/schemas/Metadata'
+
+    # ---- Permissions ----
+    NewPermission:
+      x-go-type: permission_usecase.NewPermission
+      x-go-type-import:
+        path: github.com/Housiadas/cerberus/internal/usecase/permission_usecase
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+
+    UpdatePermission:
+      x-go-type: permission_usecase.UpdatePermission
+      x-go-type-import:
+        path: github.com/Housiadas/cerberus/internal/usecase/permission_usecase
+      type: object
+      properties:
+        name:
+          type: string
+
+    Permission:
+      x-go-type: permission_usecase.Permission
+      x-go-type-import:
+        path: github.com/Housiadas/cerberus/internal/usecase/permission_usecase
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+
+    PermissionPageResult:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Permission'
+        metadata:
+          $ref: '#/components/schemas/Metadata'
+
+    # ---- Audits ----
+    Audit:
+      x-go-type: audit_usecase.Audit
+      x-go-type-import:
+        path: github.com/Housiadas/cerberus/internal/usecase/audit_usecase
+      type: object
+      properties:
+        id:
+          type: string
+        objId:
+          type: string
+        objEntity:
+          type: string
+        objName:
+          type: string
+        actorId:
+          type: string
+        action:
+          type: string
+        data:
+          type: string
+        message:
+          type: string
+        timestamp:
+          type: string
+
+    AuditPageResult:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Audit'
+        metadata:
+          $ref: '#/components/schemas/Metadata'
+
+    # ---- Common ----
+    Metadata:
+      x-go-type: page.Metadata
+      x-go-type-import:
+        path: github.com/Housiadas/cerberus/internal/utils/page
+      type: object
+      properties:
+        firstPage:
+          type: integer
+        currentPage:
+          type: integer
+        lastPage:
+          type: integer
+        rowsPerPage:
+          type: integer
+        total:
+          type: integer
+
+    Error:
+      type: object
+      properties:
+        code:
+          type: string
+        message:
+          type: string

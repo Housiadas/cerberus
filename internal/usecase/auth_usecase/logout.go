@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/Housiadas/cerberus/pkg/web/errs"
+	"github.com/Housiadas/cerberus/internal/utils/errs"
 )
 
 func (u *UseCase) Logout(ctx context.Context, userID string, req LogoutReq) error {
@@ -16,7 +16,10 @@ func (u *UseCase) Logout(ctx context.Context, userID string, req LogoutReq) erro
 
 	// Check if userID matches
 	if rToken.UserID != userID {
-		return errs.New(errs.Unauthenticated, errs.Errorf(errs.Unauthenticated, "invalid user id"))
+		return errs.New(
+			errs.Unauthenticated,
+			errs.Errorf(errs.Unauthenticated, "invalid user id"),
+		)
 	}
 
 	// Revoke refresh token

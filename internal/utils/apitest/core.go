@@ -2,9 +2,11 @@ package apitest
 
 import (
 	"github.com/Housiadas/cerberus/internal/app/repo/audit_repo"
+	"github.com/Housiadas/cerberus/internal/app/repo/permission_repo"
 	"github.com/Housiadas/cerberus/internal/app/repo/role_repo"
 	"github.com/Housiadas/cerberus/internal/app/repo/user_repo"
 	"github.com/Housiadas/cerberus/internal/core/service/audit_service"
+	"github.com/Housiadas/cerberus/internal/core/service/permission_service"
 	"github.com/Housiadas/cerberus/internal/core/service/role_service"
 	"github.com/Housiadas/cerberus/internal/core/service/user_service"
 	"github.com/Housiadas/cerberus/pkg/clock"
@@ -23,10 +25,12 @@ func newCore(log *logger.Service, db *sqlx.DB) Core {
 	auditService := audit_service.New(log, audit_repo.NewStore(log, db))
 	userService := user_service.New(log, user_repo.NewStore(log, db), uuidGen, clk, hash)
 	roleService := role_service.New(log, role_repo.NewStore(log, db))
+	permissionService := permission_service.New(log, permission_repo.NewStore(log, db))
 
 	return Core{
-		Audit: auditService,
-		User:  userService,
-		Role:  roleService,
+		Audit:      auditService,
+		User:       userService,
+		Role:       roleService,
+		Permission: permissionService,
 	}
 }

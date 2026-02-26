@@ -3,9 +3,9 @@ package role
 import (
 	"context"
 
+	"github.com/Housiadas/cerberus/internal/utils/page"
 	"github.com/Housiadas/cerberus/pkg/order"
 	"github.com/Housiadas/cerberus/pkg/pgsql"
-	"github.com/Housiadas/cerberus/pkg/web"
 	"github.com/google/uuid"
 )
 
@@ -16,6 +16,6 @@ type Storer interface {
 	Update(ctx context.Context, role Role) error
 	Delete(ctx context.Context, role Role) error
 	Count(ctx context.Context, filter QueryFilter) (int, error)
-	Query(ctx context.Context, filter QueryFilter, orderBy order.By, page web.Page) ([]Role, error)
+	Query(ctx context.Context, filter QueryFilter, orderBy order.By, page page.Page) ([]Role, error)
 	QueryByID(ctx context.Context, userID uuid.UUID) (Role, error)
 }

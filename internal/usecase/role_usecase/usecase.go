@@ -5,9 +5,9 @@ import (
 	"context"
 
 	"github.com/Housiadas/cerberus/internal/core/service/role_service"
+	"github.com/Housiadas/cerberus/internal/utils/errs"
+	"github.com/Housiadas/cerberus/internal/utils/page"
 	"github.com/Housiadas/cerberus/pkg/order"
-	"github.com/Housiadas/cerberus/pkg/web"
-	"github.com/Housiadas/cerberus/pkg/web/errs"
 	"github.com/google/uuid"
 )
 
@@ -55,7 +55,13 @@ func (uc *UseCase) Update(ctx context.Context, res UpdateRole, roleID string) (R
 
 	updRole, err := uc.roleService.Update(ctx, role, uu)
 	if err != nil {
-		return Role{}, errs.Errorf(errs.Internal, "update: userID[%s] uu[%+v]: %s", roleID, uu, err)
+		return Role{}, errs.Errorf(
+			errs.Internal,
+			"update: userID[%s] uu[%+v]: %s",
+			roleID,
+			uu,
+			err,
+		)
 	}
 
 	return toAppRole(updRole), nil
@@ -97,31 +103,31 @@ func (uc *UseCase) QueryByID(ctx context.Context, roleID string) (Role, error) {
 }
 
 // Query returns a list of roles with paging.
-func (uc *UseCase) Query(ctx context.Context, qp AppQueryParams) (web.Result[Role], error) {
-	p, err := web.Parse(qp.Page, qp.Rows)
+func (uc *UseCase) Query(ctx context.Context, qp AppQueryParams) (page.Result[Role], error) {
+	p, err := page.Parse(qp.Page, qp.Rows)
 	if err != nil {
-		return web.Result[Role]{}, errs.NewFieldErrors("page", err)
+		return page.Result[Role]{}, errs.NewFieldErrors("page", err)
 	}
 
 	filter, err := parseFilter(qp)
 	if err != nil {
-		return web.Result[Role]{}, err
+		return page.Result[Role]{}, err
 	}
 
 	orderBy, err := order.Parse(getOrderByFields(), qp.OrderBy, getDefaultOrderBy())
 	if err != nil {
-		return web.Result[Role]{}, errs.NewFieldErrors("order", err)
+		return page.Result[Role]{}, errs.NewFieldErrors("order", err)
 	}
 
 	usrs, err := uc.roleService.Query(ctx, filter, orderBy, p)
 	if err != nil {
-		return web.Result[Role]{}, errs.Errorf(errs.Internal, "query: %s", err)
+		return page.Result[Role]{}, errs.Errorf(errs.Internal, "query: %s", err)
 	}
 
 	total, err := uc.roleService.Count(ctx, filter)
 	if err != nil {
-		return web.Result[Role]{}, errs.Errorf(errs.Internal, "count: %s", err)
+		return page.Result[Role]{}, errs.Errorf(errs.Internal, "count: %s", err)
 	}
 
-	return web.NewResult(toAppRoles(usrs), total, p), nil
+	return page.NewResult(toAppRoles(usrs), total, p), nil
 }

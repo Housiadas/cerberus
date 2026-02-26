@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/Housiadas/cerberus/pkg/web/errs"
+	"github.com/Housiadas/cerberus/internal/utils/errs"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 )

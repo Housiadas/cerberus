@@ -7,9 +7,9 @@ import (
 
 	"github.com/Housiadas/cerberus/internal/core/domain/user"
 	"github.com/Housiadas/cerberus/internal/core/service/audit_service"
+	"github.com/Housiadas/cerberus/internal/utils/errs"
+	"github.com/Housiadas/cerberus/internal/utils/page"
 	"github.com/Housiadas/cerberus/pkg/order"
-	"github.com/Housiadas/cerberus/pkg/web"
-	"github.com/Housiadas/cerberus/pkg/web/errs"
 )
 
 type UseCase struct {
@@ -22,15 +22,15 @@ func NewUseCase(service *audit_service.Service) *UseCase {
 	}
 }
 
-func (a *UseCase) Query(ctx context.Context, qp AppQueryParams) (web.Result[Audit], error) {
-	p, err := web.Parse(qp.Page, qp.Rows)
+func (a *UseCase) Query(ctx context.Context, qp AppQueryParams) (page.Result[Audit], error) {
+	p, err := page.Parse(qp.Page, qp.Rows)
 	if err != nil {
-		return web.Result[Audit]{}, errs.NewFieldErrors("page", err)
+		return page.Result[Audit]{}, errs.NewFieldErrors("page", err)
 	}
 
 	filter, err := parseFilter(qp)
 	if err != nil {
-		return web.Result[Audit]{}, func() *errs.Error {
+		return page.Result[Audit]{}, func() *errs.Error {
 			target := &errs.Error{}
 			_ = errors.As(err, &target)
 
@@ -40,18 +40,18 @@ func (a *UseCase) Query(ctx context.Context, qp AppQueryParams) (web.Result[Audi
 
 	orderBy, err := order.Parse(orderByFields, qp.OrderBy, user.GetDefaultOrderBy())
 	if err != nil {
-		return web.Result[Audit]{}, errs.NewFieldErrors("order", err)
+		return page.Result[Audit]{}, errs.NewFieldErrors("order", err)
 	}
 
 	adts, err := a.AuditService.Query(ctx, filter, orderBy, p)
 	if err != nil {
-		return web.Result[Audit]{}, errs.Errorf(errs.Internal, "query: %s", err)
+		return page.Result[Audit]{}, errs.Errorf(errs.Internal, "query: %s", err)
 	}
 
 	total, err := a.AuditService.Count(ctx, filter)
 	if err != nil {
-		return web.Result[Audit]{}, errs.Errorf(errs.Internal, "count: %s", err)
+		return page.Result[Audit]{}, errs.Errorf(errs.Internal, "count: %s", err)
 	}
 
-	return web.NewResult(toAppAudits(adts), total, p), nil
+	return page.NewResult(toAppAudits(adts), total, p), nil
 }

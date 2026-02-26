@@ -1,14 +1,12 @@
 package refresh_token_usecase
 
 import (
-	"encoding/json"
 	"fmt"
 	"time"
 
 	"github.com/Housiadas/cerberus/internal/core/domain/refresh_token"
+	"github.com/Housiadas/cerberus/internal/utils/errs"
 	"github.com/Housiadas/cerberus/pkg/clock"
-	"github.com/Housiadas/cerberus/pkg/web"
-	"github.com/Housiadas/cerberus/pkg/web/errs"
 	"github.com/google/uuid"
 )
 
@@ -22,16 +20,6 @@ type RefreshToken struct {
 	ExpiresAt string `json:"expiresAt"`
 	CreatedAt string `json:"createdAt"`
 	Revoked   bool   `json:"revoked"`
-}
-
-// Encode implements the encoder interface.
-func (r RefreshToken) Encode() ([]byte, string, error) {
-	data, err := json.Marshal(r)
-	if err != nil {
-		return nil, web.ContentTypeJSON, fmt.Errorf("refresh token encode error: %w", err)
-	}
-
-	return data, web.ContentTypeJSON, nil
 }
 
 func toAppToken(r refresh_token.RefreshToken) RefreshToken {

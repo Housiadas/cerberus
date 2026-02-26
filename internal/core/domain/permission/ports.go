@@ -3,9 +3,9 @@ package permission
 import (
 	"context"
 
+	"github.com/Housiadas/cerberus/internal/utils/page"
 	"github.com/Housiadas/cerberus/pkg/order"
 	"github.com/Housiadas/cerberus/pkg/pgsql"
-	"github.com/Housiadas/cerberus/pkg/web"
 	"github.com/google/uuid"
 )
 
@@ -20,7 +20,7 @@ type Storer interface {
 		ctx context.Context,
 		filter QueryFilter,
 		orderBy order.By,
-		page web.Page,
+		page page.Page,
 	) ([]Permission, error)
 	QueryByID(ctx context.Context, permissionID uuid.UUID) (Permission, error)
 }

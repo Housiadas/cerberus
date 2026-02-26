@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/Housiadas/cerberus/internal/utils/page"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -15,7 +16,6 @@ import (
 	"github.com/Housiadas/cerberus/internal/core/service/permission_service"
 	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/Housiadas/cerberus/pkg/order"
-	"github.com/Housiadas/cerberus/pkg/web"
 )
 
 func TestService_Create_Successful(t *testing.T) {
@@ -230,7 +230,7 @@ func TestService_Query_Successful(t *testing.T) {
 	ctx := context.Background()
 	filter := permission.QueryFilter{}
 	orderBy := order.By{Field: "name", Direction: "asc"}
-	page := web.Page{}
+	page := page.Page{}
 
 	expectedPerms := []permission.Permission{
 		{
@@ -256,7 +256,7 @@ func TestService_Query_Error(t *testing.T) {
 	ctx := context.Background()
 	filter := permission.QueryFilter{}
 	orderBy := order.By{Field: "name", Direction: "asc"}
-	page := web.Page{}
+	page := page.Page{}
 
 	mLogger := logger.NewMockLogger(t)
 

@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/Housiadas/cerberus/internal/utils/errs"
 	"github.com/google/go-cmp/cmp"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -11,7 +12,6 @@ import (
 	"github.com/Housiadas/cerberus/internal/core/domain/user"
 	"github.com/Housiadas/cerberus/internal/usecase/user_usecase"
 	"github.com/Housiadas/cerberus/internal/utils/apitest"
-	"github.com/Housiadas/cerberus/pkg/web/errs"
 )
 
 func Test_API_User_Create_200(t *testing.T) {
@@ -34,7 +34,7 @@ func Test_API_User_Create_200(t *testing.T) {
 			URL:         "/api/v1/users",
 			Method:      http.MethodPost,
 			StatusCode:  http.StatusOK,
-			AccessToken: &sd.Users[0].AccessToken.Token,
+			AccessToken: &sd.Admins[0].AccessToken.Token,
 			Input: &user_usecase.NewUser{
 				Name:            "Chris Housi",
 				Email:           "chris@housi.com",
@@ -101,7 +101,7 @@ func Test_API_User_Create_400(t *testing.T) {
 			URL:         "/api/v1/users",
 			Method:      http.MethodPost,
 			StatusCode:  http.StatusBadRequest,
-			AccessToken: &sd.Users[0].AccessToken.Token,
+			AccessToken: &sd.Admins[0].AccessToken.Token,
 			Input:       &user_usecase.NewUser{},
 			GotResp:     &errs.Error{},
 			ExpResp:     &errs.Error{},
@@ -121,7 +121,7 @@ func Test_API_User_Create_400(t *testing.T) {
 			URL:         "/api/v1/users",
 			Method:      http.MethodPost,
 			StatusCode:  http.StatusBadRequest,
-			AccessToken: &sd.Users[0].AccessToken.Token,
+			AccessToken: &sd.Admins[0].AccessToken.Token,
 			Input: &user_usecase.NewUser{
 				Name:            "Bi",
 				Email:           "chris@housi.com",

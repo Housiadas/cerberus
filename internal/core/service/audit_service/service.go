@@ -7,10 +7,10 @@ import (
 	"time"
 
 	"github.com/Housiadas/cerberus/internal/core/domain/audit"
+	"github.com/Housiadas/cerberus/internal/utils/page"
 	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/Housiadas/cerberus/pkg/order"
 	"github.com/Housiadas/cerberus/pkg/otel"
-	"github.com/Housiadas/cerberus/pkg/web"
 	"github.com/google/uuid"
 )
 
@@ -68,7 +68,7 @@ func (b *Service) Query(
 	ctx context.Context,
 	filter audit.QueryFilter,
 	orderBy order.By,
-	page web.Page,
+	page page.Page,
 ) ([]audit.Audit, error) {
 	ctx, span := otel.AddSpan(ctx, "repo.audit.query")
 	defer span.End()

@@ -7,9 +7,9 @@ import (
 	"runtime"
 	"time"
 
+	"github.com/Housiadas/cerberus/internal/utils/errs"
 	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/Housiadas/cerberus/pkg/pgsql"
-	"github.com/Housiadas/cerberus/pkg/web/errs"
 	"github.com/jmoiron/sqlx"
 )
 

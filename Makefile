@@ -157,18 +157,18 @@ test:
 ## coverage/run: Run tests and generate filtered coverage profile
 .PHONY: coverage/run
 coverage/run:
-	go test -coverprofile=coverage.out -coverpkg=./... ./...
+	CGO_ENABLED=1 go test -coverprofile=coverage.out -coverpkg=./... ./...
 	grep -Evf .coverignore coverage.out > filtered.out
 
 ## coverage: Per-function coverage summary
 .PHONY: coverage
 coverage: coverage/run
-	go tool cover -func=filtered.out
+	CGO_ENABLED=1 go tool cover -func=filtered.out
 
 ## coverage/html: Interactive HTML report in browser
 .PHONY: coverage/html
 coverage/html: coverage/run
-	go tool cover -html=filtered.out -o coverage.html
+	CGO_ENABLED=1 go tool cover -html=filtered.out -o coverage.html
 	xdg-open coverage.html
 
 ## ================== #
@@ -244,10 +244,10 @@ tools/update:
 generate:
 	go generate ./...
 
-## swagger: Generate swagger docs
-.PHONY: swagger
-swagger:
-	docker run --rm -v $(PWD):/code ghcr.io/swaggo/swag:v1.16.3 init --g cmd/rest/main.go
+## generate/api: Generate API code from OpenAPI spec
+.PHONY: generate/api
+generate/api:
+	go generate ./internal/app/handler/...
 
 ## mockery: Generate mocks
 .PHONY: mockery

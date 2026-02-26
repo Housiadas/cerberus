@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/Housiadas/cerberus/internal/core/service/audit_service"
+	"github.com/Housiadas/cerberus/internal/core/service/permission_service"
 	"github.com/Housiadas/cerberus/internal/core/service/role_service"
 	"github.com/Housiadas/cerberus/internal/core/service/user_service"
 	"github.com/Housiadas/cerberus/internal/usecase/auth_usecase"
@@ -35,7 +36,8 @@ type Usecase struct {
 
 // Core represents all the internal core services needed for testing.
 type Core struct {
-	Audit *audit_service.Service
-	User  *user_service.Service
-	Role  *role_service.Service
+	Audit      *audit_service.Service
+	User       *user_service.Service
+	Role       *role_service.Service
+	Permission *permission_service.Service
 }

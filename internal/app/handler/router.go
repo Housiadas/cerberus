@@ -1,27 +1,25 @@
 package handler
 
 import (
-	"github.com/Housiadas/cerberus/pkg/web"
+	"github.com/Housiadas/cerberus/internal/app/handler/openapi"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
 	"github.com/riandyrn/otelchi"
-	httpSwagger "github.com/swaggo/http-swagger"
 )
 
 // Routes returns applications router.
 func (h *Handler) Routes() *chi.Mux {
-	mid := h.Web.Middleware
-	authenticate := mid.AuthenticateBearer
+	m := h.Middleware
 
-	apiRouter := chi.NewRouter()
-	apiRouter.Use(
-		mid.Recoverer(),
-		mid.RequestID,
-		mid.Logger(),
-		mid.Otel(),
-		mid.Metrics(),
-		middleware.SetHeader(web.ContentTypeKey, web.ContentTypeJSON),
+	router := chi.NewRouter()
+	router.Use(
+		m.Recoverer(),
+		m.RequestID,
+		m.Otel(),
+		m.Logger(),
+		m.Metrics(),
+		middleware.SetHeader(ContentTypeKey, ContentTypeJSON),
 		middleware.GetHead,
 		cors.Handler(cors.Options{
 			AllowedOrigins: h.Cors.AllowedOrigins,
@@ -30,68 +28,20 @@ func (h *Handler) Routes() *chi.Mux {
 			ExposedHeaders: h.Cors.ExposedHeaders,
 			MaxAge:         h.Cors.MaxAge,
 		}),
+		otelchi.Middleware(h.ServiceName, otelchi.WithChiRoutes(router)),
 	)
 
-	// v1 routes
-	apiRouter.Route("/v1", func(v1 chi.Router) {
-		v1.Use(
-			mid.APIVersion("v1"),
-			otelchi.Middleware(h.ServiceName, otelchi.WithChiRoutes(v1)),
-		)
-
-		// Auth
-		v1.Route("/auth", func(a chi.Router) {
-			a.Post("/login", h.Web.Res.Respond(h.authLogin))
-			a.Post("/register", h.Web.Res.Respond(h.authRegister))
-			a.Post("/refresh", h.Web.Res.Respond(h.authRefresh))
-			// logout - authenticated route
-			a.With(authenticate()).Post("/logout", h.Web.Res.Respond(h.authLogout))
-		})
-
-		// Users
-		v1.With(authenticate()).Route("/users", func(u chi.Router) {
-			u.Get("/", h.Web.Res.Respond(h.userQuery))
-			u.Post("/", h.Web.Res.Respond(h.userCreate))
-			u.Get("/{user_id}", h.Web.Res.Respond(h.userQueryByID))
-			u.Put("/{user_id}", h.Web.Res.Respond(h.userUpdate))
-			u.Delete("/{user_id}", h.Web.Res.Respond(h.userDelete))
-			u.Post("/{user_id}/role", h.Web.Res.Respond(h.userRoleCreate))
-			u.Delete("/{user_id}/role", h.Web.Res.Respond(h.userRoleDelete))
-		})
-
-		// Roles
-		v1.With(authenticate()).Route("/roles", func(r chi.Router) {
-			r.Get("/", h.Web.Res.Respond(h.roleQuery))
-			r.Post("/", h.Web.Res.Respond(h.roleCreate))
-			r.Put("/{role_id}", h.Web.Res.Respond(h.roleUpdate))
-			r.Delete("/{role_id}", h.Web.Res.Respond(h.roleDelete))
-			r.Post("/{role_id}/permission", h.Web.Res.Respond(h.rolePermissionCreate))
-		})
-
-		// Permissions
-		v1.With(authenticate()).Route("/permissions", func(p chi.Router) {
-			p.Get("/", h.Web.Res.Respond(h.permissionQuery))
-			p.Post("/", h.Web.Res.Respond(h.permissionCreate))
-			p.Put("/{permission_id}", h.Web.Res.Respond(h.permissionUpdate))
-			p.Delete("/{permission_id}", h.Web.Res.Respond(h.permissionDelete))
-		})
-
-		// Audits
-		v1.With(authenticate()).Route("/audits", func(a chi.Router) {
-			a.Get("/", h.Web.Res.Respond(h.auditQuery))
-		})
+	// order matter, first goes auth, then permissions etc.
+	si := openapi.NewStrictHandlerWithOptions(h, []openapi.StrictMiddlewareFunc{
+		m.Validation(),
+		m.Permission(),
+		m.Authenticate(),
+	}, openapi.StrictHTTPServerOptions{
+		RequestErrorHandlerFunc:  requestErrorHandler,
+		ResponseErrorHandlerFunc: responseErrorHandler,
 	})
 
-	// System Routes
-	router := chi.NewRouter()
-	router.Get("/readiness", h.Web.Res.Respond(h.readiness))
-	router.Get("/liveness", h.Web.Res.Respond(h.liveness))
-	router.Get("/swagger/doc.json", h.Swagger)
-	router.Handle("/swagger/*", httpSwagger.Handler(
-		httpSwagger.URL("./doc.json"),
-	))
-
-	router.Mount("/api", apiRouter)
+	openapi.HandlerFromMux(si, router)
 
 	return router
 }

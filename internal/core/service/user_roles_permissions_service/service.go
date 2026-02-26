@@ -5,9 +5,9 @@ import (
 	"fmt"
 
 	"github.com/Housiadas/cerberus/internal/core/domain/user_roles_permissions"
+	"github.com/Housiadas/cerberus/internal/utils/page"
 	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/Housiadas/cerberus/pkg/order"
-	"github.com/Housiadas/cerberus/pkg/web"
 	"github.com/google/uuid"
 )
 
@@ -27,7 +27,7 @@ func (s *Service) Query(
 	ctx context.Context,
 	filter user_roles_permissions.QueryFilter,
 	orderBy order.By,
-	p web.Page,
+	p page.Page,
 ) ([]user_roles_permissions.UserRolesPermissions, error) {
 	userRolesPerms, err := s.storer.Query(ctx, filter, orderBy, p)
 	if err != nil {

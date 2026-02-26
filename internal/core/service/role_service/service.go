@@ -7,10 +7,10 @@ import (
 	"time"
 
 	"github.com/Housiadas/cerberus/internal/core/domain/role"
+	"github.com/Housiadas/cerberus/internal/utils/page"
 	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/Housiadas/cerberus/pkg/order"
 	"github.com/Housiadas/cerberus/pkg/pgsql"
-	"github.com/Housiadas/cerberus/pkg/web"
 	"github.com/google/uuid"
 )
 
@@ -117,7 +117,7 @@ func (c *Service) Query(
 	ctx context.Context,
 	filter role.QueryFilter,
 	orderBy order.By,
-	page web.Page,
+	page page.Page,
 ) ([]role.Role, error) {
 	roles, err := c.storer.Query(ctx, filter, orderBy, page)
 	if err != nil {
