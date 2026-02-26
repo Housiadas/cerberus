@@ -59,3 +59,20 @@ The goal is to create the soft delete feature
   output: docs/rest.gen.go
 ```
 - Remove everything related to swaggo and replace with oapi-codegen
+
+## Addition of redis
+- Add redis to the compose.yaml
+- Add go redis client to the go.mod
+- Create a wrapper for redis in pkg
+- Generate mocks for redis methods
+- Add redis to the env
+- Add redis to the config and config.dist
+- Refactor the cache directory user_cache package
+- Use redis for L2 cache and for L1 cache use sturdyc
+- Use WithDistributedStorage from sturdyc package
+- The flow: sturdyc -> redis -> db
+- Use the flow for fetching endpoints not for delete/update endpoints
+- Add tests for redis
+- Run mockery
+- Run make lint
+- Run make test

@@ -9,6 +9,7 @@ import (
 	"os/signal"
 	"runtime"
 	"syscall"
+	"time"
 
 	"github.com/Housiadas/cerberus/internal/app/handler"
 	"github.com/Housiadas/cerberus/internal/config"
@@ -17,8 +18,10 @@ import (
 	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/Housiadas/cerberus/pkg/otel"
 	"github.com/Housiadas/cerberus/pkg/pgsql"
+	pkgRedis "github.com/Housiadas/cerberus/pkg/redis"
 	"github.com/Housiadas/cerberus/pkg/vault"
 	_ "github.com/jackc/pgx/v5/stdlib"
+	goRedis "github.com/redis/go-redis/v9"
 )
 
 var build = "develop"
@@ -91,6 +94,17 @@ func run(ctx context.Context, log *logger.Service) error {
 	defer db.Close()
 
 	// -------------------------------------------------------------------------
+	// Initialize Redis
+	// -------------------------------------------------------------------------
+	log.Info(ctx, "startup", "status", "initializing redis", "host", cfg.Redis.Host)
+
+	redisClient, distributedStorage, err := initRedis(ctx, cfg)
+	if err != nil {
+		return fmt.Errorf("initializing redis: %w", err)
+	}
+	defer redisClient.Close()
+
+	// -------------------------------------------------------------------------
 	// Start Tracing Support
 	// -------------------------------------------------------------------------
 	log.Info(ctx, "startup", "status", "initializing tracing support")
@@ -117,17 +131,9 @@ func run(ctx context.Context, log *logger.Service) error {
 	// -------------------------------------------------------------------------
 	log.Info(ctx, "startup", "status", "initializing vault client", "address", cfg.Vault.Address)
 
-	vaultClient, err := vault.New(vault.Config{
-		Address: cfg.Vault.Address,
-		Token:   cfg.Vault.Token,
-	})
+	jwtSecret, err := initVault(ctx, cfg)
 	if err != nil {
-		return fmt.Errorf("creating vault client: %w", err)
-	}
-
-	jwtSecret, err := vaultClient.GetJWTSecret(ctx)
-	if err != nil {
-		return fmt.Errorf("getting jwt secret from vault: %w", err)
+		return fmt.Errorf("initializing vault: %w", err)
 	}
 
 	log.Info(ctx, "startup", "status", "jwt secret loaded from vault")
@@ -163,13 +169,14 @@ func run(ctx context.Context, log *logger.Service) error {
 
 	// Initialize handler
 	h := handler.New(handler.Config{
-		ServiceName:       cfg.App.Name,
-		Build:             build,
-		Cors:              cfg.Cors,
-		DB:                db,
-		Log:               log,
-		Tracer:            tracer,
-		AccessTokenSecret: jwtSecret,
+		ServiceName:        cfg.App.Name,
+		Build:              build,
+		Cors:               cfg.Cors,
+		DB:                 db,
+		Log:                log,
+		Tracer:             tracer,
+		AccessTokenSecret:  jwtSecret,
+		DistributedStorage: distributedStorage,
 	})
 
 	api := http.Server{
@@ -212,4 +219,44 @@ func run(ctx context.Context, log *logger.Service) error {
 	}
 
 	return nil
+}
+
+func initRedis(
+	ctx context.Context,
+	cfg config.Config,
+) (*goRedis.Client, *pkgRedis.DistributedStorage, error) {
+	client, err := pkgRedis.Open(ctx, pkgRedis.Config{
+		Host:     cfg.Redis.Host,
+		Password: cfg.Redis.Password,
+		DB:       cfg.Redis.DB,
+	})
+	if err != nil {
+		return nil, nil, fmt.Errorf("connecting to redis: %w", err)
+	}
+
+	ttl, err := time.ParseDuration(cfg.Redis.TTL)
+	if err != nil {
+		client.Close()
+
+		return nil, nil, fmt.Errorf("parsing redis TTL: %w", err)
+	}
+
+	return client, pkgRedis.NewDistributedStorage(client, ttl), nil
+}
+
+func initVault(ctx context.Context, cfg config.Config) ([]byte, error) {
+	vaultClient, err := vault.New(vault.Config{
+		Address: cfg.Vault.Address,
+		Token:   cfg.Vault.Token,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("creating vault client: %w", err)
+	}
+
+	jwtSecret, err := vaultClient.GetJWTSecret(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("getting jwt secret from vault: %w", err)
+	}
+
+	return jwtSecret, nil
 }

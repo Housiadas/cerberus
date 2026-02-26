@@ -4,6 +4,7 @@ networks:
 volumes:
   db_data:
   kafka_data:
+  redis_data:
   tempo_data:
   vault_data:
 
@@ -41,6 +42,17 @@ services:
       - "9092:9092"
     volumes:
       - kafka_data:/var/lib/kafka/data
+    networks:
+      - app_local_network
+
+  redis:
+    image: redis:7.4
+    container_name: redis-container
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
     networks:
       - app_local_network
 
