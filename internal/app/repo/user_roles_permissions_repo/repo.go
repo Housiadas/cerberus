@@ -25,6 +25,8 @@ var (
 	userRolesPermissionsCountSQL string
 	//go:embed query/user_roles_permissions_count.sql
 	userHasPermissionSQL string
+	//go:embed query/user_permissions_by_user_id.sql
+	userPermissionsByUserIDSQL string
 )
 
 // Store manages the set of APIs for DB access to the view.
@@ -90,6 +92,29 @@ func (s *Store) Count(ctx context.Context, filter urp.QueryFilter) (int, error) 
 	}
 
 	return cnt.Count, nil
+}
+
+// QueryPermissionsByUserID returns all distinct permission names for the given user.
+func (s *Store) QueryPermissionsByUserID(ctx context.Context, userID uuid.UUID) ([]string, error) {
+	data := map[string]any{
+		"user_id": userID,
+	}
+
+	var rows []struct {
+		PermissionName string `db:"permission_name"`
+	}
+
+	err := pgsql.NamedQuerySlice(ctx, s.log, s.db, userPermissionsByUserIDSQL, data, &rows)
+	if err != nil {
+		return nil, fmt.Errorf("db query permissions by user_id: %w", err)
+	}
+
+	permissions := make([]string, len(rows))
+	for i, r := range rows {
+		permissions[i] = r.PermissionName
+	}
+
+	return permissions, nil
 }
 
 // HasPermission returns true if the user has the specified permission.

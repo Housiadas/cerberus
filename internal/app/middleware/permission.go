@@ -3,6 +3,7 @@ package middleware
 import (
 	"context"
 	"net/http"
+	"slices"
 
 	"github.com/Housiadas/cerberus/internal/app/handler/openapi"
 	ctxPck "github.com/Housiadas/cerberus/internal/utils/context"
@@ -46,17 +47,23 @@ func (m *Middleware) Permission() openapi.StrictMiddlewareFunc {
 			claims := ctxPck.GetClaims(ctx)
 			userID := claims.Subject
 
-			hasPermission, err := m.UseCase.UserRolesPermissions.HasPermission(
-				ctx,
-				userID,
-				permissionName,
-			)
+			sfKey := "permissions:" + userID
+			result, err, _ := m.permSflight.Do(sfKey, func() (any, error) {
+				return m.UseCase.UserRolesPermissions.QueryPermissionsByUserID(ctx, userID)
+			})
 			if err != nil {
 				m.Log.Error(ctx, "error checking permissions", err)
 
 				return nil, errs.New(errs.Internal, ErrCheckingPermission)
 			}
 
+			permissions, ok := result.([]string)
+			if !ok {
+				m.Log.Error(ctx, "error casting permissions", err)
+				return nil, errs.New(errs.Internal, ErrCheckingPermission)
+			}
+
+			hasPermission := slices.Contains(permissions, permissionName)
 			if !hasPermission {
 				m.Log.Info(ctx, "access denied",
 					"user_id", userID,

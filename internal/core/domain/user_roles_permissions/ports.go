@@ -18,4 +18,5 @@ type Storer interface {
 	) ([]UserRolesPermissions, error)
 	Count(ctx context.Context, filter QueryFilter) (int, error)
 	HasPermission(ctx context.Context, userID uuid.UUID, permissionName string) (bool, error)
+	QueryPermissionsByUserID(ctx context.Context, userID uuid.UUID) ([]string, error)
 }

@@ -13,6 +13,7 @@ import (
 	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/Housiadas/cerberus/pkg/pgsql"
 	"go.opentelemetry.io/otel/trace"
+	"golang.org/x/sync/singleflight"
 )
 
 const (
@@ -30,10 +31,11 @@ type Config struct {
 }
 
 type Middleware struct {
-	Log     logger.Logger
-	Tracer  trace.Tracer
-	Tx      *pgsql.DBBeginner
-	UseCase UseCase
+	Log         logger.Logger
+	Tracer      trace.Tracer
+	Tx          *pgsql.DBBeginner
+	UseCase     UseCase
+	permSflight singleflight.Group
 }
 
 type UseCase struct {
