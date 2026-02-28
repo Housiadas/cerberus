@@ -4,27 +4,40 @@ import (
 	"context"
 	"net/mail"
 	"testing"
-	"time"
 
 	"github.com/Housiadas/cerberus/internal/core/domain/user"
 	"github.com/Housiadas/cerberus/pkg/logger"
+	"github.com/Housiadas/cerberus/pkg/redis"
+	goredis "github.com/redis/go-redis/v9"
+
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
 
-func newTestStore(t *testing.T) (*Store, *user.MockStorer) {
+func newTestStore(t *testing.T) (*Store, *user.MockStorer, *redis.MockClient) {
 	t.Helper()
 
 	mockStorer := user.NewMockStorer(t)
 	log := logger.NewMockLogger(t)
-	store := NewStore(log, mockStorer, 5*time.Minute, nil)
+	red := redis.NewMockClient(t)
+	store := NewStore(log, mockStorer, red)
 
-	return store, mockStorer
+	return store, mockStorer, red
+}
+
+// redisCacheMiss sets up the redis mock to simulate an L2 cache miss (Get returns redis.Nil)
+// and then a Set to store the fetched value.
+func redisCacheMiss(red *redis.MockClient) {
+	red.On("Get", mock.Anything, mock.Anything).
+		Return(goredis.NewStringResult("", goredis.Nil)).Once()
+	red.On("Set", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+		Return(goredis.NewStatusResult("OK", nil)).Maybe()
 }
 
 func TestQueryByID_CacheMiss(t *testing.T) {
-	store, mockStorer := newTestStore(t)
+	store, mockStorer, red := newTestStore(t)
 	ctx := context.Background()
 
 	id := uuid.New()
@@ -33,6 +46,7 @@ func TestQueryByID_CacheMiss(t *testing.T) {
 		Email: mail.Address{Address: "test@example.com"},
 	}
 
+	redisCacheMiss(red)
 	mockStorer.On("QueryByID", ctx, id).Return(expected, nil)
 
 	result, err := store.QueryByID(ctx, id)
@@ -41,7 +55,7 @@ func TestQueryByID_CacheMiss(t *testing.T) {
 }
 
 func TestQueryByID_CacheHit(t *testing.T) {
-	store, mockStorer := newTestStore(t)
+	store, mockStorer, red := newTestStore(t)
 	ctx := context.Background()
 
 	id := uuid.New()
@@ -50,6 +64,7 @@ func TestQueryByID_CacheHit(t *testing.T) {
 		Email: mail.Address{Address: "test@example.com"},
 	}
 
+	redisCacheMiss(red)
 	mockStorer.On("QueryByID", ctx, id).Return(expected, nil).Once()
 
 	// First call - cache miss, fetches from storer
@@ -57,14 +72,14 @@ func TestQueryByID_CacheHit(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, expected, result)
 
-	// Second call - should be served from cache (storer not called again)
+	// Second call - should be served from L1 cache (neither storer nor redis called again)
 	result, err = store.QueryByID(ctx, id)
 	require.NoError(t, err)
 	assert.Equal(t, expected, result)
 }
 
 func TestQueryByEmail_CacheMiss(t *testing.T) {
-	store, mockStorer := newTestStore(t)
+	store, mockStorer, red := newTestStore(t)
 	ctx := context.Background()
 
 	email := mail.Address{Address: "test@example.com"}
@@ -73,6 +88,7 @@ func TestQueryByEmail_CacheMiss(t *testing.T) {
 		Email: email,
 	}
 
+	redisCacheMiss(red)
 	mockStorer.On("QueryByEmail", ctx, email).Return(expected, nil)
 
 	result, err := store.QueryByEmail(ctx, email)
@@ -81,7 +97,7 @@ func TestQueryByEmail_CacheMiss(t *testing.T) {
 }
 
 func TestCreate_DelegatesToStorer(t *testing.T) {
-	store, mockStorer := newTestStore(t)
+	store, mockStorer, _ := newTestStore(t)
 	ctx := context.Background()
 
 	usr := user.User{
@@ -96,7 +112,7 @@ func TestCreate_DelegatesToStorer(t *testing.T) {
 }
 
 func TestUpdate_DelegatesToStorerAndInvalidatesCache(t *testing.T) {
-	store, mockStorer := newTestStore(t)
+	store, mockStorer, _ := newTestStore(t)
 	ctx := context.Background()
 
 	usr := user.User{
@@ -111,7 +127,7 @@ func TestUpdate_DelegatesToStorerAndInvalidatesCache(t *testing.T) {
 }
 
 func TestDelete_DelegatesToStorerAndInvalidatesCache(t *testing.T) {
-	store, mockStorer := newTestStore(t)
+	store, mockStorer, _ := newTestStore(t)
 	ctx := context.Background()
 
 	usr := user.User{

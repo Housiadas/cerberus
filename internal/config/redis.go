@@ -5,7 +5,6 @@ type Redis struct {
 	Host               string
 	Password           string
 	DB                 int
-	TTL                string
 	RedisImage         string
 	RedisContainerName string
 }

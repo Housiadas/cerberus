@@ -5,7 +5,6 @@ import (
 	"context"
 	"strings"
 	"testing"
-	"time"
 
 	"github.com/Housiadas/cerberus/internal/config"
 	pkgRedis "github.com/Housiadas/cerberus/pkg/redis"
@@ -16,7 +15,7 @@ import (
 
 // New starts a Redis container using testcontainers and returns
 // a configured DistributedStorage connected to it.
-func New(t *testing.T) *pkgRedis.DistributedStorage {
+func New(t *testing.T) pkgRedis.Client {
 	t.Helper()
 
 	ctx := context.Background()
@@ -37,12 +36,9 @@ func New(t *testing.T) *pkgRedis.DistributedStorage {
 	})
 	require.NoError(t, err)
 
-	ttl, err := time.ParseDuration(cfg.Redis.TTL)
-	require.NoError(t, err)
-
 	t.Cleanup(func() {
 		client.Close()
 	})
 
-	return pkgRedis.NewDistributedStorage(client, ttl)
+	return client
 }

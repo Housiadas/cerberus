@@ -9,7 +9,6 @@ import (
 	"os/signal"
 	"runtime"
 	"syscall"
-	"time"
 
 	"github.com/Housiadas/cerberus/internal/app/handler"
 	"github.com/Housiadas/cerberus/internal/config"
@@ -98,7 +97,7 @@ func run(ctx context.Context, log *logger.Service) error {
 	// -------------------------------------------------------------------------
 	log.Info(ctx, "startup", "status", "initializing redis", "host", cfg.Redis.Host)
 
-	redisClient, distributedStorage, err := initRedis(ctx, cfg)
+	redisClient, err := initRedis(ctx, cfg)
 	if err != nil {
 		return fmt.Errorf("initializing redis: %w", err)
 	}
@@ -119,7 +118,7 @@ func run(ctx context.Context, log *logger.Service) error {
 		Probability: cfg.Tempo.Probability,
 	})
 	if err != nil {
-		return fmt.Errorf("starting tracing: %w", err)
+		return fmt.Errorf("error starting tempo: %w", err)
 	}
 
 	defer teardown(ctx)
@@ -169,14 +168,14 @@ func run(ctx context.Context, log *logger.Service) error {
 
 	// Initialize handler
 	h := handler.New(handler.Config{
-		ServiceName:        cfg.App.Name,
-		Build:              build,
-		Cors:               cfg.Cors,
-		DB:                 db,
-		Log:                log,
-		Tracer:             tracer,
-		AccessTokenSecret:  jwtSecret,
-		DistributedStorage: distributedStorage,
+		ServiceName:       cfg.App.Name,
+		Build:             build,
+		Cors:              cfg.Cors,
+		DB:                db,
+		Redis:             redisClient,
+		Log:               log,
+		Tracer:            tracer,
+		AccessTokenSecret: jwtSecret,
 	})
 
 	api := http.Server{
@@ -224,24 +223,17 @@ func run(ctx context.Context, log *logger.Service) error {
 func initRedis(
 	ctx context.Context,
 	cfg config.Config,
-) (*goRedis.Client, *pkgRedis.DistributedStorage, error) {
+) (*goRedis.Client, error) {
 	client, err := pkgRedis.Open(ctx, pkgRedis.Config{
 		Host:     cfg.Redis.Host,
 		Password: cfg.Redis.Password,
 		DB:       cfg.Redis.DB,
 	})
 	if err != nil {
-		return nil, nil, fmt.Errorf("connecting to redis: %w", err)
+		return nil, fmt.Errorf("error connecting to redis: %w", err)
 	}
 
-	ttl, err := time.ParseDuration(cfg.Redis.TTL)
-	if err != nil {
-		client.Close()
-
-		return nil, nil, fmt.Errorf("parsing redis TTL: %w", err)
-	}
-
-	return client, pkgRedis.NewDistributedStorage(client, ttl), nil
+	return client, nil
 }
 
 func initVault(ctx context.Context, cfg config.Config) ([]byte, error) {

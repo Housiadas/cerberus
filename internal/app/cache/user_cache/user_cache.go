@@ -12,9 +12,18 @@ import (
 	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/Housiadas/cerberus/pkg/order"
 	"github.com/Housiadas/cerberus/pkg/pgsql"
+	"github.com/Housiadas/cerberus/pkg/redis"
 	"github.com/google/uuid"
 	"github.com/viccon/sturdyc"
 )
+
+const (
+	capacity           = 10000
+	numShards          = 10
+	evictionPercentage = 10
+)
+
+var ttl = 5 * time.Minute
 
 // Store manages the set of APIs for user data and caching.
 type Store struct {
@@ -27,16 +36,11 @@ type Store struct {
 func NewStore(
 	log logger.Logger,
 	storer user.Storer,
-	ttl time.Duration,
-	ds sturdyc.DistributedStorage,
+	red redis.Client,
 ) *Store {
-	const (
-		capacity           = 10000
-		numShards          = 10
-		evictionPercentage = 10
-	)
+	ds := redis.NewDistributedStorage(red, ttl)
 
-	opts := []sturdyc.Option{}
+	var opts []sturdyc.Option
 	if ds != nil {
 		opts = append(opts, sturdyc.WithDistributedStorage(ds))
 	}
