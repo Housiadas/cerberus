@@ -13,6 +13,7 @@ import (
 	"github.com/Housiadas/cerberus/internal/core/service/outbox_service"
 	"github.com/Housiadas/cerberus/internal/utils/dbtest"
 	"github.com/Housiadas/cerberus/internal/utils/kafkatest"
+	"github.com/Housiadas/cerberus/internal/utils/redistest"
 	"github.com/Housiadas/cerberus/pkg/clock"
 	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/Housiadas/cerberus/pkg/otel"
@@ -50,12 +51,16 @@ func StartTest(t *testing.T, testName string) (*Test, error) {
 
 	tracer := traceProvider.Tracer("Service Name")
 
+	// Initialize Redis testcontainers
+	red := redistest.New(t)
+
 	// Initialize handler
 	h := handler.New(handler.Config{
 		ServiceName:       "Test Service Name",
 		Build:             "Test",
 		Cors:              cfg.CorsSettings{},
 		DB:                db,
+		Redis:             red,
 		Log:               log,
 		Tracer:            tracer,
 		AccessTokenSecret: []byte("test-256-bit-access-secret"),

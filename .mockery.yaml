@@ -45,6 +45,9 @@ packages:
   github.com/Housiadas/cerberus/pkg/hasher:
     config:
       all: true
+  github.com/Housiadas/cerberus/pkg/redis:
+    config:
+      all: true
   github.com/Housiadas/cerberus/pkg/logger:
     config:
       all: true

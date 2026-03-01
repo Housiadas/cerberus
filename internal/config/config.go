@@ -17,6 +17,7 @@ type Config struct {
 	DB      DB
 	Vault   Vault
 	Tempo   Tempo
+	Redis   Redis
 	Kafka   Kafka
 	Cors    CorsSettings
 }
