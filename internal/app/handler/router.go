@@ -16,9 +16,8 @@ func (h *Handler) Routes() *chi.Mux {
 	router.Use(
 		m.Recoverer(),
 		m.RequestID,
-		m.Otel(),
 		m.Logger(),
-		m.Metrics(),
+		m.Otel(),
 		middleware.SetHeader(ContentTypeKey, ContentTypeJSON),
 		middleware.GetHead,
 		cors.Handler(cors.Options{
