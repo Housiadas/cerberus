@@ -24,7 +24,7 @@ func (m *Middleware) Recoverer() func(next http.Handler) http.Handler {
 						rec,
 						string(trace),
 					)
-					m.Log.Error(ctx, "panic mid", err)
+					m.log.Error(ctx, "panic mid", err)
 					m.Error(w, err, http.StatusInternalServerError)
 
 					return

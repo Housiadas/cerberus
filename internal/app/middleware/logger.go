@@ -22,7 +22,7 @@ func (m *Middleware) Logger() func(next http.Handler) http.Handler {
 			}
 
 			defer func() {
-				m.Log.Info(ctx, "request completed",
+				m.log.Info(ctx, "request completed",
 					"path", path,
 					"method", method,
 					"remote_addr", remoteAddr,

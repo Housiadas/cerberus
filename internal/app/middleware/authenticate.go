@@ -39,7 +39,7 @@ func (m *Middleware) Authenticate() openapi.StrictMiddlewareFunc {
 
 			jwtUnverified := bearerToken[7:]
 
-			resp, err := m.UseCase.Auth.Validate(ctx, jwtUnverified)
+			resp, err := m.useCase.auth.Validate(ctx, jwtUnverified)
 			if err != nil {
 				return nil, errs.New(errs.Unauthenticated, err)
 			}
@@ -72,7 +72,7 @@ func (m *Middleware) AuthenticateBasic() func(next http.Handler) http.Handler {
 				Password: pass,
 			}
 
-			_, err := m.UseCase.User.Authenticate(ctx, authUsr)
+			_, err := m.useCase.user.Authenticate(ctx, authUsr)
 			if err != nil {
 				m.Error(w, err, http.StatusUnauthorized)
 
