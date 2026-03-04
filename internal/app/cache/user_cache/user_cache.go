@@ -49,7 +49,7 @@ func NewStore(
 
 	ds := redis.NewDistributedStorage(red, ttl)
 
-	var opts []sturdyc.Option
+	opts := make([]sturdyc.Option, 0, 6)
 	opts = append(opts, sturdyc.WithDistributedStorage(ds))
 	opts = append(opts, sturdyc.WithMetrics(recorder))
 	opts = append(opts, sturdyc.WithDistributedMetrics(recorder))

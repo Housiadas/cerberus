@@ -18,7 +18,6 @@ func newMeterProvider(
 		otlpmetricgrpc.WithEndpoint(cfg.OTLPEndpoint),
 		otlpmetricgrpc.WithInsecure(),
 	)
-
 	if err != nil {
 		return nil, fmt.Errorf("creating otlp metric exporter: %w", err)
 	}

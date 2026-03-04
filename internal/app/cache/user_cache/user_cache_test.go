@@ -20,11 +20,11 @@ func newTestStore(t *testing.T) (*Store, *user.MockStorer, *redis.MockClient) {
 	t.Helper()
 
 	mockStorer := user.NewMockStorer(t)
-	log := logger.NewMockLogger(t)
-	red := redis.NewMockClient(t)
-	store := NewStore(log, mockStorer, red)
+	mLogger := logger.NewMockLogger(t)
+	mRed := redis.NewMockClient(t)
+	store := NewStore(t.Context(), mLogger, mockStorer, mRed)
 
-	return store, mockStorer, red
+	return store, mockStorer, mRed
 }
 
 // redisCacheMiss sets up the redis mock to simulate an L2 cache miss (Get returns redis.Nil)

@@ -21,6 +21,11 @@ import (
 
 const defaultTraceID = "00000000000000000000000000000000"
 
+var (
+	errCastTracer = errors.New("error casting tracer")
+	errCastMeter  = errors.New("error casting meter")
+)
+
 // Config defines the information needed to initialize tracing and metrics.
 type Config struct {
 	ServiceName    string
@@ -88,12 +93,12 @@ func New(ctx context.Context, cfg Config) (*Provider, error) {
 	}, nil
 }
 
-// TracerProvider returns the underlying tracer
+// TracerProvider returns the underlying tracer.
 func (p *Provider) TracerProvider() trace.TracerProvider {
 	return p.tracerProvider
 }
 
-// MeterProvider returns the underlying meter
+// MeterProvider returns the underlying meter.
 func (p *Provider) MeterProvider() metric.MeterProvider {
 	return p.meterProvider
 }
@@ -110,7 +115,7 @@ func (p *Provider) Shutdown(ctx context.Context) error {
 func (p *Provider) shutdownTracer(ctx context.Context) error {
 	tp, ok := p.tracerProvider.(*sdktrace.TracerProvider)
 	if !ok {
-		return fmt.Errorf("error casting tracer")
+		return errCastTracer
 	}
 
 	err := tp.Shutdown(ctx)
@@ -125,7 +130,7 @@ func (p *Provider) shutdownTracer(ctx context.Context) error {
 func (p *Provider) shutdownMeter(ctx context.Context) error {
 	mp, ok := p.meterProvider.(*sdkmetric.MeterProvider)
 	if !ok {
-		return fmt.Errorf("error casting meter")
+		return errCastMeter
 	}
 
 	err := mp.Shutdown(ctx)
@@ -147,7 +152,6 @@ func newResource(cfg Config) (*resource.Resource, error) {
 			semconv.DeploymentEnvironment(cfg.Environment),
 		),
 	)
-
 	if err != nil {
 		return nil, fmt.Errorf("error merging otel resources: %w", err)
 	}

@@ -85,7 +85,7 @@ func initOTelMetrics(
 	ctx context.Context,
 	meter metric.Meter,
 	log logger.Logger,
-) (m middlewareMetrics) {
+) middlewareMetrics {
 	requestCount, err := meter.Int64Counter("http.server.request.total",
 		metric.WithDescription("Total number of HTTP requests"),
 		metric.WithUnit("{request}"),

@@ -82,9 +82,8 @@ func (m *Middleware) Error(w http.ResponseWriter, err error, statusCode int) {
 type responseRecorder struct {
 	http.ResponseWriter
 
-	statusCode  int
-	wroteHeader bool
-	body        bytes.Buffer
+	statusCode int
+	body       bytes.Buffer
 }
 
 func (rec *responseRecorder) WriteHeader(code int) {
