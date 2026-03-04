@@ -1,0 +1,42 @@
+# OpenTelemetry Collector configuration for Cerberus.
+# Receives OTLP from the application, exports traces to Tempo and metrics to Prometheus.
+
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+      http:
+        endpoint: 0.0.0.0:4318
+
+processors:
+  batch:
+    send_batch_size: 512
+    timeout: 5s
+
+exporters:
+  # Traces → Tempo
+  otlp/tempo:
+    endpoint: tempo:4317
+    tls:
+      insecure: true
+
+  # Metrics → Prometheus (exposes /metrics endpoint that Prometheus scrapes)
+  prometheus:
+    endpoint: 0.0.0.0:8889
+    namespace: cerberus
+
+  # Debug logging (useful during development)
+  debug:
+    verbosity: basic
+
+service:
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [otlp/tempo, debug]
+    metrics:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [prometheus, debug]
