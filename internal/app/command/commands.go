@@ -44,8 +44,8 @@ func New(cfg Config) *Command {
 		log:   cfg.Log,
 		kafka: cfg.Kafka,
 		version: config.Version{
-			Build: cfg.Version.Build,
-			Desc:  cfg.Version.Desc,
+			Build:       cfg.Version.Build,
+			Description: cfg.Version.Description,
 		},
 	}
 }
