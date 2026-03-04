@@ -10,7 +10,7 @@ import (
 	"path"
 
 	"github.com/Housiadas/cerberus/internal/utils/errs"
-	"github.com/Housiadas/cerberus/pkg/otel"
+	"github.com/Housiadas/cerberus/pkg/telemetry"
 	"go.opentelemetry.io/otel/attribute"
 )
 
@@ -37,7 +37,11 @@ func (cln *Client) Request(
 		cln.log.Info(ctx, "http request: completed", "status", statusCode)
 	}()
 
-	ctx, span := otel.AddSpan(ctx, "pkg.httpclient."+base, attribute.String("endpoint", endpoint))
+	ctx, span := telemetry.AddSpan(
+		ctx,
+		"pkg.httpclient."+base,
+		attribute.String("endpoint", endpoint),
+	)
 
 	defer func() {
 		span.SetAttributes(attribute.Int("status", statusCode))

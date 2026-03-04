@@ -15,9 +15,9 @@ import (
 	ctxPck "github.com/Housiadas/cerberus/internal/utils/context"
 	"github.com/Housiadas/cerberus/pkg/debug"
 	"github.com/Housiadas/cerberus/pkg/logger"
-	"github.com/Housiadas/cerberus/pkg/otel"
 	"github.com/Housiadas/cerberus/pkg/pgsql"
 	pkgRedis "github.com/Housiadas/cerberus/pkg/redis"
+	"github.com/Housiadas/cerberus/pkg/telemetry"
 	"github.com/Housiadas/cerberus/pkg/vault"
 	_ "github.com/jackc/pgx/v5/stdlib"
 	goRedis "github.com/redis/go-redis/v9"
@@ -33,7 +33,7 @@ func main() {
 
 	ctx := context.Background()
 
-	traceIDFn := otel.GetTraceID(ctx)
+	traceIDFn := telemetry.GetTraceID(ctx)
 	requestIDFn := ctxPck.GetRequestID(ctx)
 	log = logger.New(os.Stdout, logger.LevelInfo, "Rest api", traceIDFn, requestIDFn)
 
@@ -57,9 +57,9 @@ func run(ctx context.Context, log *logger.Service) error {
 		os.Exit(1)
 	}
 
-	cfg.Version = config.Version{
-		Build: build,
-		Desc:  "API",
+	cfg.App.Version = config.Version{
+		Build:       build,
+		Description: "API",
 	}
 
 	// -------------------------------------------------------------------------
@@ -67,11 +67,11 @@ func run(ctx context.Context, log *logger.Service) error {
 	// -------------------------------------------------------------------------
 	log.Info(ctx, "startup", "GOMAXPROCS", runtime.GOMAXPROCS(0))
 
-	log.Info(ctx, "starting application", "version", cfg.Version.Build)
+	log.Info(ctx, "starting application", "version", cfg.App.Version.Build)
 	defer log.Info(ctx, "shutdown complete")
 
 	log.BuildInfo(ctx)
-	expvar.NewString("build").Set(cfg.Version.Build)
+	expvar.NewString("build").Set(cfg.App.Version.Build)
 
 	// -------------------------------------------------------------------------
 	// Initialize Database
@@ -104,32 +104,18 @@ func run(ctx context.Context, log *logger.Service) error {
 	defer redisClient.Close()
 
 	// -------------------------------------------------------------------------
-	// Start Tracing Support
+	// Initialize Telemetry
 	// -------------------------------------------------------------------------
-	log.Info(ctx, "startup", "status", "initializing tracing support")
-
-	traceProvider, teardown, err := otel.InitTracing(ctx, otel.Config{
-		ServiceName: cfg.App.Name,
-		Host:        cfg.Tempo.Host,
-		ExcludedRoutes: map[string]struct{}{
-			"/liveness":  {},
-			"/readiness": {},
-		},
-		Probability: cfg.Tempo.Probability,
-	})
+	tel, err := initTelemetry(ctx, cfg, log)
 	if err != nil {
-		return fmt.Errorf("error starting tempo: %w", err)
+		return fmt.Errorf("initializing telemetry: %w", err)
 	}
 
-	defer teardown(ctx)
-
-	tracer := traceProvider.Tracer(cfg.App.Name)
+	defer tel.Shutdown(ctx) //nolint:errcheck
 
 	// -------------------------------------------------------------------------
 	// Initialize Vault Client
 	// -------------------------------------------------------------------------
-	log.Info(ctx, "startup", "status", "initializing vault client", "address", cfg.Vault.Address)
-
 	jwtSecret, err := initVault(ctx, cfg)
 	if err != nil {
 		return fmt.Errorf("initializing vault: %w", err)
@@ -167,14 +153,14 @@ func run(ctx context.Context, log *logger.Service) error {
 	log.Info(ctx, "startup", "status", "Rest server starting")
 
 	// Initialize handler
-	h := handler.New(handler.Config{
+	h := handler.New(ctx, handler.Config{
 		ServiceName:       cfg.App.Name,
 		Build:             build,
 		Cors:              cfg.Cors,
 		DB:                db,
 		Redis:             redisClient,
 		Log:               log,
-		Tracer:            tracer,
+		Tracer:            tel.TracerProvider().Tracer(cfg.App.Name),
 		AccessTokenSecret: jwtSecret,
 	})
 
@@ -251,4 +237,31 @@ func initVault(ctx context.Context, cfg config.Config) ([]byte, error) {
 	}
 
 	return jwtSecret, nil
+}
+
+func initTelemetry(
+	ctx context.Context,
+	cfg config.Config,
+	log logger.Logger,
+) (*telemetry.Provider, error) {
+	log.Info(ctx, "startup", "status", "initializing telemetry")
+
+	tel, err := telemetry.New(ctx, telemetry.Config{
+		ServiceName:    cfg.App.Name,
+		Environment:    cfg.App.Environment,
+		Namespace:      cfg.App.Namespace,
+		ServiceVersion: cfg.App.Version.Build,
+		OTLPEndpoint:   cfg.Collector.Host,
+		ExcludedRoutes: map[string]struct{}{
+			"/liveness":  {},
+			"/readiness": {},
+		},
+		TraceSampleRate: cfg.Collector.Probability,
+		MetricInterval:  cfg.Collector.MetricInterval,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("error starting telemetry: %w", err)
+	}
+
+	return tel, nil
 }

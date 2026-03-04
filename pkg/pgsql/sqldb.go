@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"github.com/Housiadas/cerberus/pkg/logger"
-	"github.com/Housiadas/cerberus/pkg/otel"
+	"github.com/Housiadas/cerberus/pkg/telemetry"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jmoiron/sqlx"
 	"go.opentelemetry.io/otel/attribute"
@@ -147,7 +147,7 @@ func NamedExecContext(
 		}
 	}()
 
-	ctx, span := otel.AddSpan(ctx, "internal.api.pgsql.exec", attribute.String("query", q))
+	ctx, span := telemetry.AddSpan(ctx, "internal.api.pgsql.exec", attribute.String("query", q))
 	defer span.End()
 
 	_, err = sqlx.NamedExecContext(ctx, db, query, data)
@@ -228,7 +228,11 @@ func namedQuerySlice[T any](
 		}
 	}()
 
-	ctx, span := otel.AddSpan(ctx, "internal.api.pgsql.queryslice", attribute.String("query", q))
+	ctx, span := telemetry.AddSpan(
+		ctx,
+		"internal.api.pgsql.queryslice",
+		attribute.String("query", q),
+	)
 	defer span.End()
 
 	var rows *sqlx.Rows
@@ -343,7 +347,7 @@ func namedQueryStruct(
 		}
 	}()
 
-	ctx, span := otel.AddSpan(ctx, "internal.api.pgsql.query", attribute.String("query", q))
+	ctx, span := telemetry.AddSpan(ctx, "internal.api.pgsql.query", attribute.String("query", q))
 	defer span.End()
 
 	var rows *sqlx.Rows

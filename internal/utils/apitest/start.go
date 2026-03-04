@@ -16,7 +16,7 @@ import (
 	"github.com/Housiadas/cerberus/internal/utils/redistest"
 	"github.com/Housiadas/cerberus/pkg/clock"
 	"github.com/Housiadas/cerberus/pkg/logger"
-	"github.com/Housiadas/cerberus/pkg/otel"
+	"github.com/Housiadas/cerberus/pkg/telemetry"
 	"github.com/Housiadas/cerberus/pkg/uuidgen"
 	"github.com/stretchr/testify/require"
 )
@@ -36,26 +36,20 @@ func StartTest(t *testing.T, testName string) (*Test, error) {
 	// Initialize tracer
 	ctx := context.Background()
 
-	traceProvider, teardown, err := otel.InitTracing(ctx, otel.Config{
+	tel, err := telemetry.New(ctx, telemetry.Config{
 		ServiceName: "Service Name",
-		Host:        "Test host",
-		ExcludedRoutes: map[string]struct{}{
-			"/liveness":  {},
-			"/readiness": {},
-		},
-		Probability: 0.5,
 	})
-	defer teardown(context.Background())
-
 	require.NoError(t, err)
 
-	tracer := traceProvider.Tracer("Service Name")
+	defer tel.Shutdown(context.Background()) //nolint:errcheck
+
+	tracer := tel.TracerProvider().Tracer("Service Name")
 
 	// Initialize Redis testcontainers
 	red := redistest.New(t)
 
 	// Initialize handler
-	h := handler.New(handler.Config{
+	h := handler.New(ctx, handler.Config{
 		ServiceName:       "Test Service Name",
 		Build:             "Test",
 		Cors:              cfg.CorsSettings{},
