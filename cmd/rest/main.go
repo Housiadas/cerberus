@@ -165,6 +165,7 @@ func run(ctx context.Context, log *logger.Service) error {
 		Redis:             redisClient,
 		Log:               log,
 		Tracer:            tel.TracerProvider().Tracer(cfg.App.Name),
+		Meter:             tel.MeterProvider().Meter(cfg.App.Name),
 		AccessTokenSecret: jwtSecret,
 	})
 

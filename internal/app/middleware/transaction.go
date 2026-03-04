@@ -16,12 +16,12 @@ func (m *Middleware) BeginTransaction() func(next http.Handler) http.Handler {
 			ctx := r.Context()
 			hasCommitted := false
 
-			m.Log.Info(ctx, "BEGIN TRANSACTION")
+			m.log.Info(ctx, "BEGIN TRANSACTION")
 
-			tx, err := m.Tx.Begin()
+			tx, err := m.tx.Begin()
 			if err != nil {
 				err := errs.Errorf(errs.Internal, "BEGIN TRANSACTION: %s", err)
-				m.Log.Error(ctx, "transaction middleware", err)
+				m.log.Error(ctx, "transaction middleware", err)
 				m.Error(w, err, http.StatusInternalServerError)
 
 				return
@@ -29,7 +29,7 @@ func (m *Middleware) BeginTransaction() func(next http.Handler) http.Handler {
 
 			defer func() {
 				if !hasCommitted {
-					m.Log.Info(ctx, "ROLLBACK TRANSACTION")
+					m.log.Info(ctx, "ROLLBACK TRANSACTION")
 				}
 
 				err := tx.Rollback()
@@ -38,30 +38,30 @@ func (m *Middleware) BeginTransaction() func(next http.Handler) http.Handler {
 						return
 					}
 
-					m.Log.Error(ctx, "ROLLBACK TRANSACTION", "ERROR", err)
+					m.log.Error(ctx, "ROLLBACK TRANSACTION", "ERROR", err)
 				}
 			}()
 
 			ctx = pgsql.SetTran(ctx, tx)
 
 			// Create a response recorder to capture the response
-			rec := &ResponseRecorder{ResponseWriter: w, statusCode: http.StatusOK}
+			rec := &responseRecorder{ResponseWriter: w, statusCode: http.StatusOK}
 			next.ServeHTTP(rec, r.WithContext(ctx))
 
 			// Access the recorded response
 			// Check if we can commit transaction
 			if rec.statusCode >= http.StatusBadRequest {
-				m.Log.Info(ctx, "TRANSACTION FAILED, WILL ROLLBACK")
+				m.log.Info(ctx, "TRANSACTION FAILED, WILL ROLLBACK")
 
 				return
 			}
 
-			m.Log.Info(ctx, "COMMIT TRANSACTION")
+			m.log.Info(ctx, "COMMIT TRANSACTION")
 
 			err = tx.Commit()
 			if err != nil {
 				err := errs.Errorf(errs.Internal, "COMMIT TRANSACTION: %s", err)
-				m.Log.Error(ctx, "transaction middleware", err)
+				m.log.Error(ctx, "transaction middleware", err)
 				m.Error(w, err, http.StatusInternalServerError)
 
 				return

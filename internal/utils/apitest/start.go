@@ -49,8 +49,6 @@ func StartTest(t *testing.T, testName string) (*Test, error) {
 
 	defer tel.Shutdown(context.Background()) //nolint:errcheck
 
-	tracer := tel.TracerProvider().Tracer("Service Name")
-
 	// Initialize Redis testcontainers
 	red := redistest.New(t)
 
@@ -62,7 +60,8 @@ func StartTest(t *testing.T, testName string) (*Test, error) {
 		DB:                db,
 		Redis:             red,
 		Log:               log,
-		Tracer:            tracer,
+		Tracer:            tel.TracerProvider().Tracer("Service Name"),
+		Meter:             tel.MeterProvider().Meter("Service Name"),
 		AccessTokenSecret: []byte("test-256-bit-access-secret"),
 	})
 

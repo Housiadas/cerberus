@@ -3,6 +3,7 @@ package middleware
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -12,6 +13,7 @@ import (
 	"github.com/Housiadas/cerberus/internal/usecase/user_usecase"
 	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/Housiadas/cerberus/pkg/pgsql"
+	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/trace"
 	"golang.org/x/sync/singleflight"
 )
@@ -24,6 +26,7 @@ const (
 type Config struct {
 	Log                  logger.Logger
 	Tracer               trace.Tracer
+	Meter                metric.Meter
 	Tx                   *pgsql.DBBeginner
 	AuthUseCase          *auth_usecase.UseCase
 	UserUseCase          *user_usecase.UseCase
@@ -31,29 +34,35 @@ type Config struct {
 }
 
 type Middleware struct {
-	Log         logger.Logger
-	Tracer      trace.Tracer
-	Tx          *pgsql.DBBeginner
-	UseCase     UseCase
+	log         logger.Logger
+	tracer      trace.Tracer
+	meter       metric.Meter
+	tx          *pgsql.DBBeginner
+	useCase     useCase
 	permSflight singleflight.Group
+	metrics     middlewareMetrics
 }
 
-type UseCase struct {
-	Auth                 *auth_usecase.UseCase
-	User                 *user_usecase.UseCase
-	UserRolesPermissions *user_roles_permissions_usecase.UseCase
+type useCase struct {
+	auth                 *auth_usecase.UseCase
+	user                 *user_usecase.UseCase
+	userRolesPermissions *user_roles_permissions_usecase.UseCase
 }
 
-func New(cfg Config) *Middleware {
+func New(ctx context.Context, cfg Config) *Middleware {
+	middlewareMetrics := initOTelMetrics(ctx, cfg.Meter, cfg.Log)
+
 	return &Middleware{
-		UseCase: UseCase{
-			Auth:                 cfg.AuthUseCase,
-			User:                 cfg.UserUseCase,
-			UserRolesPermissions: cfg.UserRolesPermissions,
+		useCase: useCase{
+			auth:                 cfg.AuthUseCase,
+			user:                 cfg.UserUseCase,
+			userRolesPermissions: cfg.UserRolesPermissions,
 		},
-		Log:    cfg.Log,
-		Tracer: cfg.Tracer,
-		Tx:     cfg.Tx,
+		log:     cfg.Log,
+		tracer:  cfg.Tracer,
+		meter:   cfg.Meter,
+		tx:      cfg.Tx,
+		metrics: middlewareMetrics,
 	}
 }
 
@@ -67,22 +76,24 @@ func (m *Middleware) Error(w http.ResponseWriter, err error, statusCode int) {
 	}
 }
 
-// ResponseRecorder a custom http.ResponseWriter to capture the response before it's sent to the client.
+// responseRecorder a custom http.ResponseWriter to capture
+// the response before it's sent to the client.
 // We are capturing the result of the handler to the middleware.
-type ResponseRecorder struct {
+type responseRecorder struct {
 	http.ResponseWriter
 
-	statusCode int
-	body       bytes.Buffer
+	statusCode  int
+	wroteHeader bool
+	body        bytes.Buffer
 }
 
-func (rec *ResponseRecorder) WriteHeader(code int) {
+func (rec *responseRecorder) WriteHeader(code int) {
 	rec.statusCode = code
 	rec.ResponseWriter.WriteHeader(code)
 }
 
 // Write Capture the response body.
-func (rec *ResponseRecorder) Write(b []byte) (int, error) {
+func (rec *responseRecorder) Write(b []byte) (int, error) {
 	rec.body.Write(b)
 
 	write, err := rec.ResponseWriter.Write(b)

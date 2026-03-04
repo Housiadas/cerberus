@@ -38,6 +38,7 @@ import (
 	"github.com/Housiadas/cerberus/pkg/redis"
 	"github.com/Housiadas/cerberus/pkg/uuidgen"
 	"github.com/jmoiron/sqlx"
+	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/trace"
 )
 
@@ -75,6 +76,7 @@ type Config struct {
 	Redis             redis.Client
 	Log               logger.Logger
 	Tracer            trace.Tracer
+	Meter             metric.Meter
 	AccessTokenSecret []byte
 }
 
@@ -130,9 +132,10 @@ func New(ctx context.Context, cfg Config) *Handler {
 		Cors:        cfg.Cors,
 		DB:          cfg.DB,
 		Log:         cfg.Log,
-		Middleware: middleware.New(middleware.Config{
+		Middleware: middleware.New(ctx, middleware.Config{
 			Log:                  cfg.Log,
 			Tracer:               cfg.Tracer,
+			Meter:                cfg.Meter,
 			Tx:                   pgsql.NewBeginner(cfg.DB),
 			UserUseCase:          userUsecase,
 			AuthUseCase:          authUsecase,
