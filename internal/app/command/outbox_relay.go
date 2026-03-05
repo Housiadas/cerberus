@@ -13,8 +13,8 @@ import (
 	"github.com/Housiadas/cerberus/internal/core/service/outbox_service"
 	"github.com/Housiadas/cerberus/pkg/clock"
 	"github.com/Housiadas/cerberus/pkg/kafka"
-	"github.com/Housiadas/cerberus/pkg/otel"
 	"github.com/Housiadas/cerberus/pkg/pgsql"
+	"github.com/Housiadas/cerberus/pkg/telemetry"
 	"github.com/Housiadas/cerberus/pkg/uuidgen"
 )
 
@@ -60,7 +60,7 @@ func (cmd *Command) OutboxRelay() error {
 	defer cancel()
 
 	// inject tracing to ctx
-	ctx = otel.InjectTracing(ctx, cmd.tracer)
+	ctx = telemetry.InjectTracing(ctx, cmd.tracer)
 
 	shutdown := make(chan os.Signal, 1)
 	signal.Notify(shutdown, syscall.SIGINT, syscall.SIGTERM)

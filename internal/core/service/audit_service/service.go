@@ -10,7 +10,7 @@ import (
 	"github.com/Housiadas/cerberus/internal/utils/page"
 	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/Housiadas/cerberus/pkg/order"
-	"github.com/Housiadas/cerberus/pkg/otel"
+	"github.com/Housiadas/cerberus/pkg/telemetry"
 	"github.com/google/uuid"
 )
 
@@ -30,7 +30,7 @@ func New(log logger.Logger, storer audit.Storer) *Service {
 
 // Create adds a new audit record to the system.
 func (b *Service) Create(ctx context.Context, na audit.NewAudit) (audit.Audit, error) {
-	ctx, span := otel.AddSpan(ctx, "business.auditbus.create")
+	ctx, span := telemetry.AddSpan(ctx, "business.auditbus.create")
 	defer span.End()
 
 	jsonData, err := json.Marshal(na.Data)
@@ -70,7 +70,7 @@ func (b *Service) Query(
 	orderBy order.By,
 	page page.Page,
 ) ([]audit.Audit, error) {
-	ctx, span := otel.AddSpan(ctx, "repo.audit.query")
+	ctx, span := telemetry.AddSpan(ctx, "repo.audit.query")
 	defer span.End()
 
 	audits, err := b.storer.Query(ctx, filter, orderBy, page)
@@ -83,7 +83,7 @@ func (b *Service) Query(
 
 // Count returns the total number of users.
 func (b *Service) Count(ctx context.Context, filter audit.QueryFilter) (int, error) {
-	ctx, span := otel.AddSpan(ctx, "business.auditbus.count")
+	ctx, span := telemetry.AddSpan(ctx, "business.auditbus.count")
 	defer span.End()
 
 	count, err := b.storer.Count(ctx, filter)

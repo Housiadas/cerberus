@@ -9,6 +9,7 @@ import (
 
 	"github.com/Housiadas/cerberus/internal/core/domain/user"
 	"github.com/Housiadas/cerberus/internal/utils/page"
+	"github.com/Housiadas/cerberus/pkg/cachemetrics"
 	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/Housiadas/cerberus/pkg/order"
 	"github.com/Housiadas/cerberus/pkg/pgsql"
@@ -21,6 +22,7 @@ const (
 	capacity           = 10000
 	numShards          = 10
 	evictionPercentage = 10
+	cacheName          = "user_cache"
 )
 
 var ttl = 5 * time.Minute
@@ -34,16 +36,23 @@ type Store struct {
 
 // NewStore constructs the api for data and caching access.
 func NewStore(
+	ctx context.Context,
 	log logger.Logger,
 	storer user.Storer,
 	red redis.Client,
 ) *Store {
+	// Wire up OTel metrics. Errors are non-fatal: the cache works without metrics.
+	recorder, err := cachemetrics.NewMeterRecorder(cacheName)
+	if err != nil {
+		log.Error(ctx, "error initializing user cache metrics", err)
+	}
+
 	ds := redis.NewDistributedStorage(red, ttl)
 
-	var opts []sturdyc.Option
-	if ds != nil {
-		opts = append(opts, sturdyc.WithDistributedStorage(ds))
-	}
+	opts := make([]sturdyc.Option, 0, 6)
+	opts = append(opts, sturdyc.WithDistributedStorage(ds))
+	opts = append(opts, sturdyc.WithMetrics(recorder))
+	opts = append(opts, sturdyc.WithDistributedMetrics(recorder))
 
 	return &Store{
 		log:    log,

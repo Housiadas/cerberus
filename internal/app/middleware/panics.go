@@ -5,7 +5,6 @@ import (
 	"runtime/debug"
 
 	"github.com/Housiadas/cerberus/internal/utils/errs"
-	"github.com/Housiadas/cerberus/pkg/metrics"
 )
 
 // Recoverer recovers from panics and converts the panic to an error,
@@ -18,8 +17,6 @@ func (m *Middleware) Recoverer() func(next http.Handler) http.Handler {
 			// Defer a function to recover from panic
 			defer func() {
 				if rec := recover(); rec != nil {
-					metrics.AddPanics(ctx)
-
 					trace := debug.Stack()
 					err := errs.Errorf(
 						errs.InternalOnlyLog,
@@ -27,7 +24,7 @@ func (m *Middleware) Recoverer() func(next http.Handler) http.Handler {
 						rec,
 						string(trace),
 					)
-					m.Log.Error(ctx, "panic mid", err)
+					m.log.Error(ctx, "panic mid", err)
 					m.Error(w, err, http.StatusInternalServerError)
 
 					return

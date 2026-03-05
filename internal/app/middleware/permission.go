@@ -50,24 +50,24 @@ func (m *Middleware) Permission() openapi.StrictMiddlewareFunc {
 			sfKey := "permissions:" + userID
 
 			result, err, _ := m.permSflight.Do(sfKey, func() (any, error) {
-				return m.UseCase.UserRolesPermissions.QueryPermissionsByUserID(ctx, userID)
+				return m.useCase.userRolesPermissions.QueryPermissionsByUserID(ctx, userID)
 			})
 			if err != nil {
-				m.Log.Error(ctx, "error checking permissions", err)
+				m.log.Error(ctx, "error checking permissions", err)
 
 				return nil, errs.New(errs.Internal, ErrCheckingPermission)
 			}
 
 			permissions, ok := result.([]string)
 			if !ok {
-				m.Log.Error(ctx, "error casting permissions", err)
+				m.log.Error(ctx, "error casting permissions", err)
 
 				return nil, errs.New(errs.Internal, ErrCheckingPermission)
 			}
 
 			hasPermission := slices.Contains(permissions, permissionName)
 			if !hasPermission {
-				m.Log.Info(ctx, "access denied",
+				m.log.Info(ctx, "access denied",
 					"user_id", userID,
 					"permission", permissionName,
 					"operation", operationID,

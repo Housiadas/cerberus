@@ -35,7 +35,13 @@ func Test_User(t *testing.T) {
 
 	// Initialize logger
 	var buf bytes.Buffer
-	log := logger.New(&buf, logger.LevelInfo, "TEST", "", "")
+	traceIDFn := func(context.Context) string {
+		return ""
+	}
+	requestIDFn := func(context.Context) string {
+		return ""
+	}
+	log := logger.New(&buf, logger.LevelInfo, "TEST", traceIDFn, requestIDFn)
 
 	// utils
 	hash := hasher.NewBcrypt()

@@ -10,7 +10,7 @@ import (
 	"github.com/Housiadas/cerberus/internal/config"
 	ctxPck "github.com/Housiadas/cerberus/internal/utils/context"
 	"github.com/Housiadas/cerberus/pkg/logger"
-	"github.com/Housiadas/cerberus/pkg/otel"
+	"github.com/Housiadas/cerberus/pkg/telemetry"
 )
 
 var build = "develop"
@@ -41,28 +41,33 @@ func run() error {
 	var log *logger.Service
 
 	ctx := context.Background()
-	traceIDFn := otel.GetTraceID(ctx)
-	requestIDFn := ctxPck.GetRequestID(ctx)
+	traceIDFn := func(reqCtx context.Context) string {
+		return telemetry.GetTraceID(reqCtx)
+	}
+	requestIDFn := func(reqCtx context.Context) string {
+		return ctxPck.GetRequestID(reqCtx)
+	}
 	log = logger.New(os.Stdout, logger.LevelInfo, "Worker", traceIDFn, requestIDFn)
 
 	// -------------------------------------------------------------------------
 	// Start Tracing Support
 	// -------------------------------------------------------------------------
-	traceProvider, teardown, err := otel.InitTracing(ctx, otel.Config{
-		ServiceName: cfg.App.Name,
-		Host:        cfg.Tempo.Host,
+	tp, err := telemetry.New(ctx, telemetry.Config{
+		ServiceName:  cfg.App.Name,
+		OTLPEndpoint: cfg.Collector.Host,
 		ExcludedRoutes: map[string]struct{}{
 			"/liveness":  {},
 			"/readiness": {},
 		},
-		Probability: cfg.Tempo.Probability,
+		TraceSampleRate: cfg.Collector.Probability,
+		MetricInterval:  cfg.Collector.MetricInterval,
 	})
 	if err != nil {
 		return fmt.Errorf("error starting tracing: %w", err)
 	}
-	defer teardown(ctx)
+	defer tp.Shutdown(ctx) //nolint:errcheck
 
-	tracer := traceProvider.Tracer(cfg.App.Name)
+	tracer := tp.TracerProvider().Tracer(cfg.App.Name)
 
 	// -------------------------------------------------------------------------
 	// Initialize commands
@@ -73,8 +78,8 @@ func run() error {
 		Log:    log,
 		Tracer: tracer,
 		Version: config.Version{
-			Desc:  "Worker",
-			Build: build,
+			Description: "Worker",
+			Build:       build,
 		},
 	})
 

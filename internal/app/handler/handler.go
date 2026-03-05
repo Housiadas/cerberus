@@ -3,6 +3,8 @@
 package handler
 
 import (
+	"context"
+
 	"github.com/Housiadas/cerberus/internal/app/cache/user_cache"
 	"github.com/Housiadas/cerberus/internal/app/handler/openapi"
 	"github.com/Housiadas/cerberus/internal/app/middleware"
@@ -36,6 +38,7 @@ import (
 	"github.com/Housiadas/cerberus/pkg/redis"
 	"github.com/Housiadas/cerberus/pkg/uuidgen"
 	"github.com/jmoiron/sqlx"
+	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/trace"
 )
 
@@ -73,10 +76,11 @@ type Config struct {
 	Redis             redis.Client
 	Log               logger.Logger
 	Tracer            trace.Tracer
+	Meter             metric.Meter
 	AccessTokenSecret []byte
 }
 
-func New(cfg Config) *Handler {
+func New(ctx context.Context, cfg Config) *Handler {
 	// utils
 	hash := hasher.NewBcrypt()
 	clk := clock.NewClock()
@@ -86,7 +90,7 @@ func New(cfg Config) *Handler {
 	auditRepo := audit_repo.NewStore(cfg.Log, cfg.DB)
 	outboxRepo := outbox_repo.NewStore(cfg.Log, cfg.DB)
 	userRepo := user_repo.NewStore(cfg.Log, cfg.DB)
-	userCacheStore := user_cache.NewStore(cfg.Log, userRepo, cfg.Redis)
+	userCacheStore := user_cache.NewStore(ctx, cfg.Log, userRepo, cfg.Redis)
 	roleRepo := role_repo.NewStore(cfg.Log, cfg.DB)
 	permissionRepo := permission_repo.NewStore(cfg.Log, cfg.DB)
 	userRolesPermissionsRepo := user_roles_permissions_repo.NewStore(cfg.Log, cfg.DB)
@@ -128,9 +132,10 @@ func New(cfg Config) *Handler {
 		Cors:        cfg.Cors,
 		DB:          cfg.DB,
 		Log:         cfg.Log,
-		Middleware: middleware.New(middleware.Config{
+		Middleware: middleware.New(ctx, middleware.Config{
 			Log:                  cfg.Log,
 			Tracer:               cfg.Tracer,
+			Meter:                cfg.Meter,
 			Tx:                   pgsql.NewBeginner(cfg.DB),
 			UserUseCase:          userUsecase,
 			AuthUseCase:          authUsecase,

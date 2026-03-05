@@ -1,5 +1,7 @@
 app:
   name: "Cerberus"
+  namespace: "cerberus"
+  environment: "dev"
 rest:
   api: "localhost:4000"
   debug: "localhost:4010"
@@ -35,6 +37,10 @@ kafka:
   logLevel: 0
   maxMessageBytes: 1000000
   sessionTimeout: 6000
+collector:
+  host: "localhost:4317"
+  probability: 1.0
+  metricInterval: "30s"
 cors:
   allowedOrigins: "*"
   allowedMethods: "GET;POST;PUT;DELETE;OPTIONS;PATCH"

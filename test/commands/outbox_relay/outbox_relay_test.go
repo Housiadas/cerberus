@@ -27,7 +27,13 @@ func Test_OutboxRelay_ProcessesEntries(t *testing.T) {
 	db := dbtest.New(t, "Test_OutboxRelay_ProcessesEntries")
 
 	var buf bytes.Buffer
-	log := logger.New(&buf, logger.LevelInfo, "TEST", "", "")
+	traceIDFn := func(context.Context) string {
+		return ""
+	}
+	requestIDFn := func(context.Context) string {
+		return ""
+	}
+	log := logger.New(&buf, logger.LevelInfo, "TEST", traceIDFn, requestIDFn)
 
 	kafkaProducer := kafkatest.New(t)
 
@@ -116,7 +122,13 @@ func Test_OutboxRelay_RetriesFailedEntries(t *testing.T) {
 	db := dbtest.New(t, "Test_OutboxRelay_RetriesFailedEntries")
 
 	var buf bytes.Buffer
-	log := logger.New(&buf, logger.LevelInfo, "TEST", "", "")
+	traceIDFn := func(context.Context) string {
+		return ""
+	}
+	requestIDFn := func(context.Context) string {
+		return ""
+	}
+	log := logger.New(&buf, logger.LevelInfo, "TEST", traceIDFn, requestIDFn)
 
 	outboxRepo := outbox_repo.NewStore(log, db)
 	uuidGen := uuidgen.NewV7()
@@ -167,7 +179,13 @@ func Test_OutboxRelay_MarkProcessed(t *testing.T) {
 	db := dbtest.New(t, "Test_OutboxRelay_MarkProcessed")
 
 	var buf bytes.Buffer
-	log := logger.New(&buf, logger.LevelInfo, "TEST", "", "")
+	traceIDFn := func(context.Context) string {
+		return ""
+	}
+	requestIDFn := func(context.Context) string {
+		return ""
+	}
+	log := logger.New(&buf, logger.LevelInfo, "TEST", traceIDFn, requestIDFn)
 
 	outboxRepo := outbox_repo.NewStore(log, db)
 	uuidGen := uuidgen.NewV7()

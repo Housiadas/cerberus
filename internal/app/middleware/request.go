@@ -22,12 +22,12 @@ func (m *Middleware) RequestID(next http.Handler) http.Handler {
 		reqID := r.Header.Get(middleware.RequestIDHeader)
 
 		if reqID == "" {
-			u = initializeUUIDV7(ctx, m.Log)
+			u = initializeUUIDV7(ctx, m.log)
 		} else {
 			u, err = uuid.Parse(reqID)
 			if err != nil {
-				m.Log.Info(ctx, "request id parse error", err)
-				u = initializeUUIDV7(ctx, m.Log)
+				m.log.Info(ctx, "request id parse error", err)
+				u = initializeUUIDV7(ctx, m.log)
 			}
 		}
 
