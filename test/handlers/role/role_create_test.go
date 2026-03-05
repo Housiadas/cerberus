@@ -15,7 +15,7 @@ import (
 func Test_API_Role_Create_200(t *testing.T) {
 	t.Parallel()
 
-	test, err := apitest.StartTest(t, "Test_API_Role")
+	test, err := env.StartTest(t, t.Name())
 	require.NoError(t, err)
 
 	sd, err := insertSeedData(test)
@@ -57,7 +57,7 @@ func Test_API_Role_Create_200(t *testing.T) {
 func Test_API_Role_Create_400(t *testing.T) {
 	t.Parallel()
 
-	test, err := apitest.StartTest(t, "Test_API_Role")
+	test, err := env.StartTest(t, t.Name())
 	require.NoError(t, err)
 
 	sd, err := insertSeedData(test)
@@ -97,7 +97,7 @@ func Test_API_Role_Create_400(t *testing.T) {
 func Test_API_Role_Create_403(t *testing.T) {
 	t.Parallel()
 
-	test, err := apitest.StartTest(t, "Test_API_Role")
+	test, err := env.StartTest(t, t.Name())
 	require.NoError(t, err)
 
 	sd, err := insertSeedData(test)

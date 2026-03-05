@@ -11,8 +11,6 @@ import (
 	"github.com/Housiadas/cerberus/internal/app/repo/outbox_repo"
 	"github.com/Housiadas/cerberus/internal/core/domain/outbox"
 	"github.com/Housiadas/cerberus/internal/core/service/outbox_service"
-	"github.com/Housiadas/cerberus/internal/utils/dbtest"
-	"github.com/Housiadas/cerberus/internal/utils/kafkatest"
 	"github.com/Housiadas/cerberus/pkg/clock"
 	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/Housiadas/cerberus/pkg/uuidgen"
@@ -24,7 +22,7 @@ import (
 func Test_OutboxRelay_ProcessesEntries(t *testing.T) {
 	t.Parallel()
 
-	db := dbtest.New(t, "Test_OutboxRelay_ProcessesEntries")
+	db := sc.NewDB(t, t.Name())
 
 	var buf bytes.Buffer
 	traceIDFn := func(context.Context) string {
@@ -35,7 +33,7 @@ func Test_OutboxRelay_ProcessesEntries(t *testing.T) {
 	}
 	log := logger.New(&buf, logger.LevelInfo, "TEST", traceIDFn, requestIDFn)
 
-	kafkaProducer := kafkatest.New(t)
+	kafkaProducer := sharedKafka
 
 	outboxRepo := outbox_repo.NewStore(log, db)
 	uuidGen := uuidgen.NewV7()
@@ -119,7 +117,7 @@ func Test_OutboxRelay_ProcessesEntries(t *testing.T) {
 func Test_OutboxRelay_RetriesFailedEntries(t *testing.T) {
 	t.Parallel()
 
-	db := dbtest.New(t, "Test_OutboxRelay_RetriesFailedEntries")
+	db := sc.NewDB(t, t.Name())
 
 	var buf bytes.Buffer
 	traceIDFn := func(context.Context) string {
@@ -176,7 +174,7 @@ func Test_OutboxRelay_RetriesFailedEntries(t *testing.T) {
 func Test_OutboxRelay_MarkProcessed(t *testing.T) {
 	t.Parallel()
 
-	db := dbtest.New(t, "Test_OutboxRelay_MarkProcessed")
+	db := sc.NewDB(t, t.Name())
 
 	var buf bytes.Buffer
 	traceIDFn := func(context.Context) string {
