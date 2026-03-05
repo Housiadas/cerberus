@@ -28,10 +28,8 @@ import (
 func Test_User(t *testing.T) {
 	t.Parallel()
 
-	// -------------------------------------------------------------------------
-	db := dbtest.New(t, "Test_User")
-
-	// -------------------------------------------------------------------------
+	// initialize db
+	db := sc.NewDB(t)
 
 	// Initialize logger
 	var buf bytes.Buffer
@@ -49,13 +47,11 @@ func Test_User(t *testing.T) {
 	uuidGen := uuidgen.NewV7()
 	userService := user_service.New(log, user_repo.NewStore(log, db), uuidGen, clk, hash)
 
-	// -------------------------------------------------------------------------
+	// seed
 	sd, err := insertSeedData(userService)
 	if err != nil {
 		t.Fatalf("Seeding error: %s", err)
 	}
-
-	// -------------------------------------------------------------------------
 
 	unitest.Run(t, queryUser(userService, sd), "query")
 	unitest.Run(t, createUser(userService), "create")

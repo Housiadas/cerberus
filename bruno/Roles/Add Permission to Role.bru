@@ -1,0 +1,25 @@
+meta {
+  name: Add Permission to Role
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{base_url}}/api/v1/roles/:role_id/permission
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{access_token}}
+}
+
+params:path {
+  role_id: ROLE_ID_HERE
+}
+
+body:json {
+  {
+    "name": "read:users"
+  }
+}

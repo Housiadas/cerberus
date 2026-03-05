@@ -16,6 +16,7 @@ import (
 	"github.com/Housiadas/cerberus/internal/core/service/role_service"
 	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/Housiadas/cerberus/pkg/order"
+	"github.com/Housiadas/cerberus/pkg/uuidgen"
 )
 
 func TestService_Create_Successful(t *testing.T) {
@@ -30,7 +31,10 @@ func TestService_Create_Successful(t *testing.T) {
 	mStorer := role.NewMockStorer(t)
 	mStorer.EXPECT().Create(ctx, mock.AnythingOfType("role.Role")).Return(nil)
 
-	sut := role_service.New(mLogger, mStorer)
+	mUUID := uuidgen.NewMockGenerator(t)
+	mUUID.EXPECT().Generate().Return(uuid.New(), nil)
+
+	sut := role_service.New(mLogger, mStorer, mUUID)
 	rl, err := sut.Create(ctx, nr)
 
 	assert.NoError(t, err)
@@ -51,7 +55,10 @@ func TestService_Create_StorerError(t *testing.T) {
 	mStorer := role.NewMockStorer(t)
 	mStorer.EXPECT().Create(ctx, mock.AnythingOfType("role.Role")).Return(errors.New("create error"))
 
-	sut := role_service.New(mLogger, mStorer)
+	mUUID := uuidgen.NewMockGenerator(t)
+	mUUID.EXPECT().Generate().Return(uuid.New(), nil)
+
+	sut := role_service.New(mLogger, mStorer, mUUID)
 	_, err := sut.Create(ctx, nr)
 
 	assert.Error(t, err)
@@ -79,7 +86,7 @@ func TestService_Update_Successful(t *testing.T) {
 	mStorer := role.NewMockStorer(t)
 	mStorer.EXPECT().Update(ctx, mock.AnythingOfType("role.Role")).Return(nil)
 
-	sut := role_service.New(mLogger, mStorer)
+	sut := role_service.New(mLogger, mStorer, uuidgen.NewMockGenerator(t))
 	rl, err := sut.Update(ctx, existingRole, ur)
 
 	assert.NoError(t, err)
@@ -108,7 +115,7 @@ func TestService_Update_StorerError(t *testing.T) {
 	mStorer := role.NewMockStorer(t)
 	mStorer.EXPECT().Update(ctx, mock.AnythingOfType("role.Role")).Return(errors.New("update error"))
 
-	sut := role_service.New(mLogger, mStorer)
+	sut := role_service.New(mLogger, mStorer, uuidgen.NewMockGenerator(t))
 	_, err := sut.Update(ctx, existingRole, ur)
 
 	assert.Error(t, err)
@@ -128,7 +135,7 @@ func TestService_Delete_Successful(t *testing.T) {
 	mStorer := role.NewMockStorer(t)
 	mStorer.EXPECT().Delete(ctx, rl).Return(nil)
 
-	sut := role_service.New(mLogger, mStorer)
+	sut := role_service.New(mLogger, mStorer, uuidgen.NewMockGenerator(t))
 	err := sut.Delete(ctx, rl)
 
 	assert.NoError(t, err)
@@ -147,7 +154,7 @@ func TestService_Delete_Error(t *testing.T) {
 	mStorer := role.NewMockStorer(t)
 	mStorer.EXPECT().Delete(ctx, rl).Return(errors.New("delete error"))
 
-	sut := role_service.New(mLogger, mStorer)
+	sut := role_service.New(mLogger, mStorer, uuidgen.NewMockGenerator(t))
 	err := sut.Delete(ctx, rl)
 
 	assert.Error(t, err)
@@ -163,7 +170,7 @@ func TestService_Count_Successful(t *testing.T) {
 	mStorer := role.NewMockStorer(t)
 	mStorer.EXPECT().Count(ctx, filter).Return(3, nil)
 
-	sut := role_service.New(mLogger, mStorer)
+	sut := role_service.New(mLogger, mStorer, uuidgen.NewMockGenerator(t))
 	count, err := sut.Count(ctx, filter)
 
 	assert.NoError(t, err)
@@ -179,7 +186,7 @@ func TestService_Count_Error(t *testing.T) {
 	mStorer := role.NewMockStorer(t)
 	mStorer.EXPECT().Count(ctx, filter).Return(0, errors.New("count error"))
 
-	sut := role_service.New(mLogger, mStorer)
+	sut := role_service.New(mLogger, mStorer, uuidgen.NewMockGenerator(t))
 	_, err := sut.Count(ctx, filter)
 
 	assert.Error(t, err)
@@ -203,7 +210,7 @@ func TestService_QueryByID_Successful(t *testing.T) {
 	mStorer := role.NewMockStorer(t)
 	mStorer.EXPECT().QueryByID(ctx, roleID).Return(expectedRole, nil)
 
-	sut := role_service.New(mLogger, mStorer)
+	sut := role_service.New(mLogger, mStorer, uuidgen.NewMockGenerator(t))
 	rl, err := sut.QueryByID(ctx, roleID)
 
 	assert.NoError(t, err)
@@ -220,7 +227,7 @@ func TestService_QueryByID_NotFound(t *testing.T) {
 	mStorer := role.NewMockStorer(t)
 	mStorer.EXPECT().QueryByID(ctx, roleID).Return(role.Role{}, role.ErrNotFound)
 
-	sut := role_service.New(mLogger, mStorer)
+	sut := role_service.New(mLogger, mStorer, uuidgen.NewMockGenerator(t))
 	_, err := sut.QueryByID(ctx, roleID)
 
 	assert.Error(t, err)
@@ -245,7 +252,7 @@ func TestService_Query_Successful(t *testing.T) {
 	mStorer := role.NewMockStorer(t)
 	mStorer.EXPECT().Query(ctx, filter, orderBy, page).Return(expectedRoles, nil)
 
-	sut := role_service.New(mLogger, mStorer)
+	sut := role_service.New(mLogger, mStorer, uuidgen.NewMockGenerator(t))
 	roles, err := sut.Query(ctx, filter, orderBy, page)
 
 	assert.NoError(t, err)
@@ -264,7 +271,7 @@ func TestService_Query_Error(t *testing.T) {
 	mStorer := role.NewMockStorer(t)
 	mStorer.EXPECT().Query(ctx, filter, orderBy, page).Return(nil, errors.New("query error"))
 
-	sut := role_service.New(mLogger, mStorer)
+	sut := role_service.New(mLogger, mStorer, uuidgen.NewMockGenerator(t))
 	_, err := sut.Query(ctx, filter, orderBy, page)
 
 	assert.Error(t, err)

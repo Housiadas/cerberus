@@ -9,8 +9,9 @@ The OpenAPI specification is located under [openapi](./openapi/openapi.yaml)
 - `.docker` holds docker related files
 - `.kubernetes` holds kubernetes related files
 - `.migrations` holds database migrations
+- `bruno` holds the bruno collections for the API client
 - `cmd` holds the application entry point
-- `docs` holds swagger documentation
+- `openapi` holds openapi documentation
 - `internal` holds the project logic
 - `pkg` holds shared code and libraries
 - `test` holds integration tests

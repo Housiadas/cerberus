@@ -26,7 +26,7 @@ func (h *Handler) ListAudits(
 		Until:     pntr.DerefStr(request.Params.Until),
 	}
 
-	result, err := h.Usecase.Audit.Query(ctx, qp)
+	result, err := h.usecase.audit.Query(ctx, qp)
 	if err != nil {
 		return nil, fmt.Errorf("list audits: %w", err)
 	}

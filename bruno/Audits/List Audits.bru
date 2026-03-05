@@ -1,0 +1,28 @@
+meta {
+  name: List Audits
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{base_url}}/api/v1/audits
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{access_token}}
+}
+
+params:query {
+  ~page: 1
+  ~rows: 10
+  ~orderBy: timestamp
+  ~obj_id:
+  ~obj_domain:
+  ~obj_name:
+  ~actor_id:
+  ~action:
+  ~since:
+  ~until:
+}

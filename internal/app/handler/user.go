@@ -24,7 +24,7 @@ func (h *Handler) ListUsers(
 		EndCreatedDate:   pntr.DerefStr(request.Params.EndCreatedDate),
 	}
 
-	result, err := h.Usecase.User.Query(ctx, qp)
+	result, err := h.usecase.user.Query(ctx, qp)
 	if err != nil {
 		return nil, fmt.Errorf("list users: %w", err)
 	}
@@ -39,7 +39,7 @@ func (h *Handler) CreateUser(
 	ctx context.Context,
 	request openapi.CreateUserRequestObject,
 ) (openapi.CreateUserResponseObject, error) {
-	usr, err := h.Usecase.User.Create(ctx, *request.Body)
+	usr, err := h.usecase.user.Create(ctx, *request.Body)
 	if err != nil {
 		return nil, fmt.Errorf("create user: %w", err)
 	}
@@ -51,7 +51,7 @@ func (h *Handler) GetUser(
 	ctx context.Context,
 	request openapi.GetUserRequestObject,
 ) (openapi.GetUserResponseObject, error) {
-	usr, err := h.Usecase.User.QueryByID(ctx, request.UserId)
+	usr, err := h.usecase.user.QueryByID(ctx, request.UserId)
 	if err != nil {
 		return nil, fmt.Errorf("get user: %w", err)
 	}
@@ -63,7 +63,7 @@ func (h *Handler) UpdateUser(
 	ctx context.Context,
 	request openapi.UpdateUserRequestObject,
 ) (openapi.UpdateUserResponseObject, error) {
-	updUser, err := h.Usecase.User.Update(ctx, *request.Body, request.UserId)
+	updUser, err := h.usecase.user.Update(ctx, *request.Body, request.UserId)
 	if err != nil {
 		return nil, fmt.Errorf("update user: %w", err)
 	}
@@ -75,7 +75,7 @@ func (h *Handler) DeleteUser(
 	ctx context.Context,
 	request openapi.DeleteUserRequestObject,
 ) (openapi.DeleteUserResponseObject, error) {
-	err := h.Usecase.User.Delete(ctx, request.UserId)
+	err := h.usecase.user.Delete(ctx, request.UserId)
 	if err != nil {
 		return nil, fmt.Errorf("delete user: %w", err)
 	}
@@ -87,19 +87,19 @@ func (h *Handler) CreateUserRole(
 	ctx context.Context,
 	request openapi.CreateUserRoleRequestObject,
 ) (openapi.CreateUserRoleResponseObject, error) {
-	usr, err := h.Usecase.User.Create(ctx, *request.Body)
+	err := h.usecase.userRolesPermissions.AddUserRole(ctx, request.UserId, request.Body.RoleId)
 	if err != nil {
 		return nil, fmt.Errorf("create user role: %w", err)
 	}
 
-	return openapi.CreateUserRole200JSONResponse(usr), nil
+	return openapi.CreateUserRole204Response{}, nil
 }
 
 func (h *Handler) DeleteUserRole(
 	ctx context.Context,
 	request openapi.DeleteUserRoleRequestObject,
 ) (openapi.DeleteUserRoleResponseObject, error) {
-	err := h.Usecase.User.Delete(ctx, request.UserId)
+	err := h.usecase.userRolesPermissions.RemoveUserRole(ctx, request.UserId, request.Params.RoleId)
 	if err != nil {
 		return nil, fmt.Errorf("delete user role: %w", err)
 	}

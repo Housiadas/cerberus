@@ -1,0 +1,25 @@
+package handlers_test
+
+import (
+	"context"
+	"fmt"
+
+	"github.com/Housiadas/cerberus/internal/core/service/user_service"
+	"github.com/Housiadas/cerberus/internal/utils/apitest"
+)
+
+func insertAuthSeedData(test *apitest.Test) (apitest.SeedData, error) {
+	ctx := context.Background()
+
+	usrs, err := user_service.TestSeedUsers(ctx, 2, test.Core.User)
+	if err != nil {
+		return apitest.SeedData{}, fmt.Errorf("seeding users : %w", err)
+	}
+
+	return apitest.SeedData{
+		Users: []apitest.User{
+			{User: usrs[0]},
+			{User: usrs[1]},
+		},
+	}, nil
+}

@@ -292,14 +292,10 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/NewUser'
+              $ref: '#/components/schemas/AddUserRoleReq'
       responses:
-        '200':
+        '204':
           description: Role added
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/User'
         default:
           $ref: '#/components/responses/ErrorResponse'
 
@@ -310,6 +306,12 @@ paths:
       description: Remove a role from a user
       security:
         - BearerAuth: []
+      parameters:
+        - name: role_id
+          in: query
+          required: true
+          schema:
+            type: string
       responses:
         '204':
           description: Role removed
@@ -443,14 +445,29 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/NewRole'
+              $ref: '#/components/schemas/AddRolePermissionReq'
       responses:
-        '200':
+        '204':
           description: Permission added
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Role'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
+    delete:
+      operationId: deleteRolePermission
+      tags: [Roles]
+      summary: Remove permission from role
+      description: Remove a permission from a role
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: permission_id
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Permission removed
         default:
           $ref: '#/components/responses/ErrorResponse'
 
@@ -784,6 +801,21 @@ components:
             $ref: '#/components/schemas/User'
         metadata:
           $ref: '#/components/schemas/Metadata'
+
+    # ---- User Roles / Role Permissions ----
+    AddUserRoleReq:
+      type: object
+      required: [role_id]
+      properties:
+        role_id:
+          type: string
+
+    AddRolePermissionReq:
+      type: object
+      required: [permission_id]
+      properties:
+        permission_id:
+          type: string
 
     # ---- Roles ----
     NewRole:

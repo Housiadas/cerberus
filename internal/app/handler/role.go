@@ -21,7 +21,7 @@ func (h *Handler) ListRoles(
 		Name:    pntr.DerefStr(request.Params.Name),
 	}
 
-	result, err := h.Usecase.Role.Query(ctx, qp)
+	result, err := h.usecase.role.Query(ctx, qp)
 	if err != nil {
 		return nil, fmt.Errorf("list roles: %w", err)
 	}
@@ -36,7 +36,7 @@ func (h *Handler) CreateRole(
 	ctx context.Context,
 	request openapi.CreateRoleRequestObject,
 ) (openapi.CreateRoleResponseObject, error) {
-	role, err := h.Usecase.Role.Create(ctx, *request.Body)
+	role, err := h.usecase.role.Create(ctx, *request.Body)
 	if err != nil {
 		return nil, fmt.Errorf("create role: %w", err)
 	}
@@ -48,7 +48,7 @@ func (h *Handler) UpdateRole(
 	ctx context.Context,
 	request openapi.UpdateRoleRequestObject,
 ) (openapi.UpdateRoleResponseObject, error) {
-	role, err := h.Usecase.Role.Update(ctx, *request.Body, request.RoleId)
+	role, err := h.usecase.role.Update(ctx, *request.Body, request.RoleId)
 	if err != nil {
 		return nil, fmt.Errorf("update role: %w", err)
 	}
@@ -60,7 +60,7 @@ func (h *Handler) DeleteRole(
 	ctx context.Context,
 	request openapi.DeleteRoleRequestObject,
 ) (openapi.DeleteRoleResponseObject, error) {
-	err := h.Usecase.Role.Delete(ctx, request.RoleId)
+	err := h.usecase.role.Delete(ctx, request.RoleId)
 	if err != nil {
 		return nil, fmt.Errorf("delete role: %w", err)
 	}
@@ -72,10 +72,30 @@ func (h *Handler) CreateRolePermission(
 	ctx context.Context,
 	request openapi.CreateRolePermissionRequestObject,
 ) (openapi.CreateRolePermissionResponseObject, error) {
-	role, err := h.Usecase.Role.Create(ctx, *request.Body)
+	err := h.usecase.userRolesPermissions.AddRolePermission(
+		ctx,
+		request.RoleId,
+		request.Body.PermissionId,
+	)
 	if err != nil {
 		return nil, fmt.Errorf("create role permission: %w", err)
 	}
 
-	return openapi.CreateRolePermission200JSONResponse(role), nil
+	return openapi.CreateRolePermission204Response{}, nil
+}
+
+func (h *Handler) DeleteRolePermission(
+	ctx context.Context,
+	request openapi.DeleteRolePermissionRequestObject,
+) (openapi.DeleteRolePermissionResponseObject, error) {
+	err := h.usecase.userRolesPermissions.RemoveRolePermission(
+		ctx,
+		request.RoleId,
+		request.Params.PermissionId,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("delete role permission: %w", err)
+	}
+
+	return openapi.DeleteRolePermission204Response{}, nil
 }

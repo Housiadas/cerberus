@@ -12,7 +12,7 @@ func (h *Handler) Readiness(
 	ctx context.Context,
 	_ openapi.ReadinessRequestObject,
 ) (openapi.ReadinessResponseObject, error) {
-	err := h.Usecase.System.Readiness(ctx)
+	err := h.usecase.system.Readiness(ctx)
 	if err != nil {
 		return nil, errs.Errorf(errs.Internal, "database not ready")
 	}
@@ -24,5 +24,5 @@ func (h *Handler) Liveness(
 	_ context.Context,
 	_ openapi.LivenessRequestObject,
 ) (openapi.LivenessResponseObject, error) {
-	return openapi.Liveness200JSONResponse(h.Usecase.System.Liveness()), nil
+	return openapi.Liveness200JSONResponse(h.usecase.system.Liveness()), nil
 }

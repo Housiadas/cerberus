@@ -5,6 +5,8 @@ package handler
 import (
 	"context"
 
+	"github.com/Housiadas/cerberus/internal/app/cache/permission_cache"
+	"github.com/Housiadas/cerberus/internal/app/cache/role_cache"
 	"github.com/Housiadas/cerberus/internal/app/cache/user_cache"
 	"github.com/Housiadas/cerberus/internal/app/handler/openapi"
 	"github.com/Housiadas/cerberus/internal/app/middleware"
@@ -12,16 +14,20 @@ import (
 	"github.com/Housiadas/cerberus/internal/app/repo/outbox_repo"
 	"github.com/Housiadas/cerberus/internal/app/repo/permission_repo"
 	"github.com/Housiadas/cerberus/internal/app/repo/refresh_token_repo"
+	"github.com/Housiadas/cerberus/internal/app/repo/role_permissions_repo"
 	"github.com/Housiadas/cerberus/internal/app/repo/role_repo"
 	"github.com/Housiadas/cerberus/internal/app/repo/user_repo"
 	"github.com/Housiadas/cerberus/internal/app/repo/user_roles_permissions_repo"
+	"github.com/Housiadas/cerberus/internal/app/repo/user_roles_repo"
 	"github.com/Housiadas/cerberus/internal/config"
 	"github.com/Housiadas/cerberus/internal/core/service/audit_service"
 	"github.com/Housiadas/cerberus/internal/core/service/outbox_service"
 	"github.com/Housiadas/cerberus/internal/core/service/permission_service"
 	"github.com/Housiadas/cerberus/internal/core/service/refresh_token_service"
+	"github.com/Housiadas/cerberus/internal/core/service/role_permissions_service"
 	"github.com/Housiadas/cerberus/internal/core/service/role_service"
 	"github.com/Housiadas/cerberus/internal/core/service/user_roles_permissions_service"
+	"github.com/Housiadas/cerberus/internal/core/service/user_roles_service"
 	"github.com/Housiadas/cerberus/internal/core/service/user_service"
 	"github.com/Housiadas/cerberus/internal/usecase/audit_usecase"
 	"github.com/Housiadas/cerberus/internal/usecase/auth_usecase"
@@ -45,29 +51,7 @@ import (
 // Ensure Handler implements the strict server interface at compile time.
 var _ openapi.StrictServerInterface = (*Handler)(nil)
 
-// Handler contains all the mandatory systems required by handler.
-type Handler struct {
-	ServiceName string
-	Build       string
-	Cors        config.CorsSettings
-	DB          *sqlx.DB
-	Log         logger.Logger
-	Middleware  *middleware.Middleware
-	Usecase     Usecase
-}
-
-// Usecase represents the use case layer.
-type Usecase struct {
-	Audit                *audit_usecase.UseCase
-	Auth                 *auth_usecase.UseCase
-	User                 *user_usecase.UseCase
-	Role                 *role_usecase.UseCase
-	Permission           *permission_usecase.UseCase
-	UserRolesPermissions *user_roles_permissions_usecase.UseCase
-	System               *system_usecase.UseCase
-}
-
-// Config represents the configuration for the handler.
+// Config represents the configuration for the Handler.
 type Config struct {
 	ServiceName       string
 	Build             string
@@ -78,6 +62,25 @@ type Config struct {
 	Tracer            trace.Tracer
 	Meter             metric.Meter
 	AccessTokenSecret []byte
+}
+
+// Handler contains all the mandatory systems required by Handler.
+type Handler struct {
+	serviceName string
+	cors        config.CorsSettings
+	middleware  *middleware.Middleware
+	usecase     usecase
+}
+
+// usecase represents the use case layer.
+type usecase struct {
+	auth                 *auth_usecase.UseCase
+	user                 *user_usecase.UseCase
+	role                 *role_usecase.UseCase
+	audit                *audit_usecase.UseCase
+	permission           *permission_usecase.UseCase
+	userRolesPermissions *user_roles_permissions_usecase.UseCase
+	system               *system_usecase.UseCase
 }
 
 func New(ctx context.Context, cfg Config) *Handler {
@@ -92,17 +95,23 @@ func New(ctx context.Context, cfg Config) *Handler {
 	userRepo := user_repo.NewStore(cfg.Log, cfg.DB)
 	userCacheStore := user_cache.NewStore(ctx, cfg.Log, userRepo, cfg.Redis)
 	roleRepo := role_repo.NewStore(cfg.Log, cfg.DB)
+	roleCacheStore := role_cache.NewStore(ctx, cfg.Log, roleRepo, cfg.Redis)
 	permissionRepo := permission_repo.NewStore(cfg.Log, cfg.DB)
+	permissionCacheStore := permission_cache.NewStore(ctx, cfg.Log, permissionRepo, cfg.Redis)
 	userRolesPermissionsRepo := user_roles_permissions_repo.NewStore(cfg.Log, cfg.DB)
+	userRolesRepo := user_roles_repo.NewStore(cfg.Log, cfg.DB)
+	rolePermissionsRepo := role_permissions_repo.NewStore(cfg.Log, cfg.DB)
 	refreshTokenRepo := refresh_token_repo.NewStore(cfg.Log, cfg.DB)
 
 	// services
 	auditService := audit_service.New(cfg.Log, auditRepo)
 	outboxSvc := outbox_service.New(cfg.Log, outboxRepo, uuidGen, clk)
 	userService := user_service.New(cfg.Log, userCacheStore, uuidGen, clk, hash)
-	roleService := role_service.New(cfg.Log, roleRepo)
-	permissionService := permission_service.New(cfg.Log, permissionRepo)
+	roleService := role_service.New(cfg.Log, roleCacheStore, uuidGen)
+	permissionService := permission_service.New(cfg.Log, permissionCacheStore, uuidGen)
 	refreshTokenService := refresh_token_service.New(cfg.Log, refreshTokenRepo, uuidGen, clk)
+	userRolesSvc := user_roles_service.New(cfg.Log, userRolesRepo)
+	rolePermsSvc := role_permissions_service.New(cfg.Log, rolePermissionsRepo)
 	userRolesPermissionsService := user_roles_permissions_service.New(
 		cfg.Log,
 		userRolesPermissionsRepo,
@@ -123,16 +132,17 @@ func New(ctx context.Context, cfg Config) *Handler {
 	permissionUsecase := permission_usecase.NewUseCase(permissionService)
 	systemUsecase := system_usecase.NewUseCase(cfg.Build, cfg.Log, cfg.DB)
 	userRolesPermissionsUsecase := user_roles_permissions_usecase.NewUseCase(
-		userRolesPermissionsService,
+		user_roles_permissions_usecase.Config{
+			Service:          userRolesPermissionsService,
+			UserRolesService: userRolesSvc,
+			RolePermsService: rolePermsSvc,
+		},
 	)
 
 	return &Handler{
-		ServiceName: cfg.ServiceName,
-		Build:       cfg.Build,
-		Cors:        cfg.Cors,
-		DB:          cfg.DB,
-		Log:         cfg.Log,
-		Middleware: middleware.New(ctx, middleware.Config{
+		serviceName: cfg.ServiceName,
+		cors:        cfg.Cors,
+		middleware: middleware.New(ctx, middleware.Config{
 			Log:                  cfg.Log,
 			Tracer:               cfg.Tracer,
 			Meter:                cfg.Meter,
@@ -141,14 +151,14 @@ func New(ctx context.Context, cfg Config) *Handler {
 			AuthUseCase:          authUsecase,
 			UserRolesPermissions: userRolesPermissionsUsecase,
 		}),
-		Usecase: Usecase{
-			Audit:                auditUsecase,
-			Auth:                 authUsecase,
-			User:                 userUsecase,
-			Role:                 roleUsecase,
-			Permission:           permissionUsecase,
-			UserRolesPermissions: userRolesPermissionsUsecase,
-			System:               systemUsecase,
+		usecase: usecase{
+			audit:                auditUsecase,
+			auth:                 authUsecase,
+			user:                 userUsecase,
+			role:                 roleUsecase,
+			permission:           permissionUsecase,
+			userRolesPermissions: userRolesPermissionsUsecase,
+			system:               systemUsecase,
 		},
 	}
 }

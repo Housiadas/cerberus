@@ -10,7 +10,7 @@ import (
 
 // Routes returns applications router.
 func (h *Handler) Routes() *chi.Mux {
-	m := h.Middleware
+	m := h.middleware
 
 	router := chi.NewRouter()
 	router.Use(
@@ -21,13 +21,13 @@ func (h *Handler) Routes() *chi.Mux {
 		middleware.SetHeader(ContentTypeKey, ContentTypeJSON),
 		middleware.GetHead,
 		cors.Handler(cors.Options{
-			AllowedOrigins: h.Cors.AllowedOrigins,
-			AllowedMethods: h.Cors.AllowedMethods,
-			AllowedHeaders: h.Cors.AllowedHeaders,
-			ExposedHeaders: h.Cors.ExposedHeaders,
-			MaxAge:         h.Cors.MaxAge,
+			AllowedOrigins: h.cors.AllowedOrigins,
+			AllowedMethods: h.cors.AllowedMethods,
+			AllowedHeaders: h.cors.AllowedHeaders,
+			ExposedHeaders: h.cors.ExposedHeaders,
+			MaxAge:         h.cors.MaxAge,
 		}),
-		otelchi.Middleware(h.ServiceName, otelchi.WithChiRoutes(router)),
+		otelchi.Middleware(h.serviceName, otelchi.WithChiRoutes(router)),
 	)
 
 	// order matter, first goes auth, then permissions etc.

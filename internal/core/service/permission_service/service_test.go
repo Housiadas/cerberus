@@ -16,6 +16,7 @@ import (
 	"github.com/Housiadas/cerberus/internal/core/service/permission_service"
 	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/Housiadas/cerberus/pkg/order"
+	"github.com/Housiadas/cerberus/pkg/uuidgen"
 )
 
 func TestService_Create_Successful(t *testing.T) {
@@ -30,7 +31,10 @@ func TestService_Create_Successful(t *testing.T) {
 	mStorer := permission.NewMockStorer(t)
 	mStorer.EXPECT().Create(ctx, mock.AnythingOfType("permission.Permission")).Return(nil)
 
-	sut := permission_service.New(mLogger, mStorer)
+	mUUID := uuidgen.NewMockGenerator(t)
+	mUUID.EXPECT().Generate().Return(uuid.New(), nil)
+
+	sut := permission_service.New(mLogger, mStorer, mUUID)
 	p, err := sut.Create(ctx, np)
 
 	assert.NoError(t, err)
@@ -51,7 +55,10 @@ func TestService_Create_StorerError(t *testing.T) {
 	mStorer := permission.NewMockStorer(t)
 	mStorer.EXPECT().Create(ctx, mock.AnythingOfType("permission.Permission")).Return(errors.New("create error"))
 
-	sut := permission_service.New(mLogger, mStorer)
+	mUUID := uuidgen.NewMockGenerator(t)
+	mUUID.EXPECT().Generate().Return(uuid.New(), nil)
+
+	sut := permission_service.New(mLogger, mStorer, mUUID)
 	_, err := sut.Create(ctx, np)
 
 	assert.Error(t, err)
@@ -79,7 +86,7 @@ func TestService_Update_Successful(t *testing.T) {
 	mStorer := permission.NewMockStorer(t)
 	mStorer.EXPECT().Update(ctx, mock.AnythingOfType("permission.Permission")).Return(nil)
 
-	sut := permission_service.New(mLogger, mStorer)
+	sut := permission_service.New(mLogger, mStorer, uuidgen.NewMockGenerator(t))
 	p, err := sut.Update(ctx, existingPerm, up)
 
 	assert.NoError(t, err)
@@ -107,7 +114,7 @@ func TestService_Update_StorerError(t *testing.T) {
 	mStorer := permission.NewMockStorer(t)
 	mStorer.EXPECT().Update(ctx, mock.AnythingOfType("permission.Permission")).Return(errors.New("update error"))
 
-	sut := permission_service.New(mLogger, mStorer)
+	sut := permission_service.New(mLogger, mStorer, uuidgen.NewMockGenerator(t))
 	_, err := sut.Update(ctx, existingPerm, up)
 
 	assert.Error(t, err)
@@ -127,7 +134,7 @@ func TestService_Delete_Successful(t *testing.T) {
 	mStorer := permission.NewMockStorer(t)
 	mStorer.EXPECT().Delete(ctx, p).Return(nil)
 
-	sut := permission_service.New(mLogger, mStorer)
+	sut := permission_service.New(mLogger, mStorer, uuidgen.NewMockGenerator(t))
 	err := sut.Delete(ctx, p)
 
 	assert.NoError(t, err)
@@ -146,7 +153,7 @@ func TestService_Delete_Error(t *testing.T) {
 	mStorer := permission.NewMockStorer(t)
 	mStorer.EXPECT().Delete(ctx, p).Return(errors.New("delete error"))
 
-	sut := permission_service.New(mLogger, mStorer)
+	sut := permission_service.New(mLogger, mStorer, uuidgen.NewMockGenerator(t))
 	err := sut.Delete(ctx, p)
 
 	assert.Error(t, err)
@@ -162,7 +169,7 @@ func TestService_Count_Successful(t *testing.T) {
 	mStorer := permission.NewMockStorer(t)
 	mStorer.EXPECT().Count(ctx, filter).Return(5, nil)
 
-	sut := permission_service.New(mLogger, mStorer)
+	sut := permission_service.New(mLogger, mStorer, uuidgen.NewMockGenerator(t))
 	count, err := sut.Count(ctx, filter)
 
 	assert.NoError(t, err)
@@ -178,7 +185,7 @@ func TestService_Count_Error(t *testing.T) {
 	mStorer := permission.NewMockStorer(t)
 	mStorer.EXPECT().Count(ctx, filter).Return(0, errors.New("count error"))
 
-	sut := permission_service.New(mLogger, mStorer)
+	sut := permission_service.New(mLogger, mStorer, uuidgen.NewMockGenerator(t))
 	_, err := sut.Count(ctx, filter)
 
 	assert.Error(t, err)
@@ -202,7 +209,7 @@ func TestService_QueryByID_Successful(t *testing.T) {
 	mStorer := permission.NewMockStorer(t)
 	mStorer.EXPECT().QueryByID(ctx, permID).Return(expectedPerm, nil)
 
-	sut := permission_service.New(mLogger, mStorer)
+	sut := permission_service.New(mLogger, mStorer, uuidgen.NewMockGenerator(t))
 	p, err := sut.QueryByID(ctx, permID)
 
 	assert.NoError(t, err)
@@ -219,7 +226,7 @@ func TestService_QueryByID_NotFound(t *testing.T) {
 	mStorer := permission.NewMockStorer(t)
 	mStorer.EXPECT().QueryByID(ctx, permID).Return(permission.Permission{}, permission.ErrNotFound)
 
-	sut := permission_service.New(mLogger, mStorer)
+	sut := permission_service.New(mLogger, mStorer, uuidgen.NewMockGenerator(t))
 	_, err := sut.QueryByID(ctx, permID)
 
 	assert.Error(t, err)
@@ -244,7 +251,7 @@ func TestService_Query_Successful(t *testing.T) {
 	mStorer := permission.NewMockStorer(t)
 	mStorer.EXPECT().Query(ctx, filter, orderBy, page).Return(expectedPerms, nil)
 
-	sut := permission_service.New(mLogger, mStorer)
+	sut := permission_service.New(mLogger, mStorer, uuidgen.NewMockGenerator(t))
 	perms, err := sut.Query(ctx, filter, orderBy, page)
 
 	assert.NoError(t, err)
@@ -263,7 +270,7 @@ func TestService_Query_Error(t *testing.T) {
 	mStorer := permission.NewMockStorer(t)
 	mStorer.EXPECT().Query(ctx, filter, orderBy, page).Return(nil, errors.New("query error"))
 
-	sut := permission_service.New(mLogger, mStorer)
+	sut := permission_service.New(mLogger, mStorer, uuidgen.NewMockGenerator(t))
 	_, err := sut.Query(ctx, filter, orderBy, page)
 
 	assert.Error(t, err)

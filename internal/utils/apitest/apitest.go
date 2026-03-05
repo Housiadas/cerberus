@@ -4,24 +4,22 @@ package apitest
 import (
 	"net/http"
 
-	"github.com/Housiadas/cerberus/internal/core/service/audit_service"
-	"github.com/Housiadas/cerberus/internal/core/service/permission_service"
-	"github.com/Housiadas/cerberus/internal/core/service/role_service"
-	"github.com/Housiadas/cerberus/internal/core/service/user_service"
+	"github.com/Housiadas/cerberus/internal/core/domain/audit"
+	"github.com/Housiadas/cerberus/internal/core/domain/user"
 	"github.com/Housiadas/cerberus/internal/usecase/auth_usecase"
 	"github.com/jmoiron/sqlx"
 )
 
-// Test contains functions for executing an api test.
+// Test contains functions for executing an integration test.
 type Test struct {
 	DB      *sqlx.DB
 	Mux     http.Handler
-	Usecase Usecase
-	Core    Core
+	Usecase *Usecase
+	Core    *Core
 }
 
 // New constructs a Test value for running api tests.
-func New(db *sqlx.DB, mux http.Handler, c Core, u Usecase) *Test {
+func New(db *sqlx.DB, mux http.Handler, c *Core, u *Usecase) *Test {
 	return &Test{
 		DB:      db,
 		Mux:     mux,
@@ -30,14 +28,23 @@ func New(db *sqlx.DB, mux http.Handler, c Core, u Usecase) *Test {
 	}
 }
 
-type Usecase struct {
-	Auth *auth_usecase.UseCase
+// User extends the dbtest user for api test support.
+type User struct {
+	user.User
+
+	AccessToken auth_usecase.AccessToken
+	Audits      []audit.Audit
 }
 
-// Core represents all the internal core services needed for testing.
-type Core struct {
-	Audit      *audit_service.Service
-	User       *user_service.Service
-	Role       *role_service.Service
-	Permission *permission_service.Service
+// Table represents fields needed for running an api test.
+type Table struct {
+	Name        string
+	URL         string
+	Method      string
+	AccessToken *string
+	StatusCode  int
+	Input       any
+	GotResp     any
+	ExpResp     any
+	AssertFunc  func(got any, exp any) string
 }

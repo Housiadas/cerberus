@@ -63,11 +63,15 @@ docker/down:
 docker/golang-ci:
 	docker run -t --rm -v $(pwd):/app -w /app golangci/golangci-lint:v2.8.0 golangci-lint run
 
+## docker/count: count docker containers
+.PHONY: docker/count
+docker/count:
+	docker ps -q | wc -l
+
 ## docker/clean: docker clean all
 .PHONY: docker/clean
 docker/clean:
 	docker system prune -f  && \
-    docker image prune -f && \
     docker volume prune -f
 
 ## ================== #
@@ -152,7 +156,7 @@ golangci:
 ## test: Run tests
 .PHONY: test
 test:
-	CGO_ENABLED=1 go test -v -cover -short -race -json -p 4 ./... | go tool tparse --all
+	CGO_ENABLED=1 go test -v -cover -short -race -json -p 6 ./... | go tool tparse --all
 
 ## coverage/run: Run tests and generate filtered coverage profile
 .PHONY: coverage/run

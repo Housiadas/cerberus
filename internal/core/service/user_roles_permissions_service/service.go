@@ -19,7 +19,10 @@ type Service struct {
 
 // New constructs a business API for use.
 func New(log logger.Logger, storer user_roles_permissions.Storer) *Service {
-	return &Service{log: log, storer: storer}
+	return &Service{
+		log:    log,
+		storer: storer,
+	}
 }
 
 // Query retrieves a list of user roles and permissions from the view.

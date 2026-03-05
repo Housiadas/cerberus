@@ -1,0 +1,23 @@
+meta {
+  name: List Permissions
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{base_url}}/api/v1/permissions
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{access_token}}
+}
+
+params:query {
+  ~page: 1
+  ~rows: 10
+  ~orderBy: name
+  ~permission_id:
+  ~name:
+}

@@ -1,0 +1,21 @@
+meta {
+  name: Register
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{base_url}}/api/v1/auth/register
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "name": "housi",
+    "email": "test@housi.com",
+    "department": "test",
+    "password": "password123",
+    "passwordConfirm": "password123"
+  }
+}

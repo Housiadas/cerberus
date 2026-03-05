@@ -6,6 +6,7 @@ import (
 )
 
 var orderByFields = map[string]string{
+	role.OrderByID:   "id",
 	role.OrderByName: "name",
 }
 

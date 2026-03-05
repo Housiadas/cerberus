@@ -4,37 +4,52 @@ package redistest
 import (
 	"context"
 	"strings"
-	"testing"
 
 	"github.com/Housiadas/cerberus/internal/config"
 	pkgRedis "github.com/Housiadas/cerberus/pkg/redis"
-	"github.com/stretchr/testify/require"
 	"github.com/testcontainers/testcontainers-go"
 	tcRedis "github.com/testcontainers/testcontainers-go/modules/redis"
 )
 
-// New starts a Redis container using testcontainers and returns
-// a configured DistributedStorage connected to it.
-func New(t *testing.T) pkgRedis.Client {
+// NewSharedContainer starts a single Redis container intended to be shared
+// across all tests in a package via TestMain.
+func NewSharedContainer(ctx context.Context, t interface {
+	Helper()
+	Fatal(args ...any)
+	Logf(format string, args ...any)
+	Cleanup(fn func())
+},
+) pkgRedis.Client {
 	t.Helper()
 
-	ctx := context.Background()
+	appCfg, err := config.LoadConfig()
+	if err != nil {
+		t.Fatal("load config:", err)
+	}
 
-	cfg, err := config.LoadConfig()
-	require.NoError(t, err)
+	ctr, err := tcRedis.Run(ctx, appCfg.Redis.RedisImage)
+	if err != nil {
+		t.Fatal("start shared redis container:", err)
+	}
 
-	ctr, err := tcRedis.Run(ctx, cfg.Redis.RedisImage)
-	defer testcontainers.CleanupContainer(t, ctr)
-
-	require.NoError(t, err)
+	t.Cleanup(func() {
+		err2 := testcontainers.TerminateContainer(ctr)
+		if err2 != nil {
+			t.Logf("terminate shared redis container: %s", err2)
+		}
+	})
 
 	connStr, err := ctr.ConnectionString(ctx)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatal("shared redis connection string:", err)
+	}
 
 	client, err := pkgRedis.Open(ctx, pkgRedis.Config{
 		Host: strings.TrimPrefix(connStr, "redis://"),
 	})
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatal("open shared redis client:", err)
+	}
 
 	t.Cleanup(func() {
 		client.Close()

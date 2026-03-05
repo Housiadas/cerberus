@@ -11,20 +11,23 @@ import (
 	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/Housiadas/cerberus/pkg/order"
 	"github.com/Housiadas/cerberus/pkg/pgsql"
+	"github.com/Housiadas/cerberus/pkg/uuidgen"
 	"github.com/google/uuid"
 )
 
 // Service manages the set of APIs for user access.
 type Service struct {
-	log    logger.Logger
-	storer role.Storer
+	log     logger.Logger
+	storer  role.Storer
+	uuidGen uuidgen.Generator
 }
 
 // New constructor.
-func New(log logger.Logger, storer role.Storer) *Service {
+func New(log logger.Logger, storer role.Storer, uuidGen uuidgen.Generator) *Service {
 	return &Service{
-		log:    log,
-		storer: storer,
+		log:     log,
+		storer:  storer,
+		uuidGen: uuidGen,
 	}
 }
 
@@ -37,8 +40,9 @@ func (c *Service) NewWithTx(tx pgsql.CommitRollbacker) (*Service, error) {
 	}
 
 	bus := Service{
-		log:    c.log,
-		storer: storer,
+		log:     c.log,
+		storer:  storer,
+		uuidGen: c.uuidGen,
 	}
 
 	return &bus, nil
@@ -46,15 +50,20 @@ func (c *Service) NewWithTx(tx pgsql.CommitRollbacker) (*Service, error) {
 
 // Create adds a new role.Role to the system.
 func (c *Service) Create(ctx context.Context, nr role.NewRole) (role.Role, error) {
+	id, err := c.uuidGen.Generate()
+	if err != nil {
+		return role.Role{}, fmt.Errorf("role uuid generate: %w", err)
+	}
+
 	now := time.Now()
 	rol := role.Role{
-		ID:        uuid.UUID{},
+		ID:        id,
 		Name:      nr.Name,
 		CreatedAt: now,
 		UpdatedAt: now,
 	}
 
-	err := c.storer.Create(ctx, rol)
+	err = c.storer.Create(ctx, rol)
 	if err != nil {
 		return role.Role{}, fmt.Errorf("role create: %w", err)
 	}

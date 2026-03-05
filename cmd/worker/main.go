@@ -41,13 +41,13 @@ func run() error {
 	var log *logger.Service
 
 	ctx := context.Background()
-	traceIDFn := func(reqCtx context.Context) string {
-		return telemetry.GetTraceID(reqCtx)
-	}
-	requestIDFn := func(reqCtx context.Context) string {
-		return ctxPck.GetRequestID(reqCtx)
-	}
-	log = logger.New(os.Stdout, logger.LevelInfo, "Worker", traceIDFn, requestIDFn)
+	log = logger.New(
+		os.Stdout,
+		logger.LevelInfo,
+		"Worker",
+		telemetry.GetTraceID,
+		ctxPck.GetRequestID,
+	)
 
 	// -------------------------------------------------------------------------
 	// Start Tracing Support
