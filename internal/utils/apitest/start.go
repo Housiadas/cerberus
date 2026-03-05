@@ -8,16 +8,12 @@ import (
 
 	"github.com/Housiadas/cerberus/internal/app/handler"
 	"github.com/Housiadas/cerberus/internal/app/relay"
-	"github.com/Housiadas/cerberus/internal/app/repo/outbox_repo"
 	cfg "github.com/Housiadas/cerberus/internal/config"
-	"github.com/Housiadas/cerberus/internal/core/service/outbox_service"
 	"github.com/Housiadas/cerberus/internal/utils/dbtest"
 	"github.com/Housiadas/cerberus/internal/utils/kafkatest"
 	"github.com/Housiadas/cerberus/internal/utils/redistest"
-	"github.com/Housiadas/cerberus/pkg/clock"
 	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/Housiadas/cerberus/pkg/telemetry"
-	"github.com/Housiadas/cerberus/pkg/uuidgen"
 	"github.com/stretchr/testify/require"
 )
 
@@ -53,8 +49,10 @@ func StartTest(t *testing.T, testName string) (*Test, error) {
 	red := redistest.New(t)
 
 	// Initialize handler
+	serviceName := "Test Service Name"
+	accessTokenSecret := []byte("test-256-bit-access-secret")
 	h := handler.New(ctx, handler.Config{
-		ServiceName:       "Test Service Name",
+		ServiceName:       serviceName,
 		Build:             "Test",
 		Cors:              cfg.CorsSettings{},
 		DB:                db,
@@ -62,26 +60,21 @@ func StartTest(t *testing.T, testName string) (*Test, error) {
 		Log:               log,
 		Tracer:            tel.TracerProvider().Tracer("Service Name"),
 		Meter:             tel.MeterProvider().Meter("Service Name"),
-		AccessTokenSecret: []byte("test-256-bit-access-secret"),
+		AccessTokenSecret: accessTokenSecret,
 	})
 
 	// Initialize Kafka producer via testcontainers
 	kafkaProducer := kafkatest.New(t)
 
-	// Start outbox relay
-	outboxRepo := outbox_repo.NewStore(log, db)
-	outboxSvc := outbox_service.New(log, outboxRepo, uuidgen.NewV7(), clock.NewClock())
-	outboxRelay := relay.New(log, outboxSvc, kafkaProducer, 1*time.Second, 100, 5)
+	// initialize logic
+	c := newCore(log, db)
+	u := newUseCase(log, c, accessTokenSecret, serviceName)
+
+	outboxRelay := relay.New(log, c.Outbox, kafkaProducer, 1*time.Second, 100, 5)
 
 	relayCtx, relayCancel := context.WithCancel(ctx)
 
 	go outboxRelay.Start(relayCtx)
-
-	// initialize apitest services
-	c := newCore(log, db)
-
-	// initialize usecase
-	u := Usecase{Auth: h.Usecase.Auth}
 
 	t.Cleanup(func() {
 		relayCancel()

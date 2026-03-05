@@ -39,6 +39,69 @@ func (_m *MockStorer) EXPECT() *MockStorer_Expecter {
 	return &MockStorer_Expecter{mock: &_m.Mock}
 }
 
+// Add provides a mock function for the type MockStorer
+func (_mock *MockStorer) Add(ctx context.Context, roleID uuid.UUID, permissionID uuid.UUID) error {
+	ret := _mock.Called(ctx, roleID, permissionID)
+
+	if len(ret) == 0 {
+		panic("no return value specified for Add")
+	}
+
+	var r0 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, uuid.UUID, uuid.UUID) error); ok {
+		r0 = returnFunc(ctx, roleID, permissionID)
+	} else {
+		r0 = ret.Error(0)
+	}
+	return r0
+}
+
+// MockStorer_Add_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Add'
+type MockStorer_Add_Call struct {
+	*mock.Call
+}
+
+// Add is a helper method to define mock.On call
+//   - ctx context.Context
+//   - roleID uuid.UUID
+//   - permissionID uuid.UUID
+func (_e *MockStorer_Expecter) Add(ctx interface{}, roleID interface{}, permissionID interface{}) *MockStorer_Add_Call {
+	return &MockStorer_Add_Call{Call: _e.mock.On("Add", ctx, roleID, permissionID)}
+}
+
+func (_c *MockStorer_Add_Call) Run(run func(ctx context.Context, roleID uuid.UUID, permissionID uuid.UUID)) *MockStorer_Add_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 uuid.UUID
+		if args[1] != nil {
+			arg1 = args[1].(uuid.UUID)
+		}
+		var arg2 uuid.UUID
+		if args[2] != nil {
+			arg2 = args[2].(uuid.UUID)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+		)
+	})
+	return _c
+}
+
+func (_c *MockStorer_Add_Call) Return(err error) *MockStorer_Add_Call {
+	_c.Call.Return(err)
+	return _c
+}
+
+func (_c *MockStorer_Add_Call) RunAndReturn(run func(ctx context.Context, roleID uuid.UUID, permissionID uuid.UUID) error) *MockStorer_Add_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // NewWithTx provides a mock function for the type MockStorer
 func (_mock *MockStorer) NewWithTx(tx pgsql.CommitRollbacker) (Storer, error) {
 	ret := _mock.Called(tx)
@@ -67,21 +130,38 @@ func (_mock *MockStorer) NewWithTx(tx pgsql.CommitRollbacker) (Storer, error) {
 	return r0, r1
 }
 
-// Add provides a mock function for the type MockStorer
-func (_mock *MockStorer) Add(ctx context.Context, roleID uuid.UUID, permissionID uuid.UUID) error {
-	ret := _mock.Called(ctx, roleID, permissionID)
+// MockStorer_NewWithTx_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'NewWithTx'
+type MockStorer_NewWithTx_Call struct {
+	*mock.Call
+}
 
-	if len(ret) == 0 {
-		panic("no return value specified for Add")
-	}
+// NewWithTx is a helper method to define mock.On call
+//   - tx pgsql.CommitRollbacker
+func (_e *MockStorer_Expecter) NewWithTx(tx interface{}) *MockStorer_NewWithTx_Call {
+	return &MockStorer_NewWithTx_Call{Call: _e.mock.On("NewWithTx", tx)}
+}
 
-	var r0 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, uuid.UUID, uuid.UUID) error); ok {
-		r0 = returnFunc(ctx, roleID, permissionID)
-	} else {
-		r0 = ret.Error(0)
-	}
-	return r0
+func (_c *MockStorer_NewWithTx_Call) Run(run func(tx pgsql.CommitRollbacker)) *MockStorer_NewWithTx_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 pgsql.CommitRollbacker
+		if args[0] != nil {
+			arg0 = args[0].(pgsql.CommitRollbacker)
+		}
+		run(
+			arg0,
+		)
+	})
+	return _c
+}
+
+func (_c *MockStorer_NewWithTx_Call) Return(storer Storer, err error) *MockStorer_NewWithTx_Call {
+	_c.Call.Return(storer, err)
+	return _c
+}
+
+func (_c *MockStorer_NewWithTx_Call) RunAndReturn(run func(tx pgsql.CommitRollbacker) (Storer, error)) *MockStorer_NewWithTx_Call {
+	_c.Call.Return(run)
+	return _c
 }
 
 // Remove provides a mock function for the type MockStorer
@@ -99,4 +179,50 @@ func (_mock *MockStorer) Remove(ctx context.Context, roleID uuid.UUID, permissio
 		r0 = ret.Error(0)
 	}
 	return r0
+}
+
+// MockStorer_Remove_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Remove'
+type MockStorer_Remove_Call struct {
+	*mock.Call
+}
+
+// Remove is a helper method to define mock.On call
+//   - ctx context.Context
+//   - roleID uuid.UUID
+//   - permissionID uuid.UUID
+func (_e *MockStorer_Expecter) Remove(ctx interface{}, roleID interface{}, permissionID interface{}) *MockStorer_Remove_Call {
+	return &MockStorer_Remove_Call{Call: _e.mock.On("Remove", ctx, roleID, permissionID)}
+}
+
+func (_c *MockStorer_Remove_Call) Run(run func(ctx context.Context, roleID uuid.UUID, permissionID uuid.UUID)) *MockStorer_Remove_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 uuid.UUID
+		if args[1] != nil {
+			arg1 = args[1].(uuid.UUID)
+		}
+		var arg2 uuid.UUID
+		if args[2] != nil {
+			arg2 = args[2].(uuid.UUID)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+		)
+	})
+	return _c
+}
+
+func (_c *MockStorer_Remove_Call) Return(err error) *MockStorer_Remove_Call {
+	_c.Call.Return(err)
+	return _c
+}
+
+func (_c *MockStorer_Remove_Call) RunAndReturn(run func(ctx context.Context, roleID uuid.UUID, permissionID uuid.UUID) error) *MockStorer_Remove_Call {
+	_c.Call.Return(run)
+	return _c
 }

@@ -21,7 +21,7 @@ func (h *Handler) ListPermissions(
 		Name:    pntr.DerefStr(request.Params.Name),
 	}
 
-	result, err := h.Usecase.Permission.Query(ctx, qp)
+	result, err := h.usecase.permission.Query(ctx, qp)
 	if err != nil {
 		return nil, fmt.Errorf("list permissions: %w", err)
 	}
@@ -36,7 +36,7 @@ func (h *Handler) CreatePermission(
 	ctx context.Context,
 	request openapi.CreatePermissionRequestObject,
 ) (openapi.CreatePermissionResponseObject, error) {
-	perm, err := h.Usecase.Permission.Create(ctx, *request.Body)
+	perm, err := h.usecase.permission.Create(ctx, *request.Body)
 	if err != nil {
 		return nil, fmt.Errorf("create permission: %w", err)
 	}
@@ -48,7 +48,7 @@ func (h *Handler) UpdatePermission(
 	ctx context.Context,
 	request openapi.UpdatePermissionRequestObject,
 ) (openapi.UpdatePermissionResponseObject, error) {
-	perm, err := h.Usecase.Permission.Update(ctx, *request.Body, request.PermissionId)
+	perm, err := h.usecase.permission.Update(ctx, *request.Body, request.PermissionId)
 	if err != nil {
 		return nil, fmt.Errorf("update permission: %w", err)
 	}
@@ -60,7 +60,7 @@ func (h *Handler) DeletePermission(
 	ctx context.Context,
 	request openapi.DeletePermissionRequestObject,
 ) (openapi.DeletePermissionResponseObject, error) {
-	err := h.Usecase.Permission.Delete(ctx, request.PermissionId)
+	err := h.usecase.permission.Delete(ctx, request.PermissionId)
 	if err != nil {
 		return nil, fmt.Errorf("delete permission: %w", err)
 	}

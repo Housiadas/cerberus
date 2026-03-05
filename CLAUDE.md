@@ -38,6 +38,10 @@ The `internal` directory is organized as follows:
 - `core`, holds the domain logic, separated to domain (models) and services
 - `usecases`, is the composition layer for the different domain areas
 
+## Rules
+- Never mix core/services, for example, never import role_service in the user_service
+- The usecase in the composition layer should be the only one that imports different services from the core layer
+
 # Config file
 - config.ymal using the viper library
 - Add changes to config.yml and config.ymal.dist for any extra configuration

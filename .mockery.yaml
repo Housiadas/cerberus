@@ -32,6 +32,12 @@ packages:
   github.com/Housiadas/cerberus/internal/core/domain/user_roles_permissions:
     config:
       all: true
+  github.com/Housiadas/cerberus/internal/core/domain/user_roles:
+    config:
+      all: true
+  github.com/Housiadas/cerberus/internal/core/domain/role_permissions:
+    config:
+      all: true
   github.com/Housiadas/cerberus/internal/core/domain/outbox:
     config:
       all: true
