@@ -24,7 +24,7 @@ import (
 func Test_Permission(t *testing.T) {
 	t.Parallel()
 
-	db := dbtest.New(t, "Test_Permission")
+	db := sc.NewDB(t, t.Name())
 
 	var buf bytes.Buffer
 	traceIDFn := func(context.Context) string { return "" }
