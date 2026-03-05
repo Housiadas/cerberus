@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/Housiadas/cerberus/internal/core/domain/audit"
+	"github.com/Housiadas/cerberus/internal/core/domain/permission"
 	"github.com/Housiadas/cerberus/internal/core/domain/role"
 	"github.com/Housiadas/cerberus/internal/core/domain/user"
 )
@@ -20,11 +21,17 @@ type Role struct {
 	role.Role
 }
 
+// Permission represents a permission specified for the test.
+type Permission struct {
+	permission.Permission
+}
+
 // SeedData represents data seeded for the test.
 type SeedData struct {
-	Users  []User
-	Admins []User
-	Roles  []Role
+	Users       []User
+	Admins      []User
+	Roles       []Role
+	Permissions []Permission
 }
 
 // The Table represents fields needed for running a unit test.
