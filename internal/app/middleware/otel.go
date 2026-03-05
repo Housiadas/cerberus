@@ -26,8 +26,6 @@ func (m *Middleware) Otel() func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			start := time.Now()
-			// inject trace to context
-			ctx := telemetry.InjectTracing(r.Context(), m.tracer)
 
 			// route
 			attrs := []attribute.KeyValue{
@@ -36,11 +34,14 @@ func (m *Middleware) Otel() func(next http.Handler) http.Handler {
 			}
 
 			// Start a server span.
-			ctx, span := m.tracer.Start(ctx, fmt.Sprintf("%s %s", r.Method, r.URL.Path),
+			ctx, span := m.tracer.Start(r.Context(), fmt.Sprintf("%s %s", r.Method, r.URL.Path),
 				trace.WithSpanKind(trace.SpanKindServer),
 				trace.WithAttributes(attrs...),
 			)
 			defer span.End()
+
+			// inject trace to context after span is started so trace ID is real
+			ctx = telemetry.InjectTracing(ctx, m.tracer)
 
 			// Track in-flight requests.
 			if m.metrics.requestsActive != nil {
@@ -90,7 +91,7 @@ func initOTelMetrics(
 		metric.WithDescription("Total number of HTTP requests"),
 		metric.WithUnit("{request}"),
 	)
-	if err == nil {
+	if err != nil {
 		log.Error(ctx, "metric int64counter error", "msg", err)
 	}
 
@@ -112,7 +113,7 @@ func initOTelMetrics(
 			10,
 		),
 	)
-	if err == nil {
+	if err != nil {
 		log.Error(ctx, "metric float64Histogram error", "msg", err)
 	}
 
@@ -120,7 +121,7 @@ func initOTelMetrics(
 		metric.WithDescription("Number of in-flight HTTP requests"),
 		metric.WithUnit("{request}"),
 	)
-	if err == nil {
+	if err != nil {
 		log.Error(ctx, "metric int64downCounter error", "msg", err)
 	}
 

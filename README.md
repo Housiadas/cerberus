@@ -31,12 +31,22 @@ The `usecases` directory is responsible for combaning different domain areas and
 ## Development
 
 Spin up containers
-```
+```bash
 make docker/up
 ```
 
-Destroy containers
+Run REST API
+```bash
+make go/rest/run
 ```
+
+Run migrations
+```bash
+make db/migrate/up
+```
+
+Destroy containers
+```bash
 make docker/down
 ```
 
