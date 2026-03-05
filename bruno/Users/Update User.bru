@@ -1,0 +1,28 @@
+meta {
+  name: Update User
+  type: http
+  seq: 4
+}
+
+put {
+  url: {{base_url}}/api/v1/users/:user_id
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{access_token}}
+}
+
+params:path {
+  user_id: USER_ID_HERE
+}
+
+body:json {
+  {
+    "name": "John Doe Updated",
+    "email": "john.updated@example.com",
+    "department": "engineering",
+    "enabled": true
+  }
+}

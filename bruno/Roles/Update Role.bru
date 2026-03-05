@@ -1,0 +1,25 @@
+meta {
+  name: Update Role
+  type: http
+  seq: 3
+}
+
+put {
+  url: {{base_url}}/api/v1/roles/:role_id
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{access_token}}
+}
+
+params:path {
+  role_id: ROLE_ID_HERE
+}
+
+body:json {
+  {
+    "name": "admin-updated"
+  }
+}

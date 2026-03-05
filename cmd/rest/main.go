@@ -33,13 +33,13 @@ func main() {
 
 	ctx := context.Background()
 
-	traceIDFn := func(reqCtx context.Context) string {
-		return telemetry.GetTraceID(reqCtx)
-	}
-	requestIDFn := func(reqCtx context.Context) string {
-		return ctxPck.GetRequestID(reqCtx)
-	}
-	log = logger.New(os.Stdout, logger.LevelInfo, "Rest api", traceIDFn, requestIDFn)
+	log = logger.New(
+		os.Stdout,
+		logger.LevelInfo,
+		"Rest api",
+		telemetry.GetTraceID,
+		ctxPck.GetRequestID,
+	)
 
 	// -------------------------------------------------------------------------
 	// Run the application

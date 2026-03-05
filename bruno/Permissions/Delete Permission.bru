@@ -1,0 +1,19 @@
+meta {
+  name: Delete Permission
+  type: http
+  seq: 4
+}
+
+delete {
+  url: {{base_url}}/api/v1/permissions/:permission_id
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{access_token}}
+}
+
+params:path {
+  permission_id: PERMISSION_ID_HERE
+}

@@ -1,0 +1,28 @@
+meta {
+  name: Add Role to User
+  type: http
+  seq: 6
+}
+
+post {
+  url: {{base_url}}/api/v1/users/:user_id/role
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{access_token}}
+}
+
+params:path {
+  user_id: USER_ID_HERE
+}
+
+body:json {
+  {
+    "name": "admin",
+    "email": "admin@example.com",
+    "password": "password123",
+    "passwordConfirm": "password123"
+  }
+}
