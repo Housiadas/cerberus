@@ -76,3 +76,19 @@ The goal is to create the soft delete feature
 - Run mockery
 - Run make lint
 - Run make test
+
+## Roles and permissions CRUD
+- Finish the roles and permissions CRUD
+- Fix /api/v1/users/{user_id}/role endpoints to add roles to a user
+- Fix /api/v1/roles/{role_id}/permissions endpoints to add  permissions to a role
+- Create cache layers like the user_cache, bypass operations like Update and Create
+- Add tests for roles and permissions
+- Add integration tests for roles and permissions
+- Respect usecase as the composition layer
+- Respect the flow of the application
+- Respect the query directory in the repo directory
+- Run make mockery
+- Run make lint
+- Run make test
+- Run make generate-api-docs
+- Make all the necessary changes to the application in order for the test to run
