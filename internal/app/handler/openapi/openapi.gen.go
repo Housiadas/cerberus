@@ -25,6 +25,16 @@ const (
 	BearerAuthScopes = "BearerAuth.Scopes"
 )
 
+// AddRolePermissionReq defines model for AddRolePermissionReq.
+type AddRolePermissionReq struct {
+	PermissionId string `json:"permission_id"`
+}
+
+// AddUserRoleReq defines model for AddUserRoleReq.
+type AddUserRoleReq struct {
+	RoleId string `json:"role_id"`
+}
+
 // Audit defines model for Audit.
 type Audit = audit_usecase.Audit
 
@@ -141,6 +151,11 @@ type ListRolesParams struct {
 	Name    *string `form:"name,omitempty" json:"name,omitempty"`
 }
 
+// DeleteRolePermissionParams defines parameters for DeleteRolePermission.
+type DeleteRolePermissionParams struct {
+	PermissionId string `form:"permission_id" json:"permission_id"`
+}
+
 // ListUsersParams defines parameters for ListUsers.
 type ListUsersParams struct {
 	Page             *string `form:"page,omitempty" json:"page,omitempty"`
@@ -151,6 +166,11 @@ type ListUsersParams struct {
 	Email            *string `form:"email,omitempty" json:"email,omitempty"`
 	StartCreatedDate *string `form:"start_created_date,omitempty" json:"start_created_date,omitempty"`
 	EndCreatedDate   *string `form:"end_created_date,omitempty" json:"end_created_date,omitempty"`
+}
+
+// DeleteUserRoleParams defines parameters for DeleteUserRole.
+type DeleteUserRoleParams struct {
+	RoleId string `form:"role_id" json:"role_id"`
 }
 
 // AuthLoginJSONRequestBody defines body for AuthLogin for application/json ContentType.
@@ -178,7 +198,7 @@ type CreateRoleJSONRequestBody = NewRole
 type UpdateRoleJSONRequestBody = UpdateRole
 
 // CreateRolePermissionJSONRequestBody defines body for CreateRolePermission for application/json ContentType.
-type CreateRolePermissionJSONRequestBody = NewRole
+type CreateRolePermissionJSONRequestBody = AddRolePermissionReq
 
 // CreateUserJSONRequestBody defines body for CreateUser for application/json ContentType.
 type CreateUserJSONRequestBody = NewUser
@@ -187,7 +207,7 @@ type CreateUserJSONRequestBody = NewUser
 type UpdateUserJSONRequestBody = UpdateUser
 
 // CreateUserRoleJSONRequestBody defines body for CreateUserRole for application/json ContentType.
-type CreateUserRoleJSONRequestBody = NewUser
+type CreateUserRoleJSONRequestBody = AddUserRoleReq
 
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
@@ -230,6 +250,9 @@ type ServerInterface interface {
 	// Update role
 	// (PUT /api/v1/roles/{role_id})
 	UpdateRole(w http.ResponseWriter, r *http.Request, roleId string)
+	// Remove permission from role
+	// (DELETE /api/v1/roles/{role_id}/permission)
+	DeleteRolePermission(w http.ResponseWriter, r *http.Request, roleId string, params DeleteRolePermissionParams)
 	// Add permission to role
 	// (POST /api/v1/roles/{role_id}/permission)
 	CreateRolePermission(w http.ResponseWriter, r *http.Request, roleId string)
@@ -250,7 +273,7 @@ type ServerInterface interface {
 	UpdateUser(w http.ResponseWriter, r *http.Request, userId string)
 	// Remove role from user
 	// (DELETE /api/v1/users/{user_id}/role)
-	DeleteUserRole(w http.ResponseWriter, r *http.Request, userId string)
+	DeleteUserRole(w http.ResponseWriter, r *http.Request, userId string, params DeleteUserRoleParams)
 	// Add role to user
 	// (POST /api/v1/users/{user_id}/role)
 	CreateUserRole(w http.ResponseWriter, r *http.Request, userId string)
@@ -344,6 +367,12 @@ func (_ Unimplemented) UpdateRole(w http.ResponseWriter, r *http.Request, roleId
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
+// Remove permission from role
+// (DELETE /api/v1/roles/{role_id}/permission)
+func (_ Unimplemented) DeleteRolePermission(w http.ResponseWriter, r *http.Request, roleId string, params DeleteRolePermissionParams) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
 // Add permission to role
 // (POST /api/v1/roles/{role_id}/permission)
 func (_ Unimplemented) CreateRolePermission(w http.ResponseWriter, r *http.Request, roleId string) {
@@ -382,7 +411,7 @@ func (_ Unimplemented) UpdateUser(w http.ResponseWriter, r *http.Request, userId
 
 // Remove role from user
 // (DELETE /api/v1/users/{user_id}/role)
-func (_ Unimplemented) DeleteUserRole(w http.ResponseWriter, r *http.Request, userId string) {
+func (_ Unimplemented) DeleteUserRole(w http.ResponseWriter, r *http.Request, userId string, params DeleteUserRoleParams) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -874,6 +903,55 @@ func (siw *ServerInterfaceWrapper) UpdateRole(w http.ResponseWriter, r *http.Req
 	handler.ServeHTTP(w, r)
 }
 
+// DeleteRolePermission operation middleware
+func (siw *ServerInterfaceWrapper) DeleteRolePermission(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+
+	// ------------- Path parameter "role_id" -------------
+	var roleId string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "role_id", chi.URLParam(r, "role_id"), &roleId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "role_id", Err: err})
+		return
+	}
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, BearerAuthScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params DeleteRolePermissionParams
+
+	// ------------- Required query parameter "permission_id" -------------
+
+	if paramValue := r.URL.Query().Get("permission_id"); paramValue != "" {
+
+	} else {
+		siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "permission_id"})
+		return
+	}
+
+	err = runtime.BindQueryParameter("form", true, true, "permission_id", r.URL.Query(), &params.PermissionId)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "permission_id", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.DeleteRolePermission(w, r, roleId, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 // CreateRolePermission operation middleware
 func (siw *ServerInterfaceWrapper) CreateRolePermission(w http.ResponseWriter, r *http.Request) {
 
@@ -1127,8 +1205,26 @@ func (siw *ServerInterfaceWrapper) DeleteUserRole(w http.ResponseWriter, r *http
 
 	r = r.WithContext(ctx)
 
+	// Parameter object where we will unmarshal all parameters from the context
+	var params DeleteUserRoleParams
+
+	// ------------- Required query parameter "role_id" -------------
+
+	if paramValue := r.URL.Query().Get("role_id"); paramValue != "" {
+
+	} else {
+		siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "role_id"})
+		return
+	}
+
+	err = runtime.BindQueryParameter("form", true, true, "role_id", r.URL.Query(), &params.RoleId)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "role_id", Err: err})
+		return
+	}
+
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		siw.Handler.DeleteUserRole(w, r, userId)
+		siw.Handler.DeleteUserRole(w, r, userId, params)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -1348,6 +1444,9 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	})
 	r.Group(func(r chi.Router) {
 		r.Put(options.BaseURL+"/api/v1/roles/{role_id}", wrapper.UpdateRole)
+	})
+	r.Group(func(r chi.Router) {
+		r.Delete(options.BaseURL+"/api/v1/roles/{role_id}/permission", wrapper.DeleteRolePermission)
 	})
 	r.Group(func(r chi.Router) {
 		r.Post(options.BaseURL+"/api/v1/roles/{role_id}/permission", wrapper.CreateRolePermission)
@@ -1761,6 +1860,35 @@ func (response UpdateRoledefaultJSONResponse) VisitUpdateRoleResponse(w http.Res
 	return json.NewEncoder(w).Encode(response.Body)
 }
 
+type DeleteRolePermissionRequestObject struct {
+	RoleId string `json:"role_id"`
+	Params DeleteRolePermissionParams
+}
+
+type DeleteRolePermissionResponseObject interface {
+	VisitDeleteRolePermissionResponse(w http.ResponseWriter) error
+}
+
+type DeleteRolePermission204Response struct {
+}
+
+func (response DeleteRolePermission204Response) VisitDeleteRolePermissionResponse(w http.ResponseWriter) error {
+	w.WriteHeader(204)
+	return nil
+}
+
+type DeleteRolePermissiondefaultJSONResponse struct {
+	Body       Error
+	StatusCode int
+}
+
+func (response DeleteRolePermissiondefaultJSONResponse) VisitDeleteRolePermissionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+
+	return json.NewEncoder(w).Encode(response.Body)
+}
+
 type CreateRolePermissionRequestObject struct {
 	RoleId string `json:"role_id"`
 	Body   *CreateRolePermissionJSONRequestBody
@@ -1770,13 +1898,12 @@ type CreateRolePermissionResponseObject interface {
 	VisitCreateRolePermissionResponse(w http.ResponseWriter) error
 }
 
-type CreateRolePermission200JSONResponse Role
+type CreateRolePermission204Response struct {
+}
 
-func (response CreateRolePermission200JSONResponse) VisitCreateRolePermissionResponse(w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(200)
-
-	return json.NewEncoder(w).Encode(response)
+func (response CreateRolePermission204Response) VisitCreateRolePermissionResponse(w http.ResponseWriter) error {
+	w.WriteHeader(204)
+	return nil
 }
 
 type CreateRolePermissiondefaultJSONResponse struct {
@@ -1938,6 +2065,7 @@ func (response UpdateUserdefaultJSONResponse) VisitUpdateUserResponse(w http.Res
 
 type DeleteUserRoleRequestObject struct {
 	UserId string `json:"user_id"`
+	Params DeleteUserRoleParams
 }
 
 type DeleteUserRoleResponseObject interface {
@@ -1973,13 +2101,12 @@ type CreateUserRoleResponseObject interface {
 	VisitCreateUserRoleResponse(w http.ResponseWriter) error
 }
 
-type CreateUserRole200JSONResponse User
+type CreateUserRole204Response struct {
+}
 
-func (response CreateUserRole200JSONResponse) VisitCreateUserRoleResponse(w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(200)
-
-	return json.NewEncoder(w).Encode(response)
+func (response CreateUserRole204Response) VisitCreateUserRoleResponse(w http.ResponseWriter) error {
+	w.WriteHeader(204)
+	return nil
 }
 
 type CreateUserRoledefaultJSONResponse struct {
@@ -2091,6 +2218,9 @@ type StrictServerInterface interface {
 	// Update role
 	// (PUT /api/v1/roles/{role_id})
 	UpdateRole(ctx context.Context, request UpdateRoleRequestObject) (UpdateRoleResponseObject, error)
+	// Remove permission from role
+	// (DELETE /api/v1/roles/{role_id}/permission)
+	DeleteRolePermission(ctx context.Context, request DeleteRolePermissionRequestObject) (DeleteRolePermissionResponseObject, error)
 	// Add permission to role
 	// (POST /api/v1/roles/{role_id}/permission)
 	CreateRolePermission(ctx context.Context, request CreateRolePermissionRequestObject) (CreateRolePermissionResponseObject, error)
@@ -2534,6 +2664,33 @@ func (sh *strictHandler) UpdateRole(w http.ResponseWriter, r *http.Request, role
 	}
 }
 
+// DeleteRolePermission operation middleware
+func (sh *strictHandler) DeleteRolePermission(w http.ResponseWriter, r *http.Request, roleId string, params DeleteRolePermissionParams) {
+	var request DeleteRolePermissionRequestObject
+
+	request.RoleId = roleId
+	request.Params = params
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.DeleteRolePermission(ctx, request.(DeleteRolePermissionRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "DeleteRolePermission")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(DeleteRolePermissionResponseObject); ok {
+		if err := validResponse.VisitDeleteRolePermissionResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
 // CreateRolePermission operation middleware
 func (sh *strictHandler) CreateRolePermission(w http.ResponseWriter, r *http.Request, roleId string) {
 	var request CreateRolePermissionRequestObject
@@ -2710,10 +2867,11 @@ func (sh *strictHandler) UpdateUser(w http.ResponseWriter, r *http.Request, user
 }
 
 // DeleteUserRole operation middleware
-func (sh *strictHandler) DeleteUserRole(w http.ResponseWriter, r *http.Request, userId string) {
+func (sh *strictHandler) DeleteUserRole(w http.ResponseWriter, r *http.Request, userId string, params DeleteUserRoleParams) {
 	var request DeleteUserRoleRequestObject
 
 	request.UserId = userId
+	request.Params = params
 
 	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
 		return sh.ssi.DeleteUserRole(ctx, request.(DeleteUserRoleRequestObject))

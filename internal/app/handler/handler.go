@@ -5,6 +5,8 @@ package handler
 import (
 	"context"
 
+	"github.com/Housiadas/cerberus/internal/app/cache/permission_cache"
+	"github.com/Housiadas/cerberus/internal/app/cache/role_cache"
 	"github.com/Housiadas/cerberus/internal/app/cache/user_cache"
 	"github.com/Housiadas/cerberus/internal/app/handler/openapi"
 	"github.com/Housiadas/cerberus/internal/app/middleware"
@@ -12,9 +14,11 @@ import (
 	"github.com/Housiadas/cerberus/internal/app/repo/outbox_repo"
 	"github.com/Housiadas/cerberus/internal/app/repo/permission_repo"
 	"github.com/Housiadas/cerberus/internal/app/repo/refresh_token_repo"
+	"github.com/Housiadas/cerberus/internal/app/repo/role_permissions_repo"
 	"github.com/Housiadas/cerberus/internal/app/repo/role_repo"
 	"github.com/Housiadas/cerberus/internal/app/repo/user_repo"
 	"github.com/Housiadas/cerberus/internal/app/repo/user_roles_permissions_repo"
+	"github.com/Housiadas/cerberus/internal/app/repo/user_roles_repo"
 	"github.com/Housiadas/cerberus/internal/config"
 	"github.com/Housiadas/cerberus/internal/core/service/audit_service"
 	"github.com/Housiadas/cerberus/internal/core/service/outbox_service"
@@ -92,20 +96,26 @@ func New(ctx context.Context, cfg Config) *Handler {
 	userRepo := user_repo.NewStore(cfg.Log, cfg.DB)
 	userCacheStore := user_cache.NewStore(ctx, cfg.Log, userRepo, cfg.Redis)
 	roleRepo := role_repo.NewStore(cfg.Log, cfg.DB)
+	roleCacheStore := role_cache.NewStore(ctx, cfg.Log, roleRepo, cfg.Redis)
 	permissionRepo := permission_repo.NewStore(cfg.Log, cfg.DB)
+	permissionCacheStore := permission_cache.NewStore(ctx, cfg.Log, permissionRepo, cfg.Redis)
 	userRolesPermissionsRepo := user_roles_permissions_repo.NewStore(cfg.Log, cfg.DB)
+	userRolesRepo := user_roles_repo.NewStore(cfg.Log, cfg.DB)
+	rolePermissionsRepo := role_permissions_repo.NewStore(cfg.Log, cfg.DB)
 	refreshTokenRepo := refresh_token_repo.NewStore(cfg.Log, cfg.DB)
 
 	// services
 	auditService := audit_service.New(cfg.Log, auditRepo)
 	outboxSvc := outbox_service.New(cfg.Log, outboxRepo, uuidGen, clk)
 	userService := user_service.New(cfg.Log, userCacheStore, uuidGen, clk, hash)
-	roleService := role_service.New(cfg.Log, roleRepo)
-	permissionService := permission_service.New(cfg.Log, permissionRepo)
+	roleService := role_service.New(cfg.Log, roleCacheStore, uuidGen)
+	permissionService := permission_service.New(cfg.Log, permissionCacheStore, uuidGen)
 	refreshTokenService := refresh_token_service.New(cfg.Log, refreshTokenRepo, uuidGen, clk)
 	userRolesPermissionsService := user_roles_permissions_service.New(
 		cfg.Log,
 		userRolesPermissionsRepo,
+		userRolesRepo,
+		rolePermissionsRepo,
 	)
 
 	// usecase

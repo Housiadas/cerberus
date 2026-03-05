@@ -72,10 +72,30 @@ func (h *Handler) CreateRolePermission(
 	ctx context.Context,
 	request openapi.CreateRolePermissionRequestObject,
 ) (openapi.CreateRolePermissionResponseObject, error) {
-	role, err := h.Usecase.Role.Create(ctx, *request.Body)
+	err := h.Usecase.UserRolesPermissions.AddRolePermission(
+		ctx,
+		request.RoleId,
+		request.Body.PermissionId,
+	)
 	if err != nil {
 		return nil, fmt.Errorf("create role permission: %w", err)
 	}
 
-	return openapi.CreateRolePermission200JSONResponse(role), nil
+	return openapi.CreateRolePermission204Response{}, nil
+}
+
+func (h *Handler) DeleteRolePermission(
+	ctx context.Context,
+	request openapi.DeleteRolePermissionRequestObject,
+) (openapi.DeleteRolePermissionResponseObject, error) {
+	err := h.Usecase.UserRolesPermissions.RemoveRolePermission(
+		ctx,
+		request.RoleId,
+		request.Params.PermissionId,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("delete role permission: %w", err)
+	}
+
+	return openapi.DeleteRolePermission204Response{}, nil
 }
