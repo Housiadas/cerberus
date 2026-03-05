@@ -18,6 +18,7 @@ func orderByClause(orderBy order.By) (string, error) {
 
 func getOrderByFields() map[string]string {
 	return map[string]string{
+		permission.OrderByID:   "id",
 		permission.OrderByName: "name",
 	}
 }
