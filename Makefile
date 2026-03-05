@@ -156,7 +156,7 @@ golangci:
 ## test: Run tests
 .PHONY: test
 test:
-	CGO_ENABLED=1 go test -v -cover -short -race -json -p 4 ./... | go tool tparse --all
+	CGO_ENABLED=1 go test -v -cover -short -race -json -p 6 ./... | go tool tparse --all
 
 ## coverage/run: Run tests and generate filtered coverage profile
 .PHONY: coverage/run

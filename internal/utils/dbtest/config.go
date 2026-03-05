@@ -1,12 +1,12 @@
 package dbtest
 
 import (
-	"testing"
+	"fmt"
 
 	"github.com/Housiadas/cerberus/internal/config"
-	"github.com/stretchr/testify/require"
 )
 
+// Config holds test database configuration.
 type Config struct {
 	DBUser                string
 	DBPassword            string
@@ -16,11 +16,11 @@ type Config struct {
 	PostgresContainerName string
 }
 
-func newConfig(t *testing.T) Config {
-	t.Helper()
-
+func newConfig() (Config, error) {
 	cfg, err := config.LoadConfig()
-	require.NoError(t, err)
+	if err != nil {
+		return Config{}, fmt.Errorf("load config: %w", err)
+	}
 
 	return Config{
 		DBUser:                cfg.DB.User,
@@ -29,5 +29,5 @@ func newConfig(t *testing.T) Config {
 		DBPort:                cfg.DB.Port,
 		PostgresImage:         cfg.DB.PostgresImage,
 		PostgresContainerName: cfg.DB.PostgresContainerName,
-	}
+	}, nil
 }

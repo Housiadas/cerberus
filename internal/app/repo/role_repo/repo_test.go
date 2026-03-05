@@ -24,7 +24,7 @@ import (
 func Test_Role(t *testing.T) {
 	t.Parallel()
 
-	db := sc.NewDB(t, t.Name())
+	db := sc.NewDB(t)
 
 	var buf bytes.Buffer
 	traceIDFn := func(context.Context) string { return "" }

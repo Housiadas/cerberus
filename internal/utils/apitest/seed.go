@@ -22,6 +22,12 @@ var (
 	seedRolePermissionSQL string
 )
 
+// SeedData represents users for api tests.
+type SeedData struct {
+	Users  []User
+	Admins []User
+}
+
 // SeedRole inserts a role into the database and returns its generated UUID.
 func SeedRole(ctx context.Context, db *sqlx.DB, name string) (uuid.UUID, error) {
 	id := uuid.New()

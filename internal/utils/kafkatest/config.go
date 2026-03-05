@@ -1,12 +1,10 @@
 package kafkatest
 
 import (
-	"testing"
-
 	"github.com/Housiadas/cerberus/internal/config"
-	"github.com/stretchr/testify/require"
 )
 
+// Config holds test kafka configuration.
 type Config struct {
 	AddressFamily    string
 	SecurityProtocol string
@@ -15,11 +13,17 @@ type Config struct {
 	SessionTimeout   int
 }
 
-func newConfig(t *testing.T) Config {
+func newConfig(t interface {
+	Helper()
+	Fatal(args ...any)
+},
+) Config {
 	t.Helper()
 
 	cfg, err := config.LoadConfig()
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatal("load kafka config:", err)
+	}
 
 	return Config{
 		AddressFamily:    cfg.Kafka.AddressFamily,

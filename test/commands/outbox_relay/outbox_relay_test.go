@@ -22,7 +22,7 @@ import (
 func Test_OutboxRelay_ProcessesEntries(t *testing.T) {
 	t.Parallel()
 
-	db := sc.NewDB(t, t.Name())
+	db := sc.NewDB(t)
 
 	var buf bytes.Buffer
 	traceIDFn := func(context.Context) string {
@@ -117,7 +117,7 @@ func Test_OutboxRelay_ProcessesEntries(t *testing.T) {
 func Test_OutboxRelay_RetriesFailedEntries(t *testing.T) {
 	t.Parallel()
 
-	db := sc.NewDB(t, t.Name())
+	db := sc.NewDB(t)
 
 	var buf bytes.Buffer
 	traceIDFn := func(context.Context) string {
@@ -174,7 +174,7 @@ func Test_OutboxRelay_RetriesFailedEntries(t *testing.T) {
 func Test_OutboxRelay_MarkProcessed(t *testing.T) {
 	t.Parallel()
 
-	db := sc.NewDB(t, t.Name())
+	db := sc.NewDB(t)
 
 	var buf bytes.Buffer
 	traceIDFn := func(context.Context) string {

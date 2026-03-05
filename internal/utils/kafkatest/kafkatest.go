@@ -3,10 +3,9 @@ package kafkatest
 
 import (
 	"context"
-	"testing"
+	"fmt"
 
 	"github.com/Housiadas/cerberus/pkg/kafka"
-	"github.com/stretchr/testify/require"
 	"github.com/testcontainers/testcontainers-go"
 	tcKafka "github.com/testcontainers/testcontainers-go/modules/kafka"
 )
@@ -16,14 +15,50 @@ const (
 	KafkaClusterID = "test-cluster"
 )
 
-// New starts a Kafka container using testcontainers and returns
-// a configured kafka.Producer connected to it.
-func New(t *testing.T) kafka.Producer {
+// SetupSharedContainer starts a Kafka container for use in TestMain.
+// Returns the Producer and a teardown function to call via defer.
+func SetupSharedContainer(ctx context.Context) (kafka.Producer, func()) {
+	t := &mainT{}
+	producer := NewSharedContainer(ctx, t)
+	teardown := func() {
+		for i := len(t.cleanups) - 1; i >= 0; i-- {
+			t.cleanups[i]()
+		}
+	}
+
+	return producer, teardown
+}
+
+// mainT is a minimal testing-like facade usable from TestMain.
+type mainT struct {
+	cleanups []func()
+}
+
+func (m *mainT) Helper() {}
+
+func (m *mainT) Fatal(args ...any) {
+	panic(fmt.Sprint(args...))
+}
+
+func (m *mainT) Logf(format string, args ...any) {
+	fmt.Printf(format+"\n", args...)
+}
+
+func (m *mainT) Cleanup(fn func()) {
+	m.cleanups = append(m.cleanups, fn)
+}
+
+// NewSharedContainer starts a single Kafka container intended to be shared
+// across all tests in a package via TestMain.
+func NewSharedContainer(ctx context.Context, t interface {
+	Helper()
+	Fatal(args ...any)
+	Logf(format string, args ...any)
+	Cleanup(fn func())
+},
+) kafka.Producer {
 	t.Helper()
 
-	ctx := context.Background()
-
-	// load app local config
 	cfg := newConfig(t)
 
 	ctr, err := tcKafka.Run(
@@ -31,12 +66,21 @@ func New(t *testing.T) kafka.Producer {
 		KafkaImage,
 		tcKafka.WithClusterID(KafkaClusterID),
 	)
-	defer testcontainers.CleanupContainer(t, ctr)
+	if err != nil {
+		t.Fatal("start shared kafka container:", err)
+	}
 
-	require.NoError(t, err)
+	t.Cleanup(func() {
+		err2 := testcontainers.TerminateContainer(ctr)
+		if err2 != nil {
+			t.Logf("terminate shared kafka container: %s", err2)
+		}
+	})
 
 	brokers, err := ctr.Brokers(ctx)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatal("shared kafka brokers:", err)
+	}
 
 	producer, err := kafka.NewProducer(kafka.ProducerConfig{
 		Brokers:          brokers[0],
@@ -46,7 +90,7 @@ func New(t *testing.T) kafka.Producer {
 		MaxMessageBytes:  cfg.MaxMessageBytes,
 	})
 	if err != nil {
-		t.Fatalf("creating kafka producer: %s", err)
+		t.Fatal("create shared kafka producer:", err)
 	}
 
 	t.Cleanup(func() {

@@ -1,33 +1,72 @@
-// Package dbtest contains supporting code for running tests that hit the DB.
 package dbtest
 
 import (
-	"bytes"
 	"context"
+	"database/sql"
+	"fmt"
+	"math/rand"
+	"strings"
 	"testing"
 
-	_ "github.com/jackc/pgx/v5/stdlib" // This is for sqlx driver
 	"github.com/jmoiron/sqlx"
 	"github.com/stretchr/testify/require"
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/modules/postgres"
 )
 
-// Database owns the state for running and shutting down tests.
-type Database struct {
-	DB *sqlx.DB
+// SetupSharedContainer starts a Postgres container for use in TestMain.
+// Returns the SharedContainer and a teardown function to call.
+func SetupSharedContainer(ctx context.Context) (*SharedContainer, func()) {
+	t := &mainT{}
+	sc := NewSharedContainer(ctx, t)
+	teardown := func() {
+		for i := len(t.cleanups) - 1; i >= 0; i-- {
+			t.cleanups[i]()
+		}
+	}
+
+	return sc, teardown
 }
 
-// New creates a new test database inside the database that was started
-// to handle testing. The database is migrated to the current version, and
-// a connection pool is provided with internal core packages.
-func New(t *testing.T, testName string) *sqlx.DB {
-	t.Helper()
-	// load app local config
-	cfg := newConfig(t)
+// mainT is a minimal testing-like facade usable from TestMain.
+type mainT struct {
+	cleanups []func()
+}
 
-	// Start the postgres container and run any migrations on it
-	ctx := context.Background()
+func (m *mainT) Helper() {}
+
+func (m *mainT) Fatal(args ...any) {
+	panic(fmt.Sprint(args...))
+}
+
+func (m *mainT) Logf(format string, args ...any) {
+	fmt.Printf(format+"\n", args...)
+}
+
+func (m *mainT) Cleanup(fn func()) {
+	m.cleanups = append(m.cleanups, fn)
+}
+
+// tHelper is the minimal interface required for shared container helpers.
+type tHelper interface {
+	Helper()
+	Fatal(args ...any)
+	Cleanup(fn func())
+	Logf(format string, args ...any)
+}
+
+// SharedContainer holds a running Postgres container shared across tests in a package.
+type SharedContainer struct {
+	adminURL string
+	cfg      Config
+}
+
+// NewSharedContainer starts a single Postgres container intended to be shared
+// across all tests in a package via TestMain.
+func NewSharedContainer(ctx context.Context, t tHelper) *SharedContainer {
+	t.Helper()
+
+	cfg := newConfigDirect(t)
 
 	ctr, err := postgres.Run(
 		ctx,
@@ -38,36 +77,122 @@ func New(t *testing.T, testName string) *sqlx.DB {
 		postgres.BasicWaitStrategies(),
 		postgres.WithSQLDriver("pgx"),
 	)
-	defer testcontainers.CleanupContainer(t, ctr)
-
-	require.NoError(t, err)
-
-	// database url
-	dbURL, err := ctr.ConnectionString(ctx)
-	require.NoError(t, err)
-
-	// set up migrations
-	err = migration(dbURL)
-	require.NoError(t, err)
-
-	// Open DB
-	dbTest, err := sqlx.Open("pgx", dbURL)
-	require.NoError(t, err)
-
-	// -------------------------------------------------------------------------
-	// Will be invoked when the caller is done with the database
-	var buf bytes.Buffer
+	if err != nil {
+		t.Fatal("start shared postgres container:", err)
+	}
 
 	t.Cleanup(func() {
-		t.Helper()
-
-		// Close the DB
-		dbTest.Close()
-
-		t.Logf("******************** LOGS (%s) ********************\n\n", testName)
-		t.Log(buf.String())
-		t.Logf("******************** LOGS (%s) ********************\n", testName)
+		err2 := testcontainers.TerminateContainer(ctr)
+		if err2 != nil {
+			t.Logf("terminate shared postgres container: %s", err2)
+		}
 	})
 
-	return dbTest
+	adminURL, err := ctr.ConnectionString(ctx)
+	if err != nil {
+		t.Fatal("shared postgres connection string:", err)
+	}
+
+	return &SharedContainer{
+		adminURL: adminURL,
+		cfg:      cfg,
+	}
+}
+
+// NewDB creates a fresh database within the shared container, runs migrations,
+// and returns a connected *sqlx.DB. The database is dropped on t.Cleanup.
+func (sc *SharedContainer) NewDB(t *testing.T) *sqlx.DB {
+	t.Helper()
+
+	ctx := context.Background()
+
+	// Create the database
+	adminDB, err := sql.Open("pgx", sc.adminURL+"sslmode=disable")
+	require.NoError(t, err)
+
+	dbName := testDBName()
+
+	_, err = adminDB.ExecContext(ctx, "CREATE DATABASE "+dbName)
+	if err != nil {
+		t.Fatalf("create database %s: %s", dbName, err)
+	}
+
+	// Build URL for the new database
+	testURL := replaceDBName(sc.adminURL, sc.cfg.DBName, dbName)
+
+	// Run migrations
+	err = migration(testURL)
+	require.NoError(t, err)
+
+	// Open connection
+	db, err := sqlx.Open("pgx", testURL)
+	if err != nil {
+		t.Fatalf("open test db %s: %s", dbName, err)
+	}
+
+	t.Cleanup(func() {
+		db.Close()
+
+		// adminDB at the end
+		defer adminDB.Close()
+
+		// Force-disconnect all clients then drop
+		_, _ = adminDB.ExecContext(
+			context.Background(),
+			fmt.Sprintf(
+				`SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname='%s'`,
+				dbName,
+			),
+		)
+		_, _ = adminDB.ExecContext(context.Background(), "DROP DATABASE IF EXISTS "+dbName)
+	})
+
+	return db
+}
+
+func testDBName() string {
+	const letterBytes = "abcdefghijklmnopqrstuvwxyz"
+
+	b := make([]byte, 4)
+	for i := range b {
+		b[i] = letterBytes[rand.Intn(len(letterBytes))]
+	}
+
+	return string(b)
+}
+
+// replaceDBName swaps the database name component in a Postgres URL.
+func replaceDBName(url, oldName, newName string) string {
+	if strings.HasPrefix(url, "postgres://") || strings.HasPrefix(url, "postgresql://") {
+		idx := strings.LastIndex(url, "/")
+		if idx < 0 {
+			return url
+		}
+
+		rest := url[idx+1:]
+
+		qIdx := strings.Index(rest, "?")
+		if qIdx >= 0 {
+			return url[:idx+1] + newName + rest[qIdx:]
+		}
+
+		return url[:idx+1] + newName
+	}
+
+	return strings.ReplaceAll(url, "dbname="+oldName, "dbname="+newName)
+}
+
+func newConfigDirect(t interface {
+	Helper()
+	Fatal(args ...any)
+},
+) Config {
+	t.Helper()
+
+	cfg, err := newConfig()
+	if err != nil {
+		t.Fatal("load config:", err)
+	}
+
+	return cfg
 }
