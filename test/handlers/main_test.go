@@ -1,4 +1,4 @@
-package audit_test
+package handlers_test
 
 import (
 	"os"

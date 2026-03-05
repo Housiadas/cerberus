@@ -1,4 +1,4 @@
-package auth_test
+package handlers_test
 
 import (
 	"context"
@@ -8,24 +8,18 @@ import (
 	"github.com/Housiadas/cerberus/internal/utils/apitest"
 )
 
-func insertSeedData(test *apitest.Test) (apitest.SeedData, error) {
+func insertAuthSeedData(test *apitest.Test) (apitest.SeedData, error) {
 	ctx := context.Background()
+
 	usrs, err := user_service.TestSeedUsers(ctx, 2, test.Core.User)
 	if err != nil {
 		return apitest.SeedData{}, fmt.Errorf("seeding users : %w", err)
 	}
 
-	tu1 := apitest.User{
-		User: usrs[0],
-	}
-
-	tu2 := apitest.User{
-		User: usrs[1],
-	}
-
-	sd := apitest.SeedData{
-		Users: []apitest.User{tu1, tu2},
-	}
-
-	return sd, nil
+	return apitest.SeedData{
+		Users: []apitest.User{
+			{User: usrs[0]},
+			{User: usrs[1]},
+		},
+	}, nil
 }

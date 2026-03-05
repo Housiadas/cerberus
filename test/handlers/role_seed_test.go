@@ -1,4 +1,4 @@
-package role_test
+package handlers_test
 
 import (
 	"context"
@@ -8,7 +8,7 @@ import (
 	"github.com/Housiadas/cerberus/internal/utils/apitest"
 )
 
-func insertSeedData(test *apitest.Test) (apitest.SeedData, error) {
+func insertRoleSeedData(test *apitest.Test) (apitest.SeedData, error) {
 	ctx := context.Background()
 
 	usrs, err := user_service.TestSeedUsers(ctx, 2, test.Core.User)
@@ -16,7 +16,6 @@ func insertSeedData(test *apitest.Test) (apitest.SeedData, error) {
 		return apitest.SeedData{}, fmt.Errorf("seeding users: %w", err)
 	}
 
-	// Admin role: full role + user permissions
 	adminRoleID, err := apitest.SeedRole(ctx, test.DB, "admin")
 	if err != nil {
 		return apitest.SeedData{}, fmt.Errorf("seeding admin role: %w", err)
@@ -33,7 +32,6 @@ func insertSeedData(test *apitest.Test) (apitest.SeedData, error) {
 		}
 	}
 
-	// User role: only user permissions
 	userRoleID, err := apitest.SeedRole(ctx, test.DB, "user")
 	if err != nil {
 		return apitest.SeedData{}, fmt.Errorf("seeding user role: %w", err)

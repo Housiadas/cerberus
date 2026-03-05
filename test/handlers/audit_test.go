@@ -1,4 +1,4 @@
-package audit_test
+package handlers_test
 
 import (
 	"net/http"
@@ -6,13 +6,13 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/Housiadas/cerberus/internal/usecase/audit_usecase"
-	"github.com/Housiadas/cerberus/internal/utils/errs"
-	"github.com/Housiadas/cerberus/internal/utils/page"
 	"github.com/google/go-cmp/cmp"
 	"github.com/stretchr/testify/require"
 
+	"github.com/Housiadas/cerberus/internal/usecase/audit_usecase"
 	"github.com/Housiadas/cerberus/internal/utils/apitest"
+	"github.com/Housiadas/cerberus/internal/utils/errs"
+	"github.com/Housiadas/cerberus/internal/utils/page"
 )
 
 func Test_API_Audit_Query_200(t *testing.T) {
@@ -21,7 +21,7 @@ func Test_API_Audit_Query_200(t *testing.T) {
 	test, err := env.StartTest(t, t.Name())
 	require.NoError(t, err)
 
-	sd, err := insertSeedData(test)
+	sd, err := insertAuditSeedData(test)
 	require.NoError(t, err)
 
 	sort.Slice(sd.Admins[0].Audits, func(i, j int) bool {
@@ -77,7 +77,7 @@ func Test_API_Audit_Query_400(t *testing.T) {
 	test, err := env.StartTest(t, t.Name())
 	require.NoError(t, err)
 
-	sd, err := insertSeedData(test)
+	sd, err := insertAuditSeedData(test)
 	require.NoError(t, err)
 
 	table := []apitest.Table{
@@ -116,7 +116,7 @@ func Test_API_Audit_Query_403(t *testing.T) {
 	test, err := env.StartTest(t, t.Name())
 	require.NoError(t, err)
 
-	sd, err := insertSeedData(test)
+	sd, err := insertAuditSeedData(test)
 	require.NoError(t, err)
 
 	table := []apitest.Table{

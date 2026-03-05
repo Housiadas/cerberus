@@ -1,4 +1,4 @@
-package outbox_relay_test
+package commands_test
 
 import (
 	"context"

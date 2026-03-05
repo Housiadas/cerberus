@@ -1,16 +1,16 @@
-package auth_test
+package handlers_test
 
 import (
 	"net/http"
 	"testing"
 
-	"github.com/Housiadas/cerberus/internal/usecase/auth_usecase"
-	"github.com/Housiadas/cerberus/internal/utils/errs"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/Housiadas/cerberus/internal/core/domain/user"
+	"github.com/Housiadas/cerberus/internal/usecase/auth_usecase"
 	"github.com/Housiadas/cerberus/internal/utils/apitest"
+	"github.com/Housiadas/cerberus/internal/utils/errs"
 )
 
 func Test_API_Auth_Login_200(t *testing.T) {
@@ -19,7 +19,7 @@ func Test_API_Auth_Login_200(t *testing.T) {
 	test, err := env.StartTest(t, t.Name())
 	require.NoError(t, err)
 
-	sd, err := insertSeedData(test)
+	sd, err := insertAuthSeedData(test)
 	require.NoError(t, err)
 
 	usrs := make([]user.User, 0, len(sd.Users))
@@ -63,7 +63,7 @@ func Test_API_Auth_Login_400(t *testing.T) {
 	test, err := env.StartTest(t, t.Name())
 	require.NoError(t, err)
 
-	sd, err := insertSeedData(test)
+	sd, err := insertAuthSeedData(test)
 	require.NoError(t, err)
 
 	usrs := make([]user.User, 0, len(sd.Users))
