@@ -11,18 +11,20 @@ import (
 	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/Housiadas/cerberus/pkg/order"
 	"github.com/Housiadas/cerberus/pkg/pgsql"
+	"github.com/Housiadas/cerberus/pkg/uuidgen"
 	"github.com/google/uuid"
 )
 
 // Service manages the set of APIs for permission access.
 type Service struct {
-	log    logger.Logger
-	storer permission.Storer
+	log     logger.Logger
+	storer  permission.Storer
+	uuidGen uuidgen.Generator
 }
 
 // New constructor.
-func New(log logger.Logger, storer permission.Storer) *Service {
-	return &Service{log: log, storer: storer}
+func New(log logger.Logger, storer permission.Storer, uuidGen uuidgen.Generator) *Service {
+	return &Service{log: log, storer: storer, uuidGen: uuidGen}
 }
 
 // NewWithTx constructs a new internal value that will use the
@@ -34,8 +36,9 @@ func (s *Service) NewWithTx(tx pgsql.CommitRollbacker) (*Service, error) {
 	}
 
 	bus := Service{
-		log:    s.log,
-		storer: storer,
+		log:     s.log,
+		storer:  storer,
+		uuidGen: s.uuidGen,
 	}
 
 	return &bus, nil
@@ -46,15 +49,20 @@ func (s *Service) Create(
 	ctx context.Context,
 	np permission.NewPermission,
 ) (permission.Permission, error) {
+	id, err := s.uuidGen.Generate()
+	if err != nil {
+		return permission.Permission{}, fmt.Errorf("permission uuid generate: %w", err)
+	}
+
 	now := time.Now()
 	p := permission.Permission{
-		ID:        uuid.UUID{},
+		ID:        id,
 		Name:      np.Name,
 		CreatedAt: now,
 		UpdatedAt: now,
 	}
 
-	err := s.storer.Create(ctx, p)
+	err = s.storer.Create(ctx, p)
 	if err != nil {
 		return permission.Permission{}, fmt.Errorf("permission create: %w", err)
 	}
