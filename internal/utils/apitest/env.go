@@ -4,12 +4,9 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"sync"
 	"testing"
-	"time"
 
 	"github.com/Housiadas/cerberus/internal/app/handler"
-	"github.com/Housiadas/cerberus/internal/app/relay"
 	cfg "github.com/Housiadas/cerberus/internal/config"
 	"github.com/Housiadas/cerberus/internal/utils/dbtest"
 	"github.com/Housiadas/cerberus/internal/utils/kafkatest"
@@ -116,21 +113,9 @@ func (e *Env) StartTest(t *testing.T, testName string) (*Test, error) {
 	// dependency injection
 	dep := newDependency(log, db, accessTokenSecret, serviceName)
 
-	outboxRelay := relay.New(log, dep.Core.Outbox, e.kafkaProducer, 1*time.Second, 100, 5)
-
-	relayCtx, relayCancel := context.WithCancel(ctx)
-
-	var wg sync.WaitGroup
-
-	wg.Go(func() {
-		outboxRelay.Start(relayCtx)
-	})
-
 	t.Cleanup(func() {
-		relayCancel()
-		wg.Wait()
 		t.Logf(
-			"******************** LOGS (%s) ********************\n\n%s\n******************** LOGS (%s) ********************\n",
+			"*** LOGS (%s) ***\n\n%s\n*** LOGS (%s) ***\n",
 			testName,
 			buf.String(),
 			testName,
