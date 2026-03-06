@@ -11,16 +11,68 @@ import (
 
 // Audit represents information about an individual audit record.
 type Audit struct {
-	ID        uuid.UUID
-	ObjID     uuid.UUID
-	ObjEntity entity.Entity
-	ObjName   name.Name
-	ActorID   uuid.UUID
-	Action    string
-	Data      json.RawMessage
-	Message   string
-	Timestamp time.Time
+	id        uuid.UUID
+	objID     uuid.UUID
+	objEntity entity.Entity
+	objName   name.Name
+	actorID   uuid.UUID
+	action    string
+	data      json.RawMessage
+	message   string
+	timestamp time.Time
 }
+
+// New constructs an Audit from its individual fields.
+func New(
+	id uuid.UUID,
+	objID uuid.UUID,
+	objEntity entity.Entity,
+	objName name.Name,
+	actorID uuid.UUID,
+	action string,
+	data json.RawMessage,
+	message string,
+	timestamp time.Time,
+) Audit {
+	return Audit{
+		id:        id,
+		objID:     objID,
+		objEntity: objEntity,
+		objName:   objName,
+		actorID:   actorID,
+		action:    action,
+		data:      data,
+		message:   message,
+		timestamp: timestamp,
+	}
+}
+
+// ID returns the audit ID.
+func (a Audit) ID() uuid.UUID { return a.id }
+
+// ObjID returns the audited object ID.
+func (a Audit) ObjID() uuid.UUID { return a.objID }
+
+// ObjEntity returns the audited object entity type.
+func (a Audit) ObjEntity() entity.Entity { return a.objEntity }
+
+// ObjName returns the audited object name.
+func (a Audit) ObjName() name.Name { return a.objName }
+
+// ActorID returns the actor ID.
+func (a Audit) ActorID() uuid.UUID { return a.actorID }
+
+// Action returns the action performed.
+func (a Audit) Action() string { return a.action }
+
+// Data returns the audit data payload.
+func (a Audit) Data() json.RawMessage { return a.data }
+
+// Message returns the audit message.
+func (a Audit) Message() string { return a.message }
+
+// Timestamp returns the audit timestamp.
+func (a Audit) Timestamp() time.Time { return a.timestamp }
 
 // NewAudit represents the information needed to create a new audit record.
 type NewAudit struct {

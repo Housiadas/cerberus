@@ -25,7 +25,7 @@ func Test_API_Audit_Query_200(t *testing.T) {
 	require.NoError(t, err)
 
 	sort.Slice(sd.Admins[0].Audits, func(i, j int) bool {
-		return sd.Admins[0].Audits[i].ObjName.String() <= sd.Admins[0].Audits[j].ObjName.String()
+		return sd.Admins[0].Audits[i].ObjName().String() <= sd.Admins[0].Audits[j].ObjName().String()
 	})
 
 	table := []apitest.Table{

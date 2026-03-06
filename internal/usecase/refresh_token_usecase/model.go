@@ -24,12 +24,12 @@ type RefreshToken struct {
 
 func toAppToken(r refresh_token.RefreshToken) RefreshToken {
 	return RefreshToken{
-		ID:        r.ID.String(),
-		UserID:    r.UserID.String(),
-		Token:     r.Token,
-		ExpiresAt: clock.Format(&r.ExpiresAt),
-		CreatedAt: clock.Format(&r.CreatedAt),
-		Revoked:   r.Revoked,
+		ID:        r.ID().String(),
+		UserID:    r.UserID().String(),
+		Token:     r.Token(),
+		ExpiresAt: clock.Format(new(r.ExpiresAt())),
+		CreatedAt: clock.Format(new(r.CreatedAt())),
+		Revoked:   r.Revoked(),
 	}
 }
 
@@ -60,12 +60,5 @@ func toCoreToken(r RefreshToken) (refresh_token.RefreshToken, error) {
 		return refresh_token.RefreshToken{}, fmt.Errorf("validate: %w", errors.ToError())
 	}
 
-	return refresh_token.RefreshToken{
-		ID:        id,
-		UserID:    userID,
-		Token:     r.Token,
-		ExpiresAt: expiresAt,
-		CreatedAt: createdAt,
-		Revoked:   r.Revoked,
-	}, nil
+	return refresh_token.New(id, userID, r.Token, expiresAt, createdAt, r.Revoked), nil
 }

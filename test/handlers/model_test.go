@@ -14,15 +14,15 @@ import (
 
 func toAppAudit(bus audit.Audit) audit_usecase.Audit {
 	return audit_usecase.Audit{
-		ID:        bus.ID.String(),
-		ObjID:     bus.ObjID.String(),
-		ObjEntity: bus.ObjEntity.String(),
-		ObjName:   bus.ObjName.String(),
-		ActorID:   bus.ActorID.String(),
-		Action:    bus.Action,
-		Data:      string(bus.Data),
-		Message:   bus.Message,
-		Timestamp: clock.Format(&bus.Timestamp),
+		ID:        bus.ID().String(),
+		ObjID:     bus.ObjID().String(),
+		ObjEntity: bus.ObjEntity().String(),
+		ObjName:   bus.ObjName().String(),
+		ActorID:   bus.ActorID().String(),
+		Action:    bus.Action(),
+		Data:      string(bus.Data()),
+		Message:   bus.Message(),
+		Timestamp: clock.Format(new(bus.Timestamp())),
 	}
 }
 
@@ -37,10 +37,10 @@ func toAppAudits(audits []audit.Audit) []audit_usecase.Audit {
 
 func toAppPermission(p permission.Permission) permission_usecase.Permission {
 	return permission_usecase.Permission{
-		ID:        p.ID.String(),
-		Name:      p.Name.String(),
-		CreatedAt: clock.Format(&p.CreatedAt),
-		UpdatedAt: clock.Format(&p.UpdatedAt),
+		ID:        p.ID().String(),
+		Name:      p.Name().String(),
+		CreatedAt: clock.Format(new(p.CreatedAt())),
+		UpdatedAt: clock.Format(new(p.UpdatedAt())),
 	}
 }
 
@@ -55,10 +55,10 @@ func toAppPermissions(perms []permission.Permission) []permission_usecase.Permis
 
 func toAppRole(r role.Role) role_usecase.Role {
 	return role_usecase.Role{
-		ID:        r.ID.String(),
-		Name:      r.Name.String(),
-		CreatedAt: clock.Format(&r.CreatedAt),
-		UpdatedAt: clock.Format(&r.UpdatedAt),
+		ID:        r.ID().String(),
+		Name:      r.Name().String(),
+		CreatedAt: clock.Format(new(r.CreatedAt())),
+		UpdatedAt: clock.Format(new(r.UpdatedAt())),
 	}
 }
 
@@ -73,14 +73,14 @@ func toAppRoles(roles []role.Role) []role_usecase.Role {
 
 func toAppUser(bus user.User) user_usecase.User {
 	return user_usecase.User{
-		ID:           bus.ID.String(),
-		Name:         bus.Name.String(),
-		Email:        bus.Email.Address,
+		ID:           bus.ID().String(),
+		Name:         bus.Name().String(),
+		Email:        bus.Email().Address,
 		PasswordHash: nil,
-		Department:   bus.Department.String(),
-		Enabled:      bus.Enabled,
-		CreatedAt:    clock.Format(&bus.CreatedAt),
-		UpdatedAt:    clock.Format(&bus.UpdatedAt),
+		Department:   bus.Department().String(),
+		Enabled:      bus.Enabled(),
+		CreatedAt:    clock.Format(new(bus.CreatedAt())),
+		UpdatedAt:    clock.Format(new(bus.UpdatedAt())),
 	}
 }
 
@@ -94,6 +94,5 @@ func toAppUsers(users []user.User) []user_usecase.User {
 }
 
 func toAppUserPtr(bus user.User) *user_usecase.User {
-	appUsr := toAppUser(bus)
-	return &appUsr
+	return new(toAppUser(bus))
 }

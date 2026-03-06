@@ -36,7 +36,7 @@ func main() {
 	log = logger.New(
 		os.Stdout,
 		logger.LevelInfo,
-		"Rest api",
+		"cerberus-api",
 		telemetry.GetTraceID,
 		ctxPck.GetRequestID,
 	)
@@ -63,7 +63,7 @@ func run(ctx context.Context, log *logger.Service) error {
 
 	cfg.App.Version = config.Version{
 		Build:       build,
-		Description: "API",
+		Description: "cerberus-api",
 	}
 
 	// -------------------------------------------------------------------------

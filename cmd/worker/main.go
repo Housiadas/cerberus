@@ -44,7 +44,7 @@ func run() error {
 	log = logger.New(
 		os.Stdout,
 		logger.LevelInfo,
-		"Worker",
+		"cerberus-worker",
 		telemetry.GetTraceID,
 		ctxPck.GetRequestID,
 	)

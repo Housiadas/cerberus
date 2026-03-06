@@ -24,16 +24,17 @@ func TestService_Authenticate_Successful(t *testing.T) {
 	email := unitest.MustParseEmail("john@example.com")
 	mTime := time.Date(2026, 1, 1, 10, 30, 0, 0, time.UTC)
 
-	existingUser := user.User{
-		ID:           uuid.MustParse("01234567-89ab-7def-0123-456789abcdef"),
-		Name:         name.MustParse("John Doe"),
-		Email:        email,
-		PasswordHash: []byte("hashed_password"),
-		Department:   name.MustParseNull("Engineering"),
-		Enabled:      true,
-		CreatedAt:    mTime,
-		UpdatedAt:    mTime,
-	}
+	existingUser := user.New(
+		uuid.MustParse("01234567-89ab-7def-0123-456789abcdef"),
+		name.MustParse("John Doe"),
+		email,
+		[]byte("hashed_password"),
+		name.MustParseNull("Engineering"),
+		true,
+		mTime,
+		mTime,
+		nil,
+	)
 
 	mLogger := logger.NewMockLogger(t)
 
@@ -44,15 +45,15 @@ func TestService_Authenticate_Successful(t *testing.T) {
 	mClock := clock.NewMockClock(t)
 
 	mHasher := hasher.NewMockHasher(t)
-	mHasher.EXPECT().Compare(existingUser.PasswordHash, "secret123").Return(nil)
+	mHasher.EXPECT().Compare(existingUser.PasswordHash(), "secret123").Return(nil)
 
 	sut := user_service.New(mLogger, mStorer, mUuidGen, mClock, mHasher)
 	usr, err := sut.Authenticate(ctx, email, "secret123")
 
 	assert.NoError(t, err)
-	assert.Equal(t, existingUser.ID, usr.ID)
-	assert.Equal(t, existingUser.Name, usr.Name)
-	assert.Equal(t, existingUser.Email, usr.Email)
+	assert.Equal(t, existingUser.ID(), usr.ID())
+	assert.Equal(t, existingUser.Name(), usr.Name())
+	assert.Equal(t, existingUser.Email(), usr.Email())
 }
 
 func TestService_Authenticate_UserNotFound(t *testing.T) {
@@ -80,16 +81,17 @@ func TestService_Authenticate_WrongPassword(t *testing.T) {
 	email := unitest.MustParseEmail("john@example.com")
 	mTime := time.Date(2026, 1, 1, 10, 30, 0, 0, time.UTC)
 
-	existingUser := user.User{
-		ID:           uuid.MustParse("01234567-89ab-7def-0123-456789abcdef"),
-		Name:         name.MustParse("John Doe"),
-		Email:        email,
-		PasswordHash: []byte("hashed_password"),
-		Department:   name.MustParseNull("Engineering"),
-		Enabled:      true,
-		CreatedAt:    mTime,
-		UpdatedAt:    mTime,
-	}
+	existingUser := user.New(
+		uuid.MustParse("01234567-89ab-7def-0123-456789abcdef"),
+		name.MustParse("John Doe"),
+		email,
+		[]byte("hashed_password"),
+		name.MustParseNull("Engineering"),
+		true,
+		mTime,
+		mTime,
+		nil,
+	)
 
 	mLogger := logger.NewMockLogger(t)
 
@@ -100,7 +102,7 @@ func TestService_Authenticate_WrongPassword(t *testing.T) {
 	mClock := clock.NewMockClock(t)
 
 	mHasher := hasher.NewMockHasher(t)
-	mHasher.EXPECT().Compare(existingUser.PasswordHash, "wrong_password").Return(errors.New("password mismatch"))
+	mHasher.EXPECT().Compare(existingUser.PasswordHash(), "wrong_password").Return(errors.New("password mismatch"))
 
 	sut := user_service.New(mLogger, mStorer, mUuidGen, mClock, mHasher)
 	_, err := sut.Authenticate(ctx, email, "wrong_password")

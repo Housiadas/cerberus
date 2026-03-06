@@ -3,6 +3,7 @@ package user_service_test
 import (
 	"context"
 	"errors"
+	"net/mail"
 	"testing"
 	"time"
 
@@ -12,7 +13,6 @@ import (
 	"github.com/Housiadas/cerberus/internal/core/domain/name"
 	"github.com/Housiadas/cerberus/internal/core/domain/user"
 	"github.com/Housiadas/cerberus/internal/core/service/user_service"
-	"github.com/Housiadas/cerberus/internal/utils/unitest"
 	"github.com/Housiadas/cerberus/pkg/clock"
 	"github.com/Housiadas/cerberus/pkg/hasher"
 	"github.com/Housiadas/cerberus/pkg/logger"
@@ -23,16 +23,18 @@ func TestService_Delete_Successful(t *testing.T) {
 	ctx := context.Background()
 	mTime := time.Date(2026, 1, 1, 10, 30, 0, 0, time.UTC)
 
-	usr := user.User{
-		ID:           uuid.MustParse("01234567-89ab-7def-0123-456789abcdef"),
-		Name:         name.MustParse("John Doe"),
-		Email:        unitest.MustParseEmail("john@example.com"),
-		PasswordHash: []byte("hashed_password"),
-		Department:   name.MustParseNull("Engineering"),
-		Enabled:      true,
-		CreatedAt:    mTime,
-		UpdatedAt:    mTime,
-	}
+	email, _ := mail.ParseAddress("john@example.com")
+	usr := user.New(
+		uuid.MustParse("01234567-89ab-7def-0123-456789abcdef"),
+		name.MustParse("John Doe"),
+		*email,
+		[]byte("hashed_password"),
+		name.MustParseNull("Engineering"),
+		true,
+		mTime,
+		mTime,
+		nil,
+	)
 
 	mLogger := logger.NewMockLogger(t)
 
@@ -53,16 +55,18 @@ func TestService_Delete_Error(t *testing.T) {
 	ctx := context.Background()
 	mTime := time.Date(2026, 1, 1, 10, 30, 0, 0, time.UTC)
 
-	usr := user.User{
-		ID:           uuid.MustParse("01234567-89ab-7def-0123-456789abcdef"),
-		Name:         name.MustParse("John Doe"),
-		Email:        unitest.MustParseEmail("john@example.com"),
-		PasswordHash: []byte("hashed_password"),
-		Department:   name.MustParseNull("Engineering"),
-		Enabled:      true,
-		CreatedAt:    mTime,
-		UpdatedAt:    mTime,
-	}
+	email, _ := mail.ParseAddress("john@example.com")
+	usr := user.New(
+		uuid.MustParse("01234567-89ab-7def-0123-456789abcdef"),
+		name.MustParse("John Doe"),
+		*email,
+		[]byte("hashed_password"),
+		name.MustParseNull("Engineering"),
+		true,
+		mTime,
+		mTime,
+		nil,
+	)
 
 	mLogger := logger.NewMockLogger(t)
 

@@ -43,15 +43,15 @@ func toDomain(db rowDB) (urp.UserRolesPermissions, error) {
 		permIDPtr = &permID
 	}
 
-	return urp.UserRolesPermissions{
-		UserID:         db.UserID,
-		UserName:       userName,
-		UserEmail:      mail.Address{Address: db.UserEmail},
-		RoleID:         db.RoleID,
-		RoleName:       roleName,
-		PermissionID:   permIDPtr,
-		PermissionName: permName,
-	}, nil
+	return urp.New(
+		db.UserID,
+		userName,
+		mail.Address{Address: db.UserEmail},
+		db.RoleID,
+		roleName,
+		permIDPtr,
+		permName,
+	), nil
 }
 
 func toDomains(dbs []rowDB) ([]urp.UserRolesPermissions, error) {

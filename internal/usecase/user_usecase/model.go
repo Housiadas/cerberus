@@ -47,14 +47,14 @@ type User struct {
 
 func toAppUser(bus user.User) User {
 	return User{
-		ID:           bus.ID.String(),
-		Name:         bus.Name.String(),
-		Email:        bus.Email.Address,
-		PasswordHash: bus.PasswordHash,
-		Department:   bus.Department.String(),
-		Enabled:      bus.Enabled,
-		CreatedAt:    clock.Format(&bus.CreatedAt),
-		UpdatedAt:    clock.Format(&bus.UpdatedAt),
+		ID:           bus.ID().String(),
+		Name:         bus.Name().String(),
+		Email:        bus.Email().Address,
+		PasswordHash: bus.PasswordHash(),
+		Department:   bus.Department().String(),
+		Enabled:      bus.Enabled(),
+		CreatedAt:    clock.Format(new(bus.CreatedAt())),
+		UpdatedAt:    clock.Format(new(bus.UpdatedAt())),
 	}
 }
 

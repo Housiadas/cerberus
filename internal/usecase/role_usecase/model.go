@@ -26,10 +26,10 @@ type RolePageResult struct {
 
 func toAppRole(r role.Role) Role {
 	return Role{
-		ID:        r.ID.String(),
-		Name:      r.Name.String(),
-		CreatedAt: clock.Format(&r.CreatedAt),
-		UpdatedAt: clock.Format(&r.UpdatedAt),
+		ID:        r.ID().String(),
+		Name:      r.Name().String(),
+		CreatedAt: clock.Format(new(r.CreatedAt())),
+		UpdatedAt: clock.Format(new(r.UpdatedAt())),
 	}
 }
 

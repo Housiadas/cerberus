@@ -20,11 +20,11 @@ type roleDB struct {
 
 func toRoleDB(rl role.Role) roleDB {
 	return roleDB{
-		ID:        rl.ID,
-		Name:      rl.Name.String(),
-		CreatedAt: rl.CreatedAt.UTC(),
-		UpdatedAt: rl.UpdatedAt.UTC(),
-		DeletedAt: toNullTime(rl.DeletedAt),
+		ID:        rl.ID(),
+		Name:      rl.Name().String(),
+		CreatedAt: rl.CreatedAt().UTC(),
+		UpdatedAt: rl.UpdatedAt().UTC(),
+		DeletedAt: toNullTime(rl.DeletedAt()),
 	}
 }
 
@@ -34,15 +34,13 @@ func toRoleDomain(db roleDB) (role.Role, error) {
 		return role.Role{}, fmt.Errorf("parse name: %w", err)
 	}
 
-	bus := role.Role{
-		ID:        db.ID,
-		Name:      nme,
-		CreatedAt: db.CreatedAt.In(time.UTC),
-		UpdatedAt: db.UpdatedAt.In(time.UTC),
-		DeletedAt: fromNullTime(db.DeletedAt),
-	}
-
-	return bus, nil
+	return role.New(
+		db.ID,
+		nme,
+		db.CreatedAt.In(time.UTC),
+		db.UpdatedAt.In(time.UTC),
+		fromNullTime(db.DeletedAt),
+	), nil
 }
 
 func toNullTime(t *time.Time) sql.NullTime {
