@@ -41,12 +41,12 @@ func TestService_Create_Successful(t *testing.T) {
 	tkn, err := sut.Create(ctx, userID, ttl)
 
 	assert.NoError(t, err)
-	assert.Equal(t, mID, tkn.ID)
-	assert.Equal(t, userID, tkn.UserID)
-	assert.Equal(t, mTokenID.String(), tkn.Token)
-	assert.Equal(t, mTime, tkn.CreatedAt)
-	assert.Equal(t, mTime.UTC().Add(ttl), tkn.ExpiresAt)
-	assert.False(t, tkn.Revoked)
+	assert.Equal(t, mID, tkn.ID())
+	assert.Equal(t, userID, tkn.UserID())
+	assert.Equal(t, mTokenID.String(), tkn.Token())
+	assert.Equal(t, mTime, tkn.CreatedAt())
+	assert.Equal(t, mTime.UTC().Add(ttl), tkn.ExpiresAt())
+	assert.False(t, tkn.Revoked())
 }
 
 func TestService_Create_FirstUuidError(t *testing.T) {
@@ -122,11 +122,14 @@ func TestService_QueryByToken_Successful(t *testing.T) {
 	ctx := context.Background()
 	token := "some-token-string"
 
-	expectedToken := refresh_token.RefreshToken{
-		ID:     uuid.MustParse("01234567-89ab-7def-0123-456789abcdef"),
-		UserID: uuid.MustParse("11234567-89ab-7def-0123-456789abcdef"),
-		Token:  token,
-	}
+	expectedToken := refresh_token.New(
+		uuid.MustParse("01234567-89ab-7def-0123-456789abcdef"),
+		uuid.MustParse("11234567-89ab-7def-0123-456789abcdef"),
+		token,
+		time.Time{},
+		time.Time{},
+		false,
+	)
 
 	mLogger := logger.NewMockLogger(t)
 
@@ -140,8 +143,8 @@ func TestService_QueryByToken_Successful(t *testing.T) {
 	tkn, err := sut.QueryByToken(ctx, token)
 
 	assert.NoError(t, err)
-	assert.Equal(t, expectedToken.ID, tkn.ID)
-	assert.Equal(t, expectedToken.Token, tkn.Token)
+	assert.Equal(t, expectedToken.ID(), tkn.ID())
+	assert.Equal(t, expectedToken.Token(), tkn.Token())
 }
 
 func TestService_QueryByToken_Error(t *testing.T) {
@@ -167,23 +170,16 @@ func TestService_Revoke_Successful(t *testing.T) {
 	ctx := context.Background()
 	mTime := time.Date(2026, 1, 1, 10, 30, 0, 0, time.UTC)
 
-	tkn := refresh_token.RefreshToken{
-		ID:        uuid.MustParse("01234567-89ab-7def-0123-456789abcdef"),
-		UserID:    uuid.MustParse("11234567-89ab-7def-0123-456789abcdef"),
-		Token:     "some-token",
-		ExpiresAt: mTime.Add(24 * time.Hour),
-		CreatedAt: mTime,
-		Revoked:   false,
-	}
+	tkn := refresh_token.New(
+		uuid.MustParse("01234567-89ab-7def-0123-456789abcdef"),
+		uuid.MustParse("11234567-89ab-7def-0123-456789abcdef"),
+		"some-token",
+		mTime.Add(24*time.Hour),
+		mTime,
+		false,
+	)
 
-	revokedToken := refresh_token.RefreshToken{
-		ID:        tkn.ID,
-		UserID:    tkn.UserID,
-		Token:     tkn.Token,
-		ExpiresAt: tkn.ExpiresAt,
-		CreatedAt: tkn.CreatedAt,
-		Revoked:   true,
-	}
+	revokedToken := tkn.WithRevoked(true)
 
 	mLogger := logger.NewMockLogger(t)
 
@@ -203,23 +199,16 @@ func TestService_Revoke_Error(t *testing.T) {
 	ctx := context.Background()
 	mTime := time.Date(2026, 1, 1, 10, 30, 0, 0, time.UTC)
 
-	tkn := refresh_token.RefreshToken{
-		ID:        uuid.MustParse("01234567-89ab-7def-0123-456789abcdef"),
-		UserID:    uuid.MustParse("11234567-89ab-7def-0123-456789abcdef"),
-		Token:     "some-token",
-		ExpiresAt: mTime.Add(24 * time.Hour),
-		CreatedAt: mTime,
-		Revoked:   false,
-	}
+	tkn := refresh_token.New(
+		uuid.MustParse("01234567-89ab-7def-0123-456789abcdef"),
+		uuid.MustParse("11234567-89ab-7def-0123-456789abcdef"),
+		"some-token",
+		mTime.Add(24*time.Hour),
+		mTime,
+		false,
+	)
 
-	revokedToken := refresh_token.RefreshToken{
-		ID:        tkn.ID,
-		UserID:    tkn.UserID,
-		Token:     tkn.Token,
-		ExpiresAt: tkn.ExpiresAt,
-		CreatedAt: tkn.CreatedAt,
-		Revoked:   true,
-	}
+	revokedToken := tkn.WithRevoked(true)
 
 	mLogger := logger.NewMockLogger(t)
 
@@ -239,11 +228,14 @@ func TestService_Revoke_Error(t *testing.T) {
 func TestService_Delete_Successful(t *testing.T) {
 	ctx := context.Background()
 
-	tkn := refresh_token.RefreshToken{
-		ID:     uuid.MustParse("01234567-89ab-7def-0123-456789abcdef"),
-		UserID: uuid.MustParse("11234567-89ab-7def-0123-456789abcdef"),
-		Token:  "some-token",
-	}
+	tkn := refresh_token.New(
+		uuid.MustParse("01234567-89ab-7def-0123-456789abcdef"),
+		uuid.MustParse("11234567-89ab-7def-0123-456789abcdef"),
+		"some-token",
+		time.Time{},
+		time.Time{},
+		false,
+	)
 
 	mLogger := logger.NewMockLogger(t)
 
@@ -262,11 +254,14 @@ func TestService_Delete_Successful(t *testing.T) {
 func TestService_Delete_Error(t *testing.T) {
 	ctx := context.Background()
 
-	tkn := refresh_token.RefreshToken{
-		ID:     uuid.MustParse("01234567-89ab-7def-0123-456789abcdef"),
-		UserID: uuid.MustParse("11234567-89ab-7def-0123-456789abcdef"),
-		Token:  "some-token",
-	}
+	tkn := refresh_token.New(
+		uuid.MustParse("01234567-89ab-7def-0123-456789abcdef"),
+		uuid.MustParse("11234567-89ab-7def-0123-456789abcdef"),
+		"some-token",
+		time.Time{},
+		time.Time{},
+		false,
+	)
 
 	mLogger := logger.NewMockLogger(t)
 

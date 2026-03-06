@@ -24,13 +24,15 @@ func TestService_Query_Successful(t *testing.T) {
 	page := page.Page{}
 
 	expected := []user_roles_permissions.UserRolesPermissions{
-		{
-			UserID:    uuid.MustParse("01234567-89ab-7def-0123-456789abcdef"),
-			UserName:  name.MustParse("John Doe"),
-			UserEmail: unitest.MustParseEmail("john@example.com"),
-			RoleID:    uuid.MustParse("11234567-89ab-7def-0123-456789abcdef"),
-			RoleName:  name.MustParse("Admin"),
-		},
+		user_roles_permissions.New(
+			uuid.MustParse("01234567-89ab-7def-0123-456789abcdef"),
+			name.MustParse("John Doe"),
+			unitest.MustParseEmail("john@example.com"),
+			uuid.MustParse("11234567-89ab-7def-0123-456789abcdef"),
+			name.MustParse("Admin"),
+			nil,
+			name.Null{},
+		),
 	}
 
 	mLogger := logger.NewMockLogger(t)
@@ -43,8 +45,8 @@ func TestService_Query_Successful(t *testing.T) {
 
 	assert.NoError(t, err)
 	assert.Len(t, result, 1)
-	assert.Equal(t, expected[0].UserID, result[0].UserID)
-	assert.Equal(t, expected[0].RoleName, result[0].RoleName)
+	assert.Equal(t, expected[0].UserID(), result[0].UserID())
+	assert.Equal(t, expected[0].RoleName(), result[0].RoleName())
 }
 
 func TestService_Query_Error(t *testing.T) {

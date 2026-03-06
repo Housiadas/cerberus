@@ -55,12 +55,7 @@ func (s *Service) Create(
 	}
 
 	now := time.Now()
-	p := permission.Permission{
-		ID:        id,
-		Name:      np.Name,
-		CreatedAt: now,
-		UpdatedAt: now,
-	}
+	p := permission.New(id, np.Name, now, now, nil)
 
 	err = s.storer.Create(ctx, p)
 	if err != nil {
@@ -77,10 +72,10 @@ func (s *Service) Update(
 	up permission.UpdatePermission,
 ) (permission.Permission, error) {
 	if up.Name != nil {
-		p.Name = *up.Name
+		p = p.WithName(*up.Name)
 	}
 
-	p.UpdatedAt = time.Now()
+	p = p.WithUpdatedAt(time.Now())
 
 	err := s.storer.Update(ctx, p)
 	if err != nil {

@@ -38,6 +38,7 @@ func NewConsumer(log *logger.Service, cfg ConsumerConfig) (*ConsumerClient, erro
 		"broker.address.family":    cfg.AddressFamily,
 		"session.timeout.ms":       cfg.SessionTimeout,
 		"auto.offset.reset":        "earliest",
+		"enable.auto.commit":       true,
 		"enable.auto.offset.store": false,
 	})
 	if err != nil {
@@ -63,37 +64,60 @@ func (c *ConsumerClient) Subscribe(topic string) error {
 	return nil
 }
 
+// Consume This uses StoreMessage (which stores the offset for that message)
+// and relies on the auto-committer (enable.auto.commit defaults to true in confluent-kafka-go).
+// No goroutines, no race conditions, and the context is respected.
 func (c *ConsumerClient) Consume(ctx context.Context, fn func(msg *kafka.Message) error) error {
-	msgCount := 0
-
-	run := true
-	for run {
-		ev := c.consumer.Poll(100)
-		switch event := ev.(type) {
-		case *kafka.Message:
-			msgCount++
-			if msgCount%MinCommitCount == 0 {
-				go func() {
-					_, err := c.consumer.Commit()
-					c.log.Error(ctx, fmt.Sprintf("consumer: Committing%v\n", err))
-				}()
-			}
-			// Callback, application-specific
-			err := fn(event)
-			if err != nil {
-				c.log.Error(ctx, fmt.Sprintf("consumer: %v\n", event))
-			}
-
-			fmt.Printf("%% Message on %s:\n%s\n", event.TopicPartition, string(event.Value))
-		case kafka.PartitionEOF:
-			c.log.Info(ctx, fmt.Sprintf("consumer: EOF Reached %v\n", event))
-		case kafka.Error:
-			c.log.Error(ctx, fmt.Sprintf("consumer: %v\n", event))
-
-			run = false
-		default:
-			c.log.Info(ctx, fmt.Sprintf("consumer: Ignored %v\n", event))
+	for {
+		err := c.pollOnce(ctx, fn)
+		if err != nil {
+			return err
 		}
+	}
+}
+
+func (c *ConsumerClient) pollOnce(ctx context.Context, fn func(msg *kafka.Message) error) error {
+	// check for context cancellation
+	select {
+	case <-ctx.Done():
+		return fmt.Errorf("consumer: context done: %w", ctx.Err())
+	default:
+	}
+
+	ev := c.consumer.Poll(100)
+	switch event := ev.(type) {
+	case nil:
+		return nil
+	case *kafka.Message:
+		return c.handleMessage(ctx, event, fn)
+	case kafka.Error:
+		if event.IsFatal() {
+			return fmt.Errorf("consumer: fatal Kafka error: %w", event)
+		}
+
+		c.log.Error(ctx, fmt.Sprintf("consumer: retriable error: %v", event))
+	case kafka.PartitionEOF:
+		c.log.Info(ctx, fmt.Sprintf("consumer: partition EOF: %v", event))
+	}
+
+	return nil
+}
+
+func (c *ConsumerClient) handleMessage(
+	ctx context.Context,
+	event *kafka.Message,
+	fn func(msg *kafka.Message) error,
+) error {
+	err := fn(event)
+	if err != nil {
+		c.log.Error(ctx, fmt.Sprintf("consumer: handler error: %v", err))
+
+		return nil
+	}
+
+	_, storeErr := c.consumer.StoreMessage(event)
+	if storeErr != nil {
+		c.log.Error(ctx, fmt.Sprintf("consumer: store offset error: %v", storeErr))
 	}
 
 	return nil

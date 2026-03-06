@@ -68,14 +68,7 @@ func (s *Service) Create(ctx context.Context, no outbox.NewOutbox) error {
 	}
 
 	now := s.clock.Now()
-	o := outbox.Outbox{
-		ID:          id,
-		EventType:   no.EventType,
-		AggregateID: no.AggregateID,
-		Topic:       no.Topic,
-		Payload:     payload,
-		CreatedAt:   now,
-	}
+	o := outbox.New(id, no.EventType, no.AggregateID, no.Topic, payload, 0, now, nil)
 
 	err = s.storer.Create(ctx, o)
 	if err != nil {

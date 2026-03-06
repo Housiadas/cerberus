@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"testing"
+	"time"
 
 	"github.com/Housiadas/cerberus/internal/utils/page"
 	"github.com/google/uuid"
@@ -42,13 +43,13 @@ func TestService_Create_Successful(t *testing.T) {
 	aud, err := sut.Create(ctx, na)
 
 	assert.NoError(t, err)
-	assert.NotEqual(t, uuid.Nil, aud.ID)
-	assert.Equal(t, objID, aud.ObjID)
-	assert.Equal(t, actorID, aud.ActorID)
-	assert.Equal(t, "create", aud.Action)
-	assert.Equal(t, "User created", aud.Message)
-	assert.NotZero(t, aud.Timestamp)
-	assert.NotEmpty(t, aud.Data)
+	assert.NotEqual(t, uuid.Nil, aud.ID())
+	assert.Equal(t, objID, aud.ObjID())
+	assert.Equal(t, actorID, aud.ActorID())
+	assert.Equal(t, "create", aud.Action())
+	assert.Equal(t, "User created", aud.Message())
+	assert.NotZero(t, aud.Timestamp())
+	assert.NotEmpty(t, aud.Data())
 }
 
 func TestService_Create_MarshalError(t *testing.T) {
@@ -106,11 +107,17 @@ func TestService_Query_Successful(t *testing.T) {
 	page := page.Page{}
 
 	expectedAudits := []audit.Audit{
-		{
-			ID:      uuid.MustParse("01234567-89ab-7def-0123-456789abcdef"),
-			Action:  "create",
-			Message: "Test",
-		},
+		audit.New(
+			uuid.MustParse("01234567-89ab-7def-0123-456789abcdef"),
+			uuid.Nil,
+			entity.Entity{},
+			name.Name{},
+			uuid.Nil,
+			"create",
+			nil,
+			"Test",
+			time.Time{},
+		),
 	}
 
 	mLogger := logger.NewMockLogger(t)
@@ -123,7 +130,7 @@ func TestService_Query_Successful(t *testing.T) {
 
 	assert.NoError(t, err)
 	assert.Len(t, audits, 1)
-	assert.Equal(t, expectedAudits[0].ID, audits[0].ID)
+	assert.Equal(t, expectedAudits[0].ID(), audits[0].ID())
 }
 
 func TestService_Query_Error(t *testing.T) {

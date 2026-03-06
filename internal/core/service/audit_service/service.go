@@ -43,17 +43,17 @@ func (b *Service) Create(ctx context.Context, na audit.NewAudit) (audit.Audit, e
 		return audit.Audit{}, fmt.Errorf("uuid: %w", err)
 	}
 
-	aud := audit.Audit{
-		ID:        id,
-		ObjID:     na.ObjID,
-		ObjEntity: na.ObjEntity,
-		ObjName:   na.ObjName,
-		ActorID:   na.ActorID,
-		Action:    na.Action,
-		Data:      jsonData,
-		Message:   na.Message,
-		Timestamp: time.Now(),
-	}
+	aud := audit.New(
+		id,
+		na.ObjID,
+		na.ObjEntity,
+		na.ObjName,
+		na.ActorID,
+		na.Action,
+		jsonData,
+		na.Message,
+		time.Now(),
+	)
 
 	err = b.storer.Create(ctx, aud)
 	if err != nil {

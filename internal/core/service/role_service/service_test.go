@@ -38,9 +38,9 @@ func TestService_Create_Successful(t *testing.T) {
 	rl, err := sut.Create(ctx, nr)
 
 	assert.NoError(t, err)
-	assert.Equal(t, nr.Name, rl.Name)
-	assert.NotZero(t, rl.CreatedAt)
-	assert.NotZero(t, rl.UpdatedAt)
+	assert.Equal(t, nr.Name, rl.Name())
+	assert.NotZero(t, rl.CreatedAt())
+	assert.NotZero(t, rl.UpdatedAt())
 }
 
 func TestService_Create_StorerError(t *testing.T) {
@@ -69,12 +69,13 @@ func TestService_Update_Successful(t *testing.T) {
 	ctx := context.Background()
 	mTime := time.Date(2026, 1, 1, 10, 30, 0, 0, time.UTC)
 
-	existingRole := role.Role{
-		ID:        uuid.MustParse("01234567-89ab-7def-0123-456789abcdef"),
-		Name:      name.MustParse("Admin"),
-		CreatedAt: mTime,
-		UpdatedAt: mTime,
-	}
+	existingRole := role.New(
+		uuid.MustParse("01234567-89ab-7def-0123-456789abcdef"),
+		name.MustParse("Admin"),
+		mTime,
+		mTime,
+		nil,
+	)
 
 	newName := name.MustParse("SuperAdmin")
 	ur := role.UpdateRole{
@@ -90,20 +91,21 @@ func TestService_Update_Successful(t *testing.T) {
 	rl, err := sut.Update(ctx, existingRole, ur)
 
 	assert.NoError(t, err)
-	assert.Equal(t, newName, rl.Name)
-	assert.True(t, rl.UpdatedAt.After(mTime) || rl.UpdatedAt.Equal(mTime))
+	assert.Equal(t, newName, rl.Name())
+	assert.True(t, rl.UpdatedAt().After(mTime) || rl.UpdatedAt().Equal(mTime))
 }
 
 func TestService_Update_StorerError(t *testing.T) {
 	ctx := context.Background()
 	mTime := time.Date(2026, 1, 1, 10, 30, 0, 0, time.UTC)
 
-	existingRole := role.Role{
-		ID:        uuid.MustParse("01234567-89ab-7def-0123-456789abcdef"),
-		Name:      name.MustParse("Admin"),
-		CreatedAt: mTime,
-		UpdatedAt: mTime,
-	}
+	existingRole := role.New(
+		uuid.MustParse("01234567-89ab-7def-0123-456789abcdef"),
+		name.MustParse("Admin"),
+		mTime,
+		mTime,
+		nil,
+	)
 
 	newName := name.MustParse("SuperAdmin")
 	ur := role.UpdateRole{
@@ -125,10 +127,13 @@ func TestService_Update_StorerError(t *testing.T) {
 func TestService_Delete_Successful(t *testing.T) {
 	ctx := context.Background()
 
-	rl := role.Role{
-		ID:   uuid.MustParse("01234567-89ab-7def-0123-456789abcdef"),
-		Name: name.MustParse("Admin"),
-	}
+	rl := role.New(
+		uuid.MustParse("01234567-89ab-7def-0123-456789abcdef"),
+		name.MustParse("Admin"),
+		time.Time{},
+		time.Time{},
+		nil,
+	)
 
 	mLogger := logger.NewMockLogger(t)
 
@@ -144,10 +149,13 @@ func TestService_Delete_Successful(t *testing.T) {
 func TestService_Delete_Error(t *testing.T) {
 	ctx := context.Background()
 
-	rl := role.Role{
-		ID:   uuid.MustParse("01234567-89ab-7def-0123-456789abcdef"),
-		Name: name.MustParse("Admin"),
-	}
+	rl := role.New(
+		uuid.MustParse("01234567-89ab-7def-0123-456789abcdef"),
+		name.MustParse("Admin"),
+		time.Time{},
+		time.Time{},
+		nil,
+	)
 
 	mLogger := logger.NewMockLogger(t)
 
@@ -198,12 +206,13 @@ func TestService_QueryByID_Successful(t *testing.T) {
 	roleID := uuid.MustParse("01234567-89ab-7def-0123-456789abcdef")
 	mTime := time.Date(2026, 1, 1, 10, 30, 0, 0, time.UTC)
 
-	expectedRole := role.Role{
-		ID:        roleID,
-		Name:      name.MustParse("Admin"),
-		CreatedAt: mTime,
-		UpdatedAt: mTime,
-	}
+	expectedRole := role.New(
+		roleID,
+		name.MustParse("Admin"),
+		mTime,
+		mTime,
+		nil,
+	)
 
 	mLogger := logger.NewMockLogger(t)
 
@@ -214,8 +223,8 @@ func TestService_QueryByID_Successful(t *testing.T) {
 	rl, err := sut.QueryByID(ctx, roleID)
 
 	assert.NoError(t, err)
-	assert.Equal(t, expectedRole.ID, rl.ID)
-	assert.Equal(t, expectedRole.Name, rl.Name)
+	assert.Equal(t, expectedRole.ID(), rl.ID())
+	assert.Equal(t, expectedRole.Name(), rl.Name())
 }
 
 func TestService_QueryByID_NotFound(t *testing.T) {
@@ -241,10 +250,13 @@ func TestService_Query_Successful(t *testing.T) {
 	page := page.Page{}
 
 	expectedRoles := []role.Role{
-		{
-			ID:   uuid.MustParse("01234567-89ab-7def-0123-456789abcdef"),
-			Name: name.MustParse("Admin"),
-		},
+		role.New(
+			uuid.MustParse("01234567-89ab-7def-0123-456789abcdef"),
+			name.MustParse("Admin"),
+			time.Time{},
+			time.Time{},
+			nil,
+		),
 	}
 
 	mLogger := logger.NewMockLogger(t)
@@ -257,7 +269,7 @@ func TestService_Query_Successful(t *testing.T) {
 
 	assert.NoError(t, err)
 	assert.Len(t, roles, 1)
-	assert.Equal(t, expectedRoles[0].Name, roles[0].Name)
+	assert.Equal(t, expectedRoles[0].Name(), roles[0].Name())
 }
 
 func TestService_Query_Error(t *testing.T) {
