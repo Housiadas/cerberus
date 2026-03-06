@@ -87,7 +87,7 @@ func (s *Store) Update(ctx context.Context, rl role.Role) error {
 		return fmt.Errorf("role cache update: %w", err)
 	}
 
-	s.cache.Delete(rl.ID.String())
+	s.cache.Delete(rl.ID().String())
 
 	return nil
 }
@@ -99,7 +99,7 @@ func (s *Store) Delete(ctx context.Context, rl role.Role) error {
 		return fmt.Errorf("role cache delete: %w", err)
 	}
 
-	s.cache.Delete(rl.ID.String())
+	s.cache.Delete(rl.ID().String())
 
 	return nil
 }

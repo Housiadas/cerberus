@@ -14,11 +14,11 @@ func (c *Service) Update(
 	uu user.UpdateUser,
 ) (user.User, error) {
 	if uu.Name != nil {
-		usr.Name = *uu.Name
+		usr = usr.WithName(*uu.Name)
 	}
 
 	if uu.Email != nil {
-		usr.Email = *uu.Email
+		usr = usr.WithEmail(*uu.Email)
 	}
 
 	if uu.Password != nil {
@@ -27,18 +27,18 @@ func (c *Service) Update(
 			return user.User{}, fmt.Errorf("generate_from_password: %w", err)
 		}
 
-		usr.PasswordHash = pw
+		usr = usr.WithPasswordHash(pw)
 	}
 
 	if uu.Department != nil {
-		usr.Department = *uu.Department
+		usr = usr.WithDepartment(*uu.Department)
 	}
 
 	if uu.Enabled != nil {
-		usr.Enabled = *uu.Enabled
+		usr = usr.WithEnabled(*uu.Enabled)
 	}
 
-	usr.UpdatedAt = c.clock.Now()
+	usr = usr.WithUpdatedAt(c.clock.Now())
 
 	err := c.storer.Update(ctx, usr)
 	if err != nil {

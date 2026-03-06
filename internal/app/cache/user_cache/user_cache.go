@@ -89,8 +89,8 @@ func (s *Store) Update(ctx context.Context, usr user.User) error {
 		return fmt.Errorf("user cache update: %w", err)
 	}
 
-	s.cache.Delete(usr.ID.String())
-	s.cache.Delete(usr.Email.Address)
+	s.cache.Delete(usr.ID().String())
+	s.cache.Delete(usr.Email().Address)
 
 	return nil
 }
@@ -102,8 +102,8 @@ func (s *Store) Delete(ctx context.Context, usr user.User) error {
 		return fmt.Errorf("user cache delete: %w", err)
 	}
 
-	s.cache.Delete(usr.ID.String())
-	s.cache.Delete(usr.Email.Address)
+	s.cache.Delete(usr.ID().String())
+	s.cache.Delete(usr.Email().Address)
 
 	return nil
 }

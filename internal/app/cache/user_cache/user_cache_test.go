@@ -4,7 +4,9 @@ import (
 	"context"
 	"net/mail"
 	"testing"
+	"time"
 
+	"github.com/Housiadas/cerberus/internal/core/domain/name"
 	"github.com/Housiadas/cerberus/internal/core/domain/user"
 	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/Housiadas/cerberus/pkg/redis"
@@ -41,10 +43,7 @@ func TestQueryByID_CacheMiss(t *testing.T) {
 	ctx := context.Background()
 
 	id := uuid.New()
-	expected := user.User{
-		ID:    id,
-		Email: mail.Address{Address: "test@example.com"},
-	}
+	expected := user.New(id, name.Name{}, mail.Address{Address: "test@example.com"}, nil, name.Null{}, false, time.Time{}, time.Time{}, nil)
 
 	redisCacheMiss(red)
 	mockStorer.On("QueryByID", ctx, id).Return(expected, nil)
@@ -59,10 +58,7 @@ func TestQueryByID_CacheHit(t *testing.T) {
 	ctx := context.Background()
 
 	id := uuid.New()
-	expected := user.User{
-		ID:    id,
-		Email: mail.Address{Address: "test@example.com"},
-	}
+	expected := user.New(id, name.Name{}, mail.Address{Address: "test@example.com"}, nil, name.Null{}, false, time.Time{}, time.Time{}, nil)
 
 	redisCacheMiss(red)
 	mockStorer.On("QueryByID", ctx, id).Return(expected, nil).Once()
@@ -83,10 +79,7 @@ func TestQueryByEmail_CacheMiss(t *testing.T) {
 	ctx := context.Background()
 
 	email := mail.Address{Address: "test@example.com"}
-	expected := user.User{
-		ID:    uuid.New(),
-		Email: email,
-	}
+	expected := user.New(uuid.New(), name.Name{}, email, nil, name.Null{}, false, time.Time{}, time.Time{}, nil)
 
 	redisCacheMiss(red)
 	mockStorer.On("QueryByEmail", ctx, email).Return(expected, nil)
@@ -100,10 +93,7 @@ func TestCreate_DelegatesToStorer(t *testing.T) {
 	store, mockStorer, _ := newTestStore(t)
 	ctx := context.Background()
 
-	usr := user.User{
-		ID:    uuid.New(),
-		Email: mail.Address{Address: "test@example.com"},
-	}
+	usr := user.New(uuid.New(), name.Name{}, mail.Address{Address: "test@example.com"}, nil, name.Null{}, false, time.Time{}, time.Time{}, nil)
 
 	mockStorer.On("Create", ctx, usr).Return(nil)
 
@@ -115,10 +105,7 @@ func TestUpdate_DelegatesToStorerAndInvalidatesCache(t *testing.T) {
 	store, mockStorer, _ := newTestStore(t)
 	ctx := context.Background()
 
-	usr := user.User{
-		ID:    uuid.New(),
-		Email: mail.Address{Address: "test@example.com"},
-	}
+	usr := user.New(uuid.New(), name.Name{}, mail.Address{Address: "test@example.com"}, nil, name.Null{}, false, time.Time{}, time.Time{}, nil)
 
 	mockStorer.On("Update", ctx, usr).Return(nil)
 
@@ -130,10 +117,7 @@ func TestDelete_DelegatesToStorerAndInvalidatesCache(t *testing.T) {
 	store, mockStorer, _ := newTestStore(t)
 	ctx := context.Background()
 
-	usr := user.User{
-		ID:    uuid.New(),
-		Email: mail.Address{Address: "test@example.com"},
-	}
+	usr := user.New(uuid.New(), name.Name{}, mail.Address{Address: "test@example.com"}, nil, name.Null{}, false, time.Time{}, time.Time{}, nil)
 
 	mockStorer.On("Delete", ctx, usr).Return(nil)
 

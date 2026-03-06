@@ -26,14 +26,14 @@ func (c *Service) Create(
 	}
 
 	now := c.clock.Now()
-	tkn := refresh_token.RefreshToken{
-		ID:        id,
-		UserID:    userID,
-		Token:     tokenID.String(),
-		CreatedAt: now,
-		ExpiresAt: now.UTC().Add(refreshTokenTTL),
-		Revoked:   false,
-	}
+	tkn := refresh_token.New(
+		id,
+		userID,
+		tokenID.String(),
+		now.UTC().Add(refreshTokenTTL),
+		now,
+		false,
+	)
 
 	err = c.storer.Create(ctx, tkn)
 	if err != nil {

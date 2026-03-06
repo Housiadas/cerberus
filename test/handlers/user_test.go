@@ -37,7 +37,7 @@ func Test_API_User_Query_200(t *testing.T) {
 	}
 
 	sort.Slice(usrs, func(i, j int) bool {
-		return usrs[i].ID.String() <= usrs[j].ID.String()
+		return usrs[i].ID().String() <= usrs[j].ID().String()
 	})
 
 	table := []apitest.Table{
@@ -79,7 +79,7 @@ func Test_API_User_Query_BY_ID_200(t *testing.T) {
 	table := []apitest.Table{
 		{
 			Name:        "basic",
-			URL:         fmt.Sprintf("/api/v1/users/%s", sd.Users[0].ID),
+			URL:         fmt.Sprintf("/api/v1/users/%s", sd.Users[0].ID()),
 			StatusCode:  http.StatusOK,
 			Method:      http.MethodGet,
 			AccessToken: &sd.Users[0].AccessToken.Token,
@@ -297,7 +297,7 @@ func Test_API_User_Update_200(t *testing.T) {
 	table := []apitest.Table{
 		{
 			Name:        "basic",
-			URL:         fmt.Sprintf("/api/v1/users/%s", sd.Users[0].ID),
+			URL:         fmt.Sprintf("/api/v1/users/%s", sd.Users[0].ID()),
 			Method:      http.MethodPut,
 			StatusCode:  http.StatusOK,
 			AccessToken: &sd.Users[0].AccessToken.Token,
@@ -310,13 +310,13 @@ func Test_API_User_Update_200(t *testing.T) {
 			},
 			GotResp: &user_usecase.User{},
 			ExpResp: &user_usecase.User{
-				ID:         sd.Users[0].ID.String(),
+				ID:         sd.Users[0].ID().String(),
 				Name:       "Jack Housi",
 				Email:      "chris@housi2.com",
 				Department: "IT0",
 				Enabled:    true,
-				CreatedAt:  clock.Format(&sd.Users[0].CreatedAt),
-				UpdatedAt:  clock.Format(&sd.Users[0].UpdatedAt),
+				CreatedAt:  func() string { ct := sd.Users[0].CreatedAt(); return clock.Format(&ct) }(),
+				UpdatedAt:  func() string { ut := sd.Users[0].UpdatedAt(); return clock.Format(&ut) }(),
 			},
 			AssertFunc: func(got any, exp any) string {
 				gotResp, exists := got.(*user_usecase.User)
@@ -351,7 +351,7 @@ func Test_API_User_Update_400(t *testing.T) {
 	table := []apitest.Table{
 		{
 			Name:        "bad-input",
-			URL:         fmt.Sprintf("/api/v1/users/%s", sd.Users[0].ID),
+			URL:         fmt.Sprintf("/api/v1/users/%s", sd.Users[0].ID()),
 			Method:      http.MethodPut,
 			StatusCode:  http.StatusBadRequest,
 			AccessToken: &sd.Users[0].AccessToken.Token,
@@ -382,7 +382,7 @@ func Test_API_User_Delete_200(t *testing.T) {
 	table := []apitest.Table{
 		{
 			Name:        "asadmin",
-			URL:         fmt.Sprintf("/api/v1/users/%s", sd.Users[0].ID),
+			URL:         fmt.Sprintf("/api/v1/users/%s", sd.Users[0].ID()),
 			Method:      http.MethodDelete,
 			StatusCode:  http.StatusNoContent,
 			AccessToken: &sd.Admins[0].AccessToken.Token,
@@ -404,7 +404,7 @@ func Test_API_User_Delete_403(t *testing.T) {
 	table := []apitest.Table{
 		{
 			Name:        "user-delete-forbidden",
-			URL:         fmt.Sprintf("/api/v1/users/%s", sd.Admins[0].ID),
+			URL:         fmt.Sprintf("/api/v1/users/%s", sd.Admins[0].ID()),
 			Method:      http.MethodDelete,
 			StatusCode:  http.StatusForbidden,
 			AccessToken: &sd.Users[0].AccessToken.Token,

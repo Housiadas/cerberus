@@ -48,7 +48,7 @@ func (a *UseCase) Create(ctx context.Context, app NewUser) (User, error) {
 
 	err = a.outboxSvc.Create(ctx, outbox.NewOutbox{
 		EventType:   event.UserCreated,
-		AggregateID: usr.ID,
+		AggregateID: usr.ID(),
 		Topic:       event.UserTopic,
 		Payload:     usr,
 	})
@@ -91,7 +91,7 @@ func (a *UseCase) Update(ctx context.Context, res UpdateUser, userID string) (Us
 
 	err = a.outboxSvc.Create(ctx, outbox.NewOutbox{
 		EventType:   event.UserUpdated,
-		AggregateID: updUsr.ID,
+		AggregateID: updUsr.ID(),
 		Topic:       event.UserTopic,
 		Payload:     updUsr,
 	})
@@ -127,7 +127,7 @@ func (a *UseCase) Delete(ctx context.Context, userID string) error {
 
 	err = a.outboxSvc.Create(ctx, outbox.NewOutbox{
 		EventType:   event.UserDeleted,
-		AggregateID: currentUsr.ID,
+		AggregateID: currentUsr.ID(),
 		Topic:       event.UserTopic,
 		Payload:     currentUsr,
 	})

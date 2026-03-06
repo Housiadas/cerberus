@@ -49,20 +49,20 @@ func insertUserSeedData(test *apitest.Test) (apitest.SeedData, error) {
 		}
 	}
 
-	if err = apitest.SeedUserRole(ctx, test.DB, usrs[0].ID, adminRoleID); err != nil {
+	if err = apitest.SeedUserRole(ctx, test.DB, usrs[0].ID(), adminRoleID); err != nil {
 		return apitest.SeedData{}, fmt.Errorf("seeding admin user role : %w", err)
 	}
 
-	if err = apitest.SeedUserRole(ctx, test.DB, usrs[1].ID, userRoleID); err != nil {
+	if err = apitest.SeedUserRole(ctx, test.DB, usrs[1].ID(), userRoleID); err != nil {
 		return apitest.SeedData{}, fmt.Errorf("seeding regular user role : %w", err)
 	}
 
-	tkn1, err := test.Usecase.Auth.GenerateAccessToken(ctx, usrs[0].ID.String())
+	tkn1, err := test.Usecase.Auth.GenerateAccessToken(ctx, usrs[0].ID().String())
 	if err != nil {
 		return apitest.SeedData{}, fmt.Errorf("seeding token : %w", err)
 	}
 
-	tkn2, err := test.Usecase.Auth.GenerateAccessToken(ctx, usrs[1].ID.String())
+	tkn2, err := test.Usecase.Auth.GenerateAccessToken(ctx, usrs[1].ID().String())
 	if err != nil {
 		return apitest.SeedData{}, fmt.Errorf("seeding token : %w", err)
 	}
