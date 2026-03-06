@@ -7,6 +7,12 @@ import (
 	"net/mail"
 	"sort"
 	"testing"
+	"time"
+
+	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
+	"github.com/google/uuid"
+	"golang.org/x/crypto/bcrypt"
 
 	"github.com/Housiadas/cerberus/internal/app/repo/user_repo"
 	"github.com/Housiadas/cerberus/internal/core/domain/name"
@@ -20,9 +26,6 @@ import (
 	"github.com/Housiadas/cerberus/pkg/hasher"
 	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/Housiadas/cerberus/pkg/uuidgen"
-
-	"github.com/google/go-cmp/cmp"
-	"golang.org/x/crypto/bcrypt"
 )
 
 func Test_User(t *testing.T) {
@@ -96,8 +99,13 @@ func queryUser(service *user_service.Service, sd unitest.SeedData) []unitest.Tab
 	}
 
 	sort.Slice(usrs, func(i, j int) bool {
-		return usrs[i].ID.String() <= usrs[j].ID.String()
+		return usrs[i].ID().String() <= usrs[j].ID().String()
 	})
+
+	userCmpOpts := []cmp.Option{
+		cmp.AllowUnexported(user.User{}),
+		cmpopts.EquateApproxTime(time.Second),
+	}
 
 	table := []unitest.Table{
 		{
@@ -123,24 +131,14 @@ func queryUser(service *user_service.Service, sd unitest.SeedData) []unitest.Tab
 
 				expResp := exp.([]user.User)
 
-				for i := range gotResp {
-					if clock.Format(&gotResp[i].CreatedAt) == clock.Format(&expResp[i].CreatedAt) {
-						expResp[i].CreatedAt = gotResp[i].CreatedAt
-					}
-
-					if clock.Format(&gotResp[i].UpdatedAt) == clock.Format(&expResp[i].UpdatedAt) {
-						expResp[i].UpdatedAt = gotResp[i].UpdatedAt
-					}
-				}
-
-				return cmp.Diff(gotResp, expResp)
+				return cmp.Diff(gotResp, expResp, userCmpOpts...)
 			},
 		},
 		{
 			Name:    "byid",
 			ExpResp: sd.Users[0].User,
 			ExcFunc: func(ctx context.Context) any {
-				resp, err := service.QueryByID(ctx, sd.Users[0].ID)
+				resp, err := service.QueryByID(ctx, sd.Users[0].ID())
 				if err != nil {
 					return err
 				}
@@ -155,15 +153,7 @@ func queryUser(service *user_service.Service, sd unitest.SeedData) []unitest.Tab
 
 				expResp := exp.(user.User)
 
-				if clock.Format(&gotResp.CreatedAt) == clock.Format(&expResp.CreatedAt) {
-					expResp.CreatedAt = gotResp.CreatedAt
-				}
-
-				if clock.Format(&gotResp.UpdatedAt) == clock.Format(&expResp.UpdatedAt) {
-					expResp.UpdatedAt = gotResp.UpdatedAt
-				}
-
-				return cmp.Diff(gotResp, expResp)
+				return cmp.Diff(gotResp, expResp, userCmpOpts...)
 			},
 		},
 	}
@@ -177,12 +167,17 @@ func createUser(service *user_service.Service) []unitest.Table {
 	table := []unitest.Table{
 		{
 			Name: "basic",
-			ExpResp: user.User{
-				Name:       name.MustParse("Bill Kennedy"),
-				Email:      *email,
-				Department: name.MustParseNull("ITO"),
-				Enabled:    true,
-			},
+			ExpResp: user.New(
+				uuid.UUID{},
+				name.MustParse("Bill Kennedy"),
+				*email,
+				nil,
+				name.MustParseNull("ITO"),
+				true,
+				time.Time{},
+				time.Time{},
+				nil,
+			),
 			ExcFunc: func(ctx context.Context) any {
 				nu := user.NewUser{
 					Name:       name.MustParse("Bill Kennedy"),
@@ -204,18 +199,25 @@ func createUser(service *user_service.Service) []unitest.Table {
 					return "error occurred"
 				}
 
-				if err := bcrypt.CompareHashAndPassword(gotResp.PasswordHash, []byte("123")); err != nil {
+				if err := bcrypt.CompareHashAndPassword(gotResp.PasswordHash(), []byte("123")); err != nil {
 					return err.Error()
 				}
 
 				expResp := exp.(user.User)
 
-				expResp.ID = gotResp.ID
-				expResp.PasswordHash = gotResp.PasswordHash
-				expResp.CreatedAt = gotResp.CreatedAt
-				expResp.UpdatedAt = gotResp.UpdatedAt
+				expResp = user.New(
+					gotResp.ID(),
+					expResp.Name(),
+					expResp.Email(),
+					gotResp.PasswordHash(),
+					expResp.Department(),
+					expResp.Enabled(),
+					gotResp.CreatedAt(),
+					gotResp.UpdatedAt(),
+					gotResp.DeletedAt(),
+				)
 
-				return cmp.Diff(gotResp, expResp)
+				return cmp.Diff(gotResp, expResp, cmp.AllowUnexported(user.User{}))
 			},
 		},
 	}
@@ -229,14 +231,17 @@ func updateUser(service *user_service.Service, sd unitest.SeedData) []unitest.Ta
 	table := []unitest.Table{
 		{
 			Name: "basic",
-			ExpResp: user.User{
-				ID:         sd.Users[0].ID,
-				Name:       name.MustParse("Jack Kennedy"),
-				Email:      *email,
-				Department: name.MustParseNull("ITO"),
-				Enabled:    true,
-				CreatedAt:  sd.Users[0].CreatedAt,
-			},
+			ExpResp: user.New(
+				sd.Users[0].ID(),
+				name.MustParse("Jack Kennedy"),
+				*email,
+				nil,
+				name.MustParseNull("ITO"),
+				true,
+				sd.Users[0].CreatedAt(),
+				time.Time{},
+				nil,
+			),
 			ExcFunc: func(ctx context.Context) any {
 				uu := user.UpdateUser{
 					Name:       dbtest.NamePointer("Jack Kennedy"),
@@ -258,16 +263,25 @@ func updateUser(service *user_service.Service, sd unitest.SeedData) []unitest.Ta
 					return "error occurred"
 				}
 
-				if err := bcrypt.CompareHashAndPassword(gotResp.PasswordHash, []byte("1234")); err != nil {
+				if err := bcrypt.CompareHashAndPassword(gotResp.PasswordHash(), []byte("1234")); err != nil {
 					return err.Error()
 				}
 
 				expResp := exp.(user.User)
 
-				expResp.PasswordHash = gotResp.PasswordHash
-				expResp.UpdatedAt = gotResp.UpdatedAt
+				expResp = user.New(
+					expResp.ID(),
+					expResp.Name(),
+					expResp.Email(),
+					gotResp.PasswordHash(),
+					expResp.Department(),
+					expResp.Enabled(),
+					expResp.CreatedAt(),
+					gotResp.UpdatedAt(),
+					expResp.DeletedAt(),
+				)
 
-				return cmp.Diff(gotResp, expResp)
+				return cmp.Diff(gotResp, expResp, cmp.AllowUnexported(user.User{}), cmpopts.EquateApproxTime(time.Second))
 			},
 		},
 	}

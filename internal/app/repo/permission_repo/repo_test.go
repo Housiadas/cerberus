@@ -6,6 +6,11 @@ import (
 	"fmt"
 	"sort"
 	"testing"
+	"time"
+
+	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
+	"github.com/google/uuid"
 
 	"github.com/Housiadas/cerberus/internal/app/repo/permission_repo"
 	"github.com/Housiadas/cerberus/internal/core/domain/name"
@@ -14,11 +19,8 @@ import (
 	"github.com/Housiadas/cerberus/internal/utils/dbtest"
 	"github.com/Housiadas/cerberus/internal/utils/page"
 	"github.com/Housiadas/cerberus/internal/utils/unitest"
-	"github.com/Housiadas/cerberus/pkg/clock"
 	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/Housiadas/cerberus/pkg/uuidgen"
-
-	"github.com/google/go-cmp/cmp"
 )
 
 func Test_Permission(t *testing.T) {
@@ -70,8 +72,13 @@ func queryPermission(service *permission_service.Service, sd unitest.SeedData) [
 	}
 
 	sort.Slice(perms, func(i, j int) bool {
-		return perms[i].ID.String() <= perms[j].ID.String()
+		return perms[i].ID().String() <= perms[j].ID().String()
 	})
+
+	permCmpOpts := []cmp.Option{
+		cmp.AllowUnexported(permission.Permission{}),
+		cmpopts.EquateApproxTime(time.Second),
+	}
 
 	return []unitest.Table{
 		{
@@ -97,24 +104,14 @@ func queryPermission(service *permission_service.Service, sd unitest.SeedData) [
 
 				expResp := exp.([]permission.Permission)
 
-				for i := range gotResp {
-					if clock.Format(&gotResp[i].CreatedAt) == clock.Format(&expResp[i].CreatedAt) {
-						expResp[i].CreatedAt = gotResp[i].CreatedAt
-					}
-
-					if clock.Format(&gotResp[i].UpdatedAt) == clock.Format(&expResp[i].UpdatedAt) {
-						expResp[i].UpdatedAt = gotResp[i].UpdatedAt
-					}
-				}
-
-				return cmp.Diff(gotResp, expResp)
+				return cmp.Diff(gotResp, expResp, permCmpOpts...)
 			},
 		},
 		{
 			Name:    "byid",
 			ExpResp: sd.Permissions[0].Permission,
 			ExcFunc: func(ctx context.Context) any {
-				resp, err := service.QueryByID(ctx, sd.Permissions[0].ID)
+				resp, err := service.QueryByID(ctx, sd.Permissions[0].ID())
 				if err != nil {
 					return err
 				}
@@ -129,15 +126,7 @@ func queryPermission(service *permission_service.Service, sd unitest.SeedData) [
 
 				expResp := exp.(permission.Permission)
 
-				if clock.Format(&gotResp.CreatedAt) == clock.Format(&expResp.CreatedAt) {
-					expResp.CreatedAt = gotResp.CreatedAt
-				}
-
-				if clock.Format(&gotResp.UpdatedAt) == clock.Format(&expResp.UpdatedAt) {
-					expResp.UpdatedAt = gotResp.UpdatedAt
-				}
-
-				return cmp.Diff(gotResp, expResp)
+				return cmp.Diff(gotResp, expResp, permCmpOpts...)
 			},
 		},
 	}
@@ -147,9 +136,13 @@ func createPermission(service *permission_service.Service) []unitest.Table {
 	return []unitest.Table{
 		{
 			Name: "basic",
-			ExpResp: permission.Permission{
-				Name: name.MustParse("TestPermission"),
-			},
+			ExpResp: permission.New(
+				uuid.UUID{},
+				name.MustParse("TestPermission"),
+				time.Time{},
+				time.Time{},
+				nil,
+			),
 			ExcFunc: func(ctx context.Context) any {
 				np := permission.NewPermission{
 					Name: name.MustParse("TestPermission"),
@@ -170,11 +163,9 @@ func createPermission(service *permission_service.Service) []unitest.Table {
 
 				expResp := exp.(permission.Permission)
 
-				expResp.ID = gotResp.ID
-				expResp.CreatedAt = gotResp.CreatedAt
-				expResp.UpdatedAt = gotResp.UpdatedAt
+				expResp = permission.New(gotResp.ID(), expResp.Name(), gotResp.CreatedAt(), gotResp.UpdatedAt(), gotResp.DeletedAt())
 
-				return cmp.Diff(gotResp, expResp)
+				return cmp.Diff(gotResp, expResp, cmp.AllowUnexported(permission.Permission{}))
 			},
 		},
 	}
@@ -186,11 +177,13 @@ func updatePermission(service *permission_service.Service, sd unitest.SeedData) 
 	return []unitest.Table{
 		{
 			Name: "basic",
-			ExpResp: permission.Permission{
-				ID:        sd.Permissions[0].ID,
-				Name:      newName,
-				CreatedAt: sd.Permissions[0].CreatedAt,
-			},
+			ExpResp: permission.New(
+				sd.Permissions[0].ID(),
+				newName,
+				sd.Permissions[0].CreatedAt(),
+				time.Time{},
+				nil,
+			),
 			ExcFunc: func(ctx context.Context) any {
 				up := permission.UpdatePermission{
 					Name: &newName,
@@ -210,9 +203,9 @@ func updatePermission(service *permission_service.Service, sd unitest.SeedData) 
 				}
 
 				expResp := exp.(permission.Permission)
-				expResp.UpdatedAt = gotResp.UpdatedAt
+				expResp = expResp.WithUpdatedAt(gotResp.UpdatedAt())
 
-				return cmp.Diff(gotResp, expResp)
+				return cmp.Diff(gotResp, expResp, cmp.AllowUnexported(permission.Permission{}), cmpopts.EquateApproxTime(time.Second))
 			},
 		},
 	}
