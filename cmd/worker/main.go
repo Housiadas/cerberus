@@ -75,6 +75,7 @@ func run() error {
 	cmd := command.New(command.Config{
 		DB:     cfg.DB,
 		Kafka:  cfg.Kafka,
+		Email:  cfg.Email,
 		Log:    log,
 		Tracer: tracer,
 		Version: config.Version{
@@ -104,9 +105,16 @@ func processCommands(args []string, cmd *command.Command) error {
 			return fmt.Errorf("outbox relay: %w", err)
 		}
 
+	case command.EmailNotificationRelay:
+		err := cmd.EmailNotificationRelay()
+		if err != nil {
+			return fmt.Errorf("email notification relay: %w", err)
+		}
+
 	default:
-		fmt.Println("useradd:       add a new user to the database")
-		fmt.Println("outbox-relay:  start the outbox relay process")
+		fmt.Println("useradd:                  add a new user to the database")
+		fmt.Println("outbox-relay:             start the outbox relay process")
+		fmt.Println("email-notification-relay: start the email notification relay process")
 		fmt.Println("provide a command")
 
 		return command.ErrHelp

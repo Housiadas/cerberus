@@ -2,6 +2,7 @@ app:
   name: "Cerberus"
   namespace: "cerberus"
   environment: "dev"
+  frontendURL: "http://localhost:3000"
 rest:
   api: "localhost:4000"
   debug: "localhost:4010"
@@ -41,6 +42,13 @@ collector:
   host: "localhost:4317"
   probability: 1.0
   metricInterval: "30s"
+email:
+  host: "localhost"
+  port: 1025
+  username: ""
+  password: ""
+  from: "no-reply@cerberus.local"
+  tls: false
 cors:
   allowedOrigins: "*"
   allowedMethods: "GET;POST;PUT;DELETE;OPTIONS;PATCH"

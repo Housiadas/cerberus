@@ -136,6 +136,42 @@ paths:
         default:
           $ref: '#/components/responses/ErrorResponse'
 
+  /api/v1/auth/forgot-password:
+    post:
+      operationId: authForgotPassword
+      tags: [Auth]
+      summary: Forgot password
+      description: Initiates the password reset flow by sending an email with a reset link
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ForgotPasswordReq'
+      responses:
+        '204':
+          description: Reset email sent (or silently ignored if email not found)
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
+  /api/v1/auth/reset-password:
+    post:
+      operationId: authResetPassword
+      tags: [Auth]
+      summary: Reset password
+      description: Resets the user password using a valid reset token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResetPasswordReq'
+      responses:
+        '204':
+          description: Password reset successfully
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
   # ---- Users ----
   /api/v1/users:
     get:
@@ -717,6 +753,28 @@ components:
       required: [refreshToken]
       properties:
         refreshToken:
+          type: string
+
+    ForgotPasswordReq:
+      x-go-type: auth_usecase.ForgotPasswordReq
+      x-go-type-import:
+        path: github.com/Housiadas/cerberus/internal/usecase/auth_usecase
+      type: object
+      required: [email]
+      properties:
+        email:
+          type: string
+
+    ResetPasswordReq:
+      x-go-type: auth_usecase.ResetPasswordReq
+      x-go-type-import:
+        path: github.com/Housiadas/cerberus/internal/usecase/auth_usecase
+      type: object
+      required: [token, password]
+      properties:
+        token:
+          type: string
+        password:
           type: string
 
     Token:
