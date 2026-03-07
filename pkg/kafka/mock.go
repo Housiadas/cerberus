@@ -72,16 +72,16 @@ func (_c *MockConsumer_Close_Call) RunAndReturn(run func()) *MockConsumer_Close_
 }
 
 // Consume provides a mock function for the type MockConsumer
-func (_mock *MockConsumer) Consume(ctx context.Context, msg *kafka.Message) error {
-	ret := _mock.Called(ctx, msg)
+func (_mock *MockConsumer) Consume(ctx context.Context, handler Handler, flusher Flusher) error {
+	ret := _mock.Called(ctx, handler, flusher)
 
 	if len(ret) == 0 {
 		panic("no return value specified for Consume")
 	}
 
 	var r0 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, *kafka.Message) error); ok {
-		r0 = returnFunc(ctx, msg)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, Handler, Flusher) error); ok {
+		r0 = returnFunc(ctx, handler, flusher)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -95,25 +95,27 @@ type MockConsumer_Consume_Call struct {
 
 // Consume is a helper method to define mock.On call
 //   - ctx context.Context
-//   - msg *kafka.Message
-func (_e *MockConsumer_Expecter) Consume(ctx interface{}, msg interface{}) *MockConsumer_Consume_Call {
-	return &MockConsumer_Consume_Call{Call: _e.mock.On("Consume", ctx, msg)}
+//   - handler Handler
+//   - flusher Flusher
+func (_e *MockConsumer_Expecter) Consume(ctx interface{}, handler interface{}, flusher interface{}) *MockConsumer_Consume_Call {
+	return &MockConsumer_Consume_Call{Call: _e.mock.On("Consume", ctx, handler, flusher)}
 }
 
-func (_c *MockConsumer_Consume_Call) Run(run func(ctx context.Context, msg *kafka.Message)) *MockConsumer_Consume_Call {
+func (_c *MockConsumer_Consume_Call) Run(run func(ctx context.Context, handler Handler, flusher Flusher)) *MockConsumer_Consume_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
 			arg0 = args[0].(context.Context)
 		}
-		var arg1 *kafka.Message
+		var arg1 Handler
 		if args[1] != nil {
-			arg1 = args[1].(*kafka.Message)
+			arg1 = args[1].(Handler)
 		}
-		run(
-			arg0,
-			arg1,
-		)
+		var arg2 Flusher
+		if args[2] != nil {
+			arg2 = args[2].(Flusher)
+		}
+		run(arg0, arg1, arg2)
 	})
 	return _c
 }
@@ -123,7 +125,7 @@ func (_c *MockConsumer_Consume_Call) Return(err error) *MockConsumer_Consume_Cal
 	return _c
 }
 
-func (_c *MockConsumer_Consume_Call) RunAndReturn(run func(ctx context.Context, msg *kafka.Message) error) *MockConsumer_Consume_Call {
+func (_c *MockConsumer_Consume_Call) RunAndReturn(run func(ctx context.Context, handler Handler, flusher Flusher) error) *MockConsumer_Consume_Call {
 	_c.Call.Return(run)
 	return _c
 }
