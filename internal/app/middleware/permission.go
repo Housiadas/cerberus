@@ -44,8 +44,7 @@ func (m *Middleware) Permission() openapi.StrictMiddlewareFunc {
 		}
 
 		return func(ctx context.Context, w http.ResponseWriter, r *http.Request, request any) (any, error) {
-			claims := ctxPck.GetClaims(ctx)
-			userID := claims.Subject
+			userID := ctxPck.GetActorID(ctx)
 
 			sfKey := "permissions:" + userID
 

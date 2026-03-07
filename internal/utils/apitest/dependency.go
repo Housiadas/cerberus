@@ -68,7 +68,12 @@ func newDependency(
 	)
 
 	// usecases
-	userUsecase := user_usecase.NewUseCase(userService, outboxSvc, pgsql.NewBeginner(db))
+	userUsecase := user_usecase.NewUseCase(
+		userService,
+		outboxSvc,
+		auditService,
+		pgsql.NewBeginner(db),
+	)
 	refreshTokenUsecase := refresh_token_usecase.NewUseCase(refreshTokenService)
 	authUsecase := auth_usecase.NewUseCase(auth_usecase.Config{
 		Issuer:              serviceName,

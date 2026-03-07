@@ -8,12 +8,6 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-type ctxKey string
-
-const (
-	tranKey ctxKey = "tranKey"
-)
-
 // Beginner represents a value that can begin a transaction.
 type Beginner interface {
 	Begin() (CommitRollbacker, error)

@@ -36,9 +36,9 @@ func (h *Handler) AuthLogout(
 	ctx context.Context,
 	request openapi.AuthLogoutRequestObject,
 ) (openapi.AuthLogoutResponseObject, error) {
-	claims := ctxPck.GetClaims(ctx)
+	actorID := ctxPck.GetActorID(ctx)
 
-	err := h.usecase.auth.Logout(ctx, claims.Subject, *request.Body)
+	err := h.usecase.auth.Logout(ctx, actorID, *request.Body)
 	if err != nil {
 		return nil, fmt.Errorf("auth logout: %w", err)
 	}

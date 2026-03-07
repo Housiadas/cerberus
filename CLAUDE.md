@@ -41,6 +41,8 @@ The `internal` directory is organized as follows:
 ## Rules
 - Never mix core/services, for example, never import role_service in the user_service
 - The usecase in the composition layer should be the only one that imports different services from the core layer
+- Never update mock.go files that are generated from mockery
+- Never edit vendor files
 
 # Config file
 - config.ymal using the viper library

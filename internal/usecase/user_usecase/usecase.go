@@ -7,11 +7,15 @@ import (
 	"fmt"
 	"net/mail"
 
+	"github.com/Housiadas/cerberus/internal/core/domain/audit"
+	"github.com/Housiadas/cerberus/internal/core/domain/entity"
 	"github.com/Housiadas/cerberus/internal/core/domain/event"
 	"github.com/Housiadas/cerberus/internal/core/domain/outbox"
 	"github.com/Housiadas/cerberus/internal/core/domain/user"
+	"github.com/Housiadas/cerberus/internal/core/service/audit_service"
 	"github.com/Housiadas/cerberus/internal/core/service/outbox_service"
 	"github.com/Housiadas/cerberus/internal/core/service/user_service"
+	ctxPck "github.com/Housiadas/cerberus/internal/utils/context"
 	"github.com/Housiadas/cerberus/internal/utils/errs"
 	"github.com/Housiadas/cerberus/internal/utils/page"
 	"github.com/Housiadas/cerberus/pkg/order"
@@ -19,20 +23,29 @@ import (
 	"github.com/google/uuid"
 )
 
+const (
+	actionCreate = "CREATE"
+	actionUpdate = "UPDATE"
+	actionDelete = "DELETE"
+)
+
 type UseCase struct {
 	userCore  *user_service.Service
 	outboxSvc *outbox_service.Service
+	auditSvc  *audit_service.Service
 	tx        pgsql.Beginner
 }
 
 func NewUseCase(
 	userBus *user_service.Service,
 	outboxSvc *outbox_service.Service,
+	auditSvc *audit_service.Service,
 	tx pgsql.Beginner,
 ) *UseCase {
 	return &UseCase{
 		userCore:  userBus,
 		outboxSvc: outboxSvc,
+		auditSvc:  auditSvc,
 		tx:        tx,
 	}
 }
@@ -45,6 +58,7 @@ func (a *UseCase) Create(ctx context.Context, app NewUser) (User, error) {
 	}
 
 	var usr user.User
+
 	txErr := pgsql.RunInTx(a.tx, func(tran pgsql.CommitRollbacker) error {
 		userCoreTx, err := a.userCore.NewWithTx(tran)
 		if err != nil {
@@ -56,6 +70,11 @@ func (a *UseCase) Create(ctx context.Context, app NewUser) (User, error) {
 			return errs.Errorf(errs.Internal, "outbox tx: %s", err)
 		}
 
+		auditSvcTx, err := a.auditSvc.NewWithTx(tran)
+		if err != nil {
+			return errs.Errorf(errs.Internal, "audit tx: %s", err)
+		}
+
 		usr, err = userCoreTx.Create(ctx, nc)
 		if err != nil {
 			if errors.Is(err, user.ErrUniqueEmail) {
@@ -65,12 +84,22 @@ func (a *UseCase) Create(ctx context.Context, app NewUser) (User, error) {
 			return errs.Errorf(errs.Internal, "create: usr[%+v]: %s", usr, err)
 		}
 
-		return outboxSvcTx.Create(ctx, outbox.NewOutbox{
+		err = outboxSvcTx.Create(ctx, outbox.NewOutbox{
 			EventType:   event.UserCreated,
 			AggregateID: usr.ID(),
 			Topic:       event.UserTopic,
 			Payload:     usr,
 		})
+		if err != nil {
+			return errs.Errorf(errs.Internal, "outbox create: %s", err)
+		}
+
+		_, err = auditSvcTx.Create(ctx, a.newUserAudit(ctx, usr, actionCreate))
+		if err != nil {
+			return errs.Errorf(errs.Internal, "audit create: %s", err)
+		}
+
+		return nil
 	})
 	if txErr != nil {
 		return User{}, fmt.Errorf("create user: %w", txErr)
@@ -105,35 +134,11 @@ func (a *UseCase) Update(ctx context.Context, res UpdateUser, userID string) (Us
 	var updUsr user.User
 
 	txErr := pgsql.RunInTx(a.tx, func(tran pgsql.CommitRollbacker) error {
-		userCoreTx, initErr := a.userCore.NewWithTx(tran)
-		if initErr != nil {
-			return errs.Errorf(errs.Internal, "user tx: %s", initErr)
-		}
+		var runErr error
 
-		outboxSvcTx, initErr := a.outboxSvc.NewWithTx(tran)
-		if initErr != nil {
-			return errs.Errorf(errs.Internal, "outbox tx: %s", initErr)
-		}
+		updUsr, runErr = a.updateInTx(ctx, tran, currentUsr, uu, userUUID)
 
-		var updateErr error
-
-		updUsr, updateErr = userCoreTx.Update(ctx, currentUsr, uu)
-		if updateErr != nil {
-			return errs.Errorf(
-				errs.Internal,
-				"update: userID[%s] uu[%+v]: %s",
-				userUUID,
-				uu,
-				updateErr,
-			)
-		}
-
-		return outboxSvcTx.Create(ctx, outbox.NewOutbox{
-			EventType:   event.UserUpdated,
-			AggregateID: updUsr.ID(),
-			Topic:       event.UserTopic,
-			Payload:     updUsr,
-		})
+		return runErr
 	})
 	if txErr != nil {
 		return User{}, fmt.Errorf("update user: %w", txErr)
@@ -160,19 +165,41 @@ func (a *UseCase) Delete(ctx context.Context, userID string) error {
 		)
 	}
 
-	err = a.userCore.Delete(ctx, currentUsr)
-	if err != nil {
-		return errs.Errorf(errs.Internal, "delete: userID[%s]: %s", userUUID, err)
-	}
+	txErr := pgsql.RunInTx(a.tx, func(tran pgsql.CommitRollbacker) error {
+		outboxSvcTx, initErr := a.outboxSvc.NewWithTx(tran)
+		if initErr != nil {
+			return errs.Errorf(errs.Internal, "outbox tx: %s", initErr)
+		}
 
-	err = a.outboxSvc.Create(ctx, outbox.NewOutbox{
-		EventType:   event.UserDeleted,
-		AggregateID: currentUsr.ID(),
-		Topic:       event.UserTopic,
-		Payload:     currentUsr,
+		auditSvcTx, initErr := a.auditSvc.NewWithTx(tran)
+		if initErr != nil {
+			return errs.Errorf(errs.Internal, "audit tx: %s", initErr)
+		}
+
+		deleteErr := a.userCore.Delete(ctx, currentUsr)
+		if deleteErr != nil {
+			return errs.Errorf(errs.Internal, "delete: userID[%s]: %s", userUUID, deleteErr)
+		}
+
+		outboxErr := outboxSvcTx.Create(ctx, outbox.NewOutbox{
+			EventType:   event.UserDeleted,
+			AggregateID: currentUsr.ID(),
+			Topic:       event.UserTopic,
+			Payload:     currentUsr,
+		})
+		if outboxErr != nil {
+			return errs.Errorf(errs.Internal, "outbox create: %s", outboxErr)
+		}
+
+		_, auditErr := auditSvcTx.Create(ctx, a.newUserAudit(ctx, currentUsr, actionDelete))
+		if auditErr != nil {
+			return errs.Errorf(errs.Internal, "audit delete: %s", auditErr)
+		}
+
+		return nil
 	})
-	if err != nil {
-		return errs.Errorf(errs.Internal, "outbox create: %s", err)
+	if txErr != nil {
+		return fmt.Errorf("delete user: %w", txErr)
 	}
 
 	return nil
@@ -244,4 +271,70 @@ func (a *UseCase) Authenticate(ctx context.Context, authUser AuthenticateUser) (
 	}
 
 	return toAppUser(usr), nil
+}
+
+func (a *UseCase) updateInTx(
+	ctx context.Context,
+	tran pgsql.CommitRollbacker,
+	currentUsr user.User,
+	uu user.UpdateUser,
+	userUUID uuid.UUID,
+) (user.User, error) {
+	userCoreTx, initErr := a.userCore.NewWithTx(tran)
+	if initErr != nil {
+		return user.User{}, errs.Errorf(errs.Internal, "user tx: %s", initErr)
+	}
+
+	outboxSvcTx, initErr := a.outboxSvc.NewWithTx(tran)
+	if initErr != nil {
+		return user.User{}, errs.Errorf(errs.Internal, "outbox tx: %s", initErr)
+	}
+
+	auditSvcTx, initErr := a.auditSvc.NewWithTx(tran)
+	if initErr != nil {
+		return user.User{}, errs.Errorf(errs.Internal, "audit tx: %s", initErr)
+	}
+
+	updUsr, updateErr := userCoreTx.Update(ctx, currentUsr, uu)
+	if updateErr != nil {
+		return user.User{}, errs.Errorf(
+			errs.Internal,
+			"update: userID[%s] uu[%+v]: %s",
+			userUUID,
+			uu,
+			updateErr,
+		)
+	}
+
+	updateErr = outboxSvcTx.Create(ctx, outbox.NewOutbox{
+		EventType:   event.UserUpdated,
+		AggregateID: updUsr.ID(),
+		Topic:       event.UserTopic,
+		Payload:     updUsr,
+	})
+	if updateErr != nil {
+		return user.User{}, errs.Errorf(errs.Internal, "outbox create: %s", updateErr)
+	}
+
+	_, updateErr = auditSvcTx.Create(ctx, a.newUserAudit(ctx, updUsr, actionUpdate))
+	if updateErr != nil {
+		return user.User{}, errs.Errorf(errs.Internal, "audit update: %s", updateErr)
+	}
+
+	return updUsr, nil
+}
+
+// newUserAudit builds an audit.NewAudit for a user operation.
+func (a *UseCase) newUserAudit(ctx context.Context, usr user.User, action string) audit.NewAudit {
+	actorID, _ := uuid.Parse(ctxPck.GetActorID(ctx))
+
+	return audit.NewAudit{
+		ObjID:     usr.ID(),
+		ObjEntity: entity.New(entity.UserEntity),
+		ObjName:   usr.Name(),
+		ActorID:   actorID,
+		Action:    action,
+		Data:      usr,
+		Message:   "user " + action,
+	}
 }
