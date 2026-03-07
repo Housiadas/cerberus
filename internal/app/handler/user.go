@@ -87,7 +87,7 @@ func (h *Handler) CreateUserRole(
 	ctx context.Context,
 	request openapi.CreateUserRoleRequestObject,
 ) (openapi.CreateUserRoleResponseObject, error) {
-	err := h.usecase.userRolesPermissions.AddUserRole(ctx, request.UserId, request.Body.RoleId)
+	err := h.usecase.userRoles.AddUserRole(ctx, request.UserId, request.Body.RoleId)
 	if err != nil {
 		return nil, fmt.Errorf("create user role: %w", err)
 	}
@@ -99,7 +99,7 @@ func (h *Handler) DeleteUserRole(
 	ctx context.Context,
 	request openapi.DeleteUserRoleRequestObject,
 ) (openapi.DeleteUserRoleResponseObject, error) {
-	err := h.usecase.userRolesPermissions.RemoveUserRole(ctx, request.UserId, request.Params.RoleId)
+	err := h.usecase.userRoles.RemoveUserRole(ctx, request.UserId, request.Params.RoleId)
 	if err != nil {
 		return nil, fmt.Errorf("delete user role: %w", err)
 	}

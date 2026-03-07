@@ -11,10 +11,6 @@ High Value / Low Effort
 - A short-lived reset token domain entity (similar to refresh_token)
 - An email notification event through the outbox pattern (already in place)
 
-3. Audit Trail for RBAC Changes
-   Currently, only user events (UserCreated, UserUpdated, UserDeleted) are published. Role assignment/removal, permission changes, and login events should also be
-   audited — they're high-value from a compliance perspective.
-
 4. Access Token Blacklisting / Revocation
    Logout currently only removes the refresh token. If an access token leaks, it remains valid for up to 20 minutes. A Redis-backed JWT blocklist keyed by jti (JWT ID)
    with TTL matching the token expiry would close this gap.

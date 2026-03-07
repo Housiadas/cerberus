@@ -7,6 +7,7 @@ import (
 
 	"github.com/Housiadas/cerberus/internal/core/domain/user_roles"
 	"github.com/Housiadas/cerberus/pkg/logger"
+	"github.com/Housiadas/cerberus/pkg/pgsql"
 	"github.com/google/uuid"
 )
 
@@ -22,6 +23,20 @@ func New(log logger.Logger, storer user_roles.Storer) *Service {
 		log:    log,
 		storer: storer,
 	}
+}
+
+// NewWithTx constructs a new Service value replacing the sqlx DB
+// value with a sqlx DB value that is currently inside a transaction.
+func (s *Service) NewWithTx(tx pgsql.CommitRollbacker) (*Service, error) {
+	storer, err := s.storer.NewWithTx(tx)
+	if err != nil {
+		return nil, fmt.Errorf("user_roles transaction issue: %w", err)
+	}
+
+	return &Service{
+		log:    s.log,
+		storer: storer,
+	}, nil
 }
 
 // Add assigns a role to a user.

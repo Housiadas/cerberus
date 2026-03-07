@@ -24,12 +24,6 @@ import (
 	"github.com/google/uuid"
 )
 
-const (
-	actionCreate = "CREATE"
-	actionUpdate = "UPDATE"
-	actionDelete = "DELETE"
-)
-
 type UseCase struct {
 	log       logger.Logger
 	userCore  *user_service.Service
@@ -98,7 +92,7 @@ func (a *UseCase) Create(ctx context.Context, app NewUser) (User, error) {
 			return errs.Errorf(errs.Internal, "outbox create: %s", err)
 		}
 
-		_, err = auditSvcTx.Create(ctx, a.newUserAudit(ctx, usr, actionCreate))
+		_, err = auditSvcTx.Create(ctx, a.newUserAudit(ctx, usr, audit.ActionCreate))
 		if err != nil {
 			return errs.Errorf(errs.Internal, "audit create: %s", err)
 		}
@@ -195,7 +189,7 @@ func (a *UseCase) Delete(ctx context.Context, userID string) error {
 			return errs.Errorf(errs.Internal, "outbox create: %s", outboxErr)
 		}
 
-		_, auditErr := auditSvcTx.Create(ctx, a.newUserAudit(ctx, currentUsr, actionDelete))
+		_, auditErr := auditSvcTx.Create(ctx, a.newUserAudit(ctx, currentUsr, audit.ActionDelete))
 		if auditErr != nil {
 			return errs.Errorf(errs.Internal, "audit delete: %s", auditErr)
 		}
@@ -320,7 +314,7 @@ func (a *UseCase) updateInTx(
 		return user.User{}, errs.Errorf(errs.Internal, "outbox create: %s", updateErr)
 	}
 
-	_, updateErr = auditSvcTx.Create(ctx, a.newUserAudit(ctx, updUsr, actionUpdate))
+	_, updateErr = auditSvcTx.Create(ctx, a.newUserAudit(ctx, updUsr, audit.ActionUpdate))
 	if updateErr != nil {
 		return user.User{}, errs.Errorf(errs.Internal, "audit update: %s", updateErr)
 	}
