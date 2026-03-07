@@ -72,7 +72,7 @@ func (h *Handler) CreateRolePermission(
 	ctx context.Context,
 	request openapi.CreateRolePermissionRequestObject,
 ) (openapi.CreateRolePermissionResponseObject, error) {
-	err := h.usecase.userRolesPermissions.AddRolePermission(
+	err := h.usecase.rolePermissions.AddRolePermission(
 		ctx,
 		request.RoleId,
 		request.Body.PermissionId,
@@ -88,7 +88,7 @@ func (h *Handler) DeleteRolePermission(
 	ctx context.Context,
 	request openapi.DeleteRolePermissionRequestObject,
 ) (openapi.DeleteRolePermissionResponseObject, error) {
-	err := h.usecase.userRolesPermissions.RemoveRolePermission(
+	err := h.usecase.rolePermissions.RemoveRolePermission(
 		ctx,
 		request.RoleId,
 		request.Params.PermissionId,

@@ -33,9 +33,11 @@ import (
 	"github.com/Housiadas/cerberus/internal/usecase/auth_usecase"
 	"github.com/Housiadas/cerberus/internal/usecase/permission_usecase"
 	"github.com/Housiadas/cerberus/internal/usecase/refresh_token_usecase"
+	"github.com/Housiadas/cerberus/internal/usecase/role_permissions_usecase"
 	"github.com/Housiadas/cerberus/internal/usecase/role_usecase"
 	"github.com/Housiadas/cerberus/internal/usecase/system_usecase"
 	"github.com/Housiadas/cerberus/internal/usecase/user_roles_permissions_usecase"
+	"github.com/Housiadas/cerberus/internal/usecase/user_roles_usecase"
 	"github.com/Housiadas/cerberus/internal/usecase/user_usecase"
 	"github.com/Housiadas/cerberus/pkg/clock"
 	"github.com/Housiadas/cerberus/pkg/hasher"
@@ -80,6 +82,8 @@ type usecase struct {
 	audit                *audit_usecase.UseCase
 	permission           *permission_usecase.UseCase
 	userRolesPermissions *user_roles_permissions_usecase.UseCase
+	userRoles            *user_roles_usecase.UseCase
+	rolePermissions      *role_permissions_usecase.UseCase
 	system               *system_usecase.UseCase
 }
 
@@ -118,14 +122,9 @@ func New(ctx context.Context, cfg Config) *Handler {
 	)
 
 	// usecase
+	tx := pgsql.NewBeginner(cfg.DB)
 	auditUsecase := audit_usecase.NewUseCase(auditService)
-	userUsecase := user_usecase.NewUseCase(
-		cfg.Log,
-		userService,
-		outboxSvc,
-		auditService,
-		pgsql.NewBeginner(cfg.DB),
-	)
+	userUsecase := user_usecase.NewUseCase(cfg.Log, userService, outboxSvc, auditService, tx)
 	refreshTokenUsecase := refresh_token_usecase.NewUseCase(refreshTokenService)
 	authUsecase := auth_usecase.NewUseCase(auth_usecase.Config{
 		Issuer:              cfg.ServiceName,
@@ -134,28 +133,17 @@ func New(ctx context.Context, cfg Config) *Handler {
 		UserUsecase:         userUsecase,
 		RefreshTokenUsecase: refreshTokenUsecase,
 	})
-	roleUsecase := role_usecase.NewUseCase(
-		cfg.Log,
-		roleService,
-		auditService,
-		pgsql.NewBeginner(cfg.DB),
-	)
-	permissionUsecase := permission_usecase.NewUseCase(
-		cfg.Log,
-		permissionService,
-		auditService,
-		pgsql.NewBeginner(cfg.DB),
-	)
+	roleUsecase := role_usecase.NewUseCase(cfg.Log, roleService, auditService, tx)
+	permissionUsecase := permission_usecase.NewUseCase(cfg.Log, permissionService, auditService, tx)
 	systemUsecase := system_usecase.NewUseCase(cfg.Build, cfg.Log, cfg.DB)
 	userRolesPermissionsUsecase := user_roles_permissions_usecase.NewUseCase(
 		user_roles_permissions_usecase.Config{
-			Log:              cfg.Log,
-			Service:          userRolesPermissionsService,
-			UserRolesService: userRolesSvc,
-			RolePermsService: rolePermsSvc,
-			AuditService:     auditService,
-			TX:               pgsql.NewBeginner(cfg.DB),
+			Service: userRolesPermissionsService,
 		},
+	)
+	userRolesUsecase := user_roles_usecase.NewUseCase(cfg.Log, userRolesSvc, auditService, tx)
+	rolePermissionsUsecase := role_permissions_usecase.NewUseCase(
+		cfg.Log, rolePermsSvc, auditService, tx,
 	)
 
 	return &Handler{
@@ -176,6 +164,8 @@ func New(ctx context.Context, cfg Config) *Handler {
 			role:                 roleUsecase,
 			permission:           permissionUsecase,
 			userRolesPermissions: userRolesPermissionsUsecase,
+			userRoles:            userRolesUsecase,
+			rolePermissions:      rolePermissionsUsecase,
 			system:               systemUsecase,
 		},
 	}

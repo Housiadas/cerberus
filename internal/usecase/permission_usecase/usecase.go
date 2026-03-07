@@ -124,7 +124,10 @@ func (uc *UseCase) Update(
 			)
 		}
 
-		_, auditErr := auditSvcTx.Create(ctx, uc.newPermissionAudit(ctx, updPerm, audit.ActionUpdate))
+		_, auditErr := auditSvcTx.Create(
+			ctx,
+			uc.newPermissionAudit(ctx, updPerm, audit.ActionUpdate),
+		)
 		if auditErr != nil {
 			return errs.Errorf(errs.Internal, "audit update: %s", auditErr)
 		}
@@ -171,7 +174,10 @@ func (uc *UseCase) Delete(ctx context.Context, permissionID string) error {
 			)
 		}
 
-		_, auditErr := auditSvcTx.Create(ctx, uc.newPermissionAudit(ctx, currentPerm, audit.ActionDelete))
+		_, auditErr := auditSvcTx.Create(
+			ctx,
+			uc.newPermissionAudit(ctx, currentPerm, audit.ActionDelete),
+		)
 		if auditErr != nil {
 			return errs.Errorf(errs.Internal, "audit delete: %s", auditErr)
 		}
