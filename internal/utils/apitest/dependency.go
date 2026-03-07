@@ -19,6 +19,7 @@ import (
 	"github.com/Housiadas/cerberus/pkg/clock"
 	"github.com/Housiadas/cerberus/pkg/hasher"
 	"github.com/Housiadas/cerberus/pkg/logger"
+	"github.com/Housiadas/cerberus/pkg/pgsql"
 	"github.com/Housiadas/cerberus/pkg/uuidgen"
 	"github.com/jmoiron/sqlx"
 )
@@ -67,7 +68,7 @@ func newDependency(
 	)
 
 	// usecases
-	userUsecase := user_usecase.NewUseCase(userService, outboxSvc)
+	userUsecase := user_usecase.NewUseCase(userService, outboxSvc, pgsql.NewBeginner(db))
 	refreshTokenUsecase := refresh_token_usecase.NewUseCase(refreshTokenService)
 	authUsecase := auth_usecase.NewUseCase(auth_usecase.Config{
 		Issuer:              serviceName,

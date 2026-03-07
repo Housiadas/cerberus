@@ -12,7 +12,6 @@ import (
 	"github.com/Housiadas/cerberus/internal/usecase/user_roles_permissions_usecase"
 	"github.com/Housiadas/cerberus/internal/usecase/user_usecase"
 	"github.com/Housiadas/cerberus/pkg/logger"
-	"github.com/Housiadas/cerberus/pkg/pgsql"
 	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/trace"
 	"golang.org/x/sync/singleflight"
@@ -27,7 +26,6 @@ type Config struct {
 	Log                  logger.Logger
 	Tracer               trace.Tracer
 	Meter                metric.Meter
-	Tx                   *pgsql.DBBeginner
 	AuthUseCase          *auth_usecase.UseCase
 	UserUseCase          *user_usecase.UseCase
 	UserRolesPermissions *user_roles_permissions_usecase.UseCase
@@ -37,7 +35,6 @@ type Middleware struct {
 	log         logger.Logger
 	tracer      trace.Tracer
 	meter       metric.Meter
-	tx          *pgsql.DBBeginner
 	useCase     useCase
 	permSflight singleflight.Group
 	metrics     middlewareMetrics
@@ -61,7 +58,6 @@ func New(ctx context.Context, cfg Config) *Middleware {
 		log:     cfg.Log,
 		tracer:  cfg.Tracer,
 		meter:   cfg.Meter,
-		tx:      cfg.Tx,
 		metrics: middlewareMetrics,
 	}
 }

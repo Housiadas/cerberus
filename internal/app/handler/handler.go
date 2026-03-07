@@ -119,7 +119,7 @@ func New(ctx context.Context, cfg Config) *Handler {
 
 	// usecase
 	auditUsecase := audit_usecase.NewUseCase(auditService)
-	userUsecase := user_usecase.NewUseCase(userService, outboxSvc)
+	userUsecase := user_usecase.NewUseCase(userService, outboxSvc, pgsql.NewBeginner(cfg.DB))
 	refreshTokenUsecase := refresh_token_usecase.NewUseCase(refreshTokenService)
 	authUsecase := auth_usecase.NewUseCase(auth_usecase.Config{
 		Issuer:              cfg.ServiceName,
@@ -146,7 +146,6 @@ func New(ctx context.Context, cfg Config) *Handler {
 			Log:                  cfg.Log,
 			Tracer:               cfg.Tracer,
 			Meter:                cfg.Meter,
-			Tx:                   pgsql.NewBeginner(cfg.DB),
 			UserUseCase:          userUsecase,
 			AuthUseCase:          authUsecase,
 			UserRolesPermissions: userRolesPermissionsUsecase,
