@@ -1,8 +1,9 @@
 package entity
 
 const (
-	UserEntity = "USER"
-	RoleEntity = "ROLE"
+	UserEntity       = "USER"
+	RoleEntity       = "ROLE"
+	PermissionEntity = "PERMISSION"
 )
 
 // Entity represents a domain in the system.
@@ -31,7 +32,8 @@ func (e Entity) MarshalText() ([]byte, error) {
 
 func getEntities() map[string]Entity {
 	return map[string]Entity{
-		UserEntity: New("USER"),
-		RoleEntity: New("ROLE"),
+		UserEntity:       New("USER"),
+		RoleEntity:       New("ROLE"),
+		PermissionEntity: New("PERMISSION"),
 	}
 }

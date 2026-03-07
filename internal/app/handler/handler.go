@@ -134,14 +134,27 @@ func New(ctx context.Context, cfg Config) *Handler {
 		UserUsecase:         userUsecase,
 		RefreshTokenUsecase: refreshTokenUsecase,
 	})
-	roleUsecase := role_usecase.NewUseCase(roleService)
-	permissionUsecase := permission_usecase.NewUseCase(permissionService)
+	roleUsecase := role_usecase.NewUseCase(
+		cfg.Log,
+		roleService,
+		auditService,
+		pgsql.NewBeginner(cfg.DB),
+	)
+	permissionUsecase := permission_usecase.NewUseCase(
+		cfg.Log,
+		permissionService,
+		auditService,
+		pgsql.NewBeginner(cfg.DB),
+	)
 	systemUsecase := system_usecase.NewUseCase(cfg.Build, cfg.Log, cfg.DB)
 	userRolesPermissionsUsecase := user_roles_permissions_usecase.NewUseCase(
 		user_roles_permissions_usecase.Config{
+			Log:              cfg.Log,
 			Service:          userRolesPermissionsService,
 			UserRolesService: userRolesSvc,
 			RolePermsService: rolePermsSvc,
+			AuditService:     auditService,
+			TX:               pgsql.NewBeginner(cfg.DB),
 		},
 	)
 

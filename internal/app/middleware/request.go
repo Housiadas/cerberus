@@ -17,6 +17,7 @@ func (m *Middleware) RequestID(next http.Handler) http.Handler {
 		u, err := uuid.Parse(reqID)
 		if err != nil {
 			m.log.Info(ctx, "request id parse error", err)
+
 			u = uuid.New()
 		}
 
