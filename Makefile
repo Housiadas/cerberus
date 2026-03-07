@@ -234,43 +234,6 @@ tools/list:
 tools/update:
 	go get -u tool
 
-## ======== #
-## Utils
-## ======== #
-
-## generate: Go generate command
-.PHONY: generate
-generate:
-	go generate ./...
-
-## generate/api: Generate API code from OpenAPI spec
-.PHONY: generate/api
-generate/api:
-	go generate ./internal/app/handler/...
-
-## mockery: Generate mocks
-.PHONY: mockery
-mockery:
-	docker run --rm \
-	-v "$(shell pwd)":/src \
-	-w /src \
-	vektra/mockery:3.6
-
-## metrics: See metrics
-.PHONY: metrics
-metrics:
-	expvarmon -ports="localhost:4010" \
-	-vars="build,requests,goroutines,errors,panics,mem:memstats.HeapAlloc,mem:memstats.HeapSys,mem:memstats.Sys"
-
-## grafana: Open grafana
-.PHONY: grafana
-grafana:
-	open http://localhost:3000/
-
-## statsviz: Open statsviz
-.PHONY: statsviz
-statsviz:
-	open http://localhost:4010/debug/statsviz
 
 ## ================== #
 ## Kubernetes
@@ -333,3 +296,41 @@ k8s/pods:
 .PHONY: k8s/clean
 k8s/clean:
 	minikube delete --all --purge
+
+## ======== #
+## Utils
+## ======== #
+
+## generate: Go generate command
+.PHONY: generate
+generate:
+	go generate ./...
+
+## generate/api: Generate API code from OpenAPI spec
+.PHONY: generate/api
+generate/api:
+	go generate ./internal/app/handler/...
+
+## mockery: Generate mocks
+.PHONY: mockery
+mockery:
+	docker run --rm \
+	-v "$(shell pwd)":/src \
+	-w /src \
+	vektra/mockery:3.7
+
+## metrics: See metrics
+.PHONY: metrics
+metrics:
+	expvarmon -ports="localhost:4010" \
+	-vars="build,requests,goroutines,errors,panics,mem:memstats.HeapAlloc,mem:memstats.HeapSys,mem:memstats.Sys"
+
+## grafana: Open grafana
+.PHONY: grafana
+grafana:
+	open http://localhost:3000/
+
+## statsviz: Open statsviz
+.PHONY: statsviz
+statsviz:
+	open http://localhost:4010/debug/statsviz

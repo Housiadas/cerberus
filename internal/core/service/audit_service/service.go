@@ -10,6 +10,7 @@ import (
 	"github.com/Housiadas/cerberus/internal/utils/page"
 	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/Housiadas/cerberus/pkg/order"
+	"github.com/Housiadas/cerberus/pkg/pgsql"
 	"github.com/Housiadas/cerberus/pkg/telemetry"
 	"github.com/google/uuid"
 )
@@ -26,6 +27,20 @@ func New(log logger.Logger, storer audit.Storer) *Service {
 		log:    log,
 		storer: storer,
 	}
+}
+
+// NewWithTx constructs a new Service value replacing the storer with a storer that is
+// running within a transaction.
+func (b *Service) NewWithTx(tx pgsql.CommitRollbacker) (*Service, error) {
+	storer, err := b.storer.NewWithTx(tx)
+	if err != nil {
+		return nil, fmt.Errorf("audit service tx: %w", err)
+	}
+
+	return &Service{
+		log:    b.log,
+		storer: storer,
+	}, nil
 }
 
 // Create adds a new audit record to the system.

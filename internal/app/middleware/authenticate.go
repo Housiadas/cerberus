@@ -44,7 +44,7 @@ func (m *Middleware) Authenticate() openapi.StrictMiddlewareFunc {
 				return nil, errs.New(errs.Unauthenticated, err)
 			}
 
-			ctx = ctxPck.SetClaims(ctx, resp)
+			ctx = ctxPck.SetActorID(ctx, resp.Subject)
 
 			return f(ctx, w, r.WithContext(ctx), request)
 		}

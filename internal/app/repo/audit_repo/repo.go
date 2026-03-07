@@ -39,6 +39,22 @@ func NewStore(log logger.Logger, dbPool *sqlx.DB) *Store {
 	}
 }
 
+// NewWithTx constructs a new Store value replacing the sqlx DB with a sqlx DB that is
+// running within a transaction.
+func (s *Store) NewWithTx(tx pgsql.CommitRollbacker) (audit.Storer, error) {
+	ec, err := pgsql.GetExtContext(tx)
+	if err != nil {
+		return nil, fmt.Errorf("audit transaction init error: %w", err)
+	}
+
+	store := Store{
+		log:    s.log,
+		dbPool: ec,
+	}
+
+	return &store, nil
+}
+
 // Create inserts a new auditDB record into the database.
 func (s *Store) Create(ctx context.Context, a audit.Audit) error {
 	dbAudit := toDBAudit(a)

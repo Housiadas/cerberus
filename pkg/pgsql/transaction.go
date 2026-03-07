@@ -2,15 +2,12 @@ package pgsql
 
 import (
 	"context"
+	"database/sql"
+	"errors"
 	"fmt"
 
+	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/jmoiron/sqlx"
-)
-
-type ctxKey string
-
-const (
-	tranKey ctxKey = "tranKey"
 )
 
 // Beginner represents a value that can begin a transaction.
@@ -23,8 +20,6 @@ type CommitRollbacker interface {
 	Commit() error
 	Rollback() error
 }
-
-// =============================================================================
 
 // DBBeginner implements the Beginner interface,.
 type DBBeginner struct {
@@ -42,8 +37,11 @@ func NewBeginner(sqlxDB *sqlx.DB) *DBBeginner {
 // implements the CommitRollbacker interface.
 func (db *DBBeginner) Begin() (CommitRollbacker, error) {
 	tran, err := db.sqlxDB.Beginx()
+	if err != nil {
+		return nil, fmt.Errorf("begin transaction issue: %w", err)
+	}
 
-	return tran, fmt.Errorf("begin transaction issue: %w", err)
+	return tran, nil
 }
 
 // GetExtContext is a helper function that extracts the sqlx value
@@ -57,16 +55,35 @@ func GetExtContext(tx CommitRollbacker) (sqlx.ExtContext, error) {
 	return ec, nil
 }
 
-func SetTran(ctx context.Context, tx CommitRollbacker) context.Context {
-	return context.WithValue(ctx, tranKey, tx)
-}
-
-// GetTran retrieves the value that can manage a transaction.
-func GetTran(ctx context.Context) (CommitRollbacker, error) {
-	v, ok := ctx.Value(tranKey).(CommitRollbacker)
-	if !ok {
-		return nil, ErrTransactionNotFound
+// RunInTx begins a transaction, passes the handle to fn, then commits.
+// If fn returns an error or the commit fails, the transaction is rolled back.
+func RunInTx(
+	ctx context.Context,
+	log logger.Logger,
+	beginner Beginner,
+	fn func(CommitRollbacker) error,
+) error {
+	tran, err := beginner.Begin()
+	if err != nil {
+		return fmt.Errorf("begin transaction: %w", err)
 	}
 
-	return v, nil
+	defer func() {
+		rollbackErr := tran.Rollback()
+		if rollbackErr != nil && !errors.Is(rollbackErr, sql.ErrTxDone) {
+			log.Errorc(ctx, 5, "pgsql.RunInTx", "rollback error", rollbackErr)
+		}
+	}()
+
+	fnErr := fn(tran)
+	if fnErr != nil {
+		return fnErr
+	}
+
+	commitErr := tran.Commit()
+	if commitErr != nil {
+		return fmt.Errorf("commit transaction: %w", commitErr)
+	}
+
+	return nil
 }
