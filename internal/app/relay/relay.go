@@ -124,7 +124,10 @@ func (r *Relay) processBatch(ctx context.Context) {
 		processedIDs = append(processedIDs, entry.ID())
 	}
 
-	telemetry.AddSpan(ctx, "outbox.processedIDs", attribute.Int("processedIDs", len(processedIDs)))
+	telemetry.AddSpan(ctx,
+		"outbox.processedIDs",
+		attribute.Int("processedIDs", len(processedIDs)),
+	)
 	r.producer.Flush(flushTimeoutMs)
 
 	r.log.Info(

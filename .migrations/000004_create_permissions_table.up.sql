@@ -9,3 +9,5 @@ CREATE TABLE permissions
 
     PRIMARY KEY (id)
 );
+
+CREATE INDEX idx_permissions_deleted_at ON permissions (id) WHERE deleted_at IS NULL;

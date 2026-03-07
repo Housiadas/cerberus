@@ -10,7 +10,8 @@ CREATE TABLE users
     created_at    TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at    TIMESTAMP   NOT NULL,
     deleted_at    TIMESTAMP   NULL DEFAULT NULL,
-    last_login    TIMESTAMP,
 
     PRIMARY KEY (id)
 );
+
+CREATE INDEX idx_users_deleted_at ON users (id) WHERE deleted_at IS NULL;
