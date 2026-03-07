@@ -120,6 +120,7 @@ func New(ctx context.Context, cfg Config) *Handler {
 	// usecase
 	auditUsecase := audit_usecase.NewUseCase(auditService)
 	userUsecase := user_usecase.NewUseCase(
+		cfg.Log,
 		userService,
 		outboxSvc,
 		auditService,

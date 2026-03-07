@@ -69,6 +69,7 @@ func newDependency(
 
 	// usecases
 	userUsecase := user_usecase.NewUseCase(
+		log,
 		userService,
 		outboxSvc,
 		auditService,

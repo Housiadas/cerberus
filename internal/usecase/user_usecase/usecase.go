@@ -18,6 +18,7 @@ import (
 	ctxPck "github.com/Housiadas/cerberus/internal/utils/context"
 	"github.com/Housiadas/cerberus/internal/utils/errs"
 	"github.com/Housiadas/cerberus/internal/utils/page"
+	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/Housiadas/cerberus/pkg/order"
 	"github.com/Housiadas/cerberus/pkg/pgsql"
 	"github.com/google/uuid"
@@ -30,6 +31,7 @@ const (
 )
 
 type UseCase struct {
+	log       logger.Logger
 	userCore  *user_service.Service
 	outboxSvc *outbox_service.Service
 	auditSvc  *audit_service.Service
@@ -37,12 +39,14 @@ type UseCase struct {
 }
 
 func NewUseCase(
+	log logger.Logger,
 	userBus *user_service.Service,
 	outboxSvc *outbox_service.Service,
 	auditSvc *audit_service.Service,
 	tx pgsql.Beginner,
 ) *UseCase {
 	return &UseCase{
+		log:       log,
 		userCore:  userBus,
 		outboxSvc: outboxSvc,
 		auditSvc:  auditSvc,
@@ -59,7 +63,7 @@ func (a *UseCase) Create(ctx context.Context, app NewUser) (User, error) {
 
 	var usr user.User
 
-	txErr := pgsql.RunInTx(a.tx, func(tran pgsql.CommitRollbacker) error {
+	txErr := pgsql.RunInTx(ctx, a.log, a.tx, func(tran pgsql.CommitRollbacker) error {
 		userCoreTx, err := a.userCore.NewWithTx(tran)
 		if err != nil {
 			return errs.Errorf(errs.Internal, "user tx: %s", err)
@@ -133,7 +137,7 @@ func (a *UseCase) Update(ctx context.Context, res UpdateUser, userID string) (Us
 
 	var updUsr user.User
 
-	txErr := pgsql.RunInTx(a.tx, func(tran pgsql.CommitRollbacker) error {
+	txErr := pgsql.RunInTx(ctx, a.log, a.tx, func(tran pgsql.CommitRollbacker) error {
 		var runErr error
 
 		updUsr, runErr = a.updateInTx(ctx, tran, currentUsr, uu, userUUID)
@@ -165,7 +169,7 @@ func (a *UseCase) Delete(ctx context.Context, userID string) error {
 		)
 	}
 
-	txErr := pgsql.RunInTx(a.tx, func(tran pgsql.CommitRollbacker) error {
+	txErr := pgsql.RunInTx(ctx, a.log, a.tx, func(tran pgsql.CommitRollbacker) error {
 		outboxSvcTx, initErr := a.outboxSvc.NewWithTx(tran)
 		if initErr != nil {
 			return errs.Errorf(errs.Internal, "outbox tx: %s", initErr)

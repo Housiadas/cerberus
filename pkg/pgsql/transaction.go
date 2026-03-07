@@ -1,10 +1,12 @@
 package pgsql
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"fmt"
 
+	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -55,7 +57,12 @@ func GetExtContext(tx CommitRollbacker) (sqlx.ExtContext, error) {
 
 // RunInTx begins a transaction, passes the handle to fn, then commits.
 // If fn returns an error or the commit fails, the transaction is rolled back.
-func RunInTx(beginner Beginner, fn func(CommitRollbacker) error) error {
+func RunInTx(
+	ctx context.Context,
+	log logger.Logger,
+	beginner Beginner,
+	fn func(CommitRollbacker) error,
+) error {
 	tran, err := beginner.Begin()
 	if err != nil {
 		return fmt.Errorf("begin transaction: %w", err)
@@ -64,7 +71,7 @@ func RunInTx(beginner Beginner, fn func(CommitRollbacker) error) error {
 	defer func() {
 		rollbackErr := tran.Rollback()
 		if rollbackErr != nil && !errors.Is(rollbackErr, sql.ErrTxDone) {
-			_ = rollbackErr
+			log.Errorc(ctx, 5, "pgsql.RunInTx", "rollback error", rollbackErr)
 		}
 	}()
 
