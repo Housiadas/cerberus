@@ -233,6 +233,21 @@ func (a *UseCase) Query(ctx context.Context, qp AppQueryParams) (page.Result[Use
 	return page.NewResult(toAppUsers(usrs), total, p), nil
 }
 
+// QueryByEmail returns a user by its email address.
+func (a *UseCase) QueryByEmail(ctx context.Context, email string) (User, error) {
+	addr, err := mail.ParseAddress(email)
+	if err != nil {
+		return User{}, errs.NewFieldErrors("email", err)
+	}
+
+	usr, err := a.userCore.QueryByEmail(ctx, *addr)
+	if err != nil {
+		return User{}, errs.New(errs.NotFound, err)
+	}
+
+	return toAppUser(usr), nil
+}
+
 // QueryByID returns a user by its Ia.
 func (a *UseCase) QueryByID(ctx context.Context, userID string) (User, error) {
 	userUUID, err := uuid.Parse(userID)
