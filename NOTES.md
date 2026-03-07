@@ -92,3 +92,12 @@ The goal is to create the soft delete feature
 - Run make test
 - Run make generate-api-docs
 - Make all the necessary changes to the application in order for the test to run
+
+## Transactions
+- Add transactions to the user_usecase for auditing and for the outbox, create and update operations
+- Take as an example the transactions middleware
+- Remove transactions middleware (not needed anymore)
+- Fix tests if broken
+- Run make mockery
+- Run make lint
+- Run make test
