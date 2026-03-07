@@ -54,22 +54,27 @@ func (b *Batcher) Run(ctx context.Context, processedCh <-chan *kafka.Message) er
 				if len(batch) > 0 {
 					return b.flush(ctx, batch)
 				}
+
 				return nil
 			}
 
 			batch = append(batch, msg)
 			if len(batch) >= b.batchSize {
-				if err := b.flush(ctx, batch); err != nil {
+				err := b.flush(ctx, batch)
+				if err != nil {
 					return err
 				}
+
 				batch = batch[:0]
 			}
 
 		case <-ticker.C:
 			if len(batch) > 0 {
-				if err := b.flush(ctx, batch); err != nil {
+				err := b.flush(ctx, batch)
+				if err != nil {
 					return err
 				}
+
 				batch = batch[:0]
 			}
 		}
@@ -77,12 +82,14 @@ func (b *Batcher) Run(ctx context.Context, processedCh <-chan *kafka.Message) er
 }
 
 func (b *Batcher) flush(ctx context.Context, batch []*kafka.Message) error {
-	if err := b.flusher(ctx, batch); err != nil {
+	err := b.flusher(ctx, batch)
+	if err != nil {
 		return fmt.Errorf("batcher: flush error: %w", err)
 	}
 
 	for _, msg := range batch {
-		if _, storeErr := b.storer.StoreMessage(msg); storeErr != nil {
+		_, storeErr := b.storer.StoreMessage(msg)
+		if storeErr != nil {
 			b.log.Error(ctx, fmt.Sprintf("batcher: store offset error: %v", storeErr))
 		}
 	}

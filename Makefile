@@ -133,11 +133,6 @@ vet:
 fmt:
 	go fmt ./...
 
-## fmt/yaml: Formatting yaml files
-.PHONY: fmt/yaml
-fmt/yaml:
-	go tool yamlfmt .
-
 ## lint: Run linter
 .PHONY: lint
 lint: tidy tools/install security vet golangci

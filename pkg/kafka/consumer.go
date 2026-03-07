@@ -57,12 +57,15 @@ func NewConsumer(log *logger.Service, cfg ConsumerConfig) (*ConsumerClient, erro
 	if cfg.Workers <= 0 {
 		cfg.Workers = defaultWorkers
 	}
+
 	if cfg.BatchSize <= 0 {
 		cfg.BatchSize = defaultBatchSize
 	}
+
 	if cfg.FlushTimeout <= 0 {
 		cfg.FlushTimeout = defaultFlushTimeout
 	}
+
 	if cfg.BufferSize <= 0 {
 		cfg.BufferSize = cfg.Workers * cfg.BatchSize
 	}
@@ -116,17 +119,16 @@ func (c *ConsumerClient) Consume(
 	processedCh := make(chan *kafka.Message, c.bufferSize)
 
 	var wg sync.WaitGroup
-	for i := 0; i < c.workers; i++ {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
+	for range c.workers {
+		wg.Go(func() {
 			c.runWorker(ctx, msgCh, processedCh, handler)
-		}()
+		})
 	}
 
 	batcher := NewBatcher(c.consumer, flusher, c.batchSize, c.flushTimeout, c.log)
 
 	batchErrCh := make(chan error, 1)
+
 	go func() {
 		batchErrCh <- batcher.Run(ctx, processedCh)
 	}()
@@ -157,25 +159,38 @@ func (c *ConsumerClient) runPoller(
 		default:
 		}
 
-		ev := c.consumer.Poll(100)
-		switch event := ev.(type) {
-		case nil:
-			// no event
-		case *kafka.Message:
-			select {
-			case msgCh <- event:
-			case <-ctx.Done():
-				return fmt.Errorf("consumer: context done: %w", ctx.Err())
-			}
-		case kafka.Error:
-			if event.IsFatal() {
-				return fmt.Errorf("consumer: fatal Kafka error: %w", event)
-			}
-			c.log.Error(ctx, fmt.Sprintf("consumer: retriable error: %v", event))
-		case kafka.PartitionEOF:
-			c.log.Info(ctx, fmt.Sprintf("consumer: partition EOF: %v", event))
+		err := c.handleEvent(ctx, c.consumer.Poll(100), msgCh)
+		if err != nil {
+			return err
 		}
 	}
+}
+
+func (c *ConsumerClient) handleEvent(
+	ctx context.Context,
+	ev kafka.Event,
+	msgCh chan<- *kafka.Message,
+) error {
+	switch event := ev.(type) {
+	case nil:
+		// no event
+	case *kafka.Message:
+		select {
+		case msgCh <- event:
+		case <-ctx.Done():
+			return fmt.Errorf("consumer: context done: %w", ctx.Err())
+		}
+	case kafka.Error:
+		if event.IsFatal() {
+			return fmt.Errorf("consumer: fatal Kafka error: %w", event)
+		}
+
+		c.log.Error(ctx, fmt.Sprintf("consumer: retriable error: %v", event))
+	case kafka.PartitionEOF:
+		c.log.Info(ctx, fmt.Sprintf("consumer: partition EOF: %v", event))
+	}
+
+	return nil
 }
 
 func (c *ConsumerClient) runWorker(
@@ -188,6 +203,7 @@ func (c *ConsumerClient) runWorker(
 		err := handler(ctx, msg)
 		if err != nil {
 			c.log.Error(ctx, fmt.Sprintf("consumer: handler error: %v", err))
+
 			continue
 		}
 
