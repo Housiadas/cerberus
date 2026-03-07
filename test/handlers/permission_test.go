@@ -33,7 +33,7 @@ func Test_API_Permission_Query_200(t *testing.T) {
 	require.NoError(t, err)
 
 	sort.Slice(perms, func(i, j int) bool {
-		return perms[i].ID.String() <= perms[j].ID.String()
+		return perms[i].ID().String() <= perms[j].ID().String()
 	})
 
 	table := []apitest.Table{
@@ -216,7 +216,7 @@ func Test_API_Permission_Update_200(t *testing.T) {
 	table := []apitest.Table{
 		{
 			Name:        "basic",
-			URL:         fmt.Sprintf("/api/v1/permissions/%s", perms[0].ID),
+			URL:         fmt.Sprintf("/api/v1/permissions/%s", perms[0].ID()),
 			Method:      http.MethodPut,
 			StatusCode:  http.StatusOK,
 			AccessToken: &sd.Admins[0].AccessToken.Token,
@@ -224,12 +224,14 @@ func Test_API_Permission_Update_200(t *testing.T) {
 				Name: dbtest.StringPointer("UpdatedPermission"),
 			},
 			GotResp: &permission_usecase.Permission{},
-			ExpResp: &permission_usecase.Permission{
-				ID:        perms[0].ID.String(),
-				Name:      "UpdatedPermission",
-				CreatedAt: clock.Format(&perms[0].CreatedAt),
-				UpdatedAt: clock.Format(&perms[0].UpdatedAt),
-			},
+			ExpResp: func() *permission_usecase.Permission {
+				return &permission_usecase.Permission{
+					ID:        perms[0].ID().String(),
+					Name:      "UpdatedPermission",
+					CreatedAt: clock.Format(new(perms[0].CreatedAt())),
+					UpdatedAt: clock.Format(new(perms[0].UpdatedAt())),
+				}
+			}(),
 			AssertFunc: func(got any, exp any) string {
 				gotResp, exists := got.(*permission_usecase.Permission)
 				if !exists {
@@ -263,7 +265,7 @@ func Test_API_Permission_Update_403(t *testing.T) {
 	table := []apitest.Table{
 		{
 			Name:        "forbidden",
-			URL:         fmt.Sprintf("/api/v1/permissions/%s", perms[0].ID),
+			URL:         fmt.Sprintf("/api/v1/permissions/%s", perms[0].ID()),
 			Method:      http.MethodPut,
 			StatusCode:  http.StatusForbidden,
 			AccessToken: &sd.Users[0].AccessToken.Token,
@@ -297,7 +299,7 @@ func Test_API_Permission_Delete_204(t *testing.T) {
 	table := []apitest.Table{
 		{
 			Name:        "basic",
-			URL:         fmt.Sprintf("/api/v1/permissions/%s", perms[0].ID),
+			URL:         fmt.Sprintf("/api/v1/permissions/%s", perms[0].ID()),
 			Method:      http.MethodDelete,
 			StatusCode:  http.StatusNoContent,
 			AccessToken: &sd.Admins[0].AccessToken.Token,
@@ -323,7 +325,7 @@ func Test_API_Permission_Delete_403(t *testing.T) {
 	table := []apitest.Table{
 		{
 			Name:        "forbidden",
-			URL:         fmt.Sprintf("/api/v1/permissions/%s", perms[0].ID),
+			URL:         fmt.Sprintf("/api/v1/permissions/%s", perms[0].ID()),
 			Method:      http.MethodDelete,
 			StatusCode:  http.StatusForbidden,
 			AccessToken: &sd.Users[0].AccessToken.Token,

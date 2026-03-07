@@ -6,6 +6,11 @@ import (
 	"fmt"
 	"sort"
 	"testing"
+	"time"
+
+	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
+	"github.com/google/uuid"
 
 	"github.com/Housiadas/cerberus/internal/app/repo/role_repo"
 	"github.com/Housiadas/cerberus/internal/core/domain/name"
@@ -14,11 +19,8 @@ import (
 	"github.com/Housiadas/cerberus/internal/utils/dbtest"
 	"github.com/Housiadas/cerberus/internal/utils/page"
 	"github.com/Housiadas/cerberus/internal/utils/unitest"
-	"github.com/Housiadas/cerberus/pkg/clock"
 	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/Housiadas/cerberus/pkg/uuidgen"
-
-	"github.com/google/go-cmp/cmp"
 )
 
 func Test_Role(t *testing.T) {
@@ -70,8 +72,13 @@ func queryRole(service *role_service.Service, sd unitest.SeedData) []unitest.Tab
 	}
 
 	sort.Slice(roles, func(i, j int) bool {
-		return roles[i].ID.String() <= roles[j].ID.String()
+		return roles[i].ID().String() <= roles[j].ID().String()
 	})
+
+	roleCmpOpts := []cmp.Option{
+		cmp.AllowUnexported(role.Role{}),
+		cmpopts.EquateApproxTime(time.Second),
+	}
 
 	return []unitest.Table{
 		{
@@ -97,24 +104,14 @@ func queryRole(service *role_service.Service, sd unitest.SeedData) []unitest.Tab
 
 				expResp := exp.([]role.Role)
 
-				for i := range gotResp {
-					if clock.Format(&gotResp[i].CreatedAt) == clock.Format(&expResp[i].CreatedAt) {
-						expResp[i].CreatedAt = gotResp[i].CreatedAt
-					}
-
-					if clock.Format(&gotResp[i].UpdatedAt) == clock.Format(&expResp[i].UpdatedAt) {
-						expResp[i].UpdatedAt = gotResp[i].UpdatedAt
-					}
-				}
-
-				return cmp.Diff(gotResp, expResp)
+				return cmp.Diff(gotResp, expResp, roleCmpOpts...)
 			},
 		},
 		{
 			Name:    "byid",
 			ExpResp: sd.Roles[0].Role,
 			ExcFunc: func(ctx context.Context) any {
-				resp, err := service.QueryByID(ctx, sd.Roles[0].ID)
+				resp, err := service.QueryByID(ctx, sd.Roles[0].ID())
 				if err != nil {
 					return err
 				}
@@ -129,15 +126,7 @@ func queryRole(service *role_service.Service, sd unitest.SeedData) []unitest.Tab
 
 				expResp := exp.(role.Role)
 
-				if clock.Format(&gotResp.CreatedAt) == clock.Format(&expResp.CreatedAt) {
-					expResp.CreatedAt = gotResp.CreatedAt
-				}
-
-				if clock.Format(&gotResp.UpdatedAt) == clock.Format(&expResp.UpdatedAt) {
-					expResp.UpdatedAt = gotResp.UpdatedAt
-				}
-
-				return cmp.Diff(gotResp, expResp)
+				return cmp.Diff(gotResp, expResp, roleCmpOpts...)
 			},
 		},
 	}
@@ -147,9 +136,13 @@ func createRole(service *role_service.Service) []unitest.Table {
 	return []unitest.Table{
 		{
 			Name: "basic",
-			ExpResp: role.Role{
-				Name: name.MustParse("TestRole"),
-			},
+			ExpResp: role.New(
+				uuid.UUID{},
+				name.MustParse("TestRole"),
+				time.Time{},
+				time.Time{},
+				nil,
+			),
 			ExcFunc: func(ctx context.Context) any {
 				nr := role.NewRole{
 					Name: name.MustParse("TestRole"),
@@ -170,11 +163,9 @@ func createRole(service *role_service.Service) []unitest.Table {
 
 				expResp := exp.(role.Role)
 
-				expResp.ID = gotResp.ID
-				expResp.CreatedAt = gotResp.CreatedAt
-				expResp.UpdatedAt = gotResp.UpdatedAt
+				expResp = role.New(gotResp.ID(), expResp.Name(), gotResp.CreatedAt(), gotResp.UpdatedAt(), gotResp.DeletedAt())
 
-				return cmp.Diff(gotResp, expResp)
+				return cmp.Diff(gotResp, expResp, cmp.AllowUnexported(role.Role{}))
 			},
 		},
 	}
@@ -186,11 +177,13 @@ func updateRole(service *role_service.Service, sd unitest.SeedData) []unitest.Ta
 	return []unitest.Table{
 		{
 			Name: "basic",
-			ExpResp: role.Role{
-				ID:        sd.Roles[0].ID,
-				Name:      newName,
-				CreatedAt: sd.Roles[0].CreatedAt,
-			},
+			ExpResp: role.New(
+				sd.Roles[0].ID(),
+				newName,
+				sd.Roles[0].CreatedAt(),
+				time.Time{},
+				nil,
+			),
 			ExcFunc: func(ctx context.Context) any {
 				ur := role.UpdateRole{
 					Name: &newName,
@@ -210,9 +203,9 @@ func updateRole(service *role_service.Service, sd unitest.SeedData) []unitest.Ta
 				}
 
 				expResp := exp.(role.Role)
-				expResp.UpdatedAt = gotResp.UpdatedAt
+				expResp = expResp.WithUpdatedAt(gotResp.UpdatedAt())
 
-				return cmp.Diff(gotResp, expResp)
+				return cmp.Diff(gotResp, expResp, cmp.AllowUnexported(role.Role{}), cmpopts.EquateApproxTime(time.Second))
 			},
 		},
 	}

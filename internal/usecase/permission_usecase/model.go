@@ -24,10 +24,10 @@ type PermissionPageResults struct {
 
 func toAppPermission(p permission.Permission) Permission {
 	return Permission{
-		ID:        p.ID.String(),
-		Name:      p.Name.String(),
-		CreatedAt: clock.Format(&p.CreatedAt),
-		UpdatedAt: clock.Format(&p.UpdatedAt),
+		ID:        p.ID().String(),
+		Name:      p.Name().String(),
+		CreatedAt: clock.Format(new(p.CreatedAt())),
+		UpdatedAt: clock.Format(new(p.UpdatedAt())),
 	}
 }
 

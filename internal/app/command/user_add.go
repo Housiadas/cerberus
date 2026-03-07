@@ -60,7 +60,7 @@ func (cmd *Command) UserAdd(name, email, pass string) error {
 		return fmt.Errorf("create user: %w", err)
 	}
 
-	fmt.Println("user id:", usr.ID)
+	fmt.Println("user id:", usr.ID())
 
 	return nil
 }

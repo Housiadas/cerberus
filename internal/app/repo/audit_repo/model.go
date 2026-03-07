@@ -25,19 +25,17 @@ type auditDB struct {
 }
 
 func toDBAudit(bus audit.Audit) auditDB {
-	db := auditDB{
-		ID:        bus.ID,
-		ObjID:     bus.ObjID,
-		ObjEntity: bus.ObjEntity.String(),
-		ObjName:   bus.ObjName.String(),
-		ActorID:   bus.ActorID,
-		Action:    bus.Action,
-		Data:      types.NullJSONText{JSONText: []byte(bus.Data), Valid: true},
-		Message:   bus.Message,
-		Timestamp: bus.Timestamp.UTC(),
+	return auditDB{
+		ID:        bus.ID(),
+		ObjID:     bus.ObjID(),
+		ObjEntity: bus.ObjEntity().String(),
+		ObjName:   bus.ObjName().String(),
+		ActorID:   bus.ActorID(),
+		Action:    bus.Action(),
+		Data:      types.NullJSONText{JSONText: []byte(bus.Data()), Valid: true},
+		Message:   bus.Message(),
+		Timestamp: bus.Timestamp().UTC(),
 	}
-
-	return db
 }
 
 func toDomainAudit(db auditDB) (audit.Audit, error) {
@@ -51,19 +49,17 @@ func toDomainAudit(db auditDB) (audit.Audit, error) {
 		return audit.Audit{}, fmt.Errorf("parse name: %w", err)
 	}
 
-	bus := audit.Audit{
-		ID:        db.ID,
-		ObjID:     db.ObjID,
-		ObjEntity: ent,
-		ObjName:   n,
-		ActorID:   db.ActorID,
-		Action:    db.Action,
-		Data:      json.RawMessage(db.Data.JSONText),
-		Message:   db.Message,
-		Timestamp: db.Timestamp.UTC(),
-	}
-
-	return bus, nil
+	return audit.New(
+		db.ID,
+		db.ObjID,
+		ent,
+		n,
+		db.ActorID,
+		db.Action,
+		json.RawMessage(db.Data.JSONText),
+		db.Message,
+		db.Timestamp.UTC(),
+	), nil
 }
 
 func toBusAudits(dbs []auditDB) ([]audit.Audit, error) {

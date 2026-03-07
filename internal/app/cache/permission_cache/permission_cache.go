@@ -92,7 +92,7 @@ func (s *Store) Update(ctx context.Context, p permission.Permission) error {
 		return fmt.Errorf("permission cache update: %w", err)
 	}
 
-	s.cache.Delete(p.ID.String())
+	s.cache.Delete(p.ID().String())
 
 	return nil
 }
@@ -104,7 +104,7 @@ func (s *Store) Delete(ctx context.Context, p permission.Permission) error {
 		return fmt.Errorf("permission cache delete: %w", err)
 	}
 
-	s.cache.Delete(p.ID.String())
+	s.cache.Delete(p.ID().String())
 
 	return nil
 }

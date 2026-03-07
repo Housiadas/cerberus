@@ -3,7 +3,9 @@ package role_cache
 import (
 	"context"
 	"testing"
+	"time"
 
+	"github.com/Housiadas/cerberus/internal/core/domain/name"
 	"github.com/Housiadas/cerberus/internal/core/domain/role"
 	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/Housiadas/cerberus/pkg/redis"
@@ -38,7 +40,7 @@ func TestQueryByID_CacheMiss(t *testing.T) {
 	ctx := context.Background()
 
 	id := uuid.New()
-	expected := role.Role{ID: id}
+	expected := role.New(id, name.Name{}, time.Time{}, time.Time{}, nil)
 
 	redisCacheMiss(red)
 	mockStorer.On("QueryByID", ctx, id).Return(expected, nil)
@@ -53,7 +55,7 @@ func TestQueryByID_CacheHit(t *testing.T) {
 	ctx := context.Background()
 
 	id := uuid.New()
-	expected := role.Role{ID: id}
+	expected := role.New(id, name.Name{}, time.Time{}, time.Time{}, nil)
 
 	redisCacheMiss(red)
 	mockStorer.On("QueryByID", ctx, id).Return(expected, nil).Once()
@@ -71,7 +73,7 @@ func TestCreate_DelegatesToStorer(t *testing.T) {
 	store, mockStorer, _ := newTestStore(t)
 	ctx := context.Background()
 
-	rl := role.Role{ID: uuid.New()}
+	rl := role.New(uuid.New(), name.Name{}, time.Time{}, time.Time{}, nil)
 
 	mockStorer.On("Create", ctx, rl).Return(nil)
 
@@ -83,7 +85,7 @@ func TestUpdate_DelegatesToStorerAndInvalidatesCache(t *testing.T) {
 	store, mockStorer, _ := newTestStore(t)
 	ctx := context.Background()
 
-	rl := role.Role{ID: uuid.New()}
+	rl := role.New(uuid.New(), name.Name{}, time.Time{}, time.Time{}, nil)
 
 	mockStorer.On("Update", ctx, rl).Return(nil)
 
@@ -95,7 +97,7 @@ func TestDelete_DelegatesToStorerAndInvalidatesCache(t *testing.T) {
 	store, mockStorer, _ := newTestStore(t)
 	ctx := context.Background()
 
-	rl := role.Role{ID: uuid.New()}
+	rl := role.New(uuid.New(), name.Name{}, time.Time{}, time.Time{}, nil)
 
 	mockStorer.On("Delete", ctx, rl).Return(nil)
 

@@ -18,24 +18,22 @@ type tokenDB struct {
 
 func toTokenDB(rToken refresh_token.RefreshToken) tokenDB {
 	return tokenDB{
-		ID:        rToken.ID,
-		UserID:    rToken.UserID,
-		Token:     rToken.Token,
-		ExpiresAt: rToken.ExpiresAt,
-		CreatedAt: rToken.CreatedAt,
-		Revoked:   rToken.Revoked,
+		ID:        rToken.ID(),
+		UserID:    rToken.UserID(),
+		Token:     rToken.Token(),
+		ExpiresAt: rToken.ExpiresAt(),
+		CreatedAt: rToken.CreatedAt(),
+		Revoked:   rToken.Revoked(),
 	}
 }
 
 func toTokenDomain(db tokenDB) (refresh_token.RefreshToken, error) {
-	bus := refresh_token.RefreshToken{
-		ID:        db.ID,
-		UserID:    db.UserID,
-		Token:     db.Token,
-		ExpiresAt: db.ExpiresAt,
-		CreatedAt: db.CreatedAt,
-		Revoked:   db.Revoked,
-	}
-
-	return bus, nil
+	return refresh_token.New(
+		db.ID,
+		db.UserID,
+		db.Token,
+		db.ExpiresAt,
+		db.CreatedAt,
+		db.Revoked,
+	), nil
 }

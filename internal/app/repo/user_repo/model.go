@@ -25,18 +25,18 @@ type userDB struct {
 
 func toUserDB(usr user.User) userDB {
 	return userDB{
-		ID:           usr.ID,
-		Name:         usr.Name.String(),
-		Email:        usr.Email.Address,
-		PasswordHash: usr.PasswordHash,
+		ID:           usr.ID(),
+		Name:         usr.Name().String(),
+		Email:        usr.Email().Address,
+		PasswordHash: usr.PasswordHash(),
 		Department: sql.NullString{
-			String: usr.Department.String(),
-			Valid:  usr.Department.Valid(),
+			String: usr.Department().String(),
+			Valid:  usr.Department().Valid(),
 		},
-		Enabled:   usr.Enabled,
-		CreatedAt: usr.CreatedAt.UTC(),
-		UpdatedAt: usr.UpdatedAt.UTC(),
-		DeletedAt: toNullTime(usr.DeletedAt),
+		Enabled:   usr.Enabled(),
+		CreatedAt: usr.CreatedAt().UTC(),
+		UpdatedAt: usr.UpdatedAt().UTC(),
+		DeletedAt: toNullTime(usr.DeletedAt()),
 	}
 }
 
@@ -55,19 +55,17 @@ func toUserDomain(db userDB) (user.User, error) {
 		return user.User{}, fmt.Errorf("parse department: %w", err)
 	}
 
-	bus := user.User{
-		ID:           db.ID,
-		Name:         nme,
-		Email:        addr,
-		PasswordHash: db.PasswordHash,
-		Enabled:      db.Enabled,
-		Department:   department,
-		CreatedAt:    db.CreatedAt.In(time.UTC),
-		UpdatedAt:    db.UpdatedAt.In(time.UTC),
-		DeletedAt:    fromNullTime(db.DeletedAt),
-	}
-
-	return bus, nil
+	return user.New(
+		db.ID,
+		nme,
+		addr,
+		db.PasswordHash,
+		department,
+		db.Enabled,
+		db.CreatedAt.In(time.UTC),
+		db.UpdatedAt.In(time.UTC),
+		fromNullTime(db.DeletedAt),
+	), nil
 }
 
 func toNullTime(t *time.Time) sql.NullTime {

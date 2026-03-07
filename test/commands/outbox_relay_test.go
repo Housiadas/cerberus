@@ -59,25 +59,8 @@ func Test_OutboxRelay_ProcessesEntries(t *testing.T) {
 	id2, err := uuidGen.Generate()
 	require.NoError(t, err)
 
-	entry1 := outbox.Outbox{
-		ID:          id1,
-		EventType:   "user.created",
-		AggregateID: aggregateID1,
-		Topic:       "user-events",
-		Payload:     payload1,
-		RetryCount:  0,
-		CreatedAt:   now,
-	}
-
-	entry2 := outbox.Outbox{
-		ID:          id2,
-		EventType:   "user.updated",
-		AggregateID: aggregateID2,
-		Topic:       "user-events",
-		Payload:     payload2,
-		RetryCount:  0,
-		CreatedAt:   now,
-	}
+	entry1 := outbox.New(id1, "user.created", aggregateID1, "user-events", payload1, 0, now, nil)
+	entry2 := outbox.New(id2, "user.updated", aggregateID2, "user-events", payload2, 0, now, nil)
 
 	err = outboxRepo.Create(ctx, entry1)
 	require.NoError(t, err)
@@ -141,15 +124,7 @@ func Test_OutboxRelay_RetriesFailedEntries(t *testing.T) {
 	payload, err := json.Marshal(map[string]string{"action": "created"})
 	require.NoError(t, err)
 
-	entry := outbox.Outbox{
-		ID:          id1,
-		EventType:   "user.created",
-		AggregateID: uuid.New(),
-		Topic:       "user-events",
-		Payload:     payload,
-		RetryCount:  0,
-		CreatedAt:   time.Now().UTC(),
-	}
+	entry := outbox.New(id1, "user.created", uuid.New(), "user-events", payload, 0, time.Now().UTC(), nil)
 
 	err = outboxRepo.Create(ctx, entry)
 	require.NoError(t, err)
@@ -198,15 +173,7 @@ func Test_OutboxRelay_MarkProcessed(t *testing.T) {
 	payload, err := json.Marshal(map[string]string{"action": "deleted"})
 	require.NoError(t, err)
 
-	entry := outbox.Outbox{
-		ID:          id1,
-		EventType:   "user.deleted",
-		AggregateID: uuid.New(),
-		Topic:       "user-events",
-		Payload:     payload,
-		RetryCount:  0,
-		CreatedAt:   time.Now().UTC(),
-	}
+	entry := outbox.New(id1, "user.deleted", uuid.New(), "user-events", payload, 0, time.Now().UTC(), nil)
 
 	err = outboxRepo.Create(ctx, entry)
 	require.NoError(t, err)

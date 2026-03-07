@@ -33,7 +33,7 @@ func Test_API_Role_Query_200(t *testing.T) {
 	require.NoError(t, err)
 
 	sort.Slice(roles, func(i, j int) bool {
-		return roles[i].ID.String() <= roles[j].ID.String()
+		return roles[i].ID().String() <= roles[j].ID().String()
 	})
 
 	table := []apitest.Table{
@@ -216,7 +216,7 @@ func Test_API_Role_Update_200(t *testing.T) {
 	table := []apitest.Table{
 		{
 			Name:        "basic",
-			URL:         fmt.Sprintf("/api/v1/roles/%s", roles[0].ID),
+			URL:         fmt.Sprintf("/api/v1/roles/%s", roles[0].ID()),
 			Method:      http.MethodPut,
 			StatusCode:  http.StatusOK,
 			AccessToken: &sd.Admins[0].AccessToken.Token,
@@ -224,12 +224,16 @@ func Test_API_Role_Update_200(t *testing.T) {
 				Name: dbtest.StringPointer("UpdatedRole"),
 			},
 			GotResp: &role_usecase.Role{},
-			ExpResp: &role_usecase.Role{
-				ID:        roles[0].ID.String(),
-				Name:      "UpdatedRole",
-				CreatedAt: clock.Format(&roles[0].CreatedAt),
-				UpdatedAt: clock.Format(&roles[0].UpdatedAt),
-			},
+			ExpResp: func() *role_usecase.Role {
+				createdAt := roles[0].CreatedAt()
+				updatedAt := roles[0].UpdatedAt()
+				return &role_usecase.Role{
+					ID:        roles[0].ID().String(),
+					Name:      "UpdatedRole",
+					CreatedAt: clock.Format(&createdAt),
+					UpdatedAt: clock.Format(&updatedAt),
+				}
+			}(),
 			AssertFunc: func(got any, exp any) string {
 				gotResp, exists := got.(*role_usecase.Role)
 				if !exists {
@@ -263,7 +267,7 @@ func Test_API_Role_Update_403(t *testing.T) {
 	table := []apitest.Table{
 		{
 			Name:        "forbidden",
-			URL:         fmt.Sprintf("/api/v1/roles/%s", roles[0].ID),
+			URL:         fmt.Sprintf("/api/v1/roles/%s", roles[0].ID()),
 			Method:      http.MethodPut,
 			StatusCode:  http.StatusForbidden,
 			AccessToken: &sd.Users[0].AccessToken.Token,
@@ -297,7 +301,7 @@ func Test_API_Role_Delete_204(t *testing.T) {
 	table := []apitest.Table{
 		{
 			Name:        "basic",
-			URL:         fmt.Sprintf("/api/v1/roles/%s", roles[0].ID),
+			URL:         fmt.Sprintf("/api/v1/roles/%s", roles[0].ID()),
 			Method:      http.MethodDelete,
 			StatusCode:  http.StatusNoContent,
 			AccessToken: &sd.Admins[0].AccessToken.Token,
@@ -323,7 +327,7 @@ func Test_API_Role_Delete_403(t *testing.T) {
 	table := []apitest.Table{
 		{
 			Name:        "forbidden",
-			URL:         fmt.Sprintf("/api/v1/roles/%s", roles[0].ID),
+			URL:         fmt.Sprintf("/api/v1/roles/%s", roles[0].ID()),
 			Method:      http.MethodDelete,
 			StatusCode:  http.StatusForbidden,
 			AccessToken: &sd.Users[0].AccessToken.Token,

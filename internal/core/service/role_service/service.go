@@ -56,12 +56,7 @@ func (c *Service) Create(ctx context.Context, nr role.NewRole) (role.Role, error
 	}
 
 	now := time.Now()
-	rol := role.Role{
-		ID:        id,
-		Name:      nr.Name,
-		CreatedAt: now,
-		UpdatedAt: now,
-	}
+	rol := role.New(id, nr.Name, now, now, nil)
 
 	err = c.storer.Create(ctx, rol)
 	if err != nil {
@@ -78,10 +73,10 @@ func (c *Service) Update(
 	uprole role.UpdateRole,
 ) (role.Role, error) {
 	if uprole.Name != nil {
-		rl.Name = *uprole.Name
+		rl = rl.WithName(*uprole.Name)
 	}
 
-	rl.UpdatedAt = time.Now()
+	rl = rl.WithUpdatedAt(time.Now())
 
 	err := c.storer.Update(ctx, rl)
 	if err != nil {

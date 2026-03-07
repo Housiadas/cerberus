@@ -100,11 +100,11 @@ func (r *Relay) processBatch(ctx context.Context) {
 	for _, entry := range entries {
 		msg := &ckafka.Message{
 			TopicPartition: ckafka.TopicPartition{
-				Topic:     new(entry.Topic),
+				Topic:     new(entry.Topic()),
 				Partition: ckafka.PartitionAny,
 			},
-			Key:   []byte(entry.AggregateID.String()),
-			Value: entry.Payload,
+			Key:   []byte(entry.AggregateID().String()),
+			Value: entry.Payload(),
 		}
 
 		err := r.producer.Produce(ctx, msg)
@@ -113,15 +113,15 @@ func (r *Relay) processBatch(ctx context.Context) {
 				ctx,
 				"relay",
 				"status", "produce error",
-				"event_id", entry.ID,
+				"event_id", entry.ID(),
 				"msg", err,
 			)
-			failedIDs = append(failedIDs, entry.ID)
+			failedIDs = append(failedIDs, entry.ID())
 
 			continue
 		}
 
-		processedIDs = append(processedIDs, entry.ID)
+		processedIDs = append(processedIDs, entry.ID())
 	}
 
 	telemetry.AddSpan(ctx, "outbox.processedIDs", attribute.Int("processedIDs", len(processedIDs)))

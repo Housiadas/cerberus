@@ -26,15 +26,15 @@ type AuditPageResult struct {
 
 func toAppAudit(aud audit.Audit) Audit {
 	return Audit{
-		ID:        aud.ID.String(),
-		ObjID:     aud.ObjID.String(),
-		ObjEntity: aud.ObjEntity.String(),
-		ObjName:   aud.ObjName.String(),
-		ActorID:   aud.ActorID.String(),
-		Action:    aud.Action,
-		Data:      string(aud.Data),
-		Message:   aud.Message,
-		Timestamp: clock.Format(&aud.Timestamp),
+		ID:        aud.ID().String(),
+		ObjID:     aud.ObjID().String(),
+		ObjEntity: aud.ObjEntity().String(),
+		ObjName:   aud.ObjName().String(),
+		ActorID:   aud.ActorID().String(),
+		Action:    aud.Action(),
+		Data:      string(aud.Data()),
+		Message:   aud.Message(),
+		Timestamp: clock.Format(new(aud.Timestamp())),
 	}
 }
 

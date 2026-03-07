@@ -22,28 +22,28 @@ type outboxDB struct {
 
 func toOutboxDB(o outbox.Outbox) outboxDB {
 	return outboxDB{
-		ID:          o.ID,
-		EventType:   o.EventType,
-		AggregateID: o.AggregateID,
-		Topic:       o.Topic,
-		Payload:     o.Payload,
-		RetryCount:  o.RetryCount,
-		CreatedAt:   o.CreatedAt.UTC(),
-		ProcessedAt: toNullTime(o.ProcessedAt),
+		ID:          o.ID(),
+		EventType:   o.EventType(),
+		AggregateID: o.AggregateID(),
+		Topic:       o.Topic(),
+		Payload:     o.Payload(),
+		RetryCount:  o.RetryCount(),
+		CreatedAt:   o.CreatedAt().UTC(),
+		ProcessedAt: toNullTime(o.ProcessedAt()),
 	}
 }
 
 func toOutboxDomain(db outboxDB) outbox.Outbox {
-	return outbox.Outbox{
-		ID:          db.ID,
-		EventType:   db.EventType,
-		AggregateID: db.AggregateID,
-		Topic:       db.Topic,
-		Payload:     db.Payload,
-		RetryCount:  db.RetryCount,
-		CreatedAt:   db.CreatedAt.In(time.UTC),
-		ProcessedAt: fromNullTime(db.ProcessedAt),
-	}
+	return outbox.New(
+		db.ID,
+		db.EventType,
+		db.AggregateID,
+		db.Topic,
+		db.Payload,
+		db.RetryCount,
+		db.CreatedAt.In(time.UTC),
+		fromNullTime(db.ProcessedAt),
+	)
 }
 
 func toNullTime(t *time.Time) sql.NullTime {

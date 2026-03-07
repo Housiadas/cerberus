@@ -17,21 +17,21 @@ type UserRolesPermissions struct {
 
 func toAppUserRolesPermissions(r urp.UserRolesPermissions) UserRolesPermissions {
 	var permID string
-	if r.PermissionID != nil {
-		permID = r.PermissionID.String()
+	if r.PermissionID() != nil {
+		permID = r.PermissionID().String()
 	}
 
 	var permName string
-	if r.PermissionName.Valid() {
-		permName = r.PermissionName.String()
+	if r.PermissionName().Valid() {
+		permName = r.PermissionName().String()
 	}
 
 	return UserRolesPermissions{
-		UserID:         r.UserID.String(),
-		UserName:       r.UserName.String(),
-		UserEmail:      r.UserEmail.Address,
-		RoleID:         r.RoleID.String(),
-		RoleName:       r.RoleName.String(),
+		UserID:         r.UserID().String(),
+		UserName:       r.UserName().String(),
+		UserEmail:      r.UserEmail().Address,
+		RoleID:         r.RoleID().String(),
+		RoleName:       r.RoleName().String(),
 		PermissionID:   permID,
 		PermissionName: permName,
 	}

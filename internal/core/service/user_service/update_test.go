@@ -25,16 +25,17 @@ func TestService_Update_AllFields(t *testing.T) {
 	mTime := time.Date(2026, 1, 1, 10, 30, 0, 0, time.UTC)
 	updatedTime := time.Date(2026, 1, 2, 10, 30, 0, 0, time.UTC)
 
-	existingUser := user.User{
-		ID:           uuid.MustParse("01234567-89ab-7def-0123-456789abcdef"),
-		Name:         name.MustParse("John Doe"),
-		Email:        unitest.MustParseEmail("john@example.com"),
-		PasswordHash: []byte("old_hash"),
-		Department:   name.MustParseNull("Engineering"),
-		Enabled:      true,
-		CreatedAt:    mTime,
-		UpdatedAt:    mTime,
-	}
+	existingUser := user.New(
+		uuid.MustParse("01234567-89ab-7def-0123-456789abcdef"),
+		name.MustParse("John Doe"),
+		unitest.MustParseEmail("john@example.com"),
+		[]byte("old_hash"),
+		name.MustParseNull("Engineering"),
+		true,
+		mTime,
+		mTime,
+		nil,
+	)
 
 	newName := name.MustParse("Jane Doe")
 	newEmail := unitest.MustParseEmail("jane@example.com")
@@ -50,16 +51,17 @@ func TestService_Update_AllFields(t *testing.T) {
 		Enabled:    &newEnabled,
 	}
 
-	expectedUser := user.User{
-		ID:           existingUser.ID,
-		Name:         newName,
-		Email:        newEmail,
-		PasswordHash: []byte("new_hash"),
-		Department:   newDepartment,
-		Enabled:      false,
-		CreatedAt:    mTime,
-		UpdatedAt:    updatedTime,
-	}
+	expectedUser := user.New(
+		existingUser.ID(),
+		newName,
+		newEmail,
+		[]byte("new_hash"),
+		newDepartment,
+		false,
+		mTime,
+		updatedTime,
+		nil,
+	)
 
 	mLogger := logger.NewMockLogger(t)
 
@@ -78,11 +80,11 @@ func TestService_Update_AllFields(t *testing.T) {
 	usr, err := sut.Update(ctx, existingUser, uu)
 
 	assert.NoError(t, err)
-	assert.Equal(t, newName, usr.Name)
-	assert.Equal(t, newEmail, usr.Email)
-	assert.Equal(t, newDepartment, usr.Department)
-	assert.Equal(t, false, usr.Enabled)
-	assert.Equal(t, updatedTime, usr.UpdatedAt)
+	assert.Equal(t, newName, usr.Name())
+	assert.Equal(t, newEmail, usr.Email())
+	assert.Equal(t, newDepartment, usr.Department())
+	assert.Equal(t, false, usr.Enabled())
+	assert.Equal(t, updatedTime, usr.UpdatedAt())
 }
 
 func TestService_Update_PartialFields(t *testing.T) {
@@ -90,32 +92,34 @@ func TestService_Update_PartialFields(t *testing.T) {
 	mTime := time.Date(2026, 1, 1, 10, 30, 0, 0, time.UTC)
 	updatedTime := time.Date(2026, 1, 2, 10, 30, 0, 0, time.UTC)
 
-	existingUser := user.User{
-		ID:           uuid.MustParse("01234567-89ab-7def-0123-456789abcdef"),
-		Name:         name.MustParse("John Doe"),
-		Email:        unitest.MustParseEmail("john@example.com"),
-		PasswordHash: []byte("old_hash"),
-		Department:   name.MustParseNull("Engineering"),
-		Enabled:      true,
-		CreatedAt:    mTime,
-		UpdatedAt:    mTime,
-	}
+	existingUser := user.New(
+		uuid.MustParse("01234567-89ab-7def-0123-456789abcdef"),
+		name.MustParse("John Doe"),
+		unitest.MustParseEmail("john@example.com"),
+		[]byte("old_hash"),
+		name.MustParseNull("Engineering"),
+		true,
+		mTime,
+		mTime,
+		nil,
+	)
 
 	newName := name.MustParse("Jane Doe")
 	uu := user.UpdateUser{
 		Name: &newName,
 	}
 
-	expectedUser := user.User{
-		ID:           existingUser.ID,
-		Name:         newName,
-		Email:        existingUser.Email,
-		PasswordHash: existingUser.PasswordHash,
-		Department:   existingUser.Department,
-		Enabled:      true,
-		CreatedAt:    mTime,
-		UpdatedAt:    updatedTime,
-	}
+	expectedUser := user.New(
+		existingUser.ID(),
+		newName,
+		existingUser.Email(),
+		existingUser.PasswordHash(),
+		existingUser.Department(),
+		true,
+		mTime,
+		updatedTime,
+		nil,
+	)
 
 	mLogger := logger.NewMockLogger(t)
 
@@ -133,24 +137,25 @@ func TestService_Update_PartialFields(t *testing.T) {
 	usr, err := sut.Update(ctx, existingUser, uu)
 
 	assert.NoError(t, err)
-	assert.Equal(t, newName, usr.Name)
-	assert.Equal(t, existingUser.Email, usr.Email)
+	assert.Equal(t, newName, usr.Name())
+	assert.Equal(t, existingUser.Email(), usr.Email())
 }
 
 func TestService_Update_HasherError(t *testing.T) {
 	ctx := context.Background()
 	mTime := time.Date(2026, 1, 1, 10, 30, 0, 0, time.UTC)
 
-	existingUser := user.User{
-		ID:           uuid.MustParse("01234567-89ab-7def-0123-456789abcdef"),
-		Name:         name.MustParse("John Doe"),
-		Email:        unitest.MustParseEmail("john@example.com"),
-		PasswordHash: []byte("old_hash"),
-		Department:   name.MustParseNull("Engineering"),
-		Enabled:      true,
-		CreatedAt:    mTime,
-		UpdatedAt:    mTime,
-	}
+	existingUser := user.New(
+		uuid.MustParse("01234567-89ab-7def-0123-456789abcdef"),
+		name.MustParse("John Doe"),
+		unitest.MustParseEmail("john@example.com"),
+		[]byte("old_hash"),
+		name.MustParseNull("Engineering"),
+		true,
+		mTime,
+		mTime,
+		nil,
+	)
 
 	newPassword := password.MustParse("newpassword123")
 	uu := user.UpdateUser{
@@ -177,32 +182,34 @@ func TestService_Update_StorerError(t *testing.T) {
 	mTime := time.Date(2026, 1, 1, 10, 30, 0, 0, time.UTC)
 	updatedTime := time.Date(2026, 1, 2, 10, 30, 0, 0, time.UTC)
 
-	existingUser := user.User{
-		ID:           uuid.MustParse("01234567-89ab-7def-0123-456789abcdef"),
-		Name:         name.MustParse("John Doe"),
-		Email:        unitest.MustParseEmail("john@example.com"),
-		PasswordHash: []byte("old_hash"),
-		Department:   name.MustParseNull("Engineering"),
-		Enabled:      true,
-		CreatedAt:    mTime,
-		UpdatedAt:    mTime,
-	}
+	existingUser := user.New(
+		uuid.MustParse("01234567-89ab-7def-0123-456789abcdef"),
+		name.MustParse("John Doe"),
+		unitest.MustParseEmail("john@example.com"),
+		[]byte("old_hash"),
+		name.MustParseNull("Engineering"),
+		true,
+		mTime,
+		mTime,
+		nil,
+	)
 
 	newName := name.MustParse("Jane Doe")
 	uu := user.UpdateUser{
 		Name: &newName,
 	}
 
-	expectedUser := user.User{
-		ID:           existingUser.ID,
-		Name:         newName,
-		Email:        existingUser.Email,
-		PasswordHash: existingUser.PasswordHash,
-		Department:   existingUser.Department,
-		Enabled:      true,
-		CreatedAt:    mTime,
-		UpdatedAt:    updatedTime,
-	}
+	expectedUser := user.New(
+		existingUser.ID(),
+		newName,
+		existingUser.Email(),
+		existingUser.PasswordHash(),
+		existingUser.Department(),
+		true,
+		mTime,
+		updatedTime,
+		nil,
+	)
 
 	mLogger := logger.NewMockLogger(t)
 

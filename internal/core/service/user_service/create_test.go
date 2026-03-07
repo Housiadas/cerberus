@@ -31,16 +31,17 @@ func TestService_Create_Successful(t *testing.T) {
 		Password:   password.MustParse("password123"),
 		Department: name.MustParseNull("Engineering"),
 	}
-	expectedUser := user.User{
-		ID:           mUuid,
-		Name:         name.MustParse("John Doe"),
-		Email:        unitest.MustParseEmail("john@example.com"),
-		PasswordHash: []byte("password123"),
-		Department:   name.MustParseNull("Engineering"),
-		Enabled:      true,
-		CreatedAt:    mTime,
-		UpdatedAt:    mTime,
-	}
+	expectedUser := user.New(
+		mUuid,
+		name.MustParse("John Doe"),
+		unitest.MustParseEmail("john@example.com"),
+		[]byte("password123"),
+		name.MustParseNull("Engineering"),
+		true,
+		mTime,
+		mTime,
+		nil,
+	)
 
 	mLogger := logger.NewMockLogger(t)
 
@@ -54,18 +55,18 @@ func TestService_Create_Successful(t *testing.T) {
 	mClock.EXPECT().Now().Return(mTime)
 
 	mHasher := hasher.NewMockHasher(t)
-	mHasher.EXPECT().Hash(newUser.Password.String()).Return(expectedUser.PasswordHash, nil)
+	mHasher.EXPECT().Hash(newUser.Password.String()).Return(expectedUser.PasswordHash(), nil)
 
 	sut := user_service.New(mLogger, mStorer, mUuidGen, mClock, mHasher)
 	usr, err := sut.Create(ctx, newUser)
 
 	assert.NoError(t, err)
-	assert.NotEqual(t, uuid.Nil, usr.ID)
-	assert.Equal(t, newUser.Name, usr.Name)
-	assert.Equal(t, newUser.Email, usr.Email)
-	assert.Equal(t, newUser.Department, usr.Department)
-	assert.NotZero(t, usr.CreatedAt)
-	assert.NotZero(t, usr.UpdatedAt)
+	assert.NotEqual(t, uuid.Nil, usr.ID())
+	assert.Equal(t, newUser.Name, usr.Name())
+	assert.Equal(t, newUser.Email, usr.Email())
+	assert.Equal(t, newUser.Department, usr.Department())
+	assert.NotZero(t, usr.CreatedAt())
+	assert.NotZero(t, usr.UpdatedAt())
 }
 
 func TestService_Create_Uuid_Error(t *testing.T) {

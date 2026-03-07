@@ -27,22 +27,8 @@ func TestRelay_ProcessBatch_Successful(t *testing.T) {
 	id2 := uuid.MustParse("22222222-2222-7222-2222-222222222222")
 
 	entries := []outbox.Outbox{
-		{
-			ID:          id1,
-			EventType:   "user.created",
-			AggregateID: uuid.MustParse("aaaaaaaa-aaaa-7aaa-aaaa-aaaaaaaaaaaa"),
-			Topic:       "user-events",
-			Payload:     json.RawMessage(`{"name":"John"}`),
-			CreatedAt:   mTime,
-		},
-		{
-			ID:          id2,
-			EventType:   "user.updated",
-			AggregateID: uuid.MustParse("bbbbbbbb-bbbb-7bbb-bbbb-bbbbbbbbbbbb"),
-			Topic:       "user-events",
-			Payload:     json.RawMessage(`{"name":"Jane"}`),
-			CreatedAt:   mTime,
-		},
+		outbox.New(id1, "user.created", uuid.MustParse("aaaaaaaa-aaaa-7aaa-aaaa-aaaaaaaaaaaa"), "user-events", json.RawMessage(`{"name":"John"}`), 0, mTime, nil),
+		outbox.New(id2, "user.updated", uuid.MustParse("bbbbbbbb-bbbb-7bbb-bbbb-bbbbbbbbbbbb"), "user-events", json.RawMessage(`{"name":"Jane"}`), 0, mTime, nil),
 	}
 
 	mLogger := logger.NewMockLogger(t)
@@ -80,22 +66,8 @@ func TestRelay_ProcessBatch_PartialFailure(t *testing.T) {
 	id2 := uuid.MustParse("22222222-2222-7222-2222-222222222222")
 
 	entries := []outbox.Outbox{
-		{
-			ID:          id1,
-			EventType:   "user.created",
-			AggregateID: uuid.MustParse("aaaaaaaa-aaaa-7aaa-aaaa-aaaaaaaaaaaa"),
-			Topic:       "user-events",
-			Payload:     json.RawMessage(`{"name":"John"}`),
-			CreatedAt:   mTime,
-		},
-		{
-			ID:          id2,
-			EventType:   "user.updated",
-			AggregateID: uuid.MustParse("bbbbbbbb-bbbb-7bbb-bbbb-bbbbbbbbbbbb"),
-			Topic:       "user-events",
-			Payload:     json.RawMessage(`{"name":"Jane"}`),
-			CreatedAt:   mTime,
-		},
+		outbox.New(id1, "user.created", uuid.MustParse("aaaaaaaa-aaaa-7aaa-aaaa-aaaaaaaaaaaa"), "user-events", json.RawMessage(`{"name":"John"}`), 0, mTime, nil),
+		outbox.New(id2, "user.updated", uuid.MustParse("bbbbbbbb-bbbb-7bbb-bbbb-bbbbbbbbbbbb"), "user-events", json.RawMessage(`{"name":"Jane"}`), 0, mTime, nil),
 	}
 
 	mLogger := logger.NewMockLogger(t)
@@ -166,14 +138,7 @@ func TestRelay_ProcessBatch_AllFailed_DeadLetter(t *testing.T) {
 	id1 := uuid.MustParse("11111111-1111-7111-1111-111111111111")
 
 	entries := []outbox.Outbox{
-		{
-			ID:          id1,
-			EventType:   "user.created",
-			AggregateID: uuid.MustParse("aaaaaaaa-aaaa-7aaa-aaaa-aaaaaaaaaaaa"),
-			Topic:       "user-events",
-			Payload:     json.RawMessage(`{"name":"John"}`),
-			CreatedAt:   mTime,
-		},
+		outbox.New(id1, "user.created", uuid.MustParse("aaaaaaaa-aaaa-7aaa-aaaa-aaaaaaaaaaaa"), "user-events", json.RawMessage(`{"name":"John"}`), 0, mTime, nil),
 	}
 
 	mLogger := logger.NewMockLogger(t)

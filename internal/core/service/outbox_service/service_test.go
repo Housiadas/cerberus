@@ -132,14 +132,16 @@ func TestService_QueryUnprocessed_Successful(t *testing.T) {
 	mTime := time.Date(2026, 1, 1, 10, 30, 0, 0, time.UTC)
 
 	expected := []outbox.Outbox{
-		{
-			ID:          uuid.MustParse("01234567-89ab-7def-0123-456789abcdef"),
-			EventType:   "user.created",
-			AggregateID: uuid.MustParse("22222222-2222-7222-2222-222222222222"),
-			Topic:       "user-events",
-			Payload:     []byte(`{"name":"John"}`),
-			CreatedAt:   mTime,
-		},
+		outbox.New(
+			uuid.MustParse("01234567-89ab-7def-0123-456789abcdef"),
+			"user.created",
+			uuid.MustParse("22222222-2222-7222-2222-222222222222"),
+			"user-events",
+			[]byte(`{"name":"John"}`),
+			0,
+			mTime,
+			nil,
+		),
 	}
 
 	mLogger := logger.NewMockLogger(t)
@@ -155,7 +157,7 @@ func TestService_QueryUnprocessed_Successful(t *testing.T) {
 
 	assert.NoError(t, err)
 	assert.Len(t, entries, 1)
-	assert.Equal(t, expected[0].ID, entries[0].ID)
+	assert.Equal(t, expected[0].ID(), entries[0].ID())
 }
 
 func TestService_QueryUnprocessed_Error(t *testing.T) {

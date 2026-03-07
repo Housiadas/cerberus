@@ -20,11 +20,11 @@ type permissionDB struct {
 
 func toPermissionDB(p permission.Permission) permissionDB {
 	return permissionDB{
-		ID:        p.ID,
-		Name:      p.Name.String(),
-		CreatedAt: p.CreatedAt.UTC(),
-		UpdatedAt: p.UpdatedAt.UTC(),
-		DeletedAt: toNullTime(p.DeletedAt),
+		ID:        p.ID(),
+		Name:      p.Name().String(),
+		CreatedAt: p.CreatedAt().UTC(),
+		UpdatedAt: p.UpdatedAt().UTC(),
+		DeletedAt: toNullTime(p.DeletedAt()),
 	}
 }
 
@@ -34,15 +34,13 @@ func toPermissionDomain(db permissionDB) (permission.Permission, error) {
 		return permission.Permission{}, fmt.Errorf("parse name: %w", err)
 	}
 
-	bus := permission.Permission{
-		ID:        db.ID,
-		Name:      nme,
-		CreatedAt: db.CreatedAt.In(time.UTC),
-		UpdatedAt: db.UpdatedAt.In(time.UTC),
-		DeletedAt: fromNullTime(db.DeletedAt),
-	}
-
-	return bus, nil
+	return permission.New(
+		db.ID,
+		nme,
+		db.CreatedAt.In(time.UTC),
+		db.UpdatedAt.In(time.UTC),
+		fromNullTime(db.DeletedAt),
+	), nil
 }
 
 func toNullTime(t *time.Time) sql.NullTime {

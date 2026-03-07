@@ -38,9 +38,9 @@ func TestService_Create_Successful(t *testing.T) {
 	p, err := sut.Create(ctx, np)
 
 	assert.NoError(t, err)
-	assert.Equal(t, np.Name, p.Name)
-	assert.NotZero(t, p.CreatedAt)
-	assert.NotZero(t, p.UpdatedAt)
+	assert.Equal(t, np.Name, p.Name())
+	assert.NotZero(t, p.CreatedAt())
+	assert.NotZero(t, p.UpdatedAt())
 }
 
 func TestService_Create_StorerError(t *testing.T) {
@@ -69,12 +69,13 @@ func TestService_Update_Successful(t *testing.T) {
 	ctx := context.Background()
 	mTime := time.Date(2026, 1, 1, 10, 30, 0, 0, time.UTC)
 
-	existingPerm := permission.Permission{
-		ID:        uuid.MustParse("01234567-89ab-7def-0123-456789abcdef"),
-		Name:      name.MustParse("Read Users"),
-		CreatedAt: mTime,
-		UpdatedAt: mTime,
-	}
+	existingPerm := permission.New(
+		uuid.MustParse("01234567-89ab-7def-0123-456789abcdef"),
+		name.MustParse("Read Users"),
+		mTime,
+		mTime,
+		nil,
+	)
 
 	newName := name.MustParse("Write Users")
 	up := permission.UpdatePermission{
@@ -90,19 +91,20 @@ func TestService_Update_Successful(t *testing.T) {
 	p, err := sut.Update(ctx, existingPerm, up)
 
 	assert.NoError(t, err)
-	assert.Equal(t, newName, p.Name)
+	assert.Equal(t, newName, p.Name())
 }
 
 func TestService_Update_StorerError(t *testing.T) {
 	ctx := context.Background()
 	mTime := time.Date(2026, 1, 1, 10, 30, 0, 0, time.UTC)
 
-	existingPerm := permission.Permission{
-		ID:        uuid.MustParse("01234567-89ab-7def-0123-456789abcdef"),
-		Name:      name.MustParse("Read Users"),
-		CreatedAt: mTime,
-		UpdatedAt: mTime,
-	}
+	existingPerm := permission.New(
+		uuid.MustParse("01234567-89ab-7def-0123-456789abcdef"),
+		name.MustParse("Read Users"),
+		mTime,
+		mTime,
+		nil,
+	)
 
 	newName := name.MustParse("Write Users")
 	up := permission.UpdatePermission{
@@ -124,10 +126,13 @@ func TestService_Update_StorerError(t *testing.T) {
 func TestService_Delete_Successful(t *testing.T) {
 	ctx := context.Background()
 
-	p := permission.Permission{
-		ID:   uuid.MustParse("01234567-89ab-7def-0123-456789abcdef"),
-		Name: name.MustParse("Read Users"),
-	}
+	p := permission.New(
+		uuid.MustParse("01234567-89ab-7def-0123-456789abcdef"),
+		name.MustParse("Read Users"),
+		time.Time{},
+		time.Time{},
+		nil,
+	)
 
 	mLogger := logger.NewMockLogger(t)
 
@@ -143,10 +148,13 @@ func TestService_Delete_Successful(t *testing.T) {
 func TestService_Delete_Error(t *testing.T) {
 	ctx := context.Background()
 
-	p := permission.Permission{
-		ID:   uuid.MustParse("01234567-89ab-7def-0123-456789abcdef"),
-		Name: name.MustParse("Read Users"),
-	}
+	p := permission.New(
+		uuid.MustParse("01234567-89ab-7def-0123-456789abcdef"),
+		name.MustParse("Read Users"),
+		time.Time{},
+		time.Time{},
+		nil,
+	)
 
 	mLogger := logger.NewMockLogger(t)
 
@@ -197,12 +205,13 @@ func TestService_QueryByID_Successful(t *testing.T) {
 	permID := uuid.MustParse("01234567-89ab-7def-0123-456789abcdef")
 	mTime := time.Date(2026, 1, 1, 10, 30, 0, 0, time.UTC)
 
-	expectedPerm := permission.Permission{
-		ID:        permID,
-		Name:      name.MustParse("Read Users"),
-		CreatedAt: mTime,
-		UpdatedAt: mTime,
-	}
+	expectedPerm := permission.New(
+		permID,
+		name.MustParse("Read Users"),
+		mTime,
+		mTime,
+		nil,
+	)
 
 	mLogger := logger.NewMockLogger(t)
 
@@ -213,8 +222,8 @@ func TestService_QueryByID_Successful(t *testing.T) {
 	p, err := sut.QueryByID(ctx, permID)
 
 	assert.NoError(t, err)
-	assert.Equal(t, expectedPerm.ID, p.ID)
-	assert.Equal(t, expectedPerm.Name, p.Name)
+	assert.Equal(t, expectedPerm.ID(), p.ID())
+	assert.Equal(t, expectedPerm.Name(), p.Name())
 }
 
 func TestService_QueryByID_NotFound(t *testing.T) {
@@ -240,10 +249,13 @@ func TestService_Query_Successful(t *testing.T) {
 	page := page.Page{}
 
 	expectedPerms := []permission.Permission{
-		{
-			ID:   uuid.MustParse("01234567-89ab-7def-0123-456789abcdef"),
-			Name: name.MustParse("Read Users"),
-		},
+		permission.New(
+			uuid.MustParse("01234567-89ab-7def-0123-456789abcdef"),
+			name.MustParse("Read Users"),
+			time.Time{},
+			time.Time{},
+			nil,
+		),
 	}
 
 	mLogger := logger.NewMockLogger(t)
@@ -256,7 +268,7 @@ func TestService_Query_Successful(t *testing.T) {
 
 	assert.NoError(t, err)
 	assert.Len(t, perms, 1)
-	assert.Equal(t, expectedPerms[0].Name, perms[0].Name)
+	assert.Equal(t, expectedPerms[0].Name(), perms[0].Name())
 }
 
 func TestService_Query_Error(t *testing.T) {

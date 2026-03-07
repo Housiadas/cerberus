@@ -34,7 +34,7 @@ func Test_API_Auth_Login_200(t *testing.T) {
 			Method:     http.MethodPost,
 			StatusCode: http.StatusOK,
 			Input: &auth_usecase.LoginReq{
-				Email:    usrs[0].Email.String(),
+				Email:    usrs[0].Email().Address,
 				Password: "Secret123!@#",
 			},
 			GotResp: &auth_usecase.Token{},
@@ -78,7 +78,7 @@ func Test_API_Auth_Login_400(t *testing.T) {
 			Method:     http.MethodPost,
 			StatusCode: http.StatusBadRequest,
 			Input: &auth_usecase.LoginReq{
-				Email: usrs[0].Email.String(),
+				Email: usrs[0].Email().Address,
 			},
 			GotResp: &errs.Error{},
 			AssertFunc: func(got any, exp any) string {
