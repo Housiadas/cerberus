@@ -1,103 +1,65 @@
-## Kubernetes deployment files
+Feature Suggestions
 
-- Create inside `.kuberenetes` the helm charts.
-- Respect the same namespace for all the applications.
-- Each helm chart should be in a different add files in the app, postgres, tempo, grafana and vault.
-- Use the same namespace for all the applications namespace: cerberus
-- Be sure that helm charts work with minikube.
-- Add commands in the Makefile to deploy the applications and run it
-- Use minikube
-- Use NodePort services for app and grafana to expose them via minikube service
+High Value / Low Effort
 
-## Unit tests task
+1. Rate Limiting                                                                                                                                                    
+   The middleware stack has no rate limiting. Add per-IP and per-user rate limiting using a token bucket pattern (e.g., golang.org/x/time/rate or Redis-backed sliding
+   window). Auth endpoints like POST /auth/login are particularly exposed to brute-force.
 
-- Add unit tests in the service package under core
-- Add unit tests like the create_test.go under user_service
-- Add tests for all the services
-- Make sure that tests are running correctly (PASS)
-- Make changes if need.
-- Mock extra interfaces with mockery if need (.mockery.yaml)
+2. Password Reset Flow
+   No POST /auth/forgot-password or POST /auth/reset-password exists. This requires:
+- A short-lived reset token domain entity (similar to refresh_token)
+- An email notification event through the outbox pattern (already in place)
 
-## Soft deletes
-- Add deleted_at field to all SQL files
-- Update all domain and services under core
-- Update all usecases
-- Update all repositories
-- Update all sql queries under repo package
-- Update all queries like fetch 
-where delete_at not Null in order to exluded them from fetching
-The goal is to create the soft delete feature
+3. Audit Trail for RBAC Changes
+   Currently, only user events (UserCreated, UserUpdated, UserDeleted) are published. Role assignment/removal, permission changes, and login events should also be
+   audited — they're high-value from a compliance perspective.
 
-## Transactional Outbox Pattern 
-- Create the transactional outbox pattern
-- Use tables in the database
-- Create migrations
-- Create outbox domain
-- Create events domain that will have
-- Make changes for the user domain
-- Use Tx transaction 
-- Produce messages to kafka in batched and mark rows as proceed
-- Add confluent kafka in compose.yaml for local env
-- Make changes to kafka package in pkg if need it
-- Use mockery for any changes
-- Add tests for all the cases
-- Run make lint, make test
+4. Access Token Blacklisting / Revocation
+   Logout currently only removes the refresh token. If an access token leaks, it remains valid for up to 20 minutes. A Redis-backed JWT blocklist keyed by jti (JWT ID)
+   with TTL matching the token expiry would close this gap.
 
-## Replace swaggo with oapi-codegen
-- Add https://github.com/oapi-codegen/oapi-codegen
-- Remove swaggo from go.mod
-- Run make generate-api-docs
-- Run make lint,
-- Add oapi-codegen to tools
-- Create yml 
-```
-  package: rest/main
-  generate:
-  std-http-server: true
-  models: true
-  strict-server: true
-  output: docs/rest.gen.go
-```
-- Remove everything related to swaggo and replace with oapi-codegen
+  ---
+Medium Value / Medium Effort
 
-## Addition of redis
-- Add redis to the compose.yaml
-- Add go redis client to the go.mod
-- Create a wrapper for redis in pkg
-- Generate mocks for redis methods
-- Add redis to the env
-- Add redis to the config and config.dist
-- Refactor the cache directory user_cache package
-- Use redis for L2 cache and for L1 cache use sturdyc
-- Use WithDistributedStorage from sturdyc package
-- The flow: sturdyc -> redis -> db
-- Use the flow for fetching endpoints not for delete/update endpoints
-- Add tests for redis
-- Run mockery
-- Run make lint
-- Run make test
+5. Hierarchical Roles (Role Inheritance)
+   The current RBAC is flat — a user can have many roles, but roles don't inherit from each other. Adding a parent_role_id to the roles table enables hierarchical
+   permission inheritance (e.g., admin inherits all editor permissions).
 
-## Roles and permissions CRUD
-- Finish the roles and permissions CRUD
-- Fix /api/v1/users/{user_id}/role endpoints to add roles to a user
-- Fix /api/v1/roles/{role_id}/permissions endpoints to add  permissions to a role
-- Create cache layers like the user_cache, bypass operations like Update and Create
-- Add tests for roles and permissions
-- Add integration tests for roles and permissions
-- Respect usecase as the composition layer
-- Respect the flow of the application
-- Respect the query directory in the repo directory
-- Run make mockery
-- Run make lint
-- Run make test
-- Run make generate-api-docs
-- Make all the necessary changes to the application in order for the test to run
+6. Pagination Cursor-Based (Keyset)
+   The codebase uses offset-based pagination (page, order packages). For large datasets, keyset/cursor pagination performs significantly better and is stable under
+   concurrent writes. This is a refactor of the repo query layer.
 
-## Transactions
-- Add transactions to the user_usecase for auditing and for the outbox, create and update operations
-- Take as an example the transactions middleware
-- Remove transactions middleware (not needed anymore)
-- Fix tests if broken
-- Run make mockery
-- Run make lint
-- Run make test
+7. User Self-Service Endpoints
+   There's no GET /me, PUT /me, or PUT /me/password endpoint. Currently, users can only be managed by privileged callers. A self-service profile endpoint with
+   different permission scope would be useful.
+
+8. Multi-Tenancy / Namespacing
+   The config.App.Namespace field exists but doesn't appear to be used for data isolation. If this is a multi-tenant SaaS, scoping all domain queries by namespace_id
+   (or tenant_id) at the repo layer would enable it.
+
+  ---
+Refactor Suggestions
+
+9. Access Token Claims — Roles as IDs, Not Names
+   JWT claims currently embed role names as strings. If a role is renamed, existing valid tokens carry the old name. Embedding role IDs and resolving them at
+   permission check time (with the existing singleflight cache) is more robust.
+
+10. Outbox Relay — Push-Based Instead of Poll-Based
+    internal/app/relay/relay.go polls the outbox table at a fixed interval. A PostgreSQL LISTEN/NOTIFY trigger on the outbox table would reduce latency and DB load —
+    the relay wakes up only on new rows.
+
+11. Config Validation at Startup
+    internal/config loads values via Viper but doesn't validate required fields (e.g., missing Vault address, empty DB host). A config.Validate() step during startup
+    would give early, clear errors instead of panics deep in initialization.
+
+12. Structured Error Responses
+    The OpenAPI spec likely defines error response shapes, but adding a consistent ErrorCode field (machine-readable, e.g., "user.not_found") alongside the HTTP status
+    would make client error handling more reliable than parsing message strings.
+
+  ---
+Architectural Observation
+
+The outbox + relay + Kafka pattern is well-implemented, but currently only covers user events. As you add more domains (billing, notifications, etc.), consider a
+generic domain event dispatcher at the usecase layer so each new usecase doesn't need to manually wire outbox_service — it could be middleware on the composition
+layer.

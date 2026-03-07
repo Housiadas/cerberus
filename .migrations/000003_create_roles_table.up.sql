@@ -9,3 +9,5 @@ CREATE TABLE roles
 
     PRIMARY KEY (id)
 );
+
+CREATE INDEX idx_roles_deleted_at ON roles (id) WHERE deleted_at IS NULL;
