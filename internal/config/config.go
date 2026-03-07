@@ -19,6 +19,7 @@ type Config struct {
 	Vault     Vault
 	Collector Collector
 	Cors      CorsSettings
+	Email     Email
 }
 
 // LoadConfig reads configuration from file or environment variables.
