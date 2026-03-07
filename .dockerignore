@@ -1,2 +1,6 @@
-.git
+.git/
+.idea/
+.claude/
+
 .gitignore
+CLAUDE.md
