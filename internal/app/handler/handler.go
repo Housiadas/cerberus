@@ -11,9 +11,11 @@ import (
 	"github.com/Housiadas/cerberus/internal/app/handler/openapi"
 	"github.com/Housiadas/cerberus/internal/app/middleware"
 	"github.com/Housiadas/cerberus/internal/app/repo/audit_repo"
+	"github.com/Housiadas/cerberus/internal/app/repo/email_notification_outbox_repo"
 	"github.com/Housiadas/cerberus/internal/app/repo/outbox_repo"
 	"github.com/Housiadas/cerberus/internal/app/repo/permission_repo"
 	"github.com/Housiadas/cerberus/internal/app/repo/refresh_token_repo"
+	"github.com/Housiadas/cerberus/internal/app/repo/reset_token_repo"
 	"github.com/Housiadas/cerberus/internal/app/repo/role_permissions_repo"
 	"github.com/Housiadas/cerberus/internal/app/repo/role_repo"
 	"github.com/Housiadas/cerberus/internal/app/repo/user_repo"
@@ -21,9 +23,11 @@ import (
 	"github.com/Housiadas/cerberus/internal/app/repo/user_roles_repo"
 	"github.com/Housiadas/cerberus/internal/config"
 	"github.com/Housiadas/cerberus/internal/core/service/audit_service"
+	"github.com/Housiadas/cerberus/internal/core/service/email_notification_outbox_service"
 	"github.com/Housiadas/cerberus/internal/core/service/outbox_service"
 	"github.com/Housiadas/cerberus/internal/core/service/permission_service"
 	"github.com/Housiadas/cerberus/internal/core/service/refresh_token_service"
+	"github.com/Housiadas/cerberus/internal/core/service/reset_token_service"
 	"github.com/Housiadas/cerberus/internal/core/service/role_permissions_service"
 	"github.com/Housiadas/cerberus/internal/core/service/role_service"
 	"github.com/Housiadas/cerberus/internal/core/service/user_roles_permissions_service"
@@ -64,6 +68,7 @@ type Config struct {
 	Tracer            trace.Tracer
 	Meter             metric.Meter
 	AccessTokenSecret []byte
+	FrontendURL       string
 }
 
 // Handler contains all the mandatory systems required by Handler.
@@ -96,6 +101,7 @@ func New(ctx context.Context, cfg Config) *Handler {
 	// repos
 	auditRepo := audit_repo.NewStore(cfg.Log, cfg.DB)
 	outboxRepo := outbox_repo.NewStore(cfg.Log, cfg.DB)
+	emailNotifOutboxRepo := email_notification_outbox_repo.NewStore(cfg.Log, cfg.DB)
 	userRepo := user_repo.NewStore(cfg.Log, cfg.DB)
 	userCacheStore := user_cache.NewStore(ctx, cfg.Log, userRepo, cfg.Redis)
 	roleRepo := role_repo.NewStore(cfg.Log, cfg.DB)
@@ -106,14 +112,19 @@ func New(ctx context.Context, cfg Config) *Handler {
 	userRolesRepo := user_roles_repo.NewStore(cfg.Log, cfg.DB)
 	rolePermissionsRepo := role_permissions_repo.NewStore(cfg.Log, cfg.DB)
 	refreshTokenRepo := refresh_token_repo.NewStore(cfg.Log, cfg.DB)
+	resetTokenRepo := reset_token_repo.NewStore(cfg.Log, cfg.DB)
 
 	// services
 	auditService := audit_service.New(cfg.Log, auditRepo)
 	outboxSvc := outbox_service.New(cfg.Log, outboxRepo, uuidGen, clk)
+	emailNotifOutboxSvc := email_notification_outbox_service.New(
+		cfg.Log, emailNotifOutboxRepo, uuidGen, clk,
+	)
 	userService := user_service.New(cfg.Log, userCacheStore, uuidGen, clk, hash)
 	roleService := role_service.New(cfg.Log, roleCacheStore, uuidGen)
 	permissionService := permission_service.New(cfg.Log, permissionCacheStore, uuidGen)
 	refreshTokenService := refresh_token_service.New(cfg.Log, refreshTokenRepo, uuidGen, clk)
+	resetTokenService := reset_token_service.New(cfg.Log, resetTokenRepo, uuidGen, clk)
 	userRolesSvc := user_roles_service.New(cfg.Log, userRolesRepo)
 	rolePermsSvc := role_permissions_service.New(cfg.Log, rolePermissionsRepo)
 	userRolesPermissionsService := user_roles_permissions_service.New(
@@ -127,11 +138,16 @@ func New(ctx context.Context, cfg Config) *Handler {
 	userUsecase := user_usecase.NewUseCase(cfg.Log, userService, outboxSvc, auditService, tx)
 	refreshTokenUsecase := refresh_token_usecase.NewUseCase(refreshTokenService)
 	authUsecase := auth_usecase.NewUseCase(auth_usecase.Config{
-		Issuer:              cfg.ServiceName,
-		AccessTokenSecret:   cfg.AccessTokenSecret,
-		Log:                 cfg.Log,
-		UserUsecase:         userUsecase,
-		RefreshTokenUsecase: refreshTokenUsecase,
+		Issuer:                     cfg.ServiceName,
+		AccessTokenSecret:          cfg.AccessTokenSecret,
+		Log:                        cfg.Log,
+		UserUsecase:                userUsecase,
+		UserService:                userService,
+		RefreshTokenUsecase:        refreshTokenUsecase,
+		ResetTokenService:          resetTokenService,
+		EmailNotificationOutboxSvc: emailNotifOutboxSvc,
+		DB:                         tx,
+		FrontendURL:                cfg.FrontendURL,
 	})
 	roleUsecase := role_usecase.NewUseCase(cfg.Log, roleService, auditService, tx)
 	permissionUsecase := permission_usecase.NewUseCase(cfg.Log, permissionService, auditService, tx)
