@@ -770,11 +770,15 @@ components:
       x-go-type-import:
         path: github.com/Housiadas/cerberus/internal/usecase/auth_usecase
       type: object
-      required: [token, password]
+      required: [token, oldPassword, password, passwordConfirm]
       properties:
         token:
           type: string
+        oldPassword:
+          type: string
         password:
+          type: string
+        passwordConfirm:
           type: string
 
     Token:

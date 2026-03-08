@@ -84,8 +84,10 @@ func (f *ForgotPasswordReq) Validate() error {
 
 // ResetPasswordReq defines the data needed to complete a password reset.
 type ResetPasswordReq struct {
-	Token    string `json:"token"    validate:"required"`
-	Password string `json:"password" validate:"required"`
+	Token           string `json:"token"           validate:"required"`
+	OldPassword     string `json:"oldPassword"     validate:"required"`
+	Password        string `json:"password"        validate:"required"`
+	PasswordConfirm string `json:"passwordConfirm" validate:"required"`
 }
 
 // Validate checks the data in the model is considered clean.
