@@ -5,6 +5,7 @@ type App struct {
 	Namespace   string
 	Environment string
 	Version     Version
+	FrontendURL string
 }
 
 type Version struct {

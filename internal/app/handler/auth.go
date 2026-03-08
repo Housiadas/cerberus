@@ -57,3 +57,27 @@ func (h *Handler) AuthRefresh(
 
 	return openapi.AuthRefresh200JSONResponse(token), nil
 }
+
+func (h *Handler) AuthForgotPassword(
+	ctx context.Context,
+	request openapi.AuthForgotPasswordRequestObject,
+) (openapi.AuthForgotPasswordResponseObject, error) {
+	err := h.usecase.auth.ForgotPassword(ctx, *request.Body)
+	if err != nil {
+		return nil, fmt.Errorf("auth forgot password: %w", err)
+	}
+
+	return openapi.AuthForgotPassword204Response{}, nil
+}
+
+func (h *Handler) AuthResetPassword(
+	ctx context.Context,
+	request openapi.AuthResetPasswordRequestObject,
+) (openapi.AuthResetPasswordResponseObject, error) {
+	err := h.usecase.auth.ResetPassword(ctx, *request.Body)
+	if err != nil {
+		return nil, fmt.Errorf("auth reset password: %w", err)
+	}
+
+	return openapi.AuthResetPassword204Response{}, nil
+}

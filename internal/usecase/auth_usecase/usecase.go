@@ -5,9 +5,13 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/Housiadas/cerberus/internal/core/service/email_notification_outbox_service"
+	"github.com/Housiadas/cerberus/internal/core/service/reset_token_service"
+	"github.com/Housiadas/cerberus/internal/core/service/user_service"
 	"github.com/Housiadas/cerberus/internal/usecase/refresh_token_usecase"
 	"github.com/Housiadas/cerberus/internal/usecase/user_usecase"
 	"github.com/Housiadas/cerberus/pkg/logger"
+	"github.com/Housiadas/cerberus/pkg/pgsql"
 	"github.com/golang-jwt/jwt/v5"
 )
 
@@ -18,23 +22,33 @@ const (
 
 // Config represents information required to initialize auth.
 type Config struct {
-	Issuer              string
-	AccessTokenSecret   []byte
-	Log                 logger.Logger
-	UserUsecase         *user_usecase.UseCase
-	RefreshTokenUsecase *refresh_token_usecase.UseCase
+	Issuer                     string
+	FrontendURL                string
+	AccessTokenSecret          []byte
+	DB                         pgsql.Beginner
+	Log                        logger.Logger
+	UserUsecase                *user_usecase.UseCase
+	UserService                *user_service.Service
+	RefreshTokenUsecase        *refresh_token_usecase.UseCase
+	ResetTokenService          *reset_token_service.Service
+	EmailNotificationOutboxSvc *email_notification_outbox_service.Service
 }
 
 // UseCase is used to authenticate clients. It can generate a token for a
 // set of user claims and recreate the claims by parsing the token.
 type UseCase struct {
-	issuer              string
-	secret              []byte
-	parser              *jwt.Parser
-	method              jwt.SigningMethod
-	log                 logger.Logger
-	userUsecase         *user_usecase.UseCase
-	refreshTokenUsecase *refresh_token_usecase.UseCase
+	issuer                     string
+	secret                     []byte
+	frontendURL                string
+	parser                     *jwt.Parser
+	log                        logger.Logger
+	tx                         pgsql.Beginner
+	method                     jwt.SigningMethod
+	userUsecase                *user_usecase.UseCase
+	userService                *user_service.Service
+	refreshTokenUsecase        *refresh_token_usecase.UseCase
+	resetTokenSvc              *reset_token_service.Service
+	emailNotificationOutboxSvc *email_notification_outbox_service.Service
 }
 
 // Claims represent the authorization claims transmitted via a JWT.
@@ -48,15 +62,20 @@ type Claims struct {
 // NewUseCase creates a UseCase to support authentication/authorization.
 func NewUseCase(cfg Config) *UseCase {
 	return &UseCase{
-		log:    cfg.Log,
-		issuer: cfg.Issuer,
-		secret: cfg.AccessTokenSecret,
-		method: jwt.GetSigningMethod(jwt.SigningMethodHS256.Name),
+		tx:          cfg.DB,
+		log:         cfg.Log,
+		issuer:      cfg.Issuer,
+		frontendURL: cfg.FrontendURL,
+		secret:      cfg.AccessTokenSecret,
+		method:      jwt.GetSigningMethod(jwt.SigningMethodHS256.Name),
 		parser: jwt.NewParser(
 			jwt.WithValidMethods([]string{jwt.SigningMethodHS256.Name}),
 		),
-		userUsecase:         cfg.UserUsecase,
-		refreshTokenUsecase: cfg.RefreshTokenUsecase,
+		userUsecase:                cfg.UserUsecase,
+		userService:                cfg.UserService,
+		refreshTokenUsecase:        cfg.RefreshTokenUsecase,
+		resetTokenSvc:              cfg.ResetTokenService,
+		emailNotificationOutboxSvc: cfg.EmailNotificationOutboxSvc,
 	}
 }
 
@@ -65,8 +84,8 @@ func (u *UseCase) Issuer() string {
 	return u.issuer
 }
 
+// CheckExpiredToken validates the expiration claim of a JWT.
 func (u *UseCase) CheckExpiredToken(claims Claims) error {
-	// Check if the token has expired
 	expiredAt := claims.ExpiresAt
 	if time.Now().Unix() > expiredAt.Unix() {
 		return ErrExpiredToken

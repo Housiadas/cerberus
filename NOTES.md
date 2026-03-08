@@ -6,12 +6,7 @@ High Value / Low Effort
    The middleware stack has no rate limiting. Add per-IP and per-user rate limiting using a token bucket pattern (e.g., golang.org/x/time/rate or Redis-backed sliding
    window). Auth endpoints like POST /auth/login are particularly exposed to brute-force.
 
-2. Password Reset Flow
-   No POST /auth/forgot-password or POST /auth/reset-password exists. This requires:
-- A short-lived reset token domain entity (similar to refresh_token)
-- An email notification event through the outbox pattern (already in place)
-
-4. Access Token Blacklisting / Revocation
+2. Access Token Blacklisting / Revocation
    Logout currently only removes the refresh token. If an access token leaks, it remains valid for up to 20 minutes. A Redis-backed JWT blocklist keyed by jti (JWT ID)
    with TTL matching the token expiry would close this gap.
 
