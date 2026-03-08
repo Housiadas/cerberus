@@ -41,6 +41,12 @@ packages:
   github.com/Housiadas/cerberus/internal/core/domain/outbox:
     config:
       all: true
+  github.com/Housiadas/cerberus/internal/core/domain/reset_token:
+    config:
+      all: true
+  github.com/Housiadas/cerberus/internal/core/domain/email_notification_outbox:
+    config:
+      all: true
   # pkg directory
   github.com/Housiadas/cerberus/pkg/kafka:
     config:

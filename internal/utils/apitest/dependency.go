@@ -2,15 +2,19 @@ package apitest
 
 import (
 	"github.com/Housiadas/cerberus/internal/app/repo/audit_repo"
+	"github.com/Housiadas/cerberus/internal/app/repo/email_notification_outbox_repo"
 	"github.com/Housiadas/cerberus/internal/app/repo/outbox_repo"
 	"github.com/Housiadas/cerberus/internal/app/repo/permission_repo"
 	"github.com/Housiadas/cerberus/internal/app/repo/refresh_token_repo"
+	"github.com/Housiadas/cerberus/internal/app/repo/reset_token_repo"
 	"github.com/Housiadas/cerberus/internal/app/repo/role_repo"
 	"github.com/Housiadas/cerberus/internal/app/repo/user_repo"
 	"github.com/Housiadas/cerberus/internal/core/service/audit_service"
+	"github.com/Housiadas/cerberus/internal/core/service/email_notification_outbox_service"
 	"github.com/Housiadas/cerberus/internal/core/service/outbox_service"
 	"github.com/Housiadas/cerberus/internal/core/service/permission_service"
 	"github.com/Housiadas/cerberus/internal/core/service/refresh_token_service"
+	"github.com/Housiadas/cerberus/internal/core/service/reset_token_service"
 	"github.com/Housiadas/cerberus/internal/core/service/role_service"
 	"github.com/Housiadas/cerberus/internal/core/service/user_service"
 	"github.com/Housiadas/cerberus/internal/usecase/auth_usecase"
@@ -31,12 +35,14 @@ type Dependency struct {
 
 // Core represents all the internal core services needed for testing.
 type Core struct {
-	Audit        *audit_service.Service
-	User         *user_service.Service
-	Role         *role_service.Service
-	Permission   *permission_service.Service
-	RefreshToken *refresh_token_service.Service
-	Outbox       *outbox_service.Service
+	Audit                   *audit_service.Service
+	User                    *user_service.Service
+	Role                    *role_service.Service
+	Permission              *permission_service.Service
+	RefreshToken            *refresh_token_service.Service
+	Outbox                  *outbox_service.Service
+	ResetToken              *reset_token_service.Service
+	EmailNotificationOutbox *email_notification_outbox_service.Service
 }
 
 type Usecase struct {
@@ -66,6 +72,13 @@ func newDependency(
 		uuidGen,
 		clk,
 	)
+	resetTokenSvc := reset_token_service.New(log, reset_token_repo.NewStore(log, db), uuidGen, clk)
+	emailNotificationOutboxSvc := email_notification_outbox_service.New(
+		log,
+		email_notification_outbox_repo.NewStore(log, db),
+		uuidGen,
+		clk,
+	)
 
 	// usecases
 	userUsecase := user_usecase.NewUseCase(
@@ -77,21 +90,28 @@ func newDependency(
 	)
 	refreshTokenUsecase := refresh_token_usecase.NewUseCase(refreshTokenService)
 	authUsecase := auth_usecase.NewUseCase(auth_usecase.Config{
-		Issuer:              serviceName,
-		AccessTokenSecret:   accessTokenSecret,
-		Log:                 log,
-		UserUsecase:         userUsecase,
-		RefreshTokenUsecase: refreshTokenUsecase,
+		Issuer:                     serviceName,
+		AccessTokenSecret:          accessTokenSecret,
+		Log:                        log,
+		UserUsecase:                userUsecase,
+		RefreshTokenUsecase:        refreshTokenUsecase,
+		UserService:                userService,
+		ResetTokenService:          resetTokenSvc,
+		EmailNotificationOutboxSvc: emailNotificationOutboxSvc,
+		DB:                         pgsql.NewBeginner(db),
+		FrontendURL:                "http://localhost:3000",
 	})
 
 	return &Dependency{
 		Core: &Core{
-			Audit:        auditService,
-			User:         userService,
-			RefreshToken: refreshTokenService,
-			Role:         roleService,
-			Permission:   permissionService,
-			Outbox:       outboxSvc,
+			Audit:                   auditService,
+			User:                    userService,
+			RefreshToken:            refreshTokenService,
+			Role:                    roleService,
+			Permission:              permissionService,
+			Outbox:                  outboxSvc,
+			ResetToken:              resetTokenSvc,
+			EmailNotificationOutbox: emailNotificationOutboxSvc,
 		},
 		Usecase: &Usecase{Auth: authUsecase},
 	}
