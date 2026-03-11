@@ -187,10 +187,11 @@ func Test_API_Auth_ResetPassword_204(t *testing.T) {
 
 	table := []apitest.Table{
 		{
-			Name:       "valid-reset",
-			URL:        "/api/v1/auth/reset-password",
-			Method:     http.MethodPost,
-			StatusCode: http.StatusNoContent,
+			Name:        "valid-reset",
+			URL:         "/api/v1/auth/reset-password",
+			Method:      http.MethodPost,
+			StatusCode:  http.StatusNoContent,
+			AccessToken: &sd.Users[0].AccessToken.Token,
 			Input: &auth_usecase.ResetPasswordReq{
 				Token:           tkn.Token(),
 				OldPassword:     "Secret123!@#",
@@ -225,10 +226,11 @@ func Test_API_Auth_ResetPassword_400(t *testing.T) {
 
 	table := []apitest.Table{
 		{
-			Name:       "invalid-token",
-			URL:        "/api/v1/auth/reset-password",
-			Method:     http.MethodPost,
-			StatusCode: http.StatusNotFound,
+			Name:        "invalid-token",
+			URL:         "/api/v1/auth/reset-password",
+			Method:      http.MethodPost,
+			StatusCode:  http.StatusNotFound,
+			AccessToken: &sd.Users[0].AccessToken.Token,
 			Input: &auth_usecase.ResetPasswordReq{
 				Token:           "invalid-token",
 				OldPassword:     "Secret123!@#",
@@ -238,10 +240,11 @@ func Test_API_Auth_ResetPassword_400(t *testing.T) {
 			GotResp: &errs.Error{},
 		},
 		{
-			Name:       "wrong-old-password",
-			URL:        "/api/v1/auth/reset-password",
-			Method:     http.MethodPost,
-			StatusCode: http.StatusBadRequest,
+			Name:        "wrong-old-password",
+			URL:         "/api/v1/auth/reset-password",
+			Method:      http.MethodPost,
+			StatusCode:  http.StatusBadRequest,
+			AccessToken: &sd.Users[0].AccessToken.Token,
 			Input: &auth_usecase.ResetPasswordReq{
 				Token:           tkn.Token(),
 				OldPassword:     "WrongPassword123!",

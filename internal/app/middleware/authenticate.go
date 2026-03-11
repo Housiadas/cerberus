@@ -14,11 +14,12 @@ import (
 
 // publicOperations lists operations that do not require authentication.
 var publicOperations = map[string]struct{}{
-	"AuthLogin":    {},
-	"AuthRegister": {},
-	"AuthRefresh":  {},
-	"Readiness":    {},
-	"Liveness":     {},
+	"AuthLogin":          {},
+	"AuthRegister":       {},
+	"AuthRefresh":        {},
+	"AuthForgotPassword": {},
+	"Readiness":          {},
+	"Liveness":           {},
 }
 
 // Authenticate applies bearer token authentication for protected operations.
