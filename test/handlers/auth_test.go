@@ -238,6 +238,14 @@ func Test_API_Auth_ResetPassword_400(t *testing.T) {
 				PasswordConfirm: "NewSecret456!@#",
 			},
 			GotResp: &errs.Error{},
+			AssertFunc: func(got any, exp any) string {
+				gotResp, exists := got.(*errs.Error)
+				if !exists {
+					return "error occurred"
+				}
+				assert.NotEmpty(t, gotResp.Message)
+				return ""
+			},
 		},
 		{
 			Name:        "wrong-old-password",
@@ -252,6 +260,14 @@ func Test_API_Auth_ResetPassword_400(t *testing.T) {
 				PasswordConfirm: "NewSecret456!@#",
 			},
 			GotResp: &errs.Error{},
+			AssertFunc: func(got any, exp any) string {
+				gotResp, exists := got.(*errs.Error)
+				if !exists {
+					return "error occurred"
+				}
+				assert.NotEmpty(t, gotResp.Message)
+				return ""
+			},
 		},
 	}
 

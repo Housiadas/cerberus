@@ -8,6 +8,7 @@ import (
 	"github.com/Housiadas/cerberus/internal/core/domain/name"
 	"github.com/Housiadas/cerberus/internal/core/domain/password"
 	"github.com/Housiadas/cerberus/internal/core/domain/user"
+	"github.com/google/uuid"
 )
 
 // TestSeedUsers is a helper method for testing.
@@ -32,10 +33,12 @@ func TestSeedUsers(ctx context.Context, n int, service *Service) ([]user.User, e
 func testNewUsers(n int) []user.NewUser {
 	newUsrs := make([]user.NewUser, n)
 
+	suffix := uuid.New().String()[:8]
+
 	for i := range n {
 		nu := user.NewUser{
 			Name:       name.MustParse(fmt.Sprintf("Name%d", i)),
-			Email:      mail.Address{Address: fmt.Sprintf("Email%d@gmail.com", i)},
+			Email:      mail.Address{Address: fmt.Sprintf("Email%d-%s@gmail.com", i, suffix)},
 			Department: name.MustParseNull(fmt.Sprintf("Department%d", i)),
 			Password:   password.MustParse("Secret123!@#"),
 		}
