@@ -9,6 +9,7 @@ import (
 	"github.com/Housiadas/cerberus/internal/core/service/reset_token_service"
 	"github.com/Housiadas/cerberus/internal/core/service/user_service"
 	"github.com/Housiadas/cerberus/internal/usecase/refresh_token_usecase"
+	"github.com/Housiadas/cerberus/internal/usecase/user_roles_permissions_usecase"
 	"github.com/Housiadas/cerberus/internal/usecase/user_usecase"
 	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/Housiadas/cerberus/pkg/pgsql"
@@ -32,6 +33,7 @@ type Config struct {
 	RefreshTokenUsecase        *refresh_token_usecase.UseCase
 	ResetTokenService          *reset_token_service.Service
 	EmailNotificationOutboxSvc *email_notification_outbox_service.Service
+	UserRolesPermissions       *user_roles_permissions_usecase.UseCase
 }
 
 // UseCase is used to authenticate clients. It can generate a token for a
@@ -49,14 +51,22 @@ type UseCase struct {
 	refreshTokenUsecase        *refresh_token_usecase.UseCase
 	resetTokenSvc              *reset_token_service.Service
 	emailNotificationOutboxSvc *email_notification_outbox_service.Service
+	userRolesPermissions       *user_roles_permissions_usecase.UseCase
+}
+
+// Permission represents a permission embedded in JWT claims.
+type Permission struct {
+	ID   string `json:"id"`
+	Name string `json:"name"`
 }
 
 // Claims represent the authorization claims transmitted via a JWT.
 type Claims struct {
 	jwt.RegisteredClaims
 
-	TokenID string   `json:"jti"` // JWT ID for token revocation
-	Roles   []string `json:"roles"`
+	TokenID     string       `json:"jti"` // JWT ID for token revocation
+	Roles       []string     `json:"roles"`
+	Permissions []Permission `json:"permissions"`
 }
 
 // NewUseCase creates a UseCase to support authentication/authorization.
@@ -76,6 +86,7 @@ func NewUseCase(cfg Config) *UseCase {
 		refreshTokenUsecase:        cfg.RefreshTokenUsecase,
 		resetTokenSvc:              cfg.ResetTokenService,
 		emailNotificationOutboxSvc: cfg.EmailNotificationOutboxSvc,
+		userRolesPermissions:       cfg.UserRolesPermissions,
 	}
 }
 

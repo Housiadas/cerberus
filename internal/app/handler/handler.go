@@ -137,6 +137,11 @@ func New(ctx context.Context, cfg Config) *Handler {
 	auditUsecase := audit_usecase.NewUseCase(auditService)
 	userUsecase := user_usecase.NewUseCase(cfg.Log, userService, outboxSvc, auditService, tx)
 	refreshTokenUsecase := refresh_token_usecase.NewUseCase(refreshTokenService)
+	userRolesPermissionsUsecase := user_roles_permissions_usecase.NewUseCase(
+		user_roles_permissions_usecase.Config{
+			Service: userRolesPermissionsService,
+		},
+	)
 	authUsecase := auth_usecase.NewUseCase(auth_usecase.Config{
 		Issuer:                     cfg.ServiceName,
 		AccessTokenSecret:          cfg.AccessTokenSecret,
@@ -148,15 +153,11 @@ func New(ctx context.Context, cfg Config) *Handler {
 		EmailNotificationOutboxSvc: emailNotifOutboxSvc,
 		DB:                         tx,
 		FrontendURL:                cfg.FrontendURL,
+		UserRolesPermissions:       userRolesPermissionsUsecase,
 	})
 	roleUsecase := role_usecase.NewUseCase(cfg.Log, roleService, auditService, tx)
 	permissionUsecase := permission_usecase.NewUseCase(cfg.Log, permissionService, auditService, tx)
 	systemUsecase := system_usecase.NewUseCase(cfg.Build, cfg.Log, cfg.DB)
-	userRolesPermissionsUsecase := user_roles_permissions_usecase.NewUseCase(
-		user_roles_permissions_usecase.Config{
-			Service: userRolesPermissionsService,
-		},
-	)
 	userRolesUsecase := user_roles_usecase.NewUseCase(cfg.Log, userRolesSvc, auditService, tx)
 	rolePermissionsUsecase := role_permissions_usecase.NewUseCase(
 		cfg.Log, rolePermsSvc, auditService, tx,

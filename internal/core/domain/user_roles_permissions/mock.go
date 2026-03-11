@@ -259,23 +259,23 @@ func (_c *MockStorer_Query_Call) RunAndReturn(run func(ctx context.Context, filt
 }
 
 // QueryPermissionsByUserID provides a mock function for the type MockStorer
-func (_mock *MockStorer) QueryPermissionsByUserID(ctx context.Context, userID uuid.UUID) ([]string, error) {
+func (_mock *MockStorer) QueryPermissionsByUserID(ctx context.Context, userID uuid.UUID) ([]Permission, error) {
 	ret := _mock.Called(ctx, userID)
 
 	if len(ret) == 0 {
 		panic("no return value specified for QueryPermissionsByUserID")
 	}
 
-	var r0 []string
+	var r0 []Permission
 	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, uuid.UUID) ([]string, error)); ok {
+	if returnFunc, ok := ret.Get(0).(func(context.Context, uuid.UUID) ([]Permission, error)); ok {
 		return returnFunc(ctx, userID)
 	}
-	if returnFunc, ok := ret.Get(0).(func(context.Context, uuid.UUID) []string); ok {
+	if returnFunc, ok := ret.Get(0).(func(context.Context, uuid.UUID) []Permission); ok {
 		r0 = returnFunc(ctx, userID)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]string)
+			r0 = ret.Get(0).([]Permission)
 		}
 	}
 	if returnFunc, ok := ret.Get(1).(func(context.Context, uuid.UUID) error); ok {
@@ -316,12 +316,12 @@ func (_c *MockStorer_QueryPermissionsByUserID_Call) Run(run func(ctx context.Con
 	return _c
 }
 
-func (_c *MockStorer_QueryPermissionsByUserID_Call) Return(strings []string, err error) *MockStorer_QueryPermissionsByUserID_Call {
-	_c.Call.Return(strings, err)
+func (_c *MockStorer_QueryPermissionsByUserID_Call) Return(permissions []Permission, err error) *MockStorer_QueryPermissionsByUserID_Call {
+	_c.Call.Return(permissions, err)
 	return _c
 }
 
-func (_c *MockStorer_QueryPermissionsByUserID_Call) RunAndReturn(run func(ctx context.Context, userID uuid.UUID) ([]string, error)) *MockStorer_QueryPermissionsByUserID_Call {
+func (_c *MockStorer_QueryPermissionsByUserID_Call) RunAndReturn(run func(ctx context.Context, userID uuid.UUID) ([]Permission, error)) *MockStorer_QueryPermissionsByUserID_Call {
 	_c.Call.Return(run)
 	return _c
 }

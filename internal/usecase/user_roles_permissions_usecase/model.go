@@ -4,6 +4,12 @@ import (
 	urp "github.com/Housiadas/cerberus/internal/core/domain/user_roles_permissions"
 )
 
+// Permission represents a permission with its ID and name for the app layer.
+type Permission struct {
+	ID   string `json:"id"`
+	Name string `json:"name"`
+}
+
 // UserRolesPermissions represents a single row from the user_roles_permissions view for the app layer.
 type UserRolesPermissions struct {
 	UserID         string `json:"userId"`

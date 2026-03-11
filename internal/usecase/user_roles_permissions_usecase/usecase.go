@@ -60,19 +60,30 @@ func (uc *UseCase) Query(
 	return page.NewResult(toManyUserRolesPermissions(rows), total, p), nil
 }
 
-// QueryPermissionsByUserID returns all permission names for the given user.
-func (uc *UseCase) QueryPermissionsByUserID(ctx context.Context, userID string) ([]string, error) {
+// QueryPermissionsByUserID returns all permissions (id and name) for the given user.
+func (uc *UseCase) QueryPermissionsByUserID(
+	ctx context.Context,
+	userID string,
+) ([]Permission, error) {
 	userUUID, err := uuid.Parse(userID)
 	if err != nil {
 		return nil, errs.Errorf(errs.InvalidArgument, "could not parse uuid: %s", err)
 	}
 
-	permissions, err := uc.service.QueryPermissionsByUserID(ctx, userUUID)
+	perms, err := uc.service.QueryPermissionsByUserID(ctx, userUUID)
 	if err != nil {
 		return nil, errs.Errorf(errs.Internal, "query_permissions_by_user_id: %s", err)
 	}
 
-	return permissions, nil
+	result := make([]Permission, len(perms))
+	for i, p := range perms {
+		result[i] = Permission{
+			ID:   p.ID.String(),
+			Name: p.Name,
+		}
+	}
+
+	return result, nil
 }
 
 // HasPermission checks if the user has the specified permission.

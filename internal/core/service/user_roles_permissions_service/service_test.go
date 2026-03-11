@@ -151,7 +151,11 @@ func TestService_QueryPermissionsByUserID_Successful(t *testing.T) {
 	ctx := context.Background()
 	userID := uuid.MustParse("01234567-89ab-7def-0123-456789abcdef")
 
-	expected := []string{"user:read", "user:write", "role:read:all"}
+	expected := []user_roles_permissions.Permission{
+		{ID: uuid.MustParse("11111111-1111-7111-1111-111111111111"), Name: "user:read"},
+		{ID: uuid.MustParse("22222222-2222-7222-2222-222222222222"), Name: "user:write"},
+		{ID: uuid.MustParse("33333333-3333-7333-3333-333333333333"), Name: "role:read:all"},
+	}
 
 	mLogger := logger.NewMockLogger(t)
 
@@ -172,7 +176,7 @@ func TestService_QueryPermissionsByUserID_Empty(t *testing.T) {
 	mLogger := logger.NewMockLogger(t)
 
 	mStorer := user_roles_permissions.NewMockStorer(t)
-	mStorer.EXPECT().QueryPermissionsByUserID(ctx, userID).Return([]string{}, nil)
+	mStorer.EXPECT().QueryPermissionsByUserID(ctx, userID).Return([]user_roles_permissions.Permission{}, nil)
 
 	sut := user_roles_permissions_service.New(mLogger, mStorer)
 	result, err := sut.QueryPermissionsByUserID(ctx, userID)
