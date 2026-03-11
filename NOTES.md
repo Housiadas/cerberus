@@ -13,30 +13,30 @@ High Value / Low Effort
   ---
 Medium Value / Medium Effort
 
-5. Hierarchical Roles (Role Inheritance)
+3. Hierarchical Roles (Role Inheritance)
    The current RBAC is flat — a user can have many roles, but roles don't inherit from each other. Adding a parent_role_id to the roles table enables hierarchical
    permission inheritance (e.g., admin inherits all editor permissions).
 
-6. Pagination Cursor-Based (Keyset)
+4. Pagination Cursor-Based (Keyset)
    The codebase uses offset-based pagination (page, order packages). For large datasets, keyset/cursor pagination performs significantly better and is stable under
    concurrent writes. This is a refactor of the repo query layer.
 
-7. User Self-Service Endpoints
+5. User Self-Service Endpoints
    There's no GET /me, PUT /me, or PUT /me/password endpoint. Currently, users can only be managed by privileged callers. A self-service profile endpoint with
    different permission scope would be useful.
 
-8. Multi-Tenancy / Namespacing
+6. Multi-Tenancy / Namespacing
    The config.App.Namespace field exists but doesn't appear to be used for data isolation. If this is a multi-tenant SaaS, scoping all domain queries by namespace_id
    (or tenant_id) at the repo layer would enable it.
 
   ---
 Refactor Suggestions
 
-9. Access Token Claims — Roles as IDs, Not Names
+7. Access Token Claims — Roles as IDs, Not Names
    JWT claims currently embed role names as strings. If a role is renamed, existing valid tokens carry the old name. Embedding role IDs and resolving them at
    permission check time (with the existing singleflight cache) is more robust.
 
-10. Outbox Relay — Push-Based Instead of Poll-Based
+8. Outbox Relay — Push-Based Instead of Poll-Based
     internal/app/relay/relay.go polls the outbox table at a fixed interval. A PostgreSQL LISTEN/NOTIFY trigger on the outbox table would reduce latency and DB load —
     the relay wakes up only on new rows.
 

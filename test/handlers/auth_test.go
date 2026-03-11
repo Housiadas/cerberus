@@ -187,10 +187,11 @@ func Test_API_Auth_ResetPassword_204(t *testing.T) {
 
 	table := []apitest.Table{
 		{
-			Name:       "valid-reset",
-			URL:        "/api/v1/auth/reset-password",
-			Method:     http.MethodPost,
-			StatusCode: http.StatusNoContent,
+			Name:        "valid-reset",
+			URL:         "/api/v1/auth/reset-password",
+			Method:      http.MethodPost,
+			StatusCode:  http.StatusNoContent,
+			AccessToken: &sd.Users[0].AccessToken.Token,
 			Input: &auth_usecase.ResetPasswordReq{
 				Token:           tkn.Token(),
 				OldPassword:     "Secret123!@#",
@@ -225,10 +226,11 @@ func Test_API_Auth_ResetPassword_400(t *testing.T) {
 
 	table := []apitest.Table{
 		{
-			Name:       "invalid-token",
-			URL:        "/api/v1/auth/reset-password",
-			Method:     http.MethodPost,
-			StatusCode: http.StatusNotFound,
+			Name:        "invalid-token",
+			URL:         "/api/v1/auth/reset-password",
+			Method:      http.MethodPost,
+			StatusCode:  http.StatusNotFound,
+			AccessToken: &sd.Users[0].AccessToken.Token,
 			Input: &auth_usecase.ResetPasswordReq{
 				Token:           "invalid-token",
 				OldPassword:     "Secret123!@#",
@@ -236,12 +238,21 @@ func Test_API_Auth_ResetPassword_400(t *testing.T) {
 				PasswordConfirm: "NewSecret456!@#",
 			},
 			GotResp: &errs.Error{},
+			AssertFunc: func(got any, exp any) string {
+				gotResp, exists := got.(*errs.Error)
+				if !exists {
+					return "error occurred"
+				}
+				assert.NotEmpty(t, gotResp.Message)
+				return ""
+			},
 		},
 		{
-			Name:       "wrong-old-password",
-			URL:        "/api/v1/auth/reset-password",
-			Method:     http.MethodPost,
-			StatusCode: http.StatusBadRequest,
+			Name:        "wrong-old-password",
+			URL:         "/api/v1/auth/reset-password",
+			Method:      http.MethodPost,
+			StatusCode:  http.StatusBadRequest,
+			AccessToken: &sd.Users[0].AccessToken.Token,
 			Input: &auth_usecase.ResetPasswordReq{
 				Token:           tkn.Token(),
 				OldPassword:     "WrongPassword123!",
@@ -249,6 +260,14 @@ func Test_API_Auth_ResetPassword_400(t *testing.T) {
 				PasswordConfirm: "NewSecret456!@#",
 			},
 			GotResp: &errs.Error{},
+			AssertFunc: func(got any, exp any) string {
+				gotResp, exists := got.(*errs.Error)
+				if !exists {
+					return "error occurred"
+				}
+				assert.NotEmpty(t, gotResp.Message)
+				return ""
+			},
 		},
 	}
 
