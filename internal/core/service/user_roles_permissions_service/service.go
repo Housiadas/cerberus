@@ -53,11 +53,11 @@ func (s *Service) Count(
 	return count, nil
 }
 
-// QueryPermissionsByUserID returns all permission names for the given user.
+// QueryPermissionsByUserID returns all permissions (id and name) for the given user.
 func (s *Service) QueryPermissionsByUserID(
 	ctx context.Context,
 	userID uuid.UUID,
-) ([]string, error) {
+) ([]user_roles_permissions.Permission, error) {
 	permissions, err := s.storer.QueryPermissionsByUserID(ctx, userID)
 	if err != nil {
 		return nil, fmt.Errorf("query permissions by user_id: %w", err)

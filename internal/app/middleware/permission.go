@@ -6,6 +6,7 @@ import (
 	"slices"
 
 	"github.com/Housiadas/cerberus/internal/app/handler/openapi"
+	"github.com/Housiadas/cerberus/internal/usecase/user_roles_permissions_usecase"
 	ctxPck "github.com/Housiadas/cerberus/internal/utils/context"
 	"github.com/Housiadas/cerberus/internal/utils/errs"
 )
@@ -57,14 +58,19 @@ func (m *Middleware) Permission() openapi.StrictMiddlewareFunc {
 				return nil, errs.New(errs.Internal, ErrCheckingPermission)
 			}
 
-			permissions, ok := result.([]string)
+			permissions, ok := result.([]user_roles_permissions_usecase.Permission)
 			if !ok {
 				m.log.Error(ctx, "error casting permissions", err)
 
 				return nil, errs.New(errs.Internal, ErrCheckingPermission)
 			}
 
-			hasPermission := slices.Contains(permissions, permissionName)
+			hasPermission := slices.ContainsFunc(
+				permissions,
+				func(p user_roles_permissions_usecase.Permission) bool {
+					return p.Name == permissionName
+				},
+			)
 			if !hasPermission {
 				m.log.Info(ctx, "access denied",
 					"user_id", userID,

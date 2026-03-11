@@ -9,6 +9,7 @@ import (
 	"github.com/Housiadas/cerberus/internal/app/repo/reset_token_repo"
 	"github.com/Housiadas/cerberus/internal/app/repo/role_repo"
 	"github.com/Housiadas/cerberus/internal/app/repo/user_repo"
+	"github.com/Housiadas/cerberus/internal/app/repo/user_roles_permissions_repo"
 	"github.com/Housiadas/cerberus/internal/core/service/audit_service"
 	"github.com/Housiadas/cerberus/internal/core/service/email_notification_outbox_service"
 	"github.com/Housiadas/cerberus/internal/core/service/outbox_service"
@@ -16,9 +17,11 @@ import (
 	"github.com/Housiadas/cerberus/internal/core/service/refresh_token_service"
 	"github.com/Housiadas/cerberus/internal/core/service/reset_token_service"
 	"github.com/Housiadas/cerberus/internal/core/service/role_service"
+	"github.com/Housiadas/cerberus/internal/core/service/user_roles_permissions_service"
 	"github.com/Housiadas/cerberus/internal/core/service/user_service"
 	"github.com/Housiadas/cerberus/internal/usecase/auth_usecase"
 	"github.com/Housiadas/cerberus/internal/usecase/refresh_token_usecase"
+	"github.com/Housiadas/cerberus/internal/usecase/user_roles_permissions_usecase"
 	"github.com/Housiadas/cerberus/internal/usecase/user_usecase"
 	"github.com/Housiadas/cerberus/pkg/clock"
 	"github.com/Housiadas/cerberus/pkg/hasher"
@@ -89,6 +92,13 @@ func newDependency(
 		pgsql.NewBeginner(db),
 	)
 	refreshTokenUsecase := refresh_token_usecase.NewUseCase(refreshTokenService)
+	userRolesPermissionsSvc := user_roles_permissions_service.New(
+		log,
+		user_roles_permissions_repo.NewStore(log, db),
+	)
+	userRolesPermissionsUsecase := user_roles_permissions_usecase.NewUseCase(
+		user_roles_permissions_usecase.Config{Service: userRolesPermissionsSvc},
+	)
 	authUsecase := auth_usecase.NewUseCase(auth_usecase.Config{
 		Issuer:                     serviceName,
 		AccessTokenSecret:          accessTokenSecret,
@@ -100,6 +110,7 @@ func newDependency(
 		EmailNotificationOutboxSvc: emailNotificationOutboxSvc,
 		DB:                         pgsql.NewBeginner(db),
 		FrontendURL:                "http://localhost:3000",
+		UserRolesPermissions:       userRolesPermissionsUsecase,
 	})
 
 	return &Dependency{

@@ -32,10 +32,6 @@ Medium Value / Medium Effort
   ---
 Refactor Suggestions
 
-7. Access Token Claims — Roles as IDs, Not Names
-   JWT claims currently embed role names as strings. If a role is renamed, existing valid tokens carry the old name. Embedding role IDs and resolving them at
-   permission check time (with the existing singleflight cache) is more robust.
-
 8. Outbox Relay — Push-Based Instead of Poll-Based
     internal/app/relay/relay.go polls the outbox table at a fixed interval. A PostgreSQL LISTEN/NOTIFY trigger on the outbox table would reduce latency and DB load —
     the relay wakes up only on new rows.

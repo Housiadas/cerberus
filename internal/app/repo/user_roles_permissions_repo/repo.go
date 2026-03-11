@@ -94,14 +94,18 @@ func (s *Store) Count(ctx context.Context, filter urp.QueryFilter) (int, error) 
 	return cnt.Count, nil
 }
 
-// QueryPermissionsByUserID returns all distinct permission names for the given user.
-func (s *Store) QueryPermissionsByUserID(ctx context.Context, userID uuid.UUID) ([]string, error) {
+// QueryPermissionsByUserID returns all distinct permissions (id and name) for the given user.
+func (s *Store) QueryPermissionsByUserID(
+	ctx context.Context,
+	userID uuid.UUID,
+) ([]urp.Permission, error) {
 	data := map[string]any{
 		"user_id": userID,
 	}
 
 	var rows []struct {
-		PermissionName string `db:"permission_name"`
+		PermissionID   uuid.UUID `db:"permission_id"`
+		PermissionName string    `db:"permission_name"`
 	}
 
 	err := pgsql.NamedQuerySlice(ctx, s.log, s.db, userPermissionsByUserIDSQL, data, &rows)
@@ -109,9 +113,12 @@ func (s *Store) QueryPermissionsByUserID(ctx context.Context, userID uuid.UUID) 
 		return nil, fmt.Errorf("db query permissions by user_id: %w", err)
 	}
 
-	permissions := make([]string, len(rows))
+	permissions := make([]urp.Permission, len(rows))
 	for i, r := range rows {
-		permissions[i] = r.PermissionName
+		permissions[i] = urp.Permission{
+			ID:   r.PermissionID,
+			Name: r.PermissionName,
+		}
 	}
 
 	return permissions, nil

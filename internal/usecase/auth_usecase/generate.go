@@ -14,12 +14,17 @@ type AccessToken struct {
 	ExpiresIn int64
 }
 
-func (u *UseCase) GenerateAccessToken(_ context.Context, userID string) (AccessToken, error) {
-	// get user roles name
-	// roles, err := u.userRolesUsecase.GetUserRolesNames(ctx, userID)
-	// if err != nil {
-	//	return AccessToken{}, errs.Errorf(errs.NotFound, "roles not found: %s", err)
-	//}
+func (u *UseCase) GenerateAccessToken(ctx context.Context, userID string) (AccessToken, error) {
+	perms, err := u.userRolesPermissions.QueryPermissionsByUserID(ctx, userID)
+	if err != nil {
+		return AccessToken{}, errs.Errorf(errs.Internal, "query permissions: %s", err)
+	}
+
+	claimPerms := make([]Permission, len(perms))
+	for i, p := range perms {
+		claimPerms[i] = Permission{ID: p.ID, Name: p.Name}
+	}
+
 	// Generating a Token requires defining a set of claims
 	// iss (issuer): Issuer of the JWT
 	// sub (subject): Subject of the JWT (the user)
@@ -31,9 +36,9 @@ func (u *UseCase) GenerateAccessToken(_ context.Context, userID string) (AccessT
 	// (allows a Token to be used only once)
 	now := time.Now()
 
-	accessTokenID, err := uuid.NewV7()
-	if err != nil {
-		return AccessToken{}, errs.Errorf(errs.Internal, "uuid v7: %s", err)
+	accessTokenID, genErr := uuid.NewV7()
+	if genErr != nil {
+		return AccessToken{}, errs.Errorf(errs.Internal, "uuid v7: %s", genErr)
 	}
 
 	accessClaims := Claims{
@@ -45,8 +50,8 @@ func (u *UseCase) GenerateAccessToken(_ context.Context, userID string) (AccessT
 			ExpiresAt: jwt.NewNumericDate(now.UTC().Add(accessTokenTTL)),
 			Audience:  []string{u.Issuer()},
 		},
-		TokenID: accessTokenID.String(),
-		// Roles:   roles,
+		TokenID:     accessTokenID.String(),
+		Permissions: claimPerms,
 	}
 
 	aToken := jwt.NewWithClaims(u.method, accessClaims)
