@@ -9,29 +9,14 @@ import (
 	"github.com/Housiadas/cerberus/internal/core/domain/user"
 	"github.com/Housiadas/cerberus/internal/utils/errs"
 	"github.com/Housiadas/cerberus/internal/utils/page"
-	"github.com/Housiadas/cerberus/internal/utils/validation"
 	"github.com/Housiadas/cerberus/pkg/clock"
 )
-
-// =============================================================================
 
 // AuthenticateUser defines the data needed to authenticate a user.
 type AuthenticateUser struct {
 	Email    string `json:"email"    validate:"required"`
 	Password string `json:"password" validate:"required"`
 }
-
-// Validate checks the data in the model is considered clean.
-func (app *AuthenticateUser) Validate() error {
-	err := validation.Check(app)
-	if err != nil {
-		return fmt.Errorf("auth user validation error: %w", err)
-	}
-
-	return nil
-}
-
-// =============================================================================
 
 // User represents information about an individual user.
 type User struct {
@@ -67,14 +52,10 @@ func toAppUsers(users []user.User) []User {
 	return app
 }
 
-// =============================================================================
-
 type UserPageResult struct {
 	Data     []User        `json:"data"`
 	Metadata page.Metadata `json:"metadata"`
 }
-
-// =============================================================================
 
 // NewUser defines the data needed to add a new user.
 type NewUser struct {
@@ -83,16 +64,6 @@ type NewUser struct {
 	Department      string `json:"department"`
 	Password        string `json:"password"        validate:"required"`
 	PasswordConfirm string `json:"passwordConfirm" validate:"required"`
-}
-
-// Validate checks the data in the model is considered clean.
-func (app *NewUser) Validate() error {
-	err := validation.Check(app)
-	if err != nil {
-		return fmt.Errorf("new user validation error: %w", err)
-	}
-
-	return nil
 }
 
 func toBusNewUser(app NewUser) (user.NewUser, error) {
@@ -131,8 +102,6 @@ func toBusNewUser(app NewUser) (user.NewUser, error) {
 
 	return bus, nil
 }
-
-// =============================================================================
 
 // UpdateUserRole defines the data needed to update a user role.
 type UpdateUserRole struct {

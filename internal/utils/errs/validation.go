@@ -6,9 +6,7 @@ import (
 	"runtime"
 )
 
-var (
-	ErrValidationError = errors.New("validation error")
-)
+var ErrValidationError = errors.New("validation error")
 
 // ParseValidationErrors converts validation errors into an Error.
 func ParseValidationErrors(err error) *Error {
