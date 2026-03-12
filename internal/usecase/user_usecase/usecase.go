@@ -145,6 +145,17 @@ func (a *UseCase) Update(ctx context.Context, res UpdateUser, userID string) (Us
 	return toAppUser(updUsr), nil
 }
 
+// UpdateMe updates the authenticated user's own profile.
+func (a *UseCase) UpdateMe(ctx context.Context, res UpdateMe, userID string) (User, error) {
+	return a.Update(ctx, UpdateUser{
+		Name:            res.Name,
+		Email:           res.Email,
+		Department:      res.Department,
+		Password:        res.Password,
+		PasswordConfirm: res.PasswordConfirm,
+	}, userID)
+}
+
 // Delete removes a user from the system.
 func (a *UseCase) Delete(ctx context.Context, userID string) error {
 	userUUID, err := uuid.Parse(userID)

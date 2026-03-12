@@ -172,6 +172,48 @@ paths:
         default:
           $ref: '#/components/responses/ErrorResponse'
 
+  # ---- Users (Self-Service) ----
+  /api/v1/users/me:
+    get:
+      operationId: getMe
+      tags: [Users]
+      summary: Get current user
+      description: Get the authenticated user's own profile
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Current user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
+    put:
+      operationId: updateMe
+      tags: [Users]
+      summary: Update current user
+      description: Update the authenticated user's own profile
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateMe'
+      responses:
+        '200':
+          description: User updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
   # ---- Users ----
   /api/v1/users:
     get:
@@ -832,6 +874,23 @@ components:
           type: string
         enabled:
           type: boolean
+
+    UpdateMe:
+      x-go-type: user_usecase.UpdateMe
+      x-go-type-import:
+        path: github.com/Housiadas/cerberus/internal/usecase/user_usecase
+      type: object
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+        department:
+          type: string
+        password:
+          type: string
+        passwordConfirm:
+          type: string
 
     User:
       x-go-type: user_usecase.User
