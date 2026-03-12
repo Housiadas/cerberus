@@ -19,6 +19,172 @@ import (
 	"github.com/Housiadas/cerberus/pkg/clock"
 )
 
+func Test_API_User_GetMe_200(t *testing.T) {
+	t.Parallel()
+
+	test, err := env.StartTest(t, t.Name())
+	require.NoError(t, err)
+
+	sd, err := insertUserSeedData(test)
+	require.NoError(t, err)
+
+	table := []apitest.Table{
+		{
+			Name:        "as-user",
+			URL:         "/api/v1/users/me",
+			StatusCode:  http.StatusOK,
+			Method:      http.MethodGet,
+			AccessToken: &sd.Users[0].AccessToken.Token,
+			GotResp:     &user_usecase.User{},
+			ExpResp:     toAppUserPtr(sd.Users[0].User),
+			AssertFunc: func(got any, exp any) string {
+				return cmp.Diff(got, exp)
+			},
+		},
+		{
+			Name:        "as-admin",
+			URL:         "/api/v1/users/me",
+			StatusCode:  http.StatusOK,
+			Method:      http.MethodGet,
+			AccessToken: &sd.Admins[0].AccessToken.Token,
+			GotResp:     &user_usecase.User{},
+			ExpResp:     toAppUserPtr(sd.Admins[0].User),
+			AssertFunc: func(got any, exp any) string {
+				return cmp.Diff(got, exp)
+			},
+		},
+	}
+
+	test.Run(t, table, "get-me-200")
+}
+
+func Test_API_User_GetMe_401(t *testing.T) {
+	t.Parallel()
+
+	test, err := env.StartTest(t, t.Name())
+	require.NoError(t, err)
+
+	table := []apitest.Table{
+		{
+			Name:       "missing-access-token",
+			URL:        "/api/v1/users/me",
+			StatusCode: http.StatusUnauthorized,
+			Method:     http.MethodGet,
+			GotResp:    &errs.Error{},
+			ExpResp:    errs.Errorf(errs.Unauthenticated, "expected authorization header format: Bearer <token>"),
+			AssertFunc: func(got any, exp any) string {
+				return cmp.Diff(got, exp)
+			},
+		},
+	}
+
+	test.Run(t, table, "get-me-401")
+}
+
+func Test_API_User_UpdateMe_200(t *testing.T) {
+	t.Parallel()
+
+	test, err := env.StartTest(t, t.Name())
+	require.NoError(t, err)
+
+	sd, err := insertUserSeedData(test)
+	require.NoError(t, err)
+
+	table := []apitest.Table{
+		{
+			Name:        "basic",
+			URL:         "/api/v1/users/me",
+			Method:      http.MethodPut,
+			StatusCode:  http.StatusOK,
+			AccessToken: &sd.Users[0].AccessToken.Token,
+			Input: &user_usecase.UpdateMe{
+				Name:       dbtest.StringPointer("Updated Name"),
+				Email:      dbtest.StringPointer("updated@housi.com"),
+				Department: dbtest.StringPointer("Engineering"),
+			},
+			GotResp: &user_usecase.User{},
+			ExpResp: &user_usecase.User{
+				ID:         sd.Users[0].ID().String(),
+				Name:       "Updated Name",
+				Email:      "updated@housi.com",
+				Department: "Engineering",
+				Enabled:    true,
+				CreatedAt:  func() string { ct := sd.Users[0].CreatedAt(); return clock.Format(&ct) }(),
+			},
+			AssertFunc: func(got any, exp any) string {
+				gotResp, exists := got.(*user_usecase.User)
+				if !exists {
+					return "error occurred"
+				}
+
+				expResp := exp.(*user_usecase.User)
+				expResp.UpdatedAt = gotResp.UpdatedAt
+
+				return cmp.Diff(gotResp, expResp)
+			},
+		},
+	}
+
+	test.Run(t, table, "update-me-200")
+}
+
+func Test_API_User_UpdateMe_400(t *testing.T) {
+	t.Parallel()
+
+	test, err := env.StartTest(t, t.Name())
+	require.NoError(t, err)
+
+	sd, err := insertUserSeedData(test)
+	require.NoError(t, err)
+
+	table := []apitest.Table{
+		{
+			Name:        "bad-email",
+			URL:         "/api/v1/users/me",
+			Method:      http.MethodPut,
+			StatusCode:  http.StatusBadRequest,
+			AccessToken: &sd.Users[0].AccessToken.Token,
+			Input: &user_usecase.UpdateMe{
+				Email:           dbtest.StringPointer("bill@"),
+				PasswordConfirm: dbtest.StringPointer("jack"),
+			},
+			GotResp: &errs.Error{},
+			ExpResp: errs.Errorf(errs.InvalidArgument, "validate: [{\"field\":\"email\",\"error\":\"mail: missing '@' or angle-addr\"},{\"field\":\"password\",\"error\":\"passwords do not match\"}]"),
+			AssertFunc: func(got any, exp any) string {
+				return cmp.Diff(got, exp)
+			},
+		},
+	}
+
+	test.Run(t, table, "update-me-400")
+}
+
+func Test_API_User_UpdateMe_401(t *testing.T) {
+	t.Parallel()
+
+	test, err := env.StartTest(t, t.Name())
+	require.NoError(t, err)
+
+	table := []apitest.Table{
+		{
+			Name:       "missing-access-token",
+			URL:        "/api/v1/users/me",
+			StatusCode: http.StatusUnauthorized,
+			Method:     http.MethodPut,
+			Input: &user_usecase.UpdateMe{
+				Name: dbtest.StringPointer("Test"),
+			},
+			GotResp: &errs.Error{},
+			ExpResp: errs.Errorf(errs.Unauthenticated, "expected authorization header format: Bearer <token>"),
+			AssertFunc: func(got any, exp any) string {
+				return cmp.Diff(got, exp)
+			},
+		},
+	}
+
+	test.Run(t, table, "update-me-401")
+}
+
 func Test_API_User_Query_200(t *testing.T) {
 	t.Parallel()
 

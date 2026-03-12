@@ -139,6 +139,15 @@ type UpdateUserRole struct {
 	Roles []string `json:"roles" validate:"required"`
 }
 
+// UpdateMe defines the data needed to update the authenticated user's own profile.
+type UpdateMe struct {
+	Name            *string `json:"name"`
+	Email           *string `json:"email"`
+	Department      *string `json:"department"`
+	Password        *string `json:"password"`
+	PasswordConfirm *string `json:"passwordConfirm"`
+}
+
 // UpdateUser defines the data needed to update a user.
 type UpdateUser struct {
 	Name            *string `json:"name"`
@@ -150,6 +159,45 @@ type UpdateUser struct {
 }
 
 func toBusUpdateUser(app UpdateUser) (user.UpdateUser, error) {
+	addr, pass, err := validateUpdateUserFields(app)
+	if err != nil {
+		return user.UpdateUser{}, err
+	}
+
+	var nme *name.Name
+
+	if app.Name != nil {
+		nm, nameErr := name.Parse(*app.Name)
+		if nameErr != nil {
+			return user.UpdateUser{}, fmt.Errorf("parse: %w", nameErr)
+		}
+
+		nme = &nm
+	}
+
+	var department *name.Null
+
+	if app.Department != nil {
+		dep, depErr := name.ParseNull(*app.Department)
+		if depErr != nil {
+			return user.UpdateUser{}, fmt.Errorf("parse: %w", depErr)
+		}
+
+		department = &dep
+	}
+
+	bus := user.UpdateUser{
+		Name:       nme,
+		Email:      addr,
+		Department: department,
+		Password:   pass,
+		Enabled:    app.Enabled,
+	}
+
+	return bus, nil
+}
+
+func validateUpdateUserFields(app UpdateUser) (*mail.Address, *password.Password, error) {
 	var errors errs.FieldErrors
 
 	var addr *mail.Address
@@ -163,48 +211,20 @@ func toBusUpdateUser(app UpdateUser) (user.UpdateUser, error) {
 		}
 	}
 
-	var nme *name.Name
-
-	if app.Name != nil {
-		nm, err := name.Parse(*app.Name)
-		if err != nil {
-			return user.UpdateUser{}, fmt.Errorf("parse: %w", err)
-		}
-
-		nme = &nm
-	}
-
-	var department *name.Null
-
-	if app.Department != nil {
-		dep, err := name.ParseNull(*app.Department)
-		if err != nil {
-			return user.UpdateUser{}, fmt.Errorf("parse: %w", err)
-		}
-
-		department = &dep
-	}
-
 	var pass *password.Password
 
-	p, err := password.ParseConfirmPointers(app.Password, app.PasswordConfirm)
-	if err != nil {
-		errors.Add("password", err)
-	}
+	if app.Password != nil || app.PasswordConfirm != nil {
+		p, err := password.ParseConfirmPointers(app.Password, app.PasswordConfirm)
+		if err != nil {
+			errors.Add("password", err)
+		}
 
-	pass = &p
+		pass = &p
+	}
 
 	if len(errors) > 0 {
-		return user.UpdateUser{}, fmt.Errorf("validate: %w", errors.ToError())
+		return nil, nil, fmt.Errorf("validate: %w", errors.ToError())
 	}
 
-	bus := user.UpdateUser{
-		Name:       nme,
-		Email:      addr,
-		Department: department,
-		Password:   pass,
-		Enabled:    app.Enabled,
-	}
-
-	return bus, nil
+	return addr, pass, nil
 }

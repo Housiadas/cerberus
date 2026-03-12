@@ -6,8 +6,37 @@ import (
 
 	"github.com/Housiadas/cerberus/internal/app/handler/openapi"
 	"github.com/Housiadas/cerberus/internal/usecase/user_usecase"
+	ctxPck "github.com/Housiadas/cerberus/internal/utils/context"
 	"github.com/Housiadas/cerberus/internal/utils/pntr"
 )
+
+func (h *Handler) GetMe(
+	ctx context.Context,
+	_ openapi.GetMeRequestObject,
+) (openapi.GetMeResponseObject, error) {
+	actorID := ctxPck.GetActorID(ctx)
+
+	usr, err := h.usecase.user.QueryByID(ctx, actorID)
+	if err != nil {
+		return nil, fmt.Errorf("get me: %w", err)
+	}
+
+	return openapi.GetMe200JSONResponse(usr), nil
+}
+
+func (h *Handler) UpdateMe(
+	ctx context.Context,
+	request openapi.UpdateMeRequestObject,
+) (openapi.UpdateMeResponseObject, error) {
+	actorID := ctxPck.GetActorID(ctx)
+
+	updUser, err := h.usecase.user.UpdateMe(ctx, *request.Body, actorID)
+	if err != nil {
+		return nil, fmt.Errorf("update me: %w", err)
+	}
+
+	return openapi.UpdateMe200JSONResponse(updUser), nil
+}
 
 func (h *Handler) ListUsers(
 	ctx context.Context,
