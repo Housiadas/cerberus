@@ -46,8 +46,16 @@ type AuditPageResult struct {
 
 // Error defines model for Error.
 type Error struct {
-	Code    *string `json:"code,omitempty"`
-	Message *string `json:"message,omitempty"`
+	Code    *string       `json:"code,omitempty"`
+	Fields  *[]FieldError `json:"fields,omitempty"`
+	Message *string       `json:"message,omitempty"`
+	Status  *string       `json:"status,omitempty"`
+}
+
+// FieldError defines model for FieldError.
+type FieldError struct {
+	Error *string `json:"error,omitempty"`
+	Field *string `json:"field,omitempty"`
 }
 
 // ForgotPasswordReq defines model for ForgotPasswordReq.

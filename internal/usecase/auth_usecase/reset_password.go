@@ -13,15 +13,27 @@ import (
 func (u *UseCase) ResetPassword(ctx context.Context, req ResetPasswordReq) error {
 	tkn, err := u.resetTokenSvc.QueryByToken(ctx, req.Token)
 	if err != nil {
-		return errs.Errorf(errs.NotFound, "invalid or expired reset token")
+		return errs.Errorf(
+			errs.NotFound,
+			errs.CodeInvalidToken,
+			"invalid or expired reset token",
+		)
 	}
 
 	if tkn.IsExpired() {
-		return errs.Errorf(errs.InvalidArgument, "reset token has expired")
+		return errs.Errorf(
+			errs.InvalidArgument,
+			errs.CodeExpiredToken,
+			"reset token has expired",
+		)
 	}
 
 	if tkn.Used() {
-		return errs.Errorf(errs.InvalidArgument, "reset token has already been used")
+		return errs.Errorf(
+			errs.InvalidArgument,
+			errs.CodeInvalidToken,
+			"reset token has already been used",
+		)
 	}
 
 	newPassword, parseErr := password.ParseConfirm(req.Password, req.PasswordConfirm)
@@ -31,12 +43,16 @@ func (u *UseCase) ResetPassword(ctx context.Context, req ResetPasswordReq) error
 
 	currentUsr, queryErr := u.userService.QueryByID(ctx, tkn.UserID())
 	if queryErr != nil {
-		return errs.Errorf(errs.Internal, "query user: %s", queryErr)
+		return errs.Errorf(errs.Internal, errs.CodeInternal, "query user: %s", queryErr)
 	}
 
 	verifyErr := u.userService.VerifyPassword(currentUsr, req.OldPassword)
 	if verifyErr != nil {
-		return errs.Errorf(errs.InvalidArgument, "old password is incorrect")
+		return errs.Errorf(
+			errs.InvalidArgument,
+			errs.CodeAuthFailed,
+			"old password is incorrect",
+		)
 	}
 
 	uu := user.UpdateUser{

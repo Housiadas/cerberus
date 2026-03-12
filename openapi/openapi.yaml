@@ -1085,7 +1085,21 @@ components:
     Error:
       type: object
       properties:
+        status:
+          type: string
         code:
           type: string
         message:
+          type: string
+        fields:
+          type: array
+          items:
+            $ref: '#/components/schemas/FieldError'
+
+    FieldError:
+      type: object
+      properties:
+        field:
+          type: string
+        error:
           type: string

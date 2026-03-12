@@ -45,12 +45,22 @@ func (a *UseCase) Query(ctx context.Context, qp AppQueryParams) (page.Result[Aud
 
 	adts, err := a.AuditService.Query(ctx, filter, orderBy, p)
 	if err != nil {
-		return page.Result[Audit]{}, errs.Errorf(errs.Internal, "query: %s", err)
+		return page.Result[Audit]{}, errs.Errorf(
+			errs.Internal,
+			errs.CodeInternal,
+			"query: %s",
+			err,
+		)
 	}
 
 	total, err := a.AuditService.Count(ctx, filter)
 	if err != nil {
-		return page.Result[Audit]{}, errs.Errorf(errs.Internal, "count: %s", err)
+		return page.Result[Audit]{}, errs.Errorf(
+			errs.Internal,
+			errs.CodeInternal,
+			"count: %s",
+			err,
+		)
 	}
 
 	return page.NewResult(toAppAudits(adts), total, p), nil

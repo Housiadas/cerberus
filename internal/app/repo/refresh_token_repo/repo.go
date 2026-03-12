@@ -82,6 +82,7 @@ func (s *Store) QueryByToken(
 		if errors.Is(err, pgsql.ErrDBNotFound) {
 			return refresh_token.RefreshToken{}, errs.Errorf(
 				errs.NotFound,
+				errs.CodeInvalidToken,
 				"refresh token not found",
 			)
 		}

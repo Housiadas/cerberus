@@ -21,10 +21,6 @@ Medium Value / Medium Effort
    The codebase uses offset-based pagination (page, order packages). For large datasets, keyset/cursor pagination performs significantly better and is stable under
    concurrent writes. This is a refactor of the repo query layer.
 
-5. Multi-Tenancy / Namespacing
-   The config.App.Namespace field exists but doesn't appear to be used for data isolation. If this is a multi-tenant SaaS, scoping all domain queries by namespace_id
-   (or tenant_id) at the repo layer would enable it.
-
   ---
 Refactor Suggestions
 
@@ -35,10 +31,6 @@ Refactor Suggestions
 8. Config Validation at Startup
     internal/config loads values via Viper but doesn't validate required fields (e.g., missing Vault address, empty DB host). A config.Validate() step during startup
     would give early, clear errors instead of panics deep in initialization.
-
-9. Structured Error Responses
-    The OpenAPI spec likely defines error response shapes, but adding a consistent ErrorCode field (machine-readable, e.g., "user.not_found") alongside the HTTP status
-    would make client error handling more reliable than parsing message strings.
 
   ---
 Architectural Observation

@@ -14,7 +14,7 @@ func (h *Handler) Readiness(
 ) (openapi.ReadinessResponseObject, error) {
 	err := h.usecase.system.Readiness(ctx)
 	if err != nil {
-		return nil, errs.Errorf(errs.Internal, "database not ready")
+		return nil, errs.Errorf(errs.Internal, errs.CodeInternal, "database not ready")
 	}
 
 	return openapi.Readiness200JSONResponse(system_usecase.Status{Status: "None"}), nil

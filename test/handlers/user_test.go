@@ -71,7 +71,7 @@ func Test_API_User_GetMe_401(t *testing.T) {
 			StatusCode: http.StatusUnauthorized,
 			Method:     http.MethodGet,
 			GotResp:    &errs.Error{},
-			ExpResp:    errs.Errorf(errs.Unauthenticated, "expected authorization header format: Bearer <token>"),
+			ExpResp:    errs.Errorf(errs.Unauthenticated, errs.CodeUnauthenticated, "expected authorization header format: Bearer <token>"),
 			AssertFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},
@@ -149,7 +149,7 @@ func Test_API_User_UpdateMe_400(t *testing.T) {
 				PasswordConfirm: dbtest.StringPointer("jack"),
 			},
 			GotResp: &errs.Error{},
-			ExpResp: errs.Errorf(errs.InvalidArgument, "validate: [{\"field\":\"email\",\"error\":\"mail: missing '@' or angle-addr\"},{\"field\":\"password\",\"error\":\"passwords do not match\"}]"),
+			ExpResp: errs.Errorf(errs.InvalidArgument, errs.CodeValidation, "validate: [{\"field\":\"email\",\"error\":\"mail: missing '@' or angle-addr\"},{\"field\":\"password\",\"error\":\"passwords do not match\"}]"),
 			AssertFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},
@@ -175,7 +175,7 @@ func Test_API_User_UpdateMe_401(t *testing.T) {
 				Name: dbtest.StringPointer("Test"),
 			},
 			GotResp: &errs.Error{},
-			ExpResp: errs.Errorf(errs.Unauthenticated, "expected authorization header format: Bearer <token>"),
+			ExpResp: errs.Errorf(errs.Unauthenticated, errs.CodeUnauthenticated, "expected authorization header format: Bearer <token>"),
 			AssertFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},
@@ -277,7 +277,7 @@ func Test_API_User_Query_400(t *testing.T) {
 			AccessToken: &sd.Admins[0].AccessToken.Token,
 			Method:      http.MethodGet,
 			GotResp:     &errs.Error{},
-			ExpResp:     errs.Errorf(errs.InvalidArgument, "[{\"field\":\"email\",\"error\":\"mail: missing '@' or angle-addr\"}]"),
+			ExpResp:     errs.Errorf(errs.InvalidArgument, errs.CodeValidation, "[{\"field\":\"email\",\"error\":\"mail: missing '@' or angle-addr\"}]"),
 			AssertFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},
@@ -289,7 +289,7 @@ func Test_API_User_Query_400(t *testing.T) {
 			Method:      http.MethodGet,
 			AccessToken: &sd.Admins[0].AccessToken.Token,
 			GotResp:     &errs.Error{},
-			ExpResp:     errs.Errorf(errs.InvalidArgument, "[{\"field\":\"order\",\"error\":\"unknown order: ser_id\"}]"),
+			ExpResp:     errs.Errorf(errs.InvalidArgument, errs.CodeValidation, "[{\"field\":\"order\",\"error\":\"unknown order: ser_id\"}]"),
 			AssertFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},
@@ -316,7 +316,7 @@ func Test_API_User_Query_403(t *testing.T) {
 			Method:      http.MethodGet,
 			AccessToken: &sd.Users[0].AccessToken.Token,
 			GotResp:     &errs.Error{},
-			ExpResp:     errs.Errorf(errs.PermissionDenied, "permission denied"),
+			ExpResp:     errs.Errorf(errs.PermissionDenied, errs.CodePermissionDenied, "permission denied"),
 			AssertFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},
@@ -402,7 +402,7 @@ func Test_API_User_Create_400(t *testing.T) {
 			StatusCode: http.StatusUnauthorized,
 			Input:      &user_usecase.NewUser{},
 			GotResp:    &errs.Error{},
-			ExpResp:    errs.Errorf(errs.Unauthenticated, "expected authorization header format: Bearer <token>"),
+			ExpResp:    errs.Errorf(errs.Unauthenticated, errs.CodeUnauthenticated, "expected authorization header format: Bearer <token>"),
 			AssertFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},
@@ -441,7 +441,7 @@ func Test_API_User_Create_400(t *testing.T) {
 				PasswordConfirm: "123",
 			},
 			GotResp: &errs.Error{},
-			ExpResp: errs.Errorf(errs.InvalidArgument, "validate: [{\"field\":\"name\",\"error\":\"invalid name value: \\\"Bi\\\"\"}]"),
+			ExpResp: errs.Errorf(errs.InvalidArgument, errs.CodeValidation, "validate: [{\"field\":\"name\",\"error\":\"invalid name value: \\\"Bi\\\"\"}]"),
 			AssertFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},
@@ -526,7 +526,7 @@ func Test_API_User_Update_400(t *testing.T) {
 				PasswordConfirm: dbtest.StringPointer("jack"),
 			},
 			GotResp: &errs.Error{},
-			ExpResp: errs.Errorf(errs.InvalidArgument, "validate: [{\"field\":\"email\",\"error\":\"mail: missing '@' or angle-addr\"},{\"field\":\"password\",\"error\":\"passwords do not match\"}]"),
+			ExpResp: errs.Errorf(errs.InvalidArgument, errs.CodeValidation, "validate: [{\"field\":\"email\",\"error\":\"mail: missing '@' or angle-addr\"},{\"field\":\"password\",\"error\":\"passwords do not match\"}]"),
 			AssertFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},
@@ -575,7 +575,7 @@ func Test_API_User_Delete_403(t *testing.T) {
 			StatusCode:  http.StatusForbidden,
 			AccessToken: &sd.Users[0].AccessToken.Token,
 			GotResp:     &errs.Error{},
-			ExpResp:     errs.Errorf(errs.PermissionDenied, "permission denied"),
+			ExpResp:     errs.Errorf(errs.PermissionDenied, errs.CodePermissionDenied, "permission denied"),
 			AssertFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},

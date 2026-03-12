@@ -6,41 +6,41 @@ import (
 
 var (
 	// None indicates the operation was successful.
-	None = ErrCode{value: 0}
+	None = StatusCode{value: 0}
 
 	// NoContent indicates the operation was successful with no content.
-	NoContent = ErrCode{value: 1}
+	NoContent = StatusCode{value: 1}
 
 	// Canceled indicates the operation was canceled (typically by the caller).
-	Canceled = ErrCode{value: 2}
+	Canceled = StatusCode{value: 2}
 
 	// Unknown error. An example of where this error may be returned is
 	// if a Status value received from another address space belongs to
 	// an error-space not known in this address space. Also,
 	// errors raised by APIs that do not return enough error information
 	// may be converted to this error.
-	Unknown = ErrCode{value: 3}
+	Unknown = StatusCode{value: 3}
 
 	// InvalidArgument indicates a client specified an invalid argument.
 	// Note that this differs from FailedPrecondition. It indicates arguments
 	// that are problematic regardless of the state of the system
 	// (e.g., a malformed file name).
-	InvalidArgument = ErrCode{value: 4}
+	InvalidArgument = StatusCode{value: 4}
 
 	// DeadlineExceeded means the operation expired before completion.
 	// For operations that change the state of the system, this error may be
 	// returned even if the operation has completed successfully. For
 	// example, a successful response from a grpc could have been delayed
 	// long enough for the deadline to expire.
-	DeadlineExceeded = ErrCode{value: 5}
+	DeadlineExceeded = StatusCode{value: 5}
 
 	// NotFound means some requested entity (e.g., file or directory) was
 	// not found.
-	NotFound = ErrCode{value: 6}
+	NotFound = StatusCode{value: 6}
 
 	// AlreadyExists means an attempt to create an entity failed because one
 	// already exists.
-	AlreadyExists = ErrCode{value: 7}
+	AlreadyExists = StatusCode{value: 7}
 
 	// PermissionDenied indicates the caller does not have permission to
 	// execute the specified operation. It must not be used for rejections
@@ -48,22 +48,22 @@ var (
 	// instead for those errors). It must not be
 	// used if the caller cannot be identified (use Unauthenticated
 	// instead for those errors).
-	PermissionDenied = ErrCode{value: 8}
+	PermissionDenied = StatusCode{value: 8}
 
 	// ResourceExhausted indicates some resource has been exhausted, perhaps
 	// a per-user quota, or perhaps the entire file system is out of space.
-	ResourceExhausted = ErrCode{value: 9}
+	ResourceExhausted = StatusCode{value: 9}
 
 	// FailedPrecondition indicates the operation was rejected because the
 	// system is not in a state required for the operation's execution.
 	// For example, a directory to be deleted may be non-empty;
 	// the rmdir operation is applied to a non-directory, etc.
-	FailedPrecondition = ErrCode{value: 10}
+	FailedPrecondition = StatusCode{value: 10}
 
 	// Aborted indicates the operation was aborted, typically due to a
 	// concurrency issue like sequencer check failures, transaction aborts,
 	// etc.
-	Aborted = ErrCode{value: 11}
+	Aborted = StatusCode{value: 11}
 
 	// OutOfRange means the operation was attempted past the valid range.
 	// E.g., seeking or reading past the end of a file.
@@ -80,16 +80,16 @@ var (
 	// error) when it applies so that callers who are iterating through
 	// a space can easily look for an OutOfRange error to detect when
 	// they are done.
-	OutOfRange = ErrCode{value: 12}
+	OutOfRange = StatusCode{value: 12}
 
 	// Unimplemented indicates the operation is not implemented or not
 	// supported/enabled in this usecase.
-	Unimplemented = ErrCode{value: 13}
+	Unimplemented = StatusCode{value: 13}
 
 	// Internal errors. Means some invariants expected by the underlying
 	// system have been broken. If you see one of these errors,
 	// something is very broken.
-	Internal = ErrCode{value: 14}
+	Internal = StatusCode{value: 14}
 
 	// Unavailable indicates the usecase is currently unavailable.
 	// This is most likely a transient condition and may be corrected
@@ -98,27 +98,27 @@ var (
 	//
 	// See the litmus test above for deciding between FailedPrecondition,
 	// Aborted, and Unavailable.
-	Unavailable = ErrCode{value: 15}
+	Unavailable = StatusCode{value: 15}
 
 	// DataLoss indicates unrecoverable data loss or corruption.
-	DataLoss = ErrCode{value: 16}
+	DataLoss = StatusCode{value: 16}
 
 	// Unauthenticated indicates the request does not have valid
 	// authentication credentials for the operation.
-	Unauthenticated = ErrCode{value: 17}
+	Unauthenticated = StatusCode{value: 17}
 
-	// TooManyRequests TooManyRequest indicates that the client has made too many requests and
+	// TooManyRequests indicates that the client has made too many requests and
 	// exceeded their rate limit and/or quota and must wait before making
 	// further requests.
-	TooManyRequests = ErrCode{value: 18}
+	TooManyRequests = StatusCode{value: 18}
 
 	// InternalOnlyLog errors. Means some invariants expected by the underlying
 	// system have been broken. If you see one of these errors,
 	// something is very broken. The error message is not sent to the client.
-	InternalOnlyLog = ErrCode{value: 19}
+	InternalOnlyLog = StatusCode{value: 19}
 )
 
-var codeNumbers = map[string]ErrCode{
+var statusNumbers = map[string]StatusCode{
 	"none":                None,
 	"no_content":          NoContent,
 	"canceled":            Canceled,
@@ -141,7 +141,7 @@ var codeNumbers = map[string]ErrCode{
 	"internal_only_log":   InternalOnlyLog,
 }
 
-var codeNames = map[ErrCode]string{
+var statusNames = map[StatusCode]string{
 	None:               "ok",
 	NoContent:          "ok_no_content",
 	Canceled:           "canceled",
@@ -164,7 +164,7 @@ var codeNames = map[ErrCode]string{
 	InternalOnlyLog:    "internal_only_log",
 }
 
-var httpStatus = map[ErrCode]int{
+var httpStatus = map[StatusCode]int{
 	None:               http.StatusOK,
 	NoContent:          http.StatusNoContent,
 	Canceled:           http.StatusGatewayTimeout,

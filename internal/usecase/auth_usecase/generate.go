@@ -17,7 +17,12 @@ type AccessToken struct {
 func (u *UseCase) GenerateAccessToken(ctx context.Context, userID string) (AccessToken, error) {
 	perms, err := u.userRolesPermissions.QueryPermissionsByUserID(ctx, userID)
 	if err != nil {
-		return AccessToken{}, errs.Errorf(errs.Internal, "query permissions: %s", err)
+		return AccessToken{}, errs.Errorf(
+			errs.Internal,
+			errs.CodeInternal,
+			"query permissions: %s",
+			err,
+		)
 	}
 
 	claimPerms := make([]Permission, len(perms))
@@ -38,7 +43,12 @@ func (u *UseCase) GenerateAccessToken(ctx context.Context, userID string) (Acces
 
 	accessTokenID, genErr := uuid.NewV7()
 	if genErr != nil {
-		return AccessToken{}, errs.Errorf(errs.Internal, "uuid v7: %s", genErr)
+		return AccessToken{}, errs.Errorf(
+			errs.Internal,
+			errs.CodeInternal,
+			"uuid v7: %s",
+			genErr,
+		)
 	}
 
 	accessClaims := Claims{
@@ -60,6 +70,7 @@ func (u *UseCase) GenerateAccessToken(ctx context.Context, userID string) (Acces
 	if err != nil {
 		return AccessToken{}, errs.Errorf(
 			errs.InvalidArgument,
+			errs.CodeInvalidToken,
 			"failed to sign access Token: %s",
 			err,
 		)
@@ -67,7 +78,12 @@ func (u *UseCase) GenerateAccessToken(ctx context.Context, userID string) (Acces
 
 	expirationDate, err := aToken.Claims.GetExpirationTime()
 	if err != nil {
-		return AccessToken{}, errs.Errorf(errs.InvalidArgument, "expiration time: %s", err)
+		return AccessToken{}, errs.Errorf(
+			errs.InvalidArgument,
+			errs.CodeInvalidToken,
+			"expiration time: %s",
+			err,
+		)
 	}
 
 	return AccessToken{

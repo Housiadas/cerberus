@@ -8,7 +8,8 @@ import (
 
 // Error represents an error in the system.
 type Error struct {
-	Code     ErrCode      `json:"code"`
+	Status   StatusCode   `json:"status"`
+	Code     string       `json:"code"`
 	Message  string       `json:"message"`
 	Fields   []FieldError `json:"fields,omitempty"`
 	FuncName string       `json:"-"`
@@ -16,10 +17,11 @@ type Error struct {
 }
 
 // New constructs an error based on an error.
-func New(code ErrCode, err error) *Error {
+func New(status StatusCode, code string, err error) *Error {
 	pc, filename, line, _ := runtime.Caller(1)
 
 	return &Error{
+		Status:   status,
 		Code:     code,
 		Message:  err.Error(),
 		FuncName: runtime.FuncForPC(pc).Name(),
@@ -28,10 +30,11 @@ func New(code ErrCode, err error) *Error {
 }
 
 // Errorf constructs an error based on an error message.
-func Errorf(code ErrCode, format string, v ...any) *Error {
+func Errorf(status StatusCode, code string, format string, v ...any) *Error {
 	pc, filename, line, _ := runtime.Caller(1)
 
 	return &Error{
+		Status:   status,
 		Code:     code,
 		Message:  fmt.Sprintf(format, v...),
 		FuncName: runtime.FuncForPC(pc).Name(),
@@ -46,10 +49,10 @@ func (e *Error) Error() string {
 
 // HTTPStatus get the http status code.
 func (e *Error) HTTPStatus() int {
-	return httpStatus[e.Code]
+	return httpStatus[e.Status]
 }
 
 // Equal provides support for the go-cmp package and testing.
 func (e *Error) Equal(e2 *Error) bool {
-	return e.Code == e2.Code && e.Message == e2.Message
+	return e.Status == e2.Status && e.Code == e2.Code && e.Message == e2.Message
 }

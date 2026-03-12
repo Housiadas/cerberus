@@ -35,7 +35,7 @@ func (fe *FieldErrors) Add(field string, err error) {
 
 // ToError converts the field errors to an Error.
 func (fe *FieldErrors) ToError() *Error {
-	return New(InvalidArgument, fe)
+	return New(InvalidArgument, CodeValidation, fe)
 }
 
 // Error implements the error interface.

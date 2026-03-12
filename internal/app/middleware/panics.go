@@ -20,6 +20,7 @@ func (m *Middleware) Recoverer() func(next http.Handler) http.Handler {
 					trace := debug.Stack()
 					err := errs.Errorf(
 						errs.InternalOnlyLog,
+						errs.CodePanic,
 						"PANIC [%v] TRACE[%s]",
 						rec,
 						string(trace),

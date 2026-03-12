@@ -19,7 +19,7 @@ func (u *UseCase) RefreshAccessToken(
 	}
 
 	if rToken.Revoked {
-		return Token{}, errs.New(errs.InvalidArgument, ErrInvalidToken)
+		return Token{}, errs.New(errs.InvalidArgument, errs.CodeInvalidToken, ErrInvalidToken)
 	}
 
 	// Check if the token has expired
@@ -29,7 +29,7 @@ func (u *UseCase) RefreshAccessToken(
 	}
 
 	if time.Now().UTC().After(expiresAt) {
-		return Token{}, errs.New(errs.InvalidArgument, ErrExpiredToken)
+		return Token{}, errs.New(errs.InvalidArgument, errs.CodeExpiredToken, ErrExpiredToken)
 	}
 
 	// Get the user

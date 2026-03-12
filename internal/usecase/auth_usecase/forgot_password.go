@@ -37,12 +37,17 @@ func (u *UseCase) ForgotPassword(ctx context.Context, req ForgotPasswordReq) err
 	txErr := pgsql.RunInTx(ctx, u.log, u.tx, func(tran pgsql.CommitRollbacker) error {
 		emailOutboxTx, initErr := u.emailNotificationOutboxSvc.NewWithTx(tran)
 		if initErr != nil {
-			return errs.Errorf(errs.Internal, "email_outbox tx: %s", initErr)
+			return errs.Errorf(errs.Internal, errs.CodeInternal, "email_outbox tx: %s", initErr)
 		}
 
 		tkn, createErr := u.resetTokenSvc.Create(ctx, usr.ID())
 		if createErr != nil {
-			return errs.Errorf(errs.Internal, "create reset token: %s", createErr)
+			return errs.Errorf(
+				errs.Internal,
+				errs.CodeInternal,
+				"create reset token: %s",
+				createErr,
+			)
 		}
 
 		resetURL := fmt.Sprintf("%s/reset-password?token=%s", u.frontendURL, tkn.Token())
@@ -59,7 +64,12 @@ func (u *UseCase) ForgotPassword(ctx context.Context, req ForgotPasswordReq) err
 			Payload:   payload,
 		})
 		if createErr != nil {
-			return errs.Errorf(errs.Internal, "email_outbox create: %s", createErr)
+			return errs.Errorf(
+				errs.Internal,
+				errs.CodeInternal,
+				"email_outbox create: %s",
+				createErr,
+			)
 		}
 
 		return nil

@@ -38,7 +38,7 @@ func (a *UseCase) Readiness(ctx context.Context) error {
 	if err != nil {
 		a.log.Info(ctx, "readiness failure", "ERROR", err)
 
-		return errs.New(errs.Internal, err)
+		return errs.New(errs.Internal, errs.CodeInternal, err)
 	}
 
 	return nil

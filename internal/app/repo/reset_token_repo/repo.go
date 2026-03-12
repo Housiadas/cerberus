@@ -72,6 +72,7 @@ func (s *Store) QueryByToken(ctx context.Context, token string) (reset_token.Res
 		if errors.Is(err, pgsql.ErrDBNotFound) {
 			return reset_token.ResetToken{}, errs.Errorf(
 				errs.NotFound,
+				errs.CodeInvalidToken,
 				"reset token not found",
 			)
 		}

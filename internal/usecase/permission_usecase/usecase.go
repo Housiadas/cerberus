@@ -44,7 +44,7 @@ func NewUseCase(
 func (uc *UseCase) Create(ctx context.Context, nperm NewPermission) (Permission, error) {
 	np, err := toBusNewPermission(nperm)
 	if err != nil {
-		return Permission{}, errs.New(errs.InvalidArgument, err)
+		return Permission{}, errs.New(errs.InvalidArgument, errs.CodeValidation, err)
 	}
 
 	var perm permission.Permission
@@ -52,22 +52,28 @@ func (uc *UseCase) Create(ctx context.Context, nperm NewPermission) (Permission,
 	txErr := pgsql.RunInTx(ctx, uc.log, uc.tx, func(tran pgsql.CommitRollbacker) error {
 		permServiceTx, initErr := uc.permissionService.NewWithTx(tran)
 		if initErr != nil {
-			return errs.Errorf(errs.Internal, "permission tx: %s", initErr)
+			return errs.Errorf(errs.Internal, errs.CodeInternal, "permission tx: %s", initErr)
 		}
 
 		auditSvcTx, initErr := uc.auditSvc.NewWithTx(tran)
 		if initErr != nil {
-			return errs.Errorf(errs.Internal, "audit tx: %s", initErr)
+			return errs.Errorf(errs.Internal, errs.CodeInternal, "audit tx: %s", initErr)
 		}
 
 		perm, err = permServiceTx.Create(ctx, np)
 		if err != nil {
-			return errs.Errorf(errs.Internal, "create: perm[%+v]: %s", perm, err)
+			return errs.Errorf(
+				errs.Internal,
+				errs.CodeInternal,
+				"create: perm[%+v]: %s",
+				perm,
+				err,
+			)
 		}
 
 		_, auditErr := auditSvcTx.Create(ctx, uc.newPermissionAudit(ctx, perm, audit.ActionCreate))
 		if auditErr != nil {
-			return errs.Errorf(errs.Internal, "audit create: %s", auditErr)
+			return errs.Errorf(errs.Internal, errs.CodeInternal, "audit create: %s", auditErr)
 		}
 
 		return nil
@@ -87,17 +93,27 @@ func (uc *UseCase) Update(
 ) (Permission, error) {
 	up, err := toBusUpdatePermission(res)
 	if err != nil {
-		return Permission{}, errs.New(errs.InvalidArgument, err)
+		return Permission{}, errs.New(errs.InvalidArgument, errs.CodeValidation, err)
 	}
 
 	permissionUUID, err := uuid.Parse(permissionID)
 	if err != nil {
-		return Permission{}, errs.Errorf(errs.InvalidArgument, "could not parse uuid: %s", err)
+		return Permission{}, errs.Errorf(
+			errs.InvalidArgument,
+			errs.CodeValidation,
+			"could not parse uuid: %s",
+			err,
+		)
 	}
 
 	currentPerm, err := uc.permissionService.QueryByID(ctx, permissionUUID)
 	if err != nil {
-		return Permission{}, errs.Errorf(errs.Internal, "permission query by id: %s", err)
+		return Permission{}, errs.Errorf(
+			errs.Internal,
+			errs.CodeInternal,
+			"permission query by id: %s",
+			err,
+		)
 	}
 
 	var updPerm permission.Permission
@@ -105,18 +121,19 @@ func (uc *UseCase) Update(
 	txErr := pgsql.RunInTx(ctx, uc.log, uc.tx, func(tran pgsql.CommitRollbacker) error {
 		permServiceTx, initErr := uc.permissionService.NewWithTx(tran)
 		if initErr != nil {
-			return errs.Errorf(errs.Internal, "permission tx: %s", initErr)
+			return errs.Errorf(errs.Internal, errs.CodeInternal, "permission tx: %s", initErr)
 		}
 
 		auditSvcTx, initErr := uc.auditSvc.NewWithTx(tran)
 		if initErr != nil {
-			return errs.Errorf(errs.Internal, "audit tx: %s", initErr)
+			return errs.Errorf(errs.Internal, errs.CodeInternal, "audit tx: %s", initErr)
 		}
 
 		updPerm, err = permServiceTx.Update(ctx, currentPerm, up)
 		if err != nil {
 			return errs.Errorf(
 				errs.Internal,
+				errs.CodeInternal,
 				"update: permissionID[%s] up[%+v]: %s",
 				permissionID,
 				up,
@@ -129,7 +146,7 @@ func (uc *UseCase) Update(
 			uc.newPermissionAudit(ctx, updPerm, audit.ActionUpdate),
 		)
 		if auditErr != nil {
-			return errs.Errorf(errs.Internal, "audit update: %s", auditErr)
+			return errs.Errorf(errs.Internal, errs.CodeInternal, "audit update: %s", auditErr)
 		}
 
 		return nil
@@ -145,29 +162,35 @@ func (uc *UseCase) Update(
 func (uc *UseCase) Delete(ctx context.Context, permissionID string) error {
 	permissionUUID, err := uuid.Parse(permissionID)
 	if err != nil {
-		return errs.Errorf(errs.InvalidArgument, "could not parse uuid: %s", err)
+		return errs.Errorf(
+			errs.InvalidArgument,
+			errs.CodeValidation,
+			"could not parse uuid: %s",
+			err,
+		)
 	}
 
 	currentPerm, err := uc.permissionService.QueryByID(ctx, permissionUUID)
 	if err != nil {
-		return errs.Errorf(errs.Internal, "permission query by id: %s", err)
+		return errs.Errorf(errs.Internal, errs.CodeInternal, "permission query by id: %s", err)
 	}
 
 	txErr := pgsql.RunInTx(ctx, uc.log, uc.tx, func(tran pgsql.CommitRollbacker) error {
 		permServiceTx, initErr := uc.permissionService.NewWithTx(tran)
 		if initErr != nil {
-			return errs.Errorf(errs.Internal, "permission tx: %s", initErr)
+			return errs.Errorf(errs.Internal, errs.CodeInternal, "permission tx: %s", initErr)
 		}
 
 		auditSvcTx, initErr := uc.auditSvc.NewWithTx(tran)
 		if initErr != nil {
-			return errs.Errorf(errs.Internal, "audit tx: %s", initErr)
+			return errs.Errorf(errs.Internal, errs.CodeInternal, "audit tx: %s", initErr)
 		}
 
 		deleteErr := permServiceTx.Delete(ctx, currentPerm)
 		if deleteErr != nil {
 			return errs.Errorf(
 				errs.Internal,
+				errs.CodeInternal,
 				"delete: permissionID[%s]: %s",
 				permissionUUID,
 				deleteErr,
@@ -179,7 +202,7 @@ func (uc *UseCase) Delete(ctx context.Context, permissionID string) error {
 			uc.newPermissionAudit(ctx, currentPerm, audit.ActionDelete),
 		)
 		if auditErr != nil {
-			return errs.Errorf(errs.Internal, "audit delete: %s", auditErr)
+			return errs.Errorf(errs.Internal, errs.CodeInternal, "audit delete: %s", auditErr)
 		}
 
 		return nil
@@ -195,12 +218,22 @@ func (uc *UseCase) Delete(ctx context.Context, permissionID string) error {
 func (uc *UseCase) QueryByID(ctx context.Context, permissionID string) (Permission, error) {
 	permissionUUID, err := uuid.Parse(permissionID)
 	if err != nil {
-		return Permission{}, errs.Errorf(errs.InvalidArgument, "could not parse uuid: %s", err)
+		return Permission{}, errs.Errorf(
+			errs.InvalidArgument,
+			errs.CodeValidation,
+			"could not parse uuid: %s",
+			err,
+		)
 	}
 
 	perm, err := uc.permissionService.QueryByID(ctx, permissionUUID)
 	if err != nil {
-		return Permission{}, errs.Errorf(errs.Internal, "permission query by id: %s", err)
+		return Permission{}, errs.Errorf(
+			errs.Internal,
+			errs.CodeInternal,
+			"permission query by id: %s",
+			err,
+		)
 	}
 
 	return toAppPermission(perm), nil
@@ -225,12 +258,22 @@ func (uc *UseCase) Query(ctx context.Context, qp AppQueryParams) (page.Result[Pe
 
 	perms, err := uc.permissionService.Query(ctx, filter, orderBy, p)
 	if err != nil {
-		return page.Result[Permission]{}, errs.Errorf(errs.Internal, "query: %s", err)
+		return page.Result[Permission]{}, errs.Errorf(
+			errs.Internal,
+			errs.CodeInternal,
+			"query: %s",
+			err,
+		)
 	}
 
 	total, err := uc.permissionService.Count(ctx, filter)
 	if err != nil {
-		return page.Result[Permission]{}, errs.Errorf(errs.Internal, "count: %s", err)
+		return page.Result[Permission]{}, errs.Errorf(
+			errs.Internal,
+			errs.CodeInternal,
+			"count: %s",
+			err,
+		)
 	}
 
 	return page.NewResult(toAppPermissions(perms), total, p), nil

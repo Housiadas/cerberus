@@ -52,7 +52,7 @@ func NewUseCase(
 func (a *UseCase) Create(ctx context.Context, app NewUser) (User, error) {
 	nc, err := toBusNewUser(app)
 	if err != nil {
-		return User{}, errs.New(errs.InvalidArgument, err)
+		return User{}, errs.New(errs.InvalidArgument, errs.CodeValidation, err)
 	}
 
 	var usr user.User
@@ -60,26 +60,32 @@ func (a *UseCase) Create(ctx context.Context, app NewUser) (User, error) {
 	txErr := pgsql.RunInTx(ctx, a.log, a.tx, func(tran pgsql.CommitRollbacker) error {
 		userCoreTx, err := a.userCore.NewWithTx(tran)
 		if err != nil {
-			return errs.Errorf(errs.Internal, "user tx: %s", err)
+			return errs.Errorf(errs.Internal, errs.CodeInternal, "user tx: %s", err)
 		}
 
 		outboxSvcTx, err := a.outboxSvc.NewWithTx(tran)
 		if err != nil {
-			return errs.Errorf(errs.Internal, "outbox tx: %s", err)
+			return errs.Errorf(errs.Internal, errs.CodeInternal, "outbox tx: %s", err)
 		}
 
 		auditSvcTx, err := a.auditSvc.NewWithTx(tran)
 		if err != nil {
-			return errs.Errorf(errs.Internal, "audit tx: %s", err)
+			return errs.Errorf(errs.Internal, errs.CodeInternal, "audit tx: %s", err)
 		}
 
 		usr, err = userCoreTx.Create(ctx, nc)
 		if err != nil {
 			if errors.Is(err, user.ErrUniqueEmail) {
-				return errs.New(errs.Aborted, user.ErrUniqueEmail)
+				return errs.New(errs.Aborted, errs.CodeUniqueEmail, user.ErrUniqueEmail)
 			}
 
-			return errs.Errorf(errs.Internal, "create: usr[%+v]: %s", usr, err)
+			return errs.Errorf(
+				errs.Internal,
+				errs.CodeInternal,
+				"create: usr[%+v]: %s",
+				usr,
+				err,
+			)
 		}
 
 		err = outboxSvcTx.Create(ctx, outbox.NewOutbox{
@@ -89,12 +95,12 @@ func (a *UseCase) Create(ctx context.Context, app NewUser) (User, error) {
 			Payload:     usr,
 		})
 		if err != nil {
-			return errs.Errorf(errs.Internal, "outbox create: %s", err)
+			return errs.Errorf(errs.Internal, errs.CodeInternal, "outbox create: %s", err)
 		}
 
 		_, err = auditSvcTx.Create(ctx, a.newUserAudit(ctx, usr, audit.ActionCreate))
 		if err != nil {
-			return errs.Errorf(errs.Internal, "audit create: %s", err)
+			return errs.Errorf(errs.Internal, errs.CodeInternal, "audit create: %s", err)
 		}
 
 		return nil
@@ -110,18 +116,24 @@ func (a *UseCase) Create(ctx context.Context, app NewUser) (User, error) {
 func (a *UseCase) Update(ctx context.Context, res UpdateUser, userID string) (User, error) {
 	uu, err := toBusUpdateUser(res)
 	if err != nil {
-		return User{}, errs.New(errs.InvalidArgument, err)
+		return User{}, errs.New(errs.InvalidArgument, errs.CodeValidation, err)
 	}
 
 	userUUID, err := uuid.Parse(userID)
 	if err != nil {
-		return User{}, errs.Errorf(errs.InvalidArgument, "could not parse uuid: %s", err)
+		return User{}, errs.Errorf(
+			errs.InvalidArgument,
+			errs.CodeValidation,
+			"could not parse uuid: %s",
+			err,
+		)
 	}
 
 	currentUsr, err := a.userCore.QueryByID(ctx, userUUID)
 	if err != nil {
 		return User{}, errs.Errorf(
 			errs.Internal,
+			errs.CodeInternal,
 			"query by id: userID[%s] uu[%+v]: %s",
 			userUUID,
 			uu,
@@ -160,13 +172,19 @@ func (a *UseCase) UpdateMe(ctx context.Context, res UpdateMe, userID string) (Us
 func (a *UseCase) Delete(ctx context.Context, userID string) error {
 	userUUID, err := uuid.Parse(userID)
 	if err != nil {
-		return errs.Errorf(errs.InvalidArgument, "could not parse uuid: %s", err)
+		return errs.Errorf(
+			errs.InvalidArgument,
+			errs.CodeValidation,
+			"could not parse uuid: %s",
+			err,
+		)
 	}
 
 	currentUsr, err := a.userCore.QueryByID(ctx, userUUID)
 	if err != nil {
 		return errs.Errorf(
 			errs.Internal,
+			errs.CodeInternal,
 			"query by id: userID[%s] uu[%+v]: %s",
 			userUUID,
 			currentUsr,
@@ -177,17 +195,23 @@ func (a *UseCase) Delete(ctx context.Context, userID string) error {
 	txErr := pgsql.RunInTx(ctx, a.log, a.tx, func(tran pgsql.CommitRollbacker) error {
 		outboxSvcTx, initErr := a.outboxSvc.NewWithTx(tran)
 		if initErr != nil {
-			return errs.Errorf(errs.Internal, "outbox tx: %s", initErr)
+			return errs.Errorf(errs.Internal, errs.CodeInternal, "outbox tx: %s", initErr)
 		}
 
 		auditSvcTx, initErr := a.auditSvc.NewWithTx(tran)
 		if initErr != nil {
-			return errs.Errorf(errs.Internal, "audit tx: %s", initErr)
+			return errs.Errorf(errs.Internal, errs.CodeInternal, "audit tx: %s", initErr)
 		}
 
 		deleteErr := a.userCore.Delete(ctx, currentUsr)
 		if deleteErr != nil {
-			return errs.Errorf(errs.Internal, "delete: userID[%s]: %s", userUUID, deleteErr)
+			return errs.Errorf(
+				errs.Internal,
+				errs.CodeInternal,
+				"delete: userID[%s]: %s",
+				userUUID,
+				deleteErr,
+			)
 		}
 
 		outboxErr := outboxSvcTx.Create(ctx, outbox.NewOutbox{
@@ -197,12 +221,12 @@ func (a *UseCase) Delete(ctx context.Context, userID string) error {
 			Payload:     currentUsr,
 		})
 		if outboxErr != nil {
-			return errs.Errorf(errs.Internal, "outbox create: %s", outboxErr)
+			return errs.Errorf(errs.Internal, errs.CodeInternal, "outbox create: %s", outboxErr)
 		}
 
 		_, auditErr := auditSvcTx.Create(ctx, a.newUserAudit(ctx, currentUsr, audit.ActionDelete))
 		if auditErr != nil {
-			return errs.Errorf(errs.Internal, "audit delete: %s", auditErr)
+			return errs.Errorf(errs.Internal, errs.CodeInternal, "audit delete: %s", auditErr)
 		}
 
 		return nil
@@ -233,12 +257,22 @@ func (a *UseCase) Query(ctx context.Context, qp AppQueryParams) (page.Result[Use
 
 	usrs, err := a.userCore.Query(ctx, filter, orderBy, p)
 	if err != nil {
-		return page.Result[User]{}, errs.Errorf(errs.Internal, "query: %s", err)
+		return page.Result[User]{}, errs.Errorf(
+			errs.Internal,
+			errs.CodeInternal,
+			"query: %s",
+			err,
+		)
 	}
 
 	total, err := a.userCore.Count(ctx, filter)
 	if err != nil {
-		return page.Result[User]{}, errs.Errorf(errs.Internal, "count: %s", err)
+		return page.Result[User]{}, errs.Errorf(
+			errs.Internal,
+			errs.CodeInternal,
+			"count: %s",
+			err,
+		)
 	}
 
 	return page.NewResult(toAppUsers(usrs), total, p), nil
@@ -253,7 +287,7 @@ func (a *UseCase) QueryByEmail(ctx context.Context, email string) (User, error) 
 
 	usr, err := a.userCore.QueryByEmail(ctx, *addr)
 	if err != nil {
-		return User{}, errs.New(errs.NotFound, err)
+		return User{}, errs.New(errs.NotFound, errs.CodeUserNotFound, err)
 	}
 
 	return toAppUser(usr), nil
@@ -263,16 +297,21 @@ func (a *UseCase) QueryByEmail(ctx context.Context, email string) (User, error) 
 func (a *UseCase) QueryByID(ctx context.Context, userID string) (User, error) {
 	userUUID, err := uuid.Parse(userID)
 	if err != nil {
-		return User{}, errs.Errorf(errs.InvalidArgument, "could not parse uuid: %s", err)
+		return User{}, errs.Errorf(
+			errs.InvalidArgument,
+			errs.CodeValidation,
+			"could not parse uuid: %s",
+			err,
+		)
 	}
 
 	usr, err := a.userCore.QueryByID(ctx, userUUID)
 	if err != nil {
 		if errors.Is(err, user.ErrNotFound) {
-			return User{}, errs.New(errs.NotFound, err)
+			return User{}, errs.New(errs.NotFound, errs.CodeUserNotFound, err)
 		}
 
-		return User{}, errs.New(errs.Internal, err)
+		return User{}, errs.New(errs.Internal, errs.CodeInternal, err)
 	}
 
 	return toAppUser(usr), nil
@@ -288,7 +327,7 @@ func (a *UseCase) Authenticate(ctx context.Context, authUser AuthenticateUser) (
 	usr, err := a.userCore.Authenticate(ctx, *addr, authUser.Password)
 	if err != nil {
 		if errors.Is(err, user.ErrNotFound) {
-			return User{}, errs.New(errs.NotFound, err)
+			return User{}, errs.New(errs.NotFound, errs.CodeAuthFailed, err)
 		}
 
 		return User{}, fmt.Errorf("user authenticate error: %w", err)
@@ -306,23 +345,34 @@ func (a *UseCase) updateInTx(
 ) (user.User, error) {
 	userCoreTx, initErr := a.userCore.NewWithTx(tran)
 	if initErr != nil {
-		return user.User{}, errs.Errorf(errs.Internal, "user tx: %s", initErr)
+		return user.User{}, errs.Errorf(errs.Internal, errs.CodeInternal, "user tx: %s", initErr)
 	}
 
 	outboxSvcTx, initErr := a.outboxSvc.NewWithTx(tran)
 	if initErr != nil {
-		return user.User{}, errs.Errorf(errs.Internal, "outbox tx: %s", initErr)
+		return user.User{}, errs.Errorf(
+			errs.Internal,
+			errs.CodeInternal,
+			"outbox tx: %s",
+			initErr,
+		)
 	}
 
 	auditSvcTx, initErr := a.auditSvc.NewWithTx(tran)
 	if initErr != nil {
-		return user.User{}, errs.Errorf(errs.Internal, "audit tx: %s", initErr)
+		return user.User{}, errs.Errorf(
+			errs.Internal,
+			errs.CodeInternal,
+			"audit tx: %s",
+			initErr,
+		)
 	}
 
 	updUsr, updateErr := userCoreTx.Update(ctx, currentUsr, uu)
 	if updateErr != nil {
 		return user.User{}, errs.Errorf(
 			errs.Internal,
+			errs.CodeInternal,
 			"update: userID[%s] uu[%+v]: %s",
 			userUUID,
 			uu,
@@ -337,12 +387,22 @@ func (a *UseCase) updateInTx(
 		Payload:     updUsr,
 	})
 	if updateErr != nil {
-		return user.User{}, errs.Errorf(errs.Internal, "outbox create: %s", updateErr)
+		return user.User{}, errs.Errorf(
+			errs.Internal,
+			errs.CodeInternal,
+			"outbox create: %s",
+			updateErr,
+		)
 	}
 
 	_, updateErr = auditSvcTx.Create(ctx, a.newUserAudit(ctx, updUsr, audit.ActionUpdate))
 	if updateErr != nil {
-		return user.User{}, errs.Errorf(errs.Internal, "audit update: %s", updateErr)
+		return user.User{}, errs.Errorf(
+			errs.Internal,
+			errs.CodeInternal,
+			"audit update: %s",
+			updateErr,
+		)
 	}
 
 	return updUsr, nil

@@ -6,23 +6,29 @@ import (
 	"runtime"
 )
 
+var (
+	ErrValidationError = errors.New("validation error")
+)
+
+// ParseValidationErrors converts validation errors into an Error.
 func ParseValidationErrors(err error) *Error {
 	var fieldErrors *FieldErrors
 
 	ok := errors.As(err, &fieldErrors)
 	if !ok {
-		return Errorf(InvalidArgument, "validation error: %s", err.Error())
+		return Errorf(InvalidArgument, CodeValidation, "validation error: %s", err.Error())
 	}
 
 	feSlice := toFieldErrorSlice(*fieldErrors)
 
-	return newWithFields(InvalidArgument, ErrValidationError, feSlice)
+	return newWithFields(InvalidArgument, CodeValidation, ErrValidationError, feSlice)
 }
 
-func newWithFields(code ErrCode, err error, fe []FieldError) *Error {
+func newWithFields(status StatusCode, code string, err error, fe []FieldError) *Error {
 	pCounter, filename, line, _ := runtime.Caller(1)
 
 	return &Error{
+		Status:   status,
 		Code:     code,
 		Message:  err.Error(),
 		Fields:   fe,
