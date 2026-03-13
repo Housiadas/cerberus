@@ -5,12 +5,12 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/Housiadas/cerberus/internal/app/event_dispatcher"
 	"github.com/Housiadas/cerberus/internal/core/domain/audit"
 	"github.com/Housiadas/cerberus/internal/core/domain/entity"
+	"github.com/Housiadas/cerberus/internal/core/domain/event"
 	"github.com/Housiadas/cerberus/internal/core/domain/permission"
-	"github.com/Housiadas/cerberus/internal/core/service/audit_service"
 	"github.com/Housiadas/cerberus/internal/core/service/permission_service"
-	ctxPck "github.com/Housiadas/cerberus/internal/utils/context"
 	"github.com/Housiadas/cerberus/internal/utils/errs"
 	"github.com/Housiadas/cerberus/internal/utils/page"
 	"github.com/Housiadas/cerberus/pkg/logger"
@@ -22,21 +22,21 @@ import (
 type UseCase struct {
 	log               logger.Logger
 	permissionService *permission_service.Service
-	auditSvc          *audit_service.Service
+	dispatcher        *event_dispatcher.EventDispatcher
 	tx                pgsql.Beginner
 }
 
 func NewUseCase(
 	log logger.Logger,
 	permissionService *permission_service.Service,
-	auditSvc *audit_service.Service,
+	dispatcher *event_dispatcher.EventDispatcher,
 	tx pgsql.Beginner,
 ) *UseCase {
 	return &UseCase{
 		log:               log,
-		permissionService: permissionService,
-		auditSvc:          auditSvc,
 		tx:                tx,
+		dispatcher:        dispatcher,
+		permissionService: permissionService,
 	}
 }
 
@@ -55,11 +55,6 @@ func (uc *UseCase) Create(ctx context.Context, nperm NewPermission) (Permission,
 			return errs.Errorf(errs.Internal, errs.CodeInternal, "permission tx: %s", initErr)
 		}
 
-		auditSvcTx, initErr := uc.auditSvc.NewWithTx(tran)
-		if initErr != nil {
-			return errs.Errorf(errs.Internal, errs.CodeInternal, "audit tx: %s", initErr)
-		}
-
 		perm, err = permServiceTx.Create(ctx, np)
 		if err != nil {
 			return errs.Errorf(
@@ -71,12 +66,7 @@ func (uc *UseCase) Create(ctx context.Context, nperm NewPermission) (Permission,
 			)
 		}
 
-		_, auditErr := auditSvcTx.Create(ctx, uc.newPermissionAudit(ctx, perm, audit.ActionCreate))
-		if auditErr != nil {
-			return errs.Errorf(errs.Internal, errs.CodeInternal, "audit create: %s", auditErr)
-		}
-
-		return nil
+		return uc.dispatcher.Dispatch(ctx, tran, newPermissionEvent(perm, audit.ActionCreate))
 	})
 	if txErr != nil {
 		return Permission{}, fmt.Errorf("create permission: %w", txErr)
@@ -124,11 +114,6 @@ func (uc *UseCase) Update(
 			return errs.Errorf(errs.Internal, errs.CodeInternal, "permission tx: %s", initErr)
 		}
 
-		auditSvcTx, initErr := uc.auditSvc.NewWithTx(tran)
-		if initErr != nil {
-			return errs.Errorf(errs.Internal, errs.CodeInternal, "audit tx: %s", initErr)
-		}
-
 		updPerm, err = permServiceTx.Update(ctx, currentPerm, up)
 		if err != nil {
 			return errs.Errorf(
@@ -141,15 +126,7 @@ func (uc *UseCase) Update(
 			)
 		}
 
-		_, auditErr := auditSvcTx.Create(
-			ctx,
-			uc.newPermissionAudit(ctx, updPerm, audit.ActionUpdate),
-		)
-		if auditErr != nil {
-			return errs.Errorf(errs.Internal, errs.CodeInternal, "audit update: %s", auditErr)
-		}
-
-		return nil
+		return uc.dispatcher.Dispatch(ctx, tran, newPermissionEvent(updPerm, audit.ActionUpdate))
 	})
 	if txErr != nil {
 		return Permission{}, fmt.Errorf("update permission: %w", txErr)
@@ -181,11 +158,6 @@ func (uc *UseCase) Delete(ctx context.Context, permissionID string) error {
 			return errs.Errorf(errs.Internal, errs.CodeInternal, "permission tx: %s", initErr)
 		}
 
-		auditSvcTx, initErr := uc.auditSvc.NewWithTx(tran)
-		if initErr != nil {
-			return errs.Errorf(errs.Internal, errs.CodeInternal, "audit tx: %s", initErr)
-		}
-
 		deleteErr := permServiceTx.Delete(ctx, currentPerm)
 		if deleteErr != nil {
 			return errs.Errorf(
@@ -197,15 +169,11 @@ func (uc *UseCase) Delete(ctx context.Context, permissionID string) error {
 			)
 		}
 
-		_, auditErr := auditSvcTx.Create(
+		return uc.dispatcher.Dispatch(
 			ctx,
-			uc.newPermissionAudit(ctx, currentPerm, audit.ActionDelete),
+			tran,
+			newPermissionEvent(currentPerm, audit.ActionDelete),
 		)
-		if auditErr != nil {
-			return errs.Errorf(errs.Internal, errs.CodeInternal, "audit delete: %s", auditErr)
-		}
-
-		return nil
 	})
 	if txErr != nil {
 		return fmt.Errorf("delete permission: %w", txErr)
@@ -279,21 +247,13 @@ func (uc *UseCase) Query(ctx context.Context, qp AppQueryParams) (page.Result[Pe
 	return page.NewResult(toAppPermissions(perms), total, p), nil
 }
 
-// newPermissionAudit builds an audit.NewAudit for a permission operation.
-func (uc *UseCase) newPermissionAudit(
-	ctx context.Context,
-	p permission.Permission,
-	action string,
-) audit.NewAudit {
-	actorID, _ := uuid.Parse(ctxPck.GetActorID(ctx))
-
-	return audit.NewAudit{
-		ObjID:     p.ID(),
-		ObjEntity: entity.New(entity.PermissionEntity),
-		ObjName:   p.Name(),
-		ActorID:   actorID,
-		Action:    action,
-		Data:      p,
-		Message:   "permission " + action,
+func newPermissionEvent(p permission.Permission, action string) event.DomainEvent {
+	return event.DomainEvent{
+		AggregateID: p.ID(),
+		Payload:     p,
+		ObjEntity:   entity.New(entity.PermissionEntity),
+		ObjName:     p.Name(),
+		Action:      action,
+		Message:     "permission " + action,
 	}
 }

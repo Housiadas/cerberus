@@ -27,10 +27,3 @@ Refactor Suggestions
 7. Outbox Relay — Push-Based Instead of Poll-Based
     internal/app/relay/relay.go polls the outbox table at a fixed interval. A PostgreSQL LISTEN/NOTIFY trigger on the outbox table would reduce latency and DB load —
     the relay wakes up only on new rows.
-
-  ---
-Architectural Observation
-
-The outbox + relay + Kafka pattern is well-implemented, but currently only covers user events. As you add more domains (billing, notifications, etc.), consider a
-generic domain event dispatcher at the usecase layer so each new usecase doesn't need to manually wire outbox_service — it could be middleware on the composition
-layer.

@@ -1,6 +1,7 @@
 package apitest
 
 import (
+	"github.com/Housiadas/cerberus/internal/app/event_dispatcher"
 	"github.com/Housiadas/cerberus/internal/app/repo/audit_repo"
 	"github.com/Housiadas/cerberus/internal/app/repo/email_notification_outbox_repo"
 	"github.com/Housiadas/cerberus/internal/app/repo/outbox_repo"
@@ -83,12 +84,14 @@ func newDependency(
 		clk,
 	)
 
-	// usecases
+	// event dispatcher
+	dispatcher := event_dispatcher.New(outboxSvc, auditService)
+
+	// usecase
 	userUsecase := user_usecase.NewUseCase(
 		log,
 		userService,
-		outboxSvc,
-		auditService,
+		dispatcher,
 		pgsql.NewBeginner(db),
 	)
 	refreshTokenUsecase := refresh_token_usecase.NewUseCase(refreshTokenService)

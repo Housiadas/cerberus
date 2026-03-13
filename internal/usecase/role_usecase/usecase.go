@@ -5,12 +5,12 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/Housiadas/cerberus/internal/app/event_dispatcher"
 	"github.com/Housiadas/cerberus/internal/core/domain/audit"
 	"github.com/Housiadas/cerberus/internal/core/domain/entity"
+	"github.com/Housiadas/cerberus/internal/core/domain/event"
 	"github.com/Housiadas/cerberus/internal/core/domain/role"
-	"github.com/Housiadas/cerberus/internal/core/service/audit_service"
 	"github.com/Housiadas/cerberus/internal/core/service/role_service"
-	ctxPck "github.com/Housiadas/cerberus/internal/utils/context"
 	"github.com/Housiadas/cerberus/internal/utils/errs"
 	"github.com/Housiadas/cerberus/internal/utils/page"
 	"github.com/Housiadas/cerberus/pkg/logger"
@@ -21,22 +21,22 @@ import (
 
 type UseCase struct {
 	log         logger.Logger
-	roleService *role_service.Service
-	auditSvc    *audit_service.Service
 	tx          pgsql.Beginner
+	roleService *role_service.Service
+	dispatcher  *event_dispatcher.EventDispatcher
 }
 
 func NewUseCase(
 	log logger.Logger,
 	roleService *role_service.Service,
-	auditSvc *audit_service.Service,
+	dispatcher *event_dispatcher.EventDispatcher,
 	tx pgsql.Beginner,
 ) *UseCase {
 	return &UseCase{
 		log:         log,
-		roleService: roleService,
-		auditSvc:    auditSvc,
 		tx:          tx,
+		roleService: roleService,
+		dispatcher:  dispatcher,
 	}
 }
 
@@ -55,11 +55,6 @@ func (uc *UseCase) Create(ctx context.Context, nrole NewRole) (Role, error) {
 			return errs.Errorf(errs.Internal, errs.CodeInternal, "role tx: %s", initErr)
 		}
 
-		auditSvcTx, initErr := uc.auditSvc.NewWithTx(tran)
-		if initErr != nil {
-			return errs.Errorf(errs.Internal, errs.CodeInternal, "audit tx: %s", initErr)
-		}
-
 		rol, err = roleServiceTx.Create(ctx, nc)
 		if err != nil {
 			return errs.Errorf(
@@ -71,12 +66,7 @@ func (uc *UseCase) Create(ctx context.Context, nrole NewRole) (Role, error) {
 			)
 		}
 
-		_, auditErr := auditSvcTx.Create(ctx, uc.newRoleAudit(ctx, rol, audit.ActionCreate))
-		if auditErr != nil {
-			return errs.Errorf(errs.Internal, errs.CodeInternal, "audit create: %s", auditErr)
-		}
-
-		return nil
+		return uc.dispatcher.Dispatch(ctx, tran, newRoleEvent(rol, audit.ActionCreate))
 	})
 	if txErr != nil {
 		return Role{}, fmt.Errorf("create role: %w", txErr)
@@ -115,11 +105,6 @@ func (uc *UseCase) Update(ctx context.Context, res UpdateRole, roleID string) (R
 			return errs.Errorf(errs.Internal, errs.CodeInternal, "role tx: %s", initErr)
 		}
 
-		auditSvcTx, initErr := uc.auditSvc.NewWithTx(tran)
-		if initErr != nil {
-			return errs.Errorf(errs.Internal, errs.CodeInternal, "audit tx: %s", initErr)
-		}
-
 		updRole, err = roleServiceTx.Update(ctx, currentRole, uu)
 		if err != nil {
 			return errs.Errorf(
@@ -132,12 +117,7 @@ func (uc *UseCase) Update(ctx context.Context, res UpdateRole, roleID string) (R
 			)
 		}
 
-		_, auditErr := auditSvcTx.Create(ctx, uc.newRoleAudit(ctx, updRole, audit.ActionUpdate))
-		if auditErr != nil {
-			return errs.Errorf(errs.Internal, errs.CodeInternal, "audit update: %s", auditErr)
-		}
-
-		return nil
+		return uc.dispatcher.Dispatch(ctx, tran, newRoleEvent(updRole, audit.ActionUpdate))
 	})
 	if txErr != nil {
 		return Role{}, fmt.Errorf("update role: %w", txErr)
@@ -169,11 +149,6 @@ func (uc *UseCase) Delete(ctx context.Context, roleID string) error {
 			return errs.Errorf(errs.Internal, errs.CodeInternal, "role tx: %s", initErr)
 		}
 
-		auditSvcTx, initErr := uc.auditSvc.NewWithTx(tran)
-		if initErr != nil {
-			return errs.Errorf(errs.Internal, errs.CodeInternal, "audit tx: %s", initErr)
-		}
-
 		deleteErr := roleServiceTx.Delete(ctx, currentRole)
 		if deleteErr != nil {
 			return errs.Errorf(
@@ -185,12 +160,7 @@ func (uc *UseCase) Delete(ctx context.Context, roleID string) error {
 			)
 		}
 
-		_, auditErr := auditSvcTx.Create(ctx, uc.newRoleAudit(ctx, currentRole, audit.ActionDelete))
-		if auditErr != nil {
-			return errs.Errorf(errs.Internal, errs.CodeInternal, "audit delete: %s", auditErr)
-		}
-
-		return nil
+		return uc.dispatcher.Dispatch(ctx, tran, newRoleEvent(currentRole, audit.ActionDelete))
 	})
 	if txErr != nil {
 		return fmt.Errorf("delete role: %w", txErr)
@@ -259,17 +229,13 @@ func (uc *UseCase) Query(ctx context.Context, qp AppQueryParams) (page.Result[Ro
 	return page.NewResult(toAppRoles(roles), total, p), nil
 }
 
-// newRoleAudit builds an audit.NewAudit for a role operation.
-func (uc *UseCase) newRoleAudit(ctx context.Context, rl role.Role, action string) audit.NewAudit {
-	actorID, _ := uuid.Parse(ctxPck.GetActorID(ctx))
-
-	return audit.NewAudit{
-		ObjID:     rl.ID(),
-		ObjEntity: entity.New(entity.RoleEntity),
-		ObjName:   rl.Name(),
-		ActorID:   actorID,
-		Action:    action,
-		Data:      rl,
-		Message:   "role " + action,
+func newRoleEvent(rl role.Role, action string) event.DomainEvent {
+	return event.DomainEvent{
+		AggregateID: rl.ID(),
+		Payload:     rl,
+		ObjEntity:   entity.New(entity.RoleEntity),
+		ObjName:     rl.Name(),
+		Action:      action,
+		Message:     "role " + action,
 	}
 }
