@@ -1,11 +1,11 @@
 package config
 
 type App struct {
-	Name        string
+	Name        string `validate:"required"`
 	Namespace   string
-	Environment string
-	Version     Version
-	FrontendURL string
+	Environment string  `validate:"required"`
+	Version     Version `validate:"required"`
+	FrontendURL string  `validate:"required"`
 }
 
 type Version struct {

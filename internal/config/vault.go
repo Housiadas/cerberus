@@ -1,6 +1,6 @@
 package config
 
 type Vault struct {
-	Address string
-	Token   string
+	Address string `validate:"required"`
+	Token   string `validate:"required"`
 }

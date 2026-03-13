@@ -3,7 +3,7 @@ package config
 import "time"
 
 type Rest struct {
-	API             string
+	API             string `validate:"required"`
 	Debug           string
 	ReadTimeout     time.Duration
 	WriteTimeout    time.Duration
