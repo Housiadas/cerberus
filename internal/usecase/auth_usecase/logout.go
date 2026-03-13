@@ -18,7 +18,8 @@ func (u *UseCase) Logout(ctx context.Context, userID string, req LogoutReq) erro
 	if rToken.UserID != userID {
 		return errs.New(
 			errs.Unauthenticated,
-			errs.Errorf(errs.Unauthenticated, "invalid user id"),
+			errs.CodeUnauthenticated,
+			errs.Errorf(errs.Unauthenticated, errs.CodeUnauthenticated, "invalid user id"),
 		)
 	}
 

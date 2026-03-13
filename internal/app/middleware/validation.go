@@ -7,13 +7,10 @@ import (
 
 	"github.com/Housiadas/cerberus/internal/app/handler/openapi"
 	"github.com/Housiadas/cerberus/internal/utils/errs"
+	"github.com/Housiadas/cerberus/internal/utils/validation"
 )
 
-type validator interface {
-	Validate() error
-}
-
-// Validation validates request bodies that implement the validator interface.
+// Validation validates request bodies using struct validation tags.
 func (m *Middleware) Validation() openapi.StrictMiddlewareFunc {
 	return func(
 		f openapi.StrictHandlerFunc,
@@ -25,11 +22,14 @@ func (m *Middleware) Validation() openapi.StrictMiddlewareFunc {
 			r *http.Request,
 			request any,
 		) (any, error) {
-			if v := extractValidator(request); v != nil {
-				err := v.Validate()
-				if err != nil {
-					return nil, errs.ParseValidationErrors(err)
-				}
+			body := extractBody(request)
+			if body == nil {
+				return f(ctx, w, r, request)
+			}
+
+			err := validation.Check(body)
+			if err != nil {
+				return nil, errs.ParseValidationErrors(err)
 			}
 
 			return f(ctx, w, r, request)
@@ -37,9 +37,8 @@ func (m *Middleware) Validation() openapi.StrictMiddlewareFunc {
 	}
 }
 
-// extractValidator extracts the Body field from a request object and checks
-// if it implements the validator interface.
-func extractValidator(request any) validator {
+// extractBody extracts the Body field from a request object.
+func extractBody(request any) any {
 	v := reflect.ValueOf(request)
 	if v.Kind() == reflect.Ptr {
 		v = v.Elem()
@@ -54,9 +53,5 @@ func extractValidator(request any) validator {
 		return nil
 	}
 
-	if val, ok := bodyField.Interface().(validator); ok {
-		return val
-	}
-
-	return nil
+	return bodyField.Interface()
 }

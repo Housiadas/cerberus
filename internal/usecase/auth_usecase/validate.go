@@ -16,11 +16,11 @@ func (u *UseCase) Validate(ctx context.Context, jwtUnverified string) (Claims, e
 	token, err := jwt.ParseWithClaims(jwtUnverified, &claims, func(token *jwt.Token) (any, error) {
 		// Validate the signing method
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, errs.New(errs.InvalidArgument, ErrInvalidToken)
+			return nil, errs.New(errs.InvalidArgument, errs.CodeInvalidToken, ErrInvalidToken)
 		}
 		// Only accept HS256
 		if token.Method.Alg() != jwt.SigningMethodHS256.Name {
-			return nil, errs.New(errs.InvalidArgument, ErrInvalidToken)
+			return nil, errs.New(errs.InvalidArgument, errs.CodeInvalidToken, ErrInvalidToken)
 		}
 
 		return u.secret, nil
@@ -34,7 +34,7 @@ func (u *UseCase) Validate(ctx context.Context, jwtUnverified string) (Claims, e
 	}
 
 	if !token.Valid {
-		return Claims{}, errs.New(errs.InvalidArgument, ErrInvalidToken)
+		return Claims{}, errs.New(errs.InvalidArgument, errs.CodeInvalidToken, ErrInvalidToken)
 	}
 
 	err = u.CheckExpiredToken(claims)
@@ -46,7 +46,11 @@ func (u *UseCase) Validate(ctx context.Context, jwtUnverified string) (Claims, e
 	err = u.isUserEnabled(ctx, claims)
 	if err != nil {
 		if errors.Is(err, ErrUserDisabled) {
-			return Claims{}, errs.New(errs.Unauthenticated, ErrUserDisabled)
+			return Claims{}, errs.New(
+				errs.Unauthenticated,
+				errs.CodeUserDisabled,
+				ErrUserDisabled,
+			)
 		}
 
 		return Claims{}, err

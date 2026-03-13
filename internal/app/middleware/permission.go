@@ -55,14 +55,22 @@ func (m *Middleware) Permission() openapi.StrictMiddlewareFunc {
 			if err != nil {
 				m.log.Error(ctx, "error checking permissions", err)
 
-				return nil, errs.New(errs.Internal, ErrCheckingPermission)
+				return nil, errs.New(
+					errs.Internal,
+					errs.CodePermissionCheckErr,
+					ErrCheckingPermission,
+				)
 			}
 
 			permissions, ok := result.([]user_roles_permissions_usecase.Permission)
 			if !ok {
 				m.log.Error(ctx, "error casting permissions", err)
 
-				return nil, errs.New(errs.Internal, ErrCheckingPermission)
+				return nil, errs.New(
+					errs.Internal,
+					errs.CodePermissionCheckErr,
+					ErrCheckingPermission,
+				)
 			}
 
 			hasPermission := slices.ContainsFunc(
@@ -78,7 +86,11 @@ func (m *Middleware) Permission() openapi.StrictMiddlewareFunc {
 					"operation", operationID,
 				)
 
-				return nil, errs.New(errs.PermissionDenied, ErrPermissionDenied)
+				return nil, errs.New(
+					errs.PermissionDenied,
+					errs.CodePermissionDenied,
+					ErrPermissionDenied,
+				)
 			}
 
 			return f(ctx, w, r, request)

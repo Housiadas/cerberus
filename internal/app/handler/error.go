@@ -14,7 +14,7 @@ func requestErrorHandler(w http.ResponseWriter, _ *http.Request, err error) {
 	w.WriteHeader(http.StatusBadRequest)
 
 	//nolint:errchkjson // best-effort error response encoding
-	_ = json.NewEncoder(w).Encode(errs.New(errs.InvalidArgument, err))
+	_ = json.NewEncoder(w).Encode(errs.New(errs.InvalidArgument, errs.CodeRequestInvalid, err))
 }
 
 // ResponseErrorHandler converts handler errors into the correct HTTP error response.
@@ -23,7 +23,7 @@ func responseErrorHandler(w http.ResponseWriter, _ *http.Request, err error) {
 
 	ok := errors.As(err, &appErr)
 	if !ok {
-		appErr = errs.Errorf(errs.Internal, "Internal Server Error")
+		appErr = errs.Errorf(errs.Internal, errs.CodeInternal, "Internal Server Error")
 	}
 
 	statusCode := appErr.HTTPStatus()

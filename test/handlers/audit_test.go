@@ -88,7 +88,7 @@ func Test_API_Audit_Query_400(t *testing.T) {
 			Method:      http.MethodGet,
 			AccessToken: &sd.Admins[0].AccessToken.Token,
 			GotResp:     &errs.Error{},
-			ExpResp:     errs.Errorf(errs.InvalidArgument, "[{\"field\":\"obj_id\",\"error\":\"invalid UUID length: 3\"}]"),
+			ExpResp:     errs.Errorf(errs.InvalidArgument, errs.CodeValidation, "[{\"field\":\"obj_id\",\"error\":\"invalid UUID length: 3\"}]"),
 			AssertFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},
@@ -100,7 +100,7 @@ func Test_API_Audit_Query_400(t *testing.T) {
 			Method:      http.MethodGet,
 			AccessToken: &sd.Admins[0].AccessToken.Token,
 			GotResp:     &errs.Error{},
-			ExpResp:     errs.Errorf(errs.InvalidArgument, "[{\"field\":\"order\",\"error\":\"unknown order: ser_id\"}]"),
+			ExpResp:     errs.Errorf(errs.InvalidArgument, errs.CodeValidation, "[{\"field\":\"order\",\"error\":\"unknown order: ser_id\"}]"),
 			AssertFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},
@@ -127,7 +127,7 @@ func Test_API_Audit_Query_403(t *testing.T) {
 			Method:      http.MethodGet,
 			AccessToken: &sd.Users[0].AccessToken.Token,
 			GotResp:     &errs.Error{},
-			ExpResp:     errs.Errorf(errs.PermissionDenied, "permission denied"),
+			ExpResp:     errs.Errorf(errs.PermissionDenied, errs.CodePermissionDenied, "permission denied"),
 			AssertFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},

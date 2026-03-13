@@ -53,23 +53,33 @@ func (uc *UseCase) RemoveUserRole(ctx context.Context, userID, roleID string) er
 func (uc *UseCase) modifyUserRole(ctx context.Context, userID, roleID, action string) error {
 	userUUID, err := uuid.Parse(userID)
 	if err != nil {
-		return errs.Errorf(errs.InvalidArgument, "could not parse user uuid: %s", err)
+		return errs.Errorf(
+			errs.InvalidArgument,
+			errs.CodeValidation,
+			"could not parse user uuid: %s",
+			err,
+		)
 	}
 
 	roleUUID, err := uuid.Parse(roleID)
 	if err != nil {
-		return errs.Errorf(errs.InvalidArgument, "could not parse role uuid: %s", err)
+		return errs.Errorf(
+			errs.InvalidArgument,
+			errs.CodeValidation,
+			"could not parse role uuid: %s",
+			err,
+		)
 	}
 
 	txErr := pgsql.RunInTx(ctx, uc.log, uc.tx, func(tran pgsql.CommitRollbacker) error {
 		svcTx, initErr := uc.userRolesService.NewWithTx(tran)
 		if initErr != nil {
-			return errs.Errorf(errs.Internal, "user_roles tx: %s", initErr)
+			return errs.Errorf(errs.Internal, errs.CodeInternal, "user_roles tx: %s", initErr)
 		}
 
 		auditSvcTx, initErr := uc.auditSvc.NewWithTx(tran)
 		if initErr != nil {
-			return errs.Errorf(errs.Internal, "audit tx: %s", initErr)
+			return errs.Errorf(errs.Internal, errs.CodeInternal, "audit tx: %s", initErr)
 		}
 
 		var opErr error
@@ -80,7 +90,13 @@ func (uc *UseCase) modifyUserRole(ctx context.Context, userID, roleID, action st
 		}
 
 		if opErr != nil {
-			return errs.Errorf(errs.Internal, "user_role %s: %s", action, opErr)
+			return errs.Errorf(
+				errs.Internal,
+				errs.CodeInternal,
+				"user_role %s: %s",
+				action,
+				opErr,
+			)
 		}
 
 		actorID, _ := uuid.Parse(ctxPck.GetActorID(ctx))
@@ -95,7 +111,13 @@ func (uc *UseCase) modifyUserRole(ctx context.Context, userID, roleID, action st
 			Message:   "user role " + action,
 		})
 		if auditErr != nil {
-			return errs.Errorf(errs.Internal, "audit user_role %s: %s", action, auditErr)
+			return errs.Errorf(
+				errs.Internal,
+				errs.CodeInternal,
+				"audit user_role %s: %s",
+				action,
+				auditErr,
+			)
 		}
 
 		return nil

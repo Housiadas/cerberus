@@ -35,14 +35,18 @@ func (m *Middleware) Authenticate() openapi.StrictMiddlewareFunc {
 		return func(ctx context.Context, w http.ResponseWriter, r *http.Request, request any) (any, error) {
 			bearerToken := r.Header.Get("Authorization")
 			if !strings.HasPrefix(bearerToken, "Bearer ") {
-				return nil, errs.New(errs.Unauthenticated, ErrInvalidAuthHeader)
+				return nil, errs.New(
+					errs.Unauthenticated,
+					errs.CodeUnauthenticated,
+					ErrInvalidAuthHeader,
+				)
 			}
 
 			jwtUnverified := bearerToken[7:]
 
 			resp, err := m.useCase.auth.Validate(ctx, jwtUnverified)
 			if err != nil {
-				return nil, errs.New(errs.Unauthenticated, err)
+				return nil, errs.New(errs.Unauthenticated, errs.CodeUnauthenticated, err)
 			}
 
 			ctx = ctxPck.SetActorID(ctx, resp.Subject)
@@ -62,7 +66,11 @@ func (m *Middleware) AuthenticateBasic() func(next http.Handler) http.Handler {
 
 			email, pass, ok := parseBasicAuth(authorizationHeader)
 			if !ok {
-				err := errs.New(errs.Unauthenticated, ErrInvalidBasicAuth)
+				err := errs.New(
+					errs.Unauthenticated,
+					errs.CodeUnauthenticated,
+					ErrInvalidBasicAuth,
+				)
 				m.Error(w, err, http.StatusUnauthorized)
 
 				return

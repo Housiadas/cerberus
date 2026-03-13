@@ -56,23 +56,38 @@ func (uc *UseCase) modifyRolePermission(
 ) error {
 	roleUUID, err := uuid.Parse(roleID)
 	if err != nil {
-		return errs.Errorf(errs.InvalidArgument, "could not parse role uuid: %s", err)
+		return errs.Errorf(
+			errs.InvalidArgument,
+			errs.CodeValidation,
+			"could not parse role uuid: %s",
+			err,
+		)
 	}
 
 	permUUID, err := uuid.Parse(permissionID)
 	if err != nil {
-		return errs.Errorf(errs.InvalidArgument, "could not parse permission uuid: %s", err)
+		return errs.Errorf(
+			errs.InvalidArgument,
+			errs.CodeValidation,
+			"could not parse permission uuid: %s",
+			err,
+		)
 	}
 
 	txErr := pgsql.RunInTx(ctx, uc.log, uc.tx, func(tran pgsql.CommitRollbacker) error {
 		rolePermsTx, initErr := uc.rolePermsService.NewWithTx(tran)
 		if initErr != nil {
-			return errs.Errorf(errs.Internal, "role_permissions tx: %s", initErr)
+			return errs.Errorf(
+				errs.Internal,
+				errs.CodeInternal,
+				"role_permissions tx: %s",
+				initErr,
+			)
 		}
 
 		auditSvcTx, initErr := uc.auditSvc.NewWithTx(tran)
 		if initErr != nil {
-			return errs.Errorf(errs.Internal, "audit tx: %s", initErr)
+			return errs.Errorf(errs.Internal, errs.CodeInternal, "audit tx: %s", initErr)
 		}
 
 		var opErr error
@@ -83,7 +98,13 @@ func (uc *UseCase) modifyRolePermission(
 		}
 
 		if opErr != nil {
-			return errs.Errorf(errs.Internal, "role_permission %s: %s", action, opErr)
+			return errs.Errorf(
+				errs.Internal,
+				errs.CodeInternal,
+				"role_permission %s: %s",
+				action,
+				opErr,
+			)
 		}
 
 		actorID, _ := uuid.Parse(ctxPck.GetActorID(ctx))
@@ -98,7 +119,13 @@ func (uc *UseCase) modifyRolePermission(
 			Message:   "role permission " + action,
 		})
 		if auditErr != nil {
-			return errs.Errorf(errs.Internal, "audit role_permission %s: %s", action, auditErr)
+			return errs.Errorf(
+				errs.Internal,
+				errs.CodeInternal,
+				"audit role_permission %s: %s",
+				action,
+				auditErr,
+			)
 		}
 
 		return nil

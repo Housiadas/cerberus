@@ -26,13 +26,19 @@ func (uc *UseCase) Create(
 ) (RefreshToken, error) {
 	userUUID, err := uuid.Parse(userID)
 	if err != nil {
-		return RefreshToken{}, errs.Errorf(errs.InvalidArgument, "could not parse uuid: %s", err)
+		return RefreshToken{}, errs.Errorf(
+			errs.InvalidArgument,
+			errs.CodeValidation,
+			"could not parse uuid: %s",
+			err,
+		)
 	}
 
 	tkn, err := uc.refreshTokenService.Create(ctx, userUUID, refreshTokenTTL)
 	if err != nil {
 		return RefreshToken{}, errs.Errorf(
 			errs.Internal,
+			errs.CodeInternal,
 			"create: refresh_token[%+v]: %s",
 			tkn,
 			err,
@@ -45,7 +51,13 @@ func (uc *UseCase) Create(
 func (uc *UseCase) QueryByToken(ctx context.Context, token string) (RefreshToken, error) {
 	tkn, err := uc.refreshTokenService.QueryByToken(ctx, token)
 	if err != nil {
-		return RefreshToken{}, errs.Errorf(errs.Internal, "query by token: [%+v]: %s", tkn, err)
+		return RefreshToken{}, errs.Errorf(
+			errs.Internal,
+			errs.CodeInternal,
+			"query by token: [%+v]: %s",
+			tkn,
+			err,
+		)
 	}
 
 	return toAppToken(tkn), nil
@@ -59,7 +71,7 @@ func (uc *UseCase) Revoke(ctx context.Context, tkn RefreshToken) error {
 
 	err = uc.refreshTokenService.Revoke(ctx, coreTkn)
 	if err != nil {
-		return errs.Errorf(errs.Internal, "revoke issue: [%+v]: %s", tkn, err)
+		return errs.Errorf(errs.Internal, errs.CodeInternal, "revoke issue: [%+v]: %s", tkn, err)
 	}
 
 	return nil

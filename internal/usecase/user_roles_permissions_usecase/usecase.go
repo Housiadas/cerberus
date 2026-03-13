@@ -49,12 +49,22 @@ func (uc *UseCase) Query(
 
 	rows, err := uc.service.Query(ctx, filter, ob, p)
 	if err != nil {
-		return page.Result[UserRolesPermissions]{}, errs.Errorf(errs.Internal, "query: %s", err)
+		return page.Result[UserRolesPermissions]{}, errs.Errorf(
+			errs.Internal,
+			errs.CodeInternal,
+			"query: %s",
+			err,
+		)
 	}
 
 	total, err := uc.service.Count(ctx, filter)
 	if err != nil {
-		return page.Result[UserRolesPermissions]{}, errs.Errorf(errs.Internal, "count: %s", err)
+		return page.Result[UserRolesPermissions]{}, errs.Errorf(
+			errs.Internal,
+			errs.CodeInternal,
+			"count: %s",
+			err,
+		)
 	}
 
 	return page.NewResult(toManyUserRolesPermissions(rows), total, p), nil
@@ -67,12 +77,22 @@ func (uc *UseCase) QueryPermissionsByUserID(
 ) ([]Permission, error) {
 	userUUID, err := uuid.Parse(userID)
 	if err != nil {
-		return nil, errs.Errorf(errs.InvalidArgument, "could not parse uuid: %s", err)
+		return nil, errs.Errorf(
+			errs.InvalidArgument,
+			errs.CodeValidation,
+			"could not parse uuid: %s",
+			err,
+		)
 	}
 
 	perms, err := uc.service.QueryPermissionsByUserID(ctx, userUUID)
 	if err != nil {
-		return nil, errs.Errorf(errs.Internal, "query_permissions_by_user_id: %s", err)
+		return nil, errs.Errorf(
+			errs.Internal,
+			errs.CodeInternal,
+			"query_permissions_by_user_id: %s",
+			err,
+		)
 	}
 
 	result := make([]Permission, len(perms))
@@ -90,12 +110,17 @@ func (uc *UseCase) QueryPermissionsByUserID(
 func (uc *UseCase) HasPermission(ctx context.Context, userID, permissionName string) (bool, error) {
 	userUUID, err := uuid.Parse(userID)
 	if err != nil {
-		return false, errs.Errorf(errs.InvalidArgument, "could not parse uuid: %s", err)
+		return false, errs.Errorf(
+			errs.InvalidArgument,
+			errs.CodeValidation,
+			"could not parse uuid: %s",
+			err,
+		)
 	}
 
 	hasPermission, err := uc.service.HasPermission(ctx, userUUID, permissionName)
 	if err != nil {
-		return false, errs.Errorf(errs.Internal, "has_permission: %s", err)
+		return false, errs.Errorf(errs.Internal, errs.CodeInternal, "has_permission: %s", err)
 	}
 
 	return hasPermission, nil
