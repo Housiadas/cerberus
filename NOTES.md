@@ -28,10 +28,6 @@ Refactor Suggestions
     internal/app/relay/relay.go polls the outbox table at a fixed interval. A PostgreSQL LISTEN/NOTIFY trigger on the outbox table would reduce latency and DB load —
     the relay wakes up only on new rows.
 
-8. Config Validation at Startup
-    internal/config loads values via Viper but doesn't validate required fields (e.g., missing Vault address, empty DB host). A config.Validate() step during startup
-    would give early, clear errors instead of panics deep in initialization.
-
   ---
 Architectural Observation
 

@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 	"runtime"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/spf13/viper"
 )
 
@@ -43,7 +44,25 @@ func LoadConfig() (Config, error) {
 		return Config{}, fmt.Errorf("viper unable to decode into struct: %w", err)
 	}
 
+	err = config.validate()
+	if err != nil {
+		return Config{}, fmt.Errorf("config validation failed: %w", err)
+	}
+
 	return config, nil
+}
+
+// Validate checks that all required configuration fields are populated
+// using struct validate tags.
+func (c Config) validate() error {
+	validate := validator.New(validator.WithRequiredStructEnabled())
+
+	err := validate.Struct(c)
+	if err != nil {
+		return fmt.Errorf("config validation: %w", err)
+	}
+
+	return nil
 }
 
 func getConfigDir() string {
