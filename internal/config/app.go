@@ -3,9 +3,9 @@ package config
 type App struct {
 	Name        string `validate:"required"`
 	Namespace   string
-	Environment string  `validate:"required"`
-	Version     Version `validate:"required"`
-	FrontendURL string  `validate:"required"`
+	Environment string
+	Version     Version
+	FrontendURL string
 }
 
 type Version struct {

@@ -8,6 +8,7 @@ import (
 	"github.com/Housiadas/cerberus/internal/app/cache/permission_cache"
 	"github.com/Housiadas/cerberus/internal/app/cache/role_cache"
 	"github.com/Housiadas/cerberus/internal/app/cache/user_cache"
+	"github.com/Housiadas/cerberus/internal/app/event_dispatcher"
 	"github.com/Housiadas/cerberus/internal/app/handler/openapi"
 	"github.com/Housiadas/cerberus/internal/app/middleware"
 	"github.com/Housiadas/cerberus/internal/app/repo/audit_repo"
@@ -132,10 +133,13 @@ func New(ctx context.Context, cfg Config) *Handler {
 		userRolesPermissionsRepo,
 	)
 
+	// event dispatcher
+	dispatcher := event_dispatcher.New(outboxSvc, auditService)
+
 	// usecase
 	tx := pgsql.NewBeginner(cfg.DB)
 	auditUsecase := audit_usecase.NewUseCase(auditService)
-	userUsecase := user_usecase.NewUseCase(cfg.Log, userService, outboxSvc, auditService, tx)
+	userUsecase := user_usecase.NewUseCase(cfg.Log, userService, dispatcher, tx)
 	refreshTokenUsecase := refresh_token_usecase.NewUseCase(refreshTokenService)
 	userRolesPermissionsUsecase := user_roles_permissions_usecase.NewUseCase(
 		user_roles_permissions_usecase.Config{
@@ -155,12 +159,12 @@ func New(ctx context.Context, cfg Config) *Handler {
 		FrontendURL:                cfg.FrontendURL,
 		UserRolesPermissions:       userRolesPermissionsUsecase,
 	})
-	roleUsecase := role_usecase.NewUseCase(cfg.Log, roleService, auditService, tx)
-	permissionUsecase := permission_usecase.NewUseCase(cfg.Log, permissionService, auditService, tx)
+	roleUsecase := role_usecase.NewUseCase(cfg.Log, roleService, dispatcher, tx)
+	permissionUsecase := permission_usecase.NewUseCase(cfg.Log, permissionService, dispatcher, tx)
 	systemUsecase := system_usecase.NewUseCase(cfg.Build, cfg.Log, cfg.DB)
-	userRolesUsecase := user_roles_usecase.NewUseCase(cfg.Log, userRolesSvc, auditService, tx)
+	userRolesUsecase := user_roles_usecase.NewUseCase(cfg.Log, userRolesSvc, dispatcher, tx)
 	rolePermissionsUsecase := role_permissions_usecase.NewUseCase(
-		cfg.Log, rolePermsSvc, auditService, tx,
+		cfg.Log, rolePermsSvc, dispatcher, tx,
 	)
 
 	return &Handler{

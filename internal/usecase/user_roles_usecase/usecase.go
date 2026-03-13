@@ -5,12 +5,12 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/Housiadas/cerberus/internal/app/event_dispatcher"
 	"github.com/Housiadas/cerberus/internal/core/domain/audit"
 	"github.com/Housiadas/cerberus/internal/core/domain/entity"
+	"github.com/Housiadas/cerberus/internal/core/domain/event"
 	"github.com/Housiadas/cerberus/internal/core/domain/name"
-	"github.com/Housiadas/cerberus/internal/core/service/audit_service"
 	"github.com/Housiadas/cerberus/internal/core/service/user_roles_service"
-	ctxPck "github.com/Housiadas/cerberus/internal/utils/context"
 	"github.com/Housiadas/cerberus/internal/utils/errs"
 	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/Housiadas/cerberus/pkg/pgsql"
@@ -21,7 +21,7 @@ import (
 type UseCase struct {
 	log              logger.Logger
 	userRolesService *user_roles_service.Service
-	auditSvc         *audit_service.Service
+	dispatcher       *event_dispatcher.EventDispatcher
 	tx               pgsql.Beginner
 }
 
@@ -29,13 +29,13 @@ type UseCase struct {
 func NewUseCase(
 	log logger.Logger,
 	userRolesService *user_roles_service.Service,
-	auditSvc *audit_service.Service,
+	dispatcher *event_dispatcher.EventDispatcher,
 	tx pgsql.Beginner,
 ) *UseCase {
 	return &UseCase{
 		log:              log,
 		userRolesService: userRolesService,
-		auditSvc:         auditSvc,
+		dispatcher:       dispatcher,
 		tx:               tx,
 	}
 }
@@ -77,11 +77,6 @@ func (uc *UseCase) modifyUserRole(ctx context.Context, userID, roleID, action st
 			return errs.Errorf(errs.Internal, errs.CodeInternal, "user_roles tx: %s", initErr)
 		}
 
-		auditSvcTx, initErr := uc.auditSvc.NewWithTx(tran)
-		if initErr != nil {
-			return errs.Errorf(errs.Internal, errs.CodeInternal, "audit tx: %s", initErr)
-		}
-
 		var opErr error
 		if action == audit.ActionAssign {
 			opErr = svcTx.Add(ctx, userUUID, roleUUID)
@@ -99,28 +94,14 @@ func (uc *UseCase) modifyUserRole(ctx context.Context, userID, roleID, action st
 			)
 		}
 
-		actorID, _ := uuid.Parse(ctxPck.GetActorID(ctx))
-
-		_, auditErr := auditSvcTx.Create(ctx, audit.NewAudit{
-			ObjID:     userUUID,
-			ObjEntity: entity.New(entity.RoleEntity),
-			ObjName:   name.MustParse(roleUUID.String()),
-			ActorID:   actorID,
-			Action:    action,
-			Data:      map[string]string{"user_id": userID, "role_id": roleID},
-			Message:   "user role " + action,
+		return uc.dispatcher.Dispatch(ctx, tran, event.DomainEvent{
+			AggregateID: userUUID,
+			Payload:     map[string]string{"user_id": userID, "role_id": roleID},
+			ObjEntity:   entity.New(entity.RoleEntity),
+			ObjName:     name.MustParse(roleUUID.String()),
+			Action:      action,
+			Message:     "user role " + action,
 		})
-		if auditErr != nil {
-			return errs.Errorf(
-				errs.Internal,
-				errs.CodeInternal,
-				"audit user_role %s: %s",
-				action,
-				auditErr,
-			)
-		}
-
-		return nil
 	})
 	if txErr != nil {
 		return fmt.Errorf("user role %s: %w", action, txErr)
