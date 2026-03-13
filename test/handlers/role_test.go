@@ -150,7 +150,12 @@ func Test_API_Role_Create_400(t *testing.T) {
 			AccessToken: &sd.Admins[0].AccessToken.Token,
 			Input:       &role_usecase.NewRole{},
 			GotResp:     &errs.Error{},
-			ExpResp:     errs.Errorf(errs.InvalidArgument, errs.CodeValidation, "parse: invalid name value: \"\""),
+			ExpResp: &errs.Error{
+				Status:  errs.InvalidArgument,
+				Code:    errs.CodeValidation,
+				Message: "validation error",
+				Fields:  []errs.FieldError{{Field: "name", Err: "name is required"}},
+			},
 			AssertFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},
