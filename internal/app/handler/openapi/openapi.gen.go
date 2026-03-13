@@ -15,7 +15,7 @@ import (
 	"github.com/Housiadas/cerberus/internal/usecase/role_usecase"
 	"github.com/Housiadas/cerberus/internal/usecase/system_usecase"
 	"github.com/Housiadas/cerberus/internal/usecase/user_usecase"
-	"github.com/Housiadas/cerberus/internal/utils/page"
+	"github.com/Housiadas/cerberus/pkg/cursor"
 	"github.com/go-chi/chi/v5"
 	"github.com/oapi-codegen/runtime"
 	strictnethttp "github.com/oapi-codegen/runtime/strictmiddleware/nethttp"
@@ -71,7 +71,7 @@ type LoginReq = auth_usecase.LoginReq
 type LogoutReq = auth_usecase.LogoutReq
 
 // Metadata defines model for Metadata.
-type Metadata = page.Metadata
+type Metadata = cursor.Metadata
 
 // NewPermission defines model for NewPermission.
 type NewPermission = permission_usecase.NewPermission
@@ -138,8 +138,8 @@ type ErrorResponse = Error
 
 // ListAuditsParams defines parameters for ListAudits.
 type ListAuditsParams struct {
-	Page      *string `form:"page,omitempty" json:"page,omitempty"`
-	Rows      *string `form:"rows,omitempty" json:"rows,omitempty"`
+	Cursor    *string `form:"cursor,omitempty" json:"cursor,omitempty"`
+	Limit     *string `form:"limit,omitempty" json:"limit,omitempty"`
 	OrderBy   *string `form:"orderBy,omitempty" json:"orderBy,omitempty"`
 	ObjId     *string `form:"obj_id,omitempty" json:"obj_id,omitempty"`
 	ObjDomain *string `form:"obj_domain,omitempty" json:"obj_domain,omitempty"`
@@ -152,8 +152,8 @@ type ListAuditsParams struct {
 
 // ListPermissionsParams defines parameters for ListPermissions.
 type ListPermissionsParams struct {
-	Page         *string `form:"page,omitempty" json:"page,omitempty"`
-	Rows         *string `form:"rows,omitempty" json:"rows,omitempty"`
+	Cursor       *string `form:"cursor,omitempty" json:"cursor,omitempty"`
+	Limit        *string `form:"limit,omitempty" json:"limit,omitempty"`
 	OrderBy      *string `form:"orderBy,omitempty" json:"orderBy,omitempty"`
 	PermissionId *string `form:"permission_id,omitempty" json:"permission_id,omitempty"`
 	Name         *string `form:"name,omitempty" json:"name,omitempty"`
@@ -161,8 +161,8 @@ type ListPermissionsParams struct {
 
 // ListRolesParams defines parameters for ListRoles.
 type ListRolesParams struct {
-	Page    *string `form:"page,omitempty" json:"page,omitempty"`
-	Rows    *string `form:"rows,omitempty" json:"rows,omitempty"`
+	Cursor  *string `form:"cursor,omitempty" json:"cursor,omitempty"`
+	Limit   *string `form:"limit,omitempty" json:"limit,omitempty"`
 	OrderBy *string `form:"orderBy,omitempty" json:"orderBy,omitempty"`
 	RoleId  *string `form:"role_id,omitempty" json:"role_id,omitempty"`
 	Name    *string `form:"name,omitempty" json:"name,omitempty"`
@@ -175,8 +175,8 @@ type DeleteRolePermissionParams struct {
 
 // ListUsersParams defines parameters for ListUsers.
 type ListUsersParams struct {
-	Page             *string `form:"page,omitempty" json:"page,omitempty"`
-	Rows             *string `form:"rows,omitempty" json:"rows,omitempty"`
+	Cursor           *string `form:"cursor,omitempty" json:"cursor,omitempty"`
+	Limit            *string `form:"limit,omitempty" json:"limit,omitempty"`
 	OrderBy          *string `form:"orderBy,omitempty" json:"orderBy,omitempty"`
 	UserId           *string `form:"user_id,omitempty" json:"user_id,omitempty"`
 	Name             *string `form:"name,omitempty" json:"name,omitempty"`
@@ -518,19 +518,19 @@ func (siw *ServerInterfaceWrapper) ListAudits(w http.ResponseWriter, r *http.Req
 	// Parameter object where we will unmarshal all parameters from the context
 	var params ListAuditsParams
 
-	// ------------- Optional query parameter "page" -------------
+	// ------------- Optional query parameter "cursor" -------------
 
-	err = runtime.BindQueryParameterWithOptions("form", true, false, "page", r.URL.Query(), &params.Page, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "cursor", r.URL.Query(), &params.Cursor, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
 	if err != nil {
-		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "page", Err: err})
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "cursor", Err: err})
 		return
 	}
 
-	// ------------- Optional query parameter "rows" -------------
+	// ------------- Optional query parameter "limit" -------------
 
-	err = runtime.BindQueryParameterWithOptions("form", true, false, "rows", r.URL.Query(), &params.Rows, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "limit", r.URL.Query(), &params.Limit, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
 	if err != nil {
-		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "rows", Err: err})
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "limit", Err: err})
 		return
 	}
 
@@ -713,19 +713,19 @@ func (siw *ServerInterfaceWrapper) ListPermissions(w http.ResponseWriter, r *htt
 	// Parameter object where we will unmarshal all parameters from the context
 	var params ListPermissionsParams
 
-	// ------------- Optional query parameter "page" -------------
+	// ------------- Optional query parameter "cursor" -------------
 
-	err = runtime.BindQueryParameterWithOptions("form", true, false, "page", r.URL.Query(), &params.Page, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "cursor", r.URL.Query(), &params.Cursor, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
 	if err != nil {
-		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "page", Err: err})
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "cursor", Err: err})
 		return
 	}
 
-	// ------------- Optional query parameter "rows" -------------
+	// ------------- Optional query parameter "limit" -------------
 
-	err = runtime.BindQueryParameterWithOptions("form", true, false, "rows", r.URL.Query(), &params.Rows, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "limit", r.URL.Query(), &params.Limit, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
 	if err != nil {
-		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "rows", Err: err})
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "limit", Err: err})
 		return
 	}
 
@@ -860,19 +860,19 @@ func (siw *ServerInterfaceWrapper) ListRoles(w http.ResponseWriter, r *http.Requ
 	// Parameter object where we will unmarshal all parameters from the context
 	var params ListRolesParams
 
-	// ------------- Optional query parameter "page" -------------
+	// ------------- Optional query parameter "cursor" -------------
 
-	err = runtime.BindQueryParameterWithOptions("form", true, false, "page", r.URL.Query(), &params.Page, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "cursor", r.URL.Query(), &params.Cursor, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
 	if err != nil {
-		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "page", Err: err})
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "cursor", Err: err})
 		return
 	}
 
-	// ------------- Optional query parameter "rows" -------------
+	// ------------- Optional query parameter "limit" -------------
 
-	err = runtime.BindQueryParameterWithOptions("form", true, false, "rows", r.URL.Query(), &params.Rows, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "limit", r.URL.Query(), &params.Limit, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
 	if err != nil {
-		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "rows", Err: err})
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "limit", Err: err})
 		return
 	}
 
@@ -1087,19 +1087,19 @@ func (siw *ServerInterfaceWrapper) ListUsers(w http.ResponseWriter, r *http.Requ
 	// Parameter object where we will unmarshal all parameters from the context
 	var params ListUsersParams
 
-	// ------------- Optional query parameter "page" -------------
+	// ------------- Optional query parameter "cursor" -------------
 
-	err = runtime.BindQueryParameterWithOptions("form", true, false, "page", r.URL.Query(), &params.Page, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "cursor", r.URL.Query(), &params.Cursor, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
 	if err != nil {
-		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "page", Err: err})
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "cursor", Err: err})
 		return
 	}
 
-	// ------------- Optional query parameter "rows" -------------
+	// ------------- Optional query parameter "limit" -------------
 
-	err = runtime.BindQueryParameterWithOptions("form", true, false, "rows", r.URL.Query(), &params.Rows, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "limit", r.URL.Query(), &params.Limit, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
 	if err != nil {
-		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "rows", Err: err})
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "limit", Err: err})
 		return
 	}
 

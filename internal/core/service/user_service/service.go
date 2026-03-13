@@ -2,7 +2,6 @@
 package user_service
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/Housiadas/cerberus/internal/core/domain/user"
@@ -55,14 +54,4 @@ func (c *Service) NewWithTx(tx pgsql.CommitRollbacker) (*Service, error) {
 	}
 
 	return &bus, nil
-}
-
-// Count returns the total number of users.
-func (c *Service) Count(ctx context.Context, filter user.QueryFilter) (int, error) {
-	count, err := c.storer.Count(ctx, filter)
-	if err != nil {
-		return 0, fmt.Errorf("users count: %w", err)
-	}
-
-	return count, nil
 }

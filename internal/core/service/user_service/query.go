@@ -6,7 +6,7 @@ import (
 	"net/mail"
 
 	"github.com/Housiadas/cerberus/internal/core/domain/user"
-	"github.com/Housiadas/cerberus/internal/utils/page"
+	"github.com/Housiadas/cerberus/pkg/cursor"
 	"github.com/Housiadas/cerberus/pkg/order"
 	"github.com/google/uuid"
 )
@@ -16,9 +16,9 @@ func (c *Service) Query(
 	ctx context.Context,
 	filter user.QueryFilter,
 	orderBy order.By,
-	page page.Page,
+	cur cursor.Cursor,
 ) ([]user.User, error) {
-	users, err := c.storer.Query(ctx, filter, orderBy, page)
+	users, err := c.storer.Query(ctx, filter, orderBy, cur)
 	if err != nil {
 		return nil, fmt.Errorf("query: %w", err)
 	}

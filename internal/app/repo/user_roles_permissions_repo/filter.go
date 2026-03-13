@@ -6,10 +6,33 @@ import (
 	"strings"
 
 	urp "github.com/Housiadas/cerberus/internal/core/domain/user_roles_permissions"
+	"github.com/Housiadas/cerberus/pkg/cursor"
+	"github.com/Housiadas/cerberus/pkg/order"
 )
 
+func applyCursor(cur cursor.Cursor, ob order.By, data map[string]any, buf *bytes.Buffer) {
+	if !cur.HasCursor() {
+		return
+	}
+
+	by, exists := getOrderFields()[ob.Field]
+	if !exists {
+		return
+	}
+
+	data["cursor_value"] = cur.FieldValue()
+	data["cursor_id"] = cur.ID()
+
+	op := ">"
+	if ob.Direction == order.DESC {
+		op = "<"
+	}
+
+	buf.WriteString(fmt.Sprintf(" AND (%s, user_id) %s (:cursor_value, :cursor_id)", by, op))
+}
+
 func applyFilter(filter urp.QueryFilter, data map[string]any, buf *bytes.Buffer) {
-	var wc []string
+	wc := []string{"1=1"}
 
 	if filter.UserID != nil {
 		data["user_id"] = *filter.UserID
@@ -53,8 +76,6 @@ func applyFilter(filter urp.QueryFilter, data map[string]any, buf *bytes.Buffer)
 		wc = append(wc, "permission_name LIKE :permission_name")
 	}
 
-	if len(wc) > 0 {
-		buf.WriteString(" WHERE ")
-		buf.WriteString(strings.Join(wc, " AND "))
-	}
+	buf.WriteString(" WHERE ")
+	buf.WriteString(strings.Join(wc, " AND "))
 }

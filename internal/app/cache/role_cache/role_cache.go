@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"github.com/Housiadas/cerberus/internal/core/domain/role"
-	"github.com/Housiadas/cerberus/internal/utils/page"
 	"github.com/Housiadas/cerberus/pkg/cachemetrics"
+	"github.com/Housiadas/cerberus/pkg/cursor"
 	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/Housiadas/cerberus/pkg/order"
 	"github.com/Housiadas/cerberus/pkg/pgsql"
@@ -109,24 +109,14 @@ func (s *Store) Query(
 	ctx context.Context,
 	filter role.QueryFilter,
 	orderBy order.By,
-	page page.Page,
+	cur cursor.Cursor,
 ) ([]role.Role, error) {
-	roles, err := s.storer.Query(ctx, filter, orderBy, page)
+	roles, err := s.storer.Query(ctx, filter, orderBy, cur)
 	if err != nil {
 		return nil, fmt.Errorf("role cache query: %w", err)
 	}
 
 	return roles, nil
-}
-
-// Count returns the total number of roles in the DB.
-func (s *Store) Count(ctx context.Context, filter role.QueryFilter) (int, error) {
-	count, err := s.storer.Count(ctx, filter)
-	if err != nil {
-		return 0, fmt.Errorf("role cache count: %w", err)
-	}
-
-	return count, nil
 }
 
 // QueryByID gets the specified role, checking L1 -> L2 -> DB.

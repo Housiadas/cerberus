@@ -9,7 +9,7 @@ import (
 	"fmt"
 
 	"github.com/Housiadas/cerberus/internal/core/domain/permission"
-	"github.com/Housiadas/cerberus/internal/utils/page"
+	"github.com/Housiadas/cerberus/pkg/cursor"
 	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/Housiadas/cerberus/pkg/order"
 	"github.com/Housiadas/cerberus/pkg/pgsql"
@@ -29,8 +29,6 @@ var (
 	permissionQuerySQL string
 	//go:embed query/permission_query_by_id.sql
 	permissionQueryByIDSQL string
-	//go:embed query/permission_count.sql
-	permissionCountSQL string
 )
 
 // Store manages the set of APIs for userDB database access.
@@ -123,15 +121,15 @@ func (s *Store) Query(
 	ctx context.Context,
 	filter permission.QueryFilter,
 	orderBy order.By,
-	page page.Page,
+	cur cursor.Cursor,
 ) ([]permission.Permission, error) {
 	data := map[string]any{
-		"offset":        (page.Number() - 1) * page.RowsPerPage(),
-		"rows_per_page": page.RowsPerPage(),
+		"limit": cur.Limit() + 1,
 	}
 
 	buf := bytes.NewBufferString(permissionQuerySQL)
 	applyFilter(filter, data, buf)
+	applyCursor(cur, orderBy, data, buf)
 
 	orderByClause, err := orderByClause(orderBy)
 	if err != nil {
@@ -139,7 +137,7 @@ func (s *Store) Query(
 	}
 
 	buf.WriteString(orderByClause)
-	buf.WriteString(" OFFSET :offset ROWS FETCH NEXT :rows_per_page ROWS ONLY")
+	buf.WriteString(" FETCH NEXT :limit ROWS ONLY")
 
 	var dbPermissions []permissionDB
 
@@ -149,22 +147,4 @@ func (s *Store) Query(
 	}
 
 	return toPermissionsDomain(dbPermissions)
-}
-
-// Count returns the total number of users in the DB.
-func (s *Store) Count(ctx context.Context, filter permission.QueryFilter) (int, error) {
-	data := map[string]any{}
-	buf := bytes.NewBufferString(permissionCountSQL)
-	applyFilter(filter, data, buf)
-
-	var count struct {
-		Count int `db:"count"`
-	}
-
-	err := pgsql.NamedQueryStruct(ctx, s.log, s.dbPool, buf.String(), data, &count)
-	if err != nil {
-		return 0, fmt.Errorf("db: %w", err)
-	}
-
-	return count.Count, nil
 }

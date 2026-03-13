@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/Housiadas/cerberus/internal/core/domain/role"
-	"github.com/Housiadas/cerberus/internal/utils/page"
+	"github.com/Housiadas/cerberus/pkg/cursor"
 	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/Housiadas/cerberus/pkg/order"
 	"github.com/Housiadas/cerberus/pkg/pgsql"
@@ -96,16 +96,6 @@ func (c *Service) Delete(ctx context.Context, rl role.Role) error {
 	return nil
 }
 
-// Count returns the total number of users.
-func (c *Service) Count(ctx context.Context, filter role.QueryFilter) (int, error) {
-	count, err := c.storer.Count(ctx, filter)
-	if err != nil {
-		return 0, fmt.Errorf("roles count: %w", err)
-	}
-
-	return count, nil
-}
-
 // QueryByID finds the user by the specified ID.
 func (c *Service) QueryByID(ctx context.Context, roleID uuid.UUID) (role.Role, error) {
 	rl, err := c.storer.QueryByID(ctx, roleID)
@@ -121,9 +111,9 @@ func (c *Service) Query(
 	ctx context.Context,
 	filter role.QueryFilter,
 	orderBy order.By,
-	page page.Page,
+	cur cursor.Cursor,
 ) ([]role.Role, error) {
-	roles, err := c.storer.Query(ctx, filter, orderBy, page)
+	roles, err := c.storer.Query(ctx, filter, orderBy, cur)
 	if err != nil {
 		return nil, fmt.Errorf("role query: %w", err)
 	}

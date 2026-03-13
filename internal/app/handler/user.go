@@ -43,8 +43,8 @@ func (h *Handler) ListUsers(
 	request openapi.ListUsersRequestObject,
 ) (openapi.ListUsersResponseObject, error) {
 	qp := user_usecase.AppQueryParams{
-		Page:             pntr.DerefStr(request.Params.Page),
-		Rows:             pntr.DerefStr(request.Params.Rows),
+		Cursor:           pntr.DerefStr(request.Params.Cursor),
+		Limit:            pntr.DerefStr(request.Params.Limit),
 		OrderBy:          pntr.DerefStr(request.Params.OrderBy),
 		ID:               pntr.DerefStr(request.Params.UserId),
 		Name:             pntr.DerefStr(request.Params.Name),

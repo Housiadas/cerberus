@@ -224,11 +224,11 @@ paths:
       security:
         - BearerAuth: []
       parameters:
-        - name: page
+        - name: cursor
           in: query
           schema:
             type: string
-        - name: rows
+        - name: limit
           in: query
           schema:
             type: string
@@ -406,11 +406,11 @@ paths:
       security:
         - BearerAuth: []
       parameters:
-        - name: page
+        - name: cursor
           in: query
           schema:
             type: string
-        - name: rows
+        - name: limit
           in: query
           schema:
             type: string
@@ -559,11 +559,11 @@ paths:
       security:
         - BearerAuth: []
       parameters:
-        - name: page
+        - name: cursor
           in: query
           schema:
             type: string
-        - name: rows
+        - name: limit
           in: query
           schema:
             type: string
@@ -666,11 +666,11 @@ paths:
       security:
         - BearerAuth: []
       parameters:
-        - name: page
+        - name: cursor
           in: query
           schema:
             type: string
-        - name: rows
+        - name: limit
           in: query
           schema:
             type: string
@@ -1066,20 +1066,18 @@ components:
 
     # ---- Common ----
     Metadata:
-      x-go-type: page.Metadata
+      x-go-type: cursor.Metadata
       x-go-type-import:
-        path: github.com/Housiadas/cerberus/internal/utils/page
+        path: github.com/Housiadas/cerberus/pkg/cursor
       type: object
       properties:
-        firstPage:
-          type: integer
-        currentPage:
-          type: integer
-        lastPage:
-          type: integer
-        rowsPerPage:
-          type: integer
-        total:
+        nextCursor:
+          type: string
+        prevCursor:
+          type: string
+        hasMore:
+          type: boolean
+        limit:
           type: integer
 
     Error:

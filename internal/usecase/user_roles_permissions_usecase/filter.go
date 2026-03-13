@@ -10,8 +10,8 @@ import (
 )
 
 type AppQueryParams struct {
-	Page           string
-	Rows           string
+	Cursor         string
+	Limit          string
 	OrderBy        string
 	UserID         string
 	UserName       string

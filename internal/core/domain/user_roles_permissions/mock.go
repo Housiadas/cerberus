@@ -7,7 +7,7 @@ package user_roles_permissions
 import (
 	"context"
 
-	"github.com/Housiadas/cerberus/internal/utils/page"
+	"github.com/Housiadas/cerberus/pkg/cursor"
 	"github.com/Housiadas/cerberus/pkg/order"
 	"github.com/google/uuid"
 	mock "github.com/stretchr/testify/mock"
@@ -38,72 +38,6 @@ type MockStorer_Expecter struct {
 
 func (_m *MockStorer) EXPECT() *MockStorer_Expecter {
 	return &MockStorer_Expecter{mock: &_m.Mock}
-}
-
-// Count provides a mock function for the type MockStorer
-func (_mock *MockStorer) Count(ctx context.Context, filter QueryFilter) (int, error) {
-	ret := _mock.Called(ctx, filter)
-
-	if len(ret) == 0 {
-		panic("no return value specified for Count")
-	}
-
-	var r0 int
-	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, QueryFilter) (int, error)); ok {
-		return returnFunc(ctx, filter)
-	}
-	if returnFunc, ok := ret.Get(0).(func(context.Context, QueryFilter) int); ok {
-		r0 = returnFunc(ctx, filter)
-	} else {
-		r0 = ret.Get(0).(int)
-	}
-	if returnFunc, ok := ret.Get(1).(func(context.Context, QueryFilter) error); ok {
-		r1 = returnFunc(ctx, filter)
-	} else {
-		r1 = ret.Error(1)
-	}
-	return r0, r1
-}
-
-// MockStorer_Count_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Count'
-type MockStorer_Count_Call struct {
-	*mock.Call
-}
-
-// Count is a helper method to define mock.On call
-//   - ctx context.Context
-//   - filter QueryFilter
-func (_e *MockStorer_Expecter) Count(ctx interface{}, filter interface{}) *MockStorer_Count_Call {
-	return &MockStorer_Count_Call{Call: _e.mock.On("Count", ctx, filter)}
-}
-
-func (_c *MockStorer_Count_Call) Run(run func(ctx context.Context, filter QueryFilter)) *MockStorer_Count_Call {
-	_c.Call.Run(func(args mock.Arguments) {
-		var arg0 context.Context
-		if args[0] != nil {
-			arg0 = args[0].(context.Context)
-		}
-		var arg1 QueryFilter
-		if args[1] != nil {
-			arg1 = args[1].(QueryFilter)
-		}
-		run(
-			arg0,
-			arg1,
-		)
-	})
-	return _c
-}
-
-func (_c *MockStorer_Count_Call) Return(n int, err error) *MockStorer_Count_Call {
-	_c.Call.Return(n, err)
-	return _c
-}
-
-func (_c *MockStorer_Count_Call) RunAndReturn(run func(ctx context.Context, filter QueryFilter) (int, error)) *MockStorer_Count_Call {
-	_c.Call.Return(run)
-	return _c
 }
 
 // HasPermission provides a mock function for the type MockStorer
@@ -179,8 +113,8 @@ func (_c *MockStorer_HasPermission_Call) RunAndReturn(run func(ctx context.Conte
 }
 
 // Query provides a mock function for the type MockStorer
-func (_mock *MockStorer) Query(ctx context.Context, filter QueryFilter, orderBy order.By, page1 page.Page) ([]UserRolesPermissions, error) {
-	ret := _mock.Called(ctx, filter, orderBy, page1)
+func (_mock *MockStorer) Query(ctx context.Context, filter QueryFilter, orderBy order.By, cur cursor.Cursor) ([]UserRolesPermissions, error) {
+	ret := _mock.Called(ctx, filter, orderBy, cur)
 
 	if len(ret) == 0 {
 		panic("no return value specified for Query")
@@ -188,18 +122,18 @@ func (_mock *MockStorer) Query(ctx context.Context, filter QueryFilter, orderBy 
 
 	var r0 []UserRolesPermissions
 	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, QueryFilter, order.By, page.Page) ([]UserRolesPermissions, error)); ok {
-		return returnFunc(ctx, filter, orderBy, page1)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, QueryFilter, order.By, cursor.Cursor) ([]UserRolesPermissions, error)); ok {
+		return returnFunc(ctx, filter, orderBy, cur)
 	}
-	if returnFunc, ok := ret.Get(0).(func(context.Context, QueryFilter, order.By, page.Page) []UserRolesPermissions); ok {
-		r0 = returnFunc(ctx, filter, orderBy, page1)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, QueryFilter, order.By, cursor.Cursor) []UserRolesPermissions); ok {
+		r0 = returnFunc(ctx, filter, orderBy, cur)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]UserRolesPermissions)
 		}
 	}
-	if returnFunc, ok := ret.Get(1).(func(context.Context, QueryFilter, order.By, page.Page) error); ok {
-		r1 = returnFunc(ctx, filter, orderBy, page1)
+	if returnFunc, ok := ret.Get(1).(func(context.Context, QueryFilter, order.By, cursor.Cursor) error); ok {
+		r1 = returnFunc(ctx, filter, orderBy, cur)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -215,12 +149,12 @@ type MockStorer_Query_Call struct {
 //   - ctx context.Context
 //   - filter QueryFilter
 //   - orderBy order.By
-//   - page1 page.Page
-func (_e *MockStorer_Expecter) Query(ctx interface{}, filter interface{}, orderBy interface{}, page1 interface{}) *MockStorer_Query_Call {
-	return &MockStorer_Query_Call{Call: _e.mock.On("Query", ctx, filter, orderBy, page1)}
+//   - cur cursor.Cursor
+func (_e *MockStorer_Expecter) Query(ctx interface{}, filter interface{}, orderBy interface{}, cur interface{}) *MockStorer_Query_Call {
+	return &MockStorer_Query_Call{Call: _e.mock.On("Query", ctx, filter, orderBy, cur)}
 }
 
-func (_c *MockStorer_Query_Call) Run(run func(ctx context.Context, filter QueryFilter, orderBy order.By, page1 page.Page)) *MockStorer_Query_Call {
+func (_c *MockStorer_Query_Call) Run(run func(ctx context.Context, filter QueryFilter, orderBy order.By, cur cursor.Cursor)) *MockStorer_Query_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
@@ -234,9 +168,9 @@ func (_c *MockStorer_Query_Call) Run(run func(ctx context.Context, filter QueryF
 		if args[2] != nil {
 			arg2 = args[2].(order.By)
 		}
-		var arg3 page.Page
+		var arg3 cursor.Cursor
 		if args[3] != nil {
-			arg3 = args[3].(page.Page)
+			arg3 = args[3].(cursor.Cursor)
 		}
 		run(
 			arg0,
@@ -253,7 +187,7 @@ func (_c *MockStorer_Query_Call) Return(userRolesPermissionss []UserRolesPermiss
 	return _c
 }
 
-func (_c *MockStorer_Query_Call) RunAndReturn(run func(ctx context.Context, filter QueryFilter, orderBy order.By, page1 page.Page) ([]UserRolesPermissions, error)) *MockStorer_Query_Call {
+func (_c *MockStorer_Query_Call) RunAndReturn(run func(ctx context.Context, filter QueryFilter, orderBy order.By, cur cursor.Cursor) ([]UserRolesPermissions, error)) *MockStorer_Query_Call {
 	_c.Call.Return(run)
 	return _c
 }

@@ -5,7 +5,6 @@ import (
 
 	"github.com/Housiadas/cerberus/internal/core/domain/name"
 	"github.com/Housiadas/cerberus/internal/core/domain/role"
-	"github.com/Housiadas/cerberus/internal/utils/page"
 	"github.com/Housiadas/cerberus/pkg/clock"
 )
 
@@ -17,11 +16,6 @@ type Role struct {
 	Name      string `json:"name"`
 	CreatedAt string `json:"createdAt"`
 	UpdatedAt string `json:"updatedAt"`
-}
-
-type RolePageResult struct {
-	Data     []Role        `json:"data"`
-	Metadata page.Metadata `json:"metadata"`
 }
 
 func toAppRole(r role.Role) Role {

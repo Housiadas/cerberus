@@ -6,7 +6,7 @@ import (
 
 	"github.com/Housiadas/cerberus/internal/core/service/user_roles_permissions_service"
 	"github.com/Housiadas/cerberus/internal/utils/errs"
-	"github.com/Housiadas/cerberus/internal/utils/page"
+	"github.com/Housiadas/cerberus/pkg/cursor"
 	"github.com/Housiadas/cerberus/pkg/order"
 	"github.com/google/uuid"
 )
@@ -27,29 +27,29 @@ func NewUseCase(cfg Config) *UseCase {
 	}
 }
 
-// Query returns a list of rows with paging.
+// Query returns a list of rows with cursor-based paging.
 func (uc *UseCase) Query(
 	ctx context.Context,
 	qp AppQueryParams,
-) (page.Result[UserRolesPermissions], error) {
-	p, err := page.Parse(qp.Page, qp.Rows)
+) (cursor.Result[UserRolesPermissions], error) {
+	cur, err := cursor.Parse(qp.Cursor, qp.Limit)
 	if err != nil {
-		return page.Result[UserRolesPermissions]{}, errs.NewFieldErrors("page", err)
+		return cursor.Result[UserRolesPermissions]{}, errs.NewFieldErrors("cursor", err)
 	}
 
 	filter, err := parseFilter(qp)
 	if err != nil {
-		return page.Result[UserRolesPermissions]{}, err
+		return cursor.Result[UserRolesPermissions]{}, err
 	}
 
 	ob, err := order.Parse(getOrderByFields(), qp.OrderBy, getDefaultOrderBy())
 	if err != nil {
-		return page.Result[UserRolesPermissions]{}, errs.NewFieldErrors("order", err)
+		return cursor.Result[UserRolesPermissions]{}, errs.NewFieldErrors("order", err)
 	}
 
-	rows, err := uc.service.Query(ctx, filter, ob, p)
+	rows, err := uc.service.Query(ctx, filter, ob, cur)
 	if err != nil {
-		return page.Result[UserRolesPermissions]{}, errs.Errorf(
+		return cursor.Result[UserRolesPermissions]{}, errs.Errorf(
 			errs.Internal,
 			errs.CodeInternal,
 			"query: %s",
@@ -57,17 +57,14 @@ func (uc *UseCase) Query(
 		)
 	}
 
-	total, err := uc.service.Count(ctx, filter)
-	if err != nil {
-		return page.Result[UserRolesPermissions]{}, errs.Errorf(
-			errs.Internal,
-			errs.CodeInternal,
-			"count: %s",
-			err,
-		)
-	}
-
-	return page.NewResult(toManyUserRolesPermissions(rows), total, p), nil
+	return cursor.NewResult(
+		toManyUserRolesPermissions(rows),
+		cur.Limit(),
+		cur,
+		ob,
+		func(r UserRolesPermissions) string { return r.UserID },
+		func(r UserRolesPermissions) any { return r.UserName },
+	), nil
 }
 
 // QueryPermissionsByUserID returns all permissions (id and name) for the given user.

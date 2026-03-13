@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/Housiadas/cerberus/internal/core/domain/permission"
-	"github.com/Housiadas/cerberus/internal/utils/page"
+	"github.com/Housiadas/cerberus/pkg/cursor"
 	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/Housiadas/cerberus/pkg/order"
 	"github.com/Housiadas/cerberus/pkg/pgsql"
@@ -95,16 +95,6 @@ func (s *Service) Delete(ctx context.Context, p permission.Permission) error {
 	return nil
 }
 
-// Count returns the total number of permissions.
-func (s *Service) Count(ctx context.Context, filter permission.QueryFilter) (int, error) {
-	count, err := s.storer.Count(ctx, filter)
-	if err != nil {
-		return 0, fmt.Errorf("permission count: %w", err)
-	}
-
-	return count, nil
-}
-
 // QueryByID finds the permission by the specified ID.
 func (s *Service) QueryByID(ctx context.Context, id uuid.UUID) (permission.Permission, error) {
 	p, err := s.storer.QueryByID(ctx, id)
@@ -120,9 +110,9 @@ func (s *Service) Query(
 	ctx context.Context,
 	filter permission.QueryFilter,
 	orderBy order.By,
-	pg page.Page,
+	cur cursor.Cursor,
 ) ([]permission.Permission, error) {
-	ps, err := s.storer.Query(ctx, filter, orderBy, pg)
+	ps, err := s.storer.Query(ctx, filter, orderBy, cur)
 	if err != nil {
 		return nil, fmt.Errorf("permission query: %w", err)
 	}

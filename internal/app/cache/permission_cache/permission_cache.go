@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"github.com/Housiadas/cerberus/internal/core/domain/permission"
-	"github.com/Housiadas/cerberus/internal/utils/page"
 	"github.com/Housiadas/cerberus/pkg/cachemetrics"
+	"github.com/Housiadas/cerberus/pkg/cursor"
 	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/Housiadas/cerberus/pkg/order"
 	"github.com/Housiadas/cerberus/pkg/pgsql"
@@ -114,24 +114,14 @@ func (s *Store) Query(
 	ctx context.Context,
 	filter permission.QueryFilter,
 	orderBy order.By,
-	page page.Page,
+	cur cursor.Cursor,
 ) ([]permission.Permission, error) {
-	perms, err := s.storer.Query(ctx, filter, orderBy, page)
+	perms, err := s.storer.Query(ctx, filter, orderBy, cur)
 	if err != nil {
 		return nil, fmt.Errorf("permission cache query: %w", err)
 	}
 
 	return perms, nil
-}
-
-// Count returns the total number of permissions in the DB.
-func (s *Store) Count(ctx context.Context, filter permission.QueryFilter) (int, error) {
-	count, err := s.storer.Count(ctx, filter)
-	if err != nil {
-		return 0, fmt.Errorf("permission cache count: %w", err)
-	}
-
-	return count, nil
 }
 
 // QueryByID gets the specified permission, checking L1 -> L2 -> DB.

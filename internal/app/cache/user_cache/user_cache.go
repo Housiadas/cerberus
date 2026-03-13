@@ -8,8 +8,8 @@ import (
 	"time"
 
 	"github.com/Housiadas/cerberus/internal/core/domain/user"
-	"github.com/Housiadas/cerberus/internal/utils/page"
 	"github.com/Housiadas/cerberus/pkg/cachemetrics"
+	"github.com/Housiadas/cerberus/pkg/cursor"
 	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/Housiadas/cerberus/pkg/order"
 	"github.com/Housiadas/cerberus/pkg/pgsql"
@@ -113,24 +113,14 @@ func (s *Store) Query(
 	ctx context.Context,
 	filter user.QueryFilter,
 	orderBy order.By,
-	page page.Page,
+	cur cursor.Cursor,
 ) ([]user.User, error) {
-	users, err := s.storer.Query(ctx, filter, orderBy, page)
+	users, err := s.storer.Query(ctx, filter, orderBy, cur)
 	if err != nil {
 		return nil, fmt.Errorf("user cache query: %w", err)
 	}
 
 	return users, nil
-}
-
-// Count returns the total number of users in the DB.
-func (s *Store) Count(ctx context.Context, filter user.QueryFilter) (int, error) {
-	count, err := s.storer.Count(ctx, filter)
-	if err != nil {
-		return 0, fmt.Errorf("user cache count: %w", err)
-	}
-
-	return count, nil
 }
 
 // QueryByID gets the specified user, checking L1 -> L2 -> DB.

@@ -11,8 +11,8 @@ import (
 )
 
 type AppQueryParams struct {
-	Page      string
-	Rows      string
+	Cursor    string
+	Limit     string
 	OrderBy   string
 	ObjID     string
 	ObjEntity string

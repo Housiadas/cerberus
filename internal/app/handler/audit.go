@@ -14,8 +14,8 @@ func (h *Handler) ListAudits(
 	request openapi.ListAuditsRequestObject,
 ) (openapi.ListAuditsResponseObject, error) {
 	qp := audit_usecase.AppQueryParams{
-		Page:      pntr.DerefStr(request.Params.Page),
-		Rows:      pntr.DerefStr(request.Params.Rows),
+		Cursor:    pntr.DerefStr(request.Params.Cursor),
+		Limit:     pntr.DerefStr(request.Params.Limit),
 		OrderBy:   pntr.DerefStr(request.Params.OrderBy),
 		ObjID:     pntr.DerefStr(request.Params.ObjId),
 		ObjEntity: pntr.DerefStr(request.Params.ObjDomain),

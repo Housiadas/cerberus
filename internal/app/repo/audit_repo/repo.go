@@ -8,7 +8,7 @@ import (
 	"fmt"
 
 	"github.com/Housiadas/cerberus/internal/core/domain/audit"
-	"github.com/Housiadas/cerberus/internal/utils/page"
+	"github.com/Housiadas/cerberus/pkg/cursor"
 	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/Housiadas/cerberus/pkg/order"
 	"github.com/Housiadas/cerberus/pkg/pgsql"
@@ -21,8 +21,6 @@ var (
 	auditCreateSQL string
 	//go:embed query/audit_query.sql
 	auditQuerySQL string
-	//go:embed query/audit_count.sql
-	auditCountSQL string
 )
 
 // Store manages the set of APIs for auditDB database access.
@@ -67,19 +65,20 @@ func (s *Store) Create(ctx context.Context, a audit.Audit) error {
 	return nil
 }
 
+// Query retrieves a list of existing audit records from the database.
 func (s *Store) Query(
 	ctx context.Context,
 	filter audit.QueryFilter,
 	orderBy order.By,
-	page page.Page,
+	cur cursor.Cursor,
 ) ([]audit.Audit, error) {
 	data := map[string]any{
-		"offset":        (page.Number() - 1) * page.RowsPerPage(),
-		"rows_per_page": page.RowsPerPage(),
+		"limit": cur.Limit() + 1,
 	}
 
 	buf := bytes.NewBufferString(auditQuerySQL)
 	applyFilter(filter, data, buf)
+	applyCursor(cur, orderBy, data, buf)
 
 	orderByClause, err := orderByClause(orderBy)
 	if err != nil {
@@ -87,7 +86,7 @@ func (s *Store) Query(
 	}
 
 	buf.WriteString(orderByClause)
-	buf.WriteString(" OFFSET :offset ROWS FETCH NEXT :rows_per_page ROWS ONLY")
+	buf.WriteString(" FETCH NEXT :limit ROWS ONLY")
 
 	var dbAudits []auditDB
 
@@ -97,23 +96,4 @@ func (s *Store) Query(
 	}
 
 	return toBusAudits(dbAudits)
-}
-
-// Count returns the total number of users in the DB.
-func (s *Store) Count(ctx context.Context, filter audit.QueryFilter) (int, error) {
-	data := map[string]any{}
-
-	buf := bytes.NewBufferString(auditCountSQL)
-	applyFilter(filter, data, buf)
-
-	var count struct {
-		Count int `db:"count"`
-	}
-
-	err := pgsql.NamedQueryStruct(ctx, s.log, s.dbPool, buf.String(), data, &count)
-	if err != nil {
-		return 0, fmt.Errorf("db: %w", err)
-	}
-
-	return count.Count, nil
 }
