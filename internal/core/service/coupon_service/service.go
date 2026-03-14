@@ -56,7 +56,19 @@ func (c *Service) Create(ctx context.Context, nc coupon.NewCoupon) (coupon.Coupo
 	}
 
 	now := time.Now()
-	cpn := coupon.New(id, nc.Code, nc.DiscountType, nc.DiscountValue, nc.Currency, nc.MaxRedemptions, 0, true, nc.ExpiresAt, now, now)
+	cpn := coupon.New(
+		id,
+		nc.Code,
+		nc.DiscountType,
+		nc.DiscountValue,
+		nc.Currency,
+		nc.MaxRedemptions,
+		0,
+		true,
+		nc.ExpiresAt,
+		now,
+		now,
+	)
 
 	err = c.storer.Create(ctx, cpn)
 	if err != nil {
@@ -75,21 +87,27 @@ func (c *Service) Update(
 	if uc.Code != nil {
 		cpn = cpn.WithCode(*uc.Code)
 	}
+
 	if uc.DiscountType != nil {
 		cpn = cpn.WithDiscountType(*uc.DiscountType)
 	}
+
 	if uc.DiscountValue != nil {
 		cpn = cpn.WithDiscountValue(*uc.DiscountValue)
 	}
+
 	if uc.Currency != nil {
 		cpn = cpn.WithCurrency(uc.Currency)
 	}
+
 	if uc.MaxRedemptions != nil {
 		cpn = cpn.WithMaxRedemptions(uc.MaxRedemptions)
 	}
+
 	if uc.IsActive != nil {
 		cpn = cpn.WithIsActive(*uc.IsActive)
 	}
+
 	if uc.ExpiresAt != nil {
 		cpn = cpn.WithExpiresAt(uc.ExpiresAt)
 	}

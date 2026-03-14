@@ -27,7 +27,11 @@ func TestNewPaymentMethods(n int) []payment_method.NewPaymentMethod {
 }
 
 // TestSeedPaymentMethods is a helper method for testing.
-func TestSeedPaymentMethods(ctx context.Context, n int, service *Service) ([]payment_method.PaymentMethod, error) {
+func TestSeedPaymentMethods(
+	ctx context.Context,
+	n int,
+	service *Service,
+) ([]payment_method.PaymentMethod, error) {
 	newPMs := TestNewPaymentMethods(n)
 
 	pms := make([]payment_method.PaymentMethod, len(newPMs))

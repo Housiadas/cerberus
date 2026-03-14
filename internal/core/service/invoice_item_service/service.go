@@ -49,14 +49,26 @@ func (c *Service) NewWithTx(tx pgsql.CommitRollbacker) (*Service, error) {
 }
 
 // Create adds a new invoice_item.InvoiceItem to the system.
-func (c *Service) Create(ctx context.Context, nii invoice_item.NewInvoiceItem) (invoice_item.InvoiceItem, error) {
+func (c *Service) Create(
+	ctx context.Context,
+	nii invoice_item.NewInvoiceItem,
+) (invoice_item.InvoiceItem, error) {
 	id, err := c.uuidGen.Generate()
 	if err != nil {
 		return invoice_item.InvoiceItem{}, fmt.Errorf("invoice item uuid generate: %w", err)
 	}
 
 	now := time.Now()
-	item := invoice_item.New(id, nii.InvoiceID, nii.Description, nii.Quantity, nii.UnitPriceCents, nii.TaxRateID, 0, now)
+	item := invoice_item.New(
+		id,
+		nii.InvoiceID,
+		nii.Description,
+		nii.Quantity,
+		nii.UnitPriceCents,
+		nii.TaxRateID,
+		0,
+		now,
+	)
 
 	err = c.storer.Create(ctx, item)
 	if err != nil {
@@ -67,10 +79,17 @@ func (c *Service) Create(ctx context.Context, nii invoice_item.NewInvoiceItem) (
 }
 
 // QueryByID finds the invoice item by the specified ID.
-func (c *Service) QueryByID(ctx context.Context, invoiceItemID uuid.UUID) (invoice_item.InvoiceItem, error) {
+func (c *Service) QueryByID(
+	ctx context.Context,
+	invoiceItemID uuid.UUID,
+) (invoice_item.InvoiceItem, error) {
 	item, err := c.storer.QueryByID(ctx, invoiceItemID)
 	if err != nil {
-		return invoice_item.InvoiceItem{}, fmt.Errorf("query: invoiceItemID[%s]: %w", invoiceItemID, err)
+		return invoice_item.InvoiceItem{}, fmt.Errorf(
+			"query: invoiceItemID[%s]: %w",
+			invoiceItemID,
+			err,
+		)
 	}
 
 	return item, nil
@@ -92,7 +111,10 @@ func (c *Service) Query(
 }
 
 // QueryByInvoiceID retrieves invoice items for a specific invoice.
-func (c *Service) QueryByInvoiceID(ctx context.Context, invoiceID uuid.UUID) ([]invoice_item.InvoiceItem, error) {
+func (c *Service) QueryByInvoiceID(
+	ctx context.Context,
+	invoiceID uuid.UUID,
+) ([]invoice_item.InvoiceItem, error) {
 	items, err := c.storer.QueryByInvoiceID(ctx, invoiceID)
 	if err != nil {
 		return nil, fmt.Errorf("query: invoiceID[%s]: %w", invoiceID, err)

@@ -70,7 +70,10 @@ func (s *Store) Create(ctx context.Context, item invoice_item.InvoiceItem) error
 }
 
 // QueryByID gets the specified invoice item from the database.
-func (s *Store) QueryByID(ctx context.Context, invoiceItemID uuid.UUID) (invoice_item.InvoiceItem, error) {
+func (s *Store) QueryByID(
+	ctx context.Context,
+	invoiceItemID uuid.UUID,
+) (invoice_item.InvoiceItem, error) {
 	data := struct {
 		ID string `db:"id"`
 	}{
@@ -92,7 +95,10 @@ func (s *Store) QueryByID(ctx context.Context, invoiceItemID uuid.UUID) (invoice
 }
 
 // QueryByInvoiceID retrieves invoice items for a specific invoice from the database.
-func (s *Store) QueryByInvoiceID(ctx context.Context, invoiceID uuid.UUID) ([]invoice_item.InvoiceItem, error) {
+func (s *Store) QueryByInvoiceID(
+	ctx context.Context,
+	invoiceID uuid.UUID,
+) ([]invoice_item.InvoiceItem, error) {
 	data := struct {
 		InvoiceID string `db:"invoice_id"`
 	}{

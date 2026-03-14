@@ -75,15 +75,19 @@ func (c *Service) Update(
 	if ut.Name != nil {
 		tr = tr.WithName(*ut.Name)
 	}
+
 	if ut.Percentage != nil {
 		tr = tr.WithPercentage(*ut.Percentage)
 	}
+
 	if ut.Country != nil {
 		tr = tr.WithCountry(*ut.Country)
 	}
+
 	if ut.Description != nil {
 		tr = tr.WithDescription(*ut.Description)
 	}
+
 	if ut.IsActive != nil {
 		tr = tr.WithIsActive(*ut.IsActive)
 	}

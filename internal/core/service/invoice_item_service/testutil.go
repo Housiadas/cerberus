@@ -28,7 +28,11 @@ func TestNewInvoiceItems(n int) []invoice_item.NewInvoiceItem {
 }
 
 // TestSeedInvoiceItems is a helper method for testing.
-func TestSeedInvoiceItems(ctx context.Context, n int, service *Service) ([]invoice_item.InvoiceItem, error) {
+func TestSeedInvoiceItems(
+	ctx context.Context,
+	n int,
+	service *Service,
+) ([]invoice_item.InvoiceItem, error) {
 	newItems := TestNewInvoiceItems(n)
 
 	items := make([]invoice_item.InvoiceItem, len(newItems))

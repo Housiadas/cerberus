@@ -82,7 +82,10 @@ func (s *Store) Update(ctx context.Context, sub subscription.Subscription) error
 }
 
 // QueryByID gets the specified subscription from the database.
-func (s *Store) QueryByID(ctx context.Context, subscriptionID uuid.UUID) (subscription.Subscription, error) {
+func (s *Store) QueryByID(
+	ctx context.Context,
+	subscriptionID uuid.UUID,
+) (subscription.Subscription, error) {
 	data := struct {
 		ID string `db:"id"`
 	}{
@@ -104,7 +107,10 @@ func (s *Store) QueryByID(ctx context.Context, subscriptionID uuid.UUID) (subscr
 }
 
 // QueryByAccountID retrieves subscriptions for a specific account from the database.
-func (s *Store) QueryByAccountID(ctx context.Context, accountID uuid.UUID) ([]subscription.Subscription, error) {
+func (s *Store) QueryByAccountID(
+	ctx context.Context,
+	accountID uuid.UUID,
+) ([]subscription.Subscription, error) {
 	data := struct {
 		AccountID string `db:"account_id"`
 	}{

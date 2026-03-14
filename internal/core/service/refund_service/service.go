@@ -57,7 +57,15 @@ func (c *Service) Create(ctx context.Context, nr refund.NewRefund) (refund.Refun
 	}
 
 	now := time.Now()
-	ref := refund.New(id, nr.PaymentID, nr.AmountCents, nr.Reason, payment.MustParse("pending"), now, now)
+	ref := refund.New(
+		id,
+		nr.PaymentID,
+		nr.AmountCents,
+		nr.Reason,
+		payment.MustParse("pending"),
+		now,
+		now,
+	)
 
 	err = c.storer.Create(ctx, ref)
 	if err != nil {
@@ -93,7 +101,10 @@ func (c *Service) Query(
 }
 
 // QueryByPaymentID retrieves refunds for a specific payment.
-func (c *Service) QueryByPaymentID(ctx context.Context, paymentID uuid.UUID) ([]refund.Refund, error) {
+func (c *Service) QueryByPaymentID(
+	ctx context.Context,
+	paymentID uuid.UUID,
+) ([]refund.Refund, error) {
 	refs, err := c.storer.QueryByPaymentID(ctx, paymentID)
 	if err != nil {
 		return nil, fmt.Errorf("query: paymentID[%s]: %w", paymentID, err)

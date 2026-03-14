@@ -28,7 +28,11 @@ func TestNewUsageRecords(n int) []usage_record.NewUsageRecord {
 }
 
 // TestSeedUsageRecords is a helper method for testing.
-func TestSeedUsageRecords(ctx context.Context, n int, service *Service) ([]usage_record.UsageRecord, error) {
+func TestSeedUsageRecords(
+	ctx context.Context,
+	n int,
+	service *Service,
+) ([]usage_record.UsageRecord, error) {
 	newURs := TestNewUsageRecords(n)
 
 	urs := make([]usage_record.UsageRecord, len(newURs))

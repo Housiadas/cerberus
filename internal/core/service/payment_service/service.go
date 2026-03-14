@@ -56,7 +56,17 @@ func (c *Service) Create(ctx context.Context, np payment.NewPayment) (payment.Pa
 	}
 
 	now := time.Now()
-	pmt := payment.New(id, np.InvoiceID, np.PaymentMethodID, np.AmountCents, np.Currency, np.Status, nil, now, now)
+	pmt := payment.New(
+		id,
+		np.InvoiceID,
+		np.PaymentMethodID,
+		np.AmountCents,
+		np.Currency,
+		np.Status,
+		nil,
+		now,
+		now,
+	)
 
 	err = c.storer.Create(ctx, pmt)
 	if err != nil {
@@ -75,6 +85,7 @@ func (c *Service) Update(
 	if up.Status != nil {
 		pmt = pmt.WithStatus(*up.Status)
 	}
+
 	if up.PaidAt != nil {
 		pmt = pmt.WithPaidAt(up.PaidAt)
 	}
@@ -100,7 +111,10 @@ func (c *Service) QueryByID(ctx context.Context, paymentID uuid.UUID) (payment.P
 }
 
 // QueryByInvoiceID finds payments by invoice ID.
-func (c *Service) QueryByInvoiceID(ctx context.Context, invoiceID uuid.UUID) ([]payment.Payment, error) {
+func (c *Service) QueryByInvoiceID(
+	ctx context.Context,
+	invoiceID uuid.UUID,
+) ([]payment.Payment, error) {
 	pmts, err := c.storer.QueryByInvoiceID(ctx, invoiceID)
 	if err != nil {
 		return nil, fmt.Errorf("query: invoiceID[%s]: %w", invoiceID, err)

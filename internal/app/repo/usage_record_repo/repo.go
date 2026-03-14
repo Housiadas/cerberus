@@ -68,7 +68,10 @@ func (s *Store) Create(ctx context.Context, ur usage_record.UsageRecord) error {
 }
 
 // QueryByID gets the specified usage record from the database.
-func (s *Store) QueryByID(ctx context.Context, usageRecordID uuid.UUID) (usage_record.UsageRecord, error) {
+func (s *Store) QueryByID(
+	ctx context.Context,
+	usageRecordID uuid.UUID,
+) (usage_record.UsageRecord, error) {
 	data := struct {
 		ID string `db:"id"`
 	}{

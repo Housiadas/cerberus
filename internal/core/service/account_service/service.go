@@ -75,9 +75,11 @@ func (c *Service) Update(
 	if ua.Name != nil {
 		acct = acct.WithName(*ua.Name)
 	}
+
 	if ua.Type != nil {
 		acct = acct.WithType(*ua.Type)
 	}
+
 	if ua.Enabled != nil {
 		acct = acct.WithEnabled(*ua.Enabled)
 	}

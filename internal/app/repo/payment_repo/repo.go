@@ -104,7 +104,10 @@ func (s *Store) QueryByID(ctx context.Context, paymentID uuid.UUID) (payment.Pay
 }
 
 // QueryByInvoiceID retrieves payments for a specific invoice from the database.
-func (s *Store) QueryByInvoiceID(ctx context.Context, invoiceID uuid.UUID) ([]payment.Payment, error) {
+func (s *Store) QueryByInvoiceID(
+	ctx context.Context,
+	invoiceID uuid.UUID,
+) ([]payment.Payment, error) {
 	data := struct {
 		InvoiceID string `db:"invoice_id"`
 	}{

@@ -92,7 +92,10 @@ func (s *Store) QueryByID(ctx context.Context, refundID uuid.UUID) (refund.Refun
 }
 
 // QueryByPaymentID gets refunds by payment ID from the database.
-func (s *Store) QueryByPaymentID(ctx context.Context, paymentID uuid.UUID) ([]refund.Refund, error) {
+func (s *Store) QueryByPaymentID(
+	ctx context.Context,
+	paymentID uuid.UUID,
+) ([]refund.Refund, error) {
 	data := struct {
 		PaymentID string `db:"payment_id"`
 	}{

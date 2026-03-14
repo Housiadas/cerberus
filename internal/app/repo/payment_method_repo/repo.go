@@ -88,7 +88,10 @@ func (s *Store) Delete(ctx context.Context, pm payment_method.PaymentMethod) err
 }
 
 // QueryByID gets the specified payment method from the database.
-func (s *Store) QueryByID(ctx context.Context, paymentMethodID uuid.UUID) (payment_method.PaymentMethod, error) {
+func (s *Store) QueryByID(
+	ctx context.Context,
+	paymentMethodID uuid.UUID,
+) (payment_method.PaymentMethod, error) {
 	data := struct {
 		ID string `db:"id"`
 	}{
@@ -110,7 +113,10 @@ func (s *Store) QueryByID(ctx context.Context, paymentMethodID uuid.UUID) (payme
 }
 
 // QueryByAccountID retrieves payment methods for a specific account from the database.
-func (s *Store) QueryByAccountID(ctx context.Context, accountID uuid.UUID) ([]payment_method.PaymentMethod, error) {
+func (s *Store) QueryByAccountID(
+	ctx context.Context,
+	accountID uuid.UUID,
+) ([]payment_method.PaymentMethod, error) {
 	data := struct {
 		AccountID string `db:"account_id"`
 	}{

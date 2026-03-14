@@ -56,7 +56,17 @@ func (c *Service) Create(ctx context.Context, np plan.NewPlan) (plan.Plan, error
 	}
 
 	now := time.Now()
-	pl := plan.New(id, np.Name, np.Description, np.Interval, np.PriceCents, np.Currency, true, now, now)
+	pl := plan.New(
+		id,
+		np.Name,
+		np.Description,
+		np.Interval,
+		np.PriceCents,
+		np.Currency,
+		true,
+		now,
+		now,
+	)
 
 	err = c.storer.Create(ctx, pl)
 	if err != nil {
@@ -75,18 +85,23 @@ func (c *Service) Update(
 	if up.Name != nil {
 		pl = pl.WithName(*up.Name)
 	}
+
 	if up.Description != nil {
 		pl = pl.WithDescription(*up.Description)
 	}
+
 	if up.Interval != nil {
 		pl = pl.WithInterval(*up.Interval)
 	}
+
 	if up.PriceCents != nil {
 		pl = pl.WithPriceCents(*up.PriceCents)
 	}
+
 	if up.Currency != nil {
 		pl = pl.WithCurrency(*up.Currency)
 	}
+
 	if up.IsActive != nil {
 		pl = pl.WithIsActive(*up.IsActive)
 	}

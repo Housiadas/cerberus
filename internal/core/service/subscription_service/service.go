@@ -49,14 +49,26 @@ func (c *Service) NewWithTx(tx pgsql.CommitRollbacker) (*Service, error) {
 }
 
 // Create adds a new subscription.Subscription to the system.
-func (c *Service) Create(ctx context.Context, ns subscription.NewSubscription) (subscription.Subscription, error) {
+func (c *Service) Create(
+	ctx context.Context,
+	ns subscription.NewSubscription,
+) (subscription.Subscription, error) {
 	id, err := c.uuidGen.Generate()
 	if err != nil {
 		return subscription.Subscription{}, fmt.Errorf("subscription uuid generate: %w", err)
 	}
 
 	now := time.Now()
-	sub := subscription.New(id, ns.AccountID, ns.PlanID, ns.Status, ns.CurrentPeriodStart, ns.CurrentPeriodEnd, now, now)
+	sub := subscription.New(
+		id,
+		ns.AccountID,
+		ns.PlanID,
+		ns.Status,
+		ns.CurrentPeriodStart,
+		ns.CurrentPeriodEnd,
+		now,
+		now,
+	)
 
 	err = c.storer.Create(ctx, sub)
 	if err != nil {
@@ -75,9 +87,11 @@ func (c *Service) Update(
 	if us.Status != nil {
 		sub = sub.WithStatus(*us.Status)
 	}
+
 	if us.CurrentPeriodStart != nil {
 		sub = sub.WithCurrentPeriodStart(*us.CurrentPeriodStart)
 	}
+
 	if us.CurrentPeriodEnd != nil {
 		sub = sub.WithCurrentPeriodEnd(*us.CurrentPeriodEnd)
 	}
@@ -93,17 +107,27 @@ func (c *Service) Update(
 }
 
 // QueryByID finds the subscription by the specified ID.
-func (c *Service) QueryByID(ctx context.Context, subscriptionID uuid.UUID) (subscription.Subscription, error) {
+func (c *Service) QueryByID(
+	ctx context.Context,
+	subscriptionID uuid.UUID,
+) (subscription.Subscription, error) {
 	sub, err := c.storer.QueryByID(ctx, subscriptionID)
 	if err != nil {
-		return subscription.Subscription{}, fmt.Errorf("query: subscriptionID[%s]: %w", subscriptionID, err)
+		return subscription.Subscription{}, fmt.Errorf(
+			"query: subscriptionID[%s]: %w",
+			subscriptionID,
+			err,
+		)
 	}
 
 	return sub, nil
 }
 
 // QueryByAccountID finds subscriptions by account ID.
-func (c *Service) QueryByAccountID(ctx context.Context, accountID uuid.UUID) ([]subscription.Subscription, error) {
+func (c *Service) QueryByAccountID(
+	ctx context.Context,
+	accountID uuid.UUID,
+) ([]subscription.Subscription, error) {
 	subs, err := c.storer.QueryByAccountID(ctx, accountID)
 	if err != nil {
 		return nil, fmt.Errorf("query: accountID[%s]: %w", accountID, err)

@@ -23,7 +23,11 @@ type Service struct {
 }
 
 // New constructor.
-func New(log logger.Logger, storer subscription_discount.Storer, uuidGen uuidgen.Generator) *Service {
+func New(
+	log logger.Logger,
+	storer subscription_discount.Storer,
+	uuidGen uuidgen.Generator,
+) *Service {
 	return &Service{
 		log:     log,
 		storer:  storer,
@@ -49,10 +53,16 @@ func (c *Service) NewWithTx(tx pgsql.CommitRollbacker) (*Service, error) {
 }
 
 // Create adds a new subscription_discount.SubscriptionDiscount to the system.
-func (c *Service) Create(ctx context.Context, nsd subscription_discount.NewSubscriptionDiscount) (subscription_discount.SubscriptionDiscount, error) {
+func (c *Service) Create(
+	ctx context.Context,
+	nsd subscription_discount.NewSubscriptionDiscount,
+) (subscription_discount.SubscriptionDiscount, error) {
 	id, err := c.uuidGen.Generate()
 	if err != nil {
-		return subscription_discount.SubscriptionDiscount{}, fmt.Errorf("subscription discount uuid generate: %w", err)
+		return subscription_discount.SubscriptionDiscount{}, fmt.Errorf(
+			"subscription discount uuid generate: %w",
+			err,
+		)
 	}
 
 	now := time.Now()
@@ -60,17 +70,27 @@ func (c *Service) Create(ctx context.Context, nsd subscription_discount.NewSubsc
 
 	err = c.storer.Create(ctx, sd)
 	if err != nil {
-		return subscription_discount.SubscriptionDiscount{}, fmt.Errorf("subscription discount create: %w", err)
+		return subscription_discount.SubscriptionDiscount{}, fmt.Errorf(
+			"subscription discount create: %w",
+			err,
+		)
 	}
 
 	return sd, nil
 }
 
 // QueryByID finds the subscription discount by the specified ID.
-func (c *Service) QueryByID(ctx context.Context, subscriptionDiscountID uuid.UUID) (subscription_discount.SubscriptionDiscount, error) {
+func (c *Service) QueryByID(
+	ctx context.Context,
+	subscriptionDiscountID uuid.UUID,
+) (subscription_discount.SubscriptionDiscount, error) {
 	sd, err := c.storer.QueryByID(ctx, subscriptionDiscountID)
 	if err != nil {
-		return subscription_discount.SubscriptionDiscount{}, fmt.Errorf("query: subscriptionDiscountID[%s]: %w", subscriptionDiscountID, err)
+		return subscription_discount.SubscriptionDiscount{}, fmt.Errorf(
+			"query: subscriptionDiscountID[%s]: %w",
+			subscriptionDiscountID,
+			err,
+		)
 	}
 
 	return sd, nil
@@ -92,7 +112,10 @@ func (c *Service) Query(
 }
 
 // QueryBySubscriptionID retrieves subscription discounts for a specific subscription.
-func (c *Service) QueryBySubscriptionID(ctx context.Context, subscriptionID uuid.UUID) ([]subscription_discount.SubscriptionDiscount, error) {
+func (c *Service) QueryBySubscriptionID(
+	ctx context.Context,
+	subscriptionID uuid.UUID,
+) ([]subscription_discount.SubscriptionDiscount, error) {
 	sds, err := c.storer.QueryBySubscriptionID(ctx, subscriptionID)
 	if err != nil {
 		return nil, fmt.Errorf("query: subscriptionID[%s]: %w", subscriptionID, err)

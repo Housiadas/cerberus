@@ -1,7 +1,6 @@
 package invoice_item_repo
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/Housiadas/cerberus/internal/core/domain/invoice_item"

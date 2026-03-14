@@ -49,14 +49,24 @@ func (c *Service) NewWithTx(tx pgsql.CommitRollbacker) (*Service, error) {
 }
 
 // Create adds a new usage_record.UsageRecord to the system.
-func (c *Service) Create(ctx context.Context, nur usage_record.NewUsageRecord) (usage_record.UsageRecord, error) {
+func (c *Service) Create(
+	ctx context.Context,
+	nur usage_record.NewUsageRecord,
+) (usage_record.UsageRecord, error) {
 	id, err := c.uuidGen.Generate()
 	if err != nil {
 		return usage_record.UsageRecord{}, fmt.Errorf("usage record uuid generate: %w", err)
 	}
 
 	now := time.Now()
-	ur := usage_record.New(id, nur.SubscriptionID, nur.Description, nur.Quantity, nur.RecordedAt, now)
+	ur := usage_record.New(
+		id,
+		nur.SubscriptionID,
+		nur.Description,
+		nur.Quantity,
+		nur.RecordedAt,
+		now,
+	)
 
 	err = c.storer.Create(ctx, ur)
 	if err != nil {
@@ -67,10 +77,17 @@ func (c *Service) Create(ctx context.Context, nur usage_record.NewUsageRecord) (
 }
 
 // QueryByID finds the usage record by the specified ID.
-func (c *Service) QueryByID(ctx context.Context, usageRecordID uuid.UUID) (usage_record.UsageRecord, error) {
+func (c *Service) QueryByID(
+	ctx context.Context,
+	usageRecordID uuid.UUID,
+) (usage_record.UsageRecord, error) {
 	ur, err := c.storer.QueryByID(ctx, usageRecordID)
 	if err != nil {
-		return usage_record.UsageRecord{}, fmt.Errorf("query: usageRecordID[%s]: %w", usageRecordID, err)
+		return usage_record.UsageRecord{}, fmt.Errorf(
+			"query: usageRecordID[%s]: %w",
+			usageRecordID,
+			err,
+		)
 	}
 
 	return ur, nil

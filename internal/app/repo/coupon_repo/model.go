@@ -55,6 +55,7 @@ func toCouponDomain(db couponDB) (coupon.Coupon, error) {
 	}
 
 	var cur *currency.Currency
+
 	if db.Currency.Valid {
 		c, err := currency.Parse(db.Currency.String)
 		if err != nil {
@@ -65,6 +66,7 @@ func toCouponDomain(db couponDB) (coupon.Coupon, error) {
 	}
 
 	var maxRedemptions *int
+
 	if db.MaxRedemptions.Valid {
 		v := int(db.MaxRedemptions.Int32)
 		maxRedemptions = &v

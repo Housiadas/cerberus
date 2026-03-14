@@ -49,7 +49,10 @@ func (c *Service) NewWithTx(tx pgsql.CommitRollbacker) (*Service, error) {
 }
 
 // Create adds a new payment_method.PaymentMethod to the system.
-func (c *Service) Create(ctx context.Context, npm payment_method.NewPaymentMethod) (payment_method.PaymentMethod, error) {
+func (c *Service) Create(
+	ctx context.Context,
+	npm payment_method.NewPaymentMethod,
+) (payment_method.PaymentMethod, error) {
 	id, err := c.uuidGen.Generate()
 	if err != nil {
 		return payment_method.PaymentMethod{}, fmt.Errorf("payment method uuid generate: %w", err)
@@ -77,10 +80,17 @@ func (c *Service) Delete(ctx context.Context, pm payment_method.PaymentMethod) e
 }
 
 // QueryByID finds the payment method by the specified ID.
-func (c *Service) QueryByID(ctx context.Context, paymentMethodID uuid.UUID) (payment_method.PaymentMethod, error) {
+func (c *Service) QueryByID(
+	ctx context.Context,
+	paymentMethodID uuid.UUID,
+) (payment_method.PaymentMethod, error) {
 	pm, err := c.storer.QueryByID(ctx, paymentMethodID)
 	if err != nil {
-		return payment_method.PaymentMethod{}, fmt.Errorf("query: paymentMethodID[%s]: %w", paymentMethodID, err)
+		return payment_method.PaymentMethod{}, fmt.Errorf(
+			"query: paymentMethodID[%s]: %w",
+			paymentMethodID,
+			err,
+		)
 	}
 
 	return pm, nil
@@ -102,7 +112,10 @@ func (c *Service) Query(
 }
 
 // QueryByAccountID retrieves payment methods for a specific account.
-func (c *Service) QueryByAccountID(ctx context.Context, accountID uuid.UUID) ([]payment_method.PaymentMethod, error) {
+func (c *Service) QueryByAccountID(
+	ctx context.Context,
+	accountID uuid.UUID,
+) ([]payment_method.PaymentMethod, error) {
 	pms, err := c.storer.QueryByAccountID(ctx, accountID)
 	if err != nil {
 		return nil, fmt.Errorf("query: accountID[%s]: %w", accountID, err)

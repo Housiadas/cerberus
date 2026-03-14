@@ -15,7 +15,9 @@ type subscriptionDiscountDB struct {
 	CreatedAt      time.Time `db:"created_at"`
 }
 
-func toSubscriptionDiscountDB(sd subscription_discount.SubscriptionDiscount) subscriptionDiscountDB {
+func toSubscriptionDiscountDB(
+	sd subscription_discount.SubscriptionDiscount,
+) subscriptionDiscountDB {
 	return subscriptionDiscountDB{
 		ID:             sd.ID(),
 		SubscriptionID: sd.SubscriptionID(),
@@ -25,7 +27,9 @@ func toSubscriptionDiscountDB(sd subscription_discount.SubscriptionDiscount) sub
 	}
 }
 
-func toSubscriptionDiscountDomain(db subscriptionDiscountDB) subscription_discount.SubscriptionDiscount {
+func toSubscriptionDiscountDomain(
+	db subscriptionDiscountDB,
+) subscription_discount.SubscriptionDiscount {
 	return subscription_discount.New(
 		db.ID,
 		db.SubscriptionID,
@@ -35,7 +39,9 @@ func toSubscriptionDiscountDomain(db subscriptionDiscountDB) subscription_discou
 	)
 }
 
-func toSubscriptionDiscountsDomain(dbs []subscriptionDiscountDB) []subscription_discount.SubscriptionDiscount {
+func toSubscriptionDiscountsDomain(
+	dbs []subscriptionDiscountDB,
+) []subscription_discount.SubscriptionDiscount {
 	sds := make([]subscription_discount.SubscriptionDiscount, len(dbs))
 
 	for i, db := range dbs {

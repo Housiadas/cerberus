@@ -29,7 +29,11 @@ func TestNewSubscriptions(n int) []subscription.NewSubscription {
 }
 
 // TestSeedSubscriptions is a helper method for testing.
-func TestSeedSubscriptions(ctx context.Context, n int, service *Service) ([]subscription.Subscription, error) {
+func TestSeedSubscriptions(
+	ctx context.Context,
+	n int,
+	service *Service,
+) ([]subscription.Subscription, error) {
 	newSubscriptions := TestNewSubscriptions(n)
 
 	subscriptions := make([]subscription.Subscription, len(newSubscriptions))

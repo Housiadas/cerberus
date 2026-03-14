@@ -56,7 +56,18 @@ func (c *Service) Create(ctx context.Context, ni invoice.NewInvoice) (invoice.In
 	}
 
 	now := time.Now()
-	inv := invoice.New(id, ni.AccountID, ni.SubscriptionID, ni.Status, ni.Currency, ni.DueDate, nil, nil, now, now)
+	inv := invoice.New(
+		id,
+		ni.AccountID,
+		ni.SubscriptionID,
+		ni.Status,
+		ni.Currency,
+		ni.DueDate,
+		nil,
+		nil,
+		now,
+		now,
+	)
 
 	err = c.storer.Create(ctx, inv)
 	if err != nil {
@@ -75,12 +86,15 @@ func (c *Service) Update(
 	if ui.Status != nil {
 		inv = inv.WithStatus(*ui.Status)
 	}
+
 	if ui.DueDate != nil {
 		inv = inv.WithDueDate(ui.DueDate)
 	}
+
 	if ui.IssuedAt != nil {
 		inv = inv.WithIssuedAt(ui.IssuedAt)
 	}
+
 	if ui.PaidAt != nil {
 		inv = inv.WithPaidAt(ui.PaidAt)
 	}
@@ -106,7 +120,10 @@ func (c *Service) QueryByID(ctx context.Context, invoiceID uuid.UUID) (invoice.I
 }
 
 // QueryByAccountID finds invoices by account ID.
-func (c *Service) QueryByAccountID(ctx context.Context, accountID uuid.UUID) ([]invoice.Invoice, error) {
+func (c *Service) QueryByAccountID(
+	ctx context.Context,
+	accountID uuid.UUID,
+) ([]invoice.Invoice, error) {
 	invs, err := c.storer.QueryByAccountID(ctx, accountID)
 	if err != nil {
 		return nil, fmt.Errorf("query: accountID[%s]: %w", accountID, err)

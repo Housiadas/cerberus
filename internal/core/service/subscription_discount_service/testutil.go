@@ -26,7 +26,11 @@ func TestNewSubscriptionDiscounts(n int) []subscription_discount.NewSubscription
 }
 
 // TestSeedSubscriptionDiscounts is a helper method for testing.
-func TestSeedSubscriptionDiscounts(ctx context.Context, n int, service *Service) ([]subscription_discount.SubscriptionDiscount, error) {
+func TestSeedSubscriptionDiscounts(
+	ctx context.Context,
+	n int,
+	service *Service,
+) ([]subscription_discount.SubscriptionDiscount, error) {
 	newSDs := TestNewSubscriptionDiscounts(n)
 
 	sds := make([]subscription_discount.SubscriptionDiscount, len(newSDs))

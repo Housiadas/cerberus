@@ -61,7 +61,13 @@ func (s *Store) NewWithTx(tx pgsql.CommitRollbacker) (subscription_discount.Stor
 
 // Create inserts a new subscription discount into the database.
 func (s *Store) Create(ctx context.Context, sd subscription_discount.SubscriptionDiscount) error {
-	err := pgsql.NamedExecContext(ctx, s.log, s.db, subscriptionDiscountCreateSQL, toSubscriptionDiscountDB(sd))
+	err := pgsql.NamedExecContext(
+		ctx,
+		s.log,
+		s.db,
+		subscriptionDiscountCreateSQL,
+		toSubscriptionDiscountDB(sd),
+	)
 	if err != nil {
 		return fmt.Errorf("error subscription discount create in db: %w", err)
 	}
@@ -70,7 +76,10 @@ func (s *Store) Create(ctx context.Context, sd subscription_discount.Subscriptio
 }
 
 // QueryByID gets the specified subscription discount from the database.
-func (s *Store) QueryByID(ctx context.Context, subscriptionDiscountID uuid.UUID) (subscription_discount.SubscriptionDiscount, error) {
+func (s *Store) QueryByID(
+	ctx context.Context,
+	subscriptionDiscountID uuid.UUID,
+) (subscription_discount.SubscriptionDiscount, error) {
 	data := struct {
 		ID string `db:"id"`
 	}{
@@ -82,7 +91,10 @@ func (s *Store) QueryByID(ctx context.Context, subscriptionDiscountID uuid.UUID)
 	err := pgsql.NamedQueryStruct(ctx, s.log, s.db, subscriptionDiscountQueryByIDSQL, data, &dbSD)
 	if err != nil {
 		if errors.Is(err, pgsql.ErrDBNotFound) {
-			return subscription_discount.SubscriptionDiscount{}, fmt.Errorf("db: %w", subscription_discount.ErrNotFound)
+			return subscription_discount.SubscriptionDiscount{}, fmt.Errorf(
+				"db: %w",
+				subscription_discount.ErrNotFound,
+			)
 		}
 
 		return subscription_discount.SubscriptionDiscount{}, fmt.Errorf("db: %w", err)
@@ -92,7 +104,10 @@ func (s *Store) QueryByID(ctx context.Context, subscriptionDiscountID uuid.UUID)
 }
 
 // QueryBySubscriptionID gets subscription discounts by subscription ID from the database.
-func (s *Store) QueryBySubscriptionID(ctx context.Context, subscriptionID uuid.UUID) ([]subscription_discount.SubscriptionDiscount, error) {
+func (s *Store) QueryBySubscriptionID(
+	ctx context.Context,
+	subscriptionID uuid.UUID,
+) ([]subscription_discount.SubscriptionDiscount, error) {
 	data := struct {
 		SubscriptionID string `db:"subscription_id"`
 	}{
@@ -101,9 +116,19 @@ func (s *Store) QueryBySubscriptionID(ctx context.Context, subscriptionID uuid.U
 
 	var dbSDs []subscriptionDiscountDB
 
-	err := pgsql.NamedQuerySlice(ctx, s.log, s.db, subscriptionDiscountQueryBySubscriptionIDSQL, data, &dbSDs)
+	err := pgsql.NamedQuerySlice(
+		ctx,
+		s.log,
+		s.db,
+		subscriptionDiscountQueryBySubscriptionIDSQL,
+		data,
+		&dbSDs,
+	)
 	if err != nil {
-		return nil, fmt.Errorf("error query subscription discount by subscription id in db: %w", err)
+		return nil, fmt.Errorf(
+			"error query subscription discount by subscription id in db: %w",
+			err,
+		)
 	}
 
 	return toSubscriptionDiscountsDomain(dbSDs), nil

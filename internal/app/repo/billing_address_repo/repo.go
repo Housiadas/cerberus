@@ -77,7 +77,10 @@ func (s *Store) Update(ctx context.Context, ba billing_address.BillingAddress) e
 }
 
 // QueryByID gets the specified billing address from the database.
-func (s *Store) QueryByID(ctx context.Context, billingAddressID uuid.UUID) (billing_address.BillingAddress, error) {
+func (s *Store) QueryByID(
+	ctx context.Context,
+	billingAddressID uuid.UUID,
+) (billing_address.BillingAddress, error) {
 	data := struct {
 		ID string `db:"id"`
 	}{
@@ -89,7 +92,10 @@ func (s *Store) QueryByID(ctx context.Context, billingAddressID uuid.UUID) (bill
 	err := pgsql.NamedQueryStruct(ctx, s.log, s.db, billingAddressQueryByIDSQL, data, &dbBA)
 	if err != nil {
 		if errors.Is(err, pgsql.ErrDBNotFound) {
-			return billing_address.BillingAddress{}, fmt.Errorf("db: %w", billing_address.ErrNotFound)
+			return billing_address.BillingAddress{}, fmt.Errorf(
+				"db: %w",
+				billing_address.ErrNotFound,
+			)
 		}
 
 		return billing_address.BillingAddress{}, fmt.Errorf("db: %w", err)
@@ -99,7 +105,10 @@ func (s *Store) QueryByID(ctx context.Context, billingAddressID uuid.UUID) (bill
 }
 
 // QueryByAccountID gets the billing address by account ID from the database.
-func (s *Store) QueryByAccountID(ctx context.Context, accountID uuid.UUID) (billing_address.BillingAddress, error) {
+func (s *Store) QueryByAccountID(
+	ctx context.Context,
+	accountID uuid.UUID,
+) (billing_address.BillingAddress, error) {
 	data := struct {
 		AccountID string `db:"account_id"`
 	}{
@@ -111,7 +120,10 @@ func (s *Store) QueryByAccountID(ctx context.Context, accountID uuid.UUID) (bill
 	err := pgsql.NamedQueryStruct(ctx, s.log, s.db, billingAddressQueryByAccountIDSQL, data, &dbBA)
 	if err != nil {
 		if errors.Is(err, pgsql.ErrDBNotFound) {
-			return billing_address.BillingAddress{}, fmt.Errorf("db: %w", billing_address.ErrNotFound)
+			return billing_address.BillingAddress{}, fmt.Errorf(
+				"db: %w",
+				billing_address.ErrNotFound,
+			)
 		}
 
 		return billing_address.BillingAddress{}, fmt.Errorf("db: %w", err)
