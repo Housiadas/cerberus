@@ -14,7 +14,7 @@ import (
 	"github.com/Housiadas/cerberus/internal/core/domain/user"
 	"github.com/Housiadas/cerberus/internal/core/service/user_service"
 	"github.com/Housiadas/cerberus/internal/utils/errs"
-	"github.com/Housiadas/cerberus/internal/utils/page"
+	"github.com/Housiadas/cerberus/pkg/cursor"
 	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/Housiadas/cerberus/pkg/order"
 	"github.com/Housiadas/cerberus/pkg/pgsql"
@@ -190,26 +190,26 @@ func (a *UseCase) Delete(ctx context.Context, userID string) error {
 	return nil
 }
 
-// Query returns a list of users with paging.
-func (a *UseCase) Query(ctx context.Context, qp AppQueryParams) (page.Result[User], error) {
-	p, err := page.Parse(qp.Page, qp.Rows)
+// Query returns a list of users with cursor-based paging.
+func (a *UseCase) Query(ctx context.Context, qp AppQueryParams) (cursor.Result[User], error) {
+	cur, err := cursor.Parse(qp.Cursor, qp.Limit)
 	if err != nil {
-		return page.Result[User]{}, errs.NewFieldErrors("page", err)
+		return cursor.Result[User]{}, errs.NewFieldErrors("cursor", err)
 	}
 
 	filter, err := parseFilter(qp)
 	if err != nil {
-		return page.Result[User]{}, err
+		return cursor.Result[User]{}, err
 	}
 
 	orderBy, err := order.Parse(getOrderByFields(), qp.OrderBy, getDefaultOrderBy())
 	if err != nil {
-		return page.Result[User]{}, errs.NewFieldErrors("order", err)
+		return cursor.Result[User]{}, errs.NewFieldErrors("order", err)
 	}
 
-	usrs, err := a.userCore.Query(ctx, filter, orderBy, p)
+	usrs, err := a.userCore.Query(ctx, filter, orderBy, cur)
 	if err != nil {
-		return page.Result[User]{}, errs.Errorf(
+		return cursor.Result[User]{}, errs.Errorf(
 			errs.Internal,
 			errs.CodeInternal,
 			"query: %s",
@@ -217,17 +217,14 @@ func (a *UseCase) Query(ctx context.Context, qp AppQueryParams) (page.Result[Use
 		)
 	}
 
-	total, err := a.userCore.Count(ctx, filter)
-	if err != nil {
-		return page.Result[User]{}, errs.Errorf(
-			errs.Internal,
-			errs.CodeInternal,
-			"count: %s",
-			err,
-		)
-	}
-
-	return page.NewResult(toAppUsers(usrs), total, p), nil
+	return cursor.NewResult(
+		toAppUsers(usrs),
+		cur.Limit(),
+		cur,
+		orderBy,
+		func(u User) string { return u.ID },
+		userFieldExtractor(orderBy),
+	), nil
 }
 
 // QueryByEmail returns a user by its email address.

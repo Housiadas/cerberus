@@ -12,7 +12,7 @@ import (
 	"github.com/Housiadas/cerberus/internal/core/domain/permission"
 	"github.com/Housiadas/cerberus/internal/core/service/permission_service"
 	"github.com/Housiadas/cerberus/internal/utils/errs"
-	"github.com/Housiadas/cerberus/internal/utils/page"
+	"github.com/Housiadas/cerberus/pkg/cursor"
 	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/Housiadas/cerberus/pkg/order"
 	"github.com/Housiadas/cerberus/pkg/pgsql"
@@ -207,26 +207,29 @@ func (uc *UseCase) QueryByID(ctx context.Context, permissionID string) (Permissi
 	return toAppPermission(perm), nil
 }
 
-// Query returns a list of permissions with paging.
-func (uc *UseCase) Query(ctx context.Context, qp AppQueryParams) (page.Result[Permission], error) {
-	p, err := page.Parse(qp.Page, qp.Rows)
+// Query returns a list of permissions with cursor-based paging.
+func (uc *UseCase) Query(
+	ctx context.Context,
+	qp AppQueryParams,
+) (cursor.Result[Permission], error) {
+	cur, err := cursor.Parse(qp.Cursor, qp.Limit)
 	if err != nil {
-		return page.Result[Permission]{}, errs.NewFieldErrors("page", err)
+		return cursor.Result[Permission]{}, errs.NewFieldErrors("cursor", err)
 	}
 
 	filter, err := parseFilter(qp)
 	if err != nil {
-		return page.Result[Permission]{}, err
+		return cursor.Result[Permission]{}, err
 	}
 
 	orderBy, err := order.Parse(getOrderByFields(), qp.OrderBy, getDefaultOrderBy())
 	if err != nil {
-		return page.Result[Permission]{}, errs.NewFieldErrors("order", err)
+		return cursor.Result[Permission]{}, errs.NewFieldErrors("order", err)
 	}
 
-	perms, err := uc.permissionService.Query(ctx, filter, orderBy, p)
+	perms, err := uc.permissionService.Query(ctx, filter, orderBy, cur)
 	if err != nil {
-		return page.Result[Permission]{}, errs.Errorf(
+		return cursor.Result[Permission]{}, errs.Errorf(
 			errs.Internal,
 			errs.CodeInternal,
 			"query: %s",
@@ -234,17 +237,14 @@ func (uc *UseCase) Query(ctx context.Context, qp AppQueryParams) (page.Result[Pe
 		)
 	}
 
-	total, err := uc.permissionService.Count(ctx, filter)
-	if err != nil {
-		return page.Result[Permission]{}, errs.Errorf(
-			errs.Internal,
-			errs.CodeInternal,
-			"count: %s",
-			err,
-		)
-	}
-
-	return page.NewResult(toAppPermissions(perms), total, p), nil
+	return cursor.NewResult(
+		toAppPermissions(perms),
+		cur.Limit(),
+		cur,
+		orderBy,
+		func(p Permission) string { return p.ID },
+		permissionFieldExtractor(orderBy),
+	), nil
 }
 
 func newPermissionEvent(p permission.Permission, action string) event.DomainEvent {

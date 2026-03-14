@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/Housiadas/cerberus/internal/core/domain/audit"
-	"github.com/Housiadas/cerberus/internal/utils/page"
+	"github.com/Housiadas/cerberus/pkg/cursor"
 	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/Housiadas/cerberus/pkg/order"
 	"github.com/Housiadas/cerberus/pkg/pgsql"
@@ -83,28 +83,15 @@ func (b *Service) Query(
 	ctx context.Context,
 	filter audit.QueryFilter,
 	orderBy order.By,
-	page page.Page,
+	cur cursor.Cursor,
 ) ([]audit.Audit, error) {
 	ctx, span := telemetry.AddSpan(ctx, "repo.audit.query")
 	defer span.End()
 
-	audits, err := b.storer.Query(ctx, filter, orderBy, page)
+	audits, err := b.storer.Query(ctx, filter, orderBy, cur)
 	if err != nil {
 		return nil, fmt.Errorf("query audits: %w", err)
 	}
 
 	return audits, nil
-}
-
-// Count returns the total number of users.
-func (b *Service) Count(ctx context.Context, filter audit.QueryFilter) (int, error) {
-	ctx, span := telemetry.AddSpan(ctx, "business.auditbus.count")
-	defer span.End()
-
-	count, err := b.storer.Count(ctx, filter)
-	if err != nil {
-		return 0, fmt.Errorf("audit count: %w", err)
-	}
-
-	return count, nil
 }

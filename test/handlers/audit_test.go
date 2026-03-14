@@ -12,7 +12,7 @@ import (
 	"github.com/Housiadas/cerberus/internal/usecase/audit_usecase"
 	"github.com/Housiadas/cerberus/internal/utils/apitest"
 	"github.com/Housiadas/cerberus/internal/utils/errs"
-	"github.com/Housiadas/cerberus/internal/utils/page"
+	"github.com/Housiadas/cerberus/pkg/cursor"
 )
 
 func Test_API_Audit_Query_200(t *testing.T) {
@@ -31,28 +31,25 @@ func Test_API_Audit_Query_200(t *testing.T) {
 	table := []apitest.Table{
 		{
 			Name:        "basic",
-			URL:         "/api/v1/audits?page=1&rows=10&orderBy=obj_name,ASC&obj_name=ObjName",
+			URL:         "/api/v1/audits?limit=10&orderBy=obj_name,ASC&obj_name=ObjName",
 			StatusCode:  http.StatusOK,
 			Method:      http.MethodGet,
 			AccessToken: &sd.Admins[0].AccessToken.Token,
-			GotResp:     &page.Result[audit_usecase.Audit]{},
-			ExpResp: &page.Result[audit_usecase.Audit]{
-				Metadata: page.Metadata{
-					FirstPage:   1,
-					CurrentPage: 1,
-					LastPage:    1,
-					RowsPerPage: 10,
-					Total:       len(sd.Admins[0].Audits),
+			GotResp:     &cursor.Result[audit_usecase.Audit]{},
+			ExpResp: &cursor.Result[audit_usecase.Audit]{
+				Metadata: cursor.Metadata{
+					HasMore: false,
+					Limit:   10,
 				},
 				Data: toAppAudits(sd.Admins[0].Audits),
 			},
 			AssertFunc: func(got any, exp any) string {
-				gotResp, exists := got.(*page.Result[audit_usecase.Audit])
+				gotResp, exists := got.(*cursor.Result[audit_usecase.Audit])
 				if !exists {
 					return "error occurred"
 				}
 
-				expResp := exp.(*page.Result[audit_usecase.Audit])
+				expResp := exp.(*cursor.Result[audit_usecase.Audit])
 
 				for i := range gotResp.Data {
 					if gotResp.Data[i].Timestamp == expResp.Data[i].Timestamp {
@@ -83,7 +80,7 @@ func Test_API_Audit_Query_400(t *testing.T) {
 	table := []apitest.Table{
 		{
 			Name:        "bad-query-filter",
-			URL:         "/api/v1/audits?page=1&rows=10&obj_id=123",
+			URL:         "/api/v1/audits?limit=10&obj_id=123",
 			StatusCode:  http.StatusBadRequest,
 			Method:      http.MethodGet,
 			AccessToken: &sd.Admins[0].AccessToken.Token,
@@ -95,7 +92,7 @@ func Test_API_Audit_Query_400(t *testing.T) {
 		},
 		{
 			Name:        "bad-order-by-value",
-			URL:         "/api/v1/audits?page=1&rows=10&orderBy=ser_id,ASC",
+			URL:         "/api/v1/audits?limit=10&orderBy=ser_id,ASC",
 			StatusCode:  http.StatusBadRequest,
 			Method:      http.MethodGet,
 			AccessToken: &sd.Admins[0].AccessToken.Token,
@@ -122,7 +119,7 @@ func Test_API_Audit_Query_403(t *testing.T) {
 	table := []apitest.Table{
 		{
 			Name:        "user-audit-forbidden",
-			URL:         "/api/v1/audits?page=1&rows=10",
+			URL:         "/api/v1/audits?limit=10",
 			StatusCode:  http.StatusForbidden,
 			Method:      http.MethodGet,
 			AccessToken: &sd.Users[0].AccessToken.Token,

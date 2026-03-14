@@ -8,7 +8,7 @@ import (
 	"github.com/Housiadas/cerberus/internal/core/domain/user"
 	"github.com/Housiadas/cerberus/internal/core/service/audit_service"
 	"github.com/Housiadas/cerberus/internal/utils/errs"
-	"github.com/Housiadas/cerberus/internal/utils/page"
+	"github.com/Housiadas/cerberus/pkg/cursor"
 	"github.com/Housiadas/cerberus/pkg/order"
 )
 
@@ -22,15 +22,15 @@ func NewUseCase(service *audit_service.Service) *UseCase {
 	}
 }
 
-func (a *UseCase) Query(ctx context.Context, qp AppQueryParams) (page.Result[Audit], error) {
-	p, err := page.Parse(qp.Page, qp.Rows)
+func (a *UseCase) Query(ctx context.Context, qp AppQueryParams) (cursor.Result[Audit], error) {
+	cur, err := cursor.Parse(qp.Cursor, qp.Limit)
 	if err != nil {
-		return page.Result[Audit]{}, errs.NewFieldErrors("page", err)
+		return cursor.Result[Audit]{}, errs.NewFieldErrors("cursor", err)
 	}
 
 	filter, err := parseFilter(qp)
 	if err != nil {
-		return page.Result[Audit]{}, func() *errs.Error {
+		return cursor.Result[Audit]{}, func() *errs.Error {
 			target := &errs.Error{}
 			_ = errors.As(err, &target)
 
@@ -40,12 +40,12 @@ func (a *UseCase) Query(ctx context.Context, qp AppQueryParams) (page.Result[Aud
 
 	orderBy, err := order.Parse(orderByFields, qp.OrderBy, user.GetDefaultOrderBy())
 	if err != nil {
-		return page.Result[Audit]{}, errs.NewFieldErrors("order", err)
+		return cursor.Result[Audit]{}, errs.NewFieldErrors("order", err)
 	}
 
-	adts, err := a.AuditService.Query(ctx, filter, orderBy, p)
+	adts, err := a.AuditService.Query(ctx, filter, orderBy, cur)
 	if err != nil {
-		return page.Result[Audit]{}, errs.Errorf(
+		return cursor.Result[Audit]{}, errs.Errorf(
 			errs.Internal,
 			errs.CodeInternal,
 			"query: %s",
@@ -53,15 +53,12 @@ func (a *UseCase) Query(ctx context.Context, qp AppQueryParams) (page.Result[Aud
 		)
 	}
 
-	total, err := a.AuditService.Count(ctx, filter)
-	if err != nil {
-		return page.Result[Audit]{}, errs.Errorf(
-			errs.Internal,
-			errs.CodeInternal,
-			"count: %s",
-			err,
-		)
-	}
-
-	return page.NewResult(toAppAudits(adts), total, p), nil
+	return cursor.NewResult(
+		toAppAudits(adts),
+		cur.Limit(),
+		cur,
+		orderBy,
+		func(a Audit) string { return a.ID },
+		auditFieldExtractor(orderBy),
+	), nil
 }

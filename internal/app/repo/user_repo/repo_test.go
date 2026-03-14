@@ -20,9 +20,9 @@ import (
 	"github.com/Housiadas/cerberus/internal/core/domain/user"
 	"github.com/Housiadas/cerberus/internal/core/service/user_service"
 	"github.com/Housiadas/cerberus/internal/utils/dbtest"
-	"github.com/Housiadas/cerberus/internal/utils/page"
 	"github.com/Housiadas/cerberus/internal/utils/unitest"
 	"github.com/Housiadas/cerberus/pkg/clock"
+	"github.com/Housiadas/cerberus/pkg/cursor"
 	"github.com/Housiadas/cerberus/pkg/hasher"
 	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/Housiadas/cerberus/pkg/uuidgen"
@@ -116,7 +116,7 @@ func queryUser(service *user_service.Service, sd unitest.SeedData) []unitest.Tab
 					Name: dbtest.NamePointer("Name"),
 				}
 
-				resp, err := service.Query(ctx, filter, user.GetDefaultOrderBy(), page.MustParse("1", "10"))
+				resp, err := service.Query(ctx, filter, user.GetDefaultOrderBy(), mustParseCursor("", "10"))
 				if err != nil {
 					return err
 				}
@@ -308,4 +308,13 @@ func deleteUser(service *user_service.Service, sd unitest.SeedData) []unitest.Ta
 	}
 
 	return table
+}
+
+func mustParseCursor(cursorStr, limitStr string) cursor.Cursor {
+	cur, err := cursor.Parse(cursorStr, limitStr)
+	if err != nil {
+		panic(err)
+	}
+
+	return cur
 }

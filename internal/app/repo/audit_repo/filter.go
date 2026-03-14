@@ -6,10 +6,33 @@ import (
 	"strings"
 
 	"github.com/Housiadas/cerberus/internal/core/domain/audit"
+	"github.com/Housiadas/cerberus/pkg/cursor"
+	"github.com/Housiadas/cerberus/pkg/order"
 )
 
+func applyCursor(cur cursor.Cursor, orderBy order.By, data map[string]any, buf *bytes.Buffer) {
+	if !cur.HasCursor() {
+		return
+	}
+
+	by, exists := getOrderByFields()[orderBy.Field]
+	if !exists {
+		return
+	}
+
+	data["cursor_value"] = cur.FieldValue()
+	data["cursor_id"] = cur.ID()
+
+	op := ">"
+	if orderBy.Direction == order.DESC {
+		op = "<"
+	}
+
+	fmt.Fprintf(buf, " AND (%s, id) %s (:cursor_value, :cursor_id)", by, op)
+}
+
 func applyFilter(filter audit.QueryFilter, data map[string]any, buf *bytes.Buffer) {
-	var wc []string
+	wc := []string{"1=1"}
 
 	if filter.ObjID != nil {
 		data["obj_id"] = filter.ObjID
@@ -53,8 +76,6 @@ func applyFilter(filter audit.QueryFilter, data map[string]any, buf *bytes.Buffe
 		wc = append(wc, "timestamp <= :until")
 	}
 
-	if len(wc) > 0 {
-		buf.WriteString(" WHERE ")
-		buf.WriteString(strings.Join(wc, " AND "))
-	}
+	buf.WriteString(" WHERE ")
+	buf.WriteString(strings.Join(wc, " AND "))
 }

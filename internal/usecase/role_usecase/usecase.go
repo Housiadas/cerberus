@@ -12,7 +12,7 @@ import (
 	"github.com/Housiadas/cerberus/internal/core/domain/role"
 	"github.com/Housiadas/cerberus/internal/core/service/role_service"
 	"github.com/Housiadas/cerberus/internal/utils/errs"
-	"github.com/Housiadas/cerberus/internal/utils/page"
+	"github.com/Housiadas/cerberus/pkg/cursor"
 	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/Housiadas/cerberus/pkg/order"
 	"github.com/Housiadas/cerberus/pkg/pgsql"
@@ -189,26 +189,26 @@ func (uc *UseCase) QueryByID(ctx context.Context, roleID string) (Role, error) {
 	return toAppRole(rol), nil
 }
 
-// Query returns a list of roles with paging.
-func (uc *UseCase) Query(ctx context.Context, qp AppQueryParams) (page.Result[Role], error) {
-	p, err := page.Parse(qp.Page, qp.Rows)
+// Query returns a list of roles with cursor-based paging.
+func (uc *UseCase) Query(ctx context.Context, qp AppQueryParams) (cursor.Result[Role], error) {
+	cur, err := cursor.Parse(qp.Cursor, qp.Limit)
 	if err != nil {
-		return page.Result[Role]{}, errs.NewFieldErrors("page", err)
+		return cursor.Result[Role]{}, errs.NewFieldErrors("cursor", err)
 	}
 
 	filter, err := parseFilter(qp)
 	if err != nil {
-		return page.Result[Role]{}, err
+		return cursor.Result[Role]{}, err
 	}
 
 	orderBy, err := order.Parse(getOrderByFields(), qp.OrderBy, getDefaultOrderBy())
 	if err != nil {
-		return page.Result[Role]{}, errs.NewFieldErrors("order", err)
+		return cursor.Result[Role]{}, errs.NewFieldErrors("order", err)
 	}
 
-	roles, err := uc.roleService.Query(ctx, filter, orderBy, p)
+	roles, err := uc.roleService.Query(ctx, filter, orderBy, cur)
 	if err != nil {
-		return page.Result[Role]{}, errs.Errorf(
+		return cursor.Result[Role]{}, errs.Errorf(
 			errs.Internal,
 			errs.CodeInternal,
 			"query: %s",
@@ -216,17 +216,14 @@ func (uc *UseCase) Query(ctx context.Context, qp AppQueryParams) (page.Result[Ro
 		)
 	}
 
-	total, err := uc.roleService.Count(ctx, filter)
-	if err != nil {
-		return page.Result[Role]{}, errs.Errorf(
-			errs.Internal,
-			errs.CodeInternal,
-			"count: %s",
-			err,
-		)
-	}
-
-	return page.NewResult(toAppRoles(roles), total, p), nil
+	return cursor.NewResult(
+		toAppRoles(roles),
+		cur.Limit(),
+		cur,
+		orderBy,
+		func(r Role) string { return r.ID },
+		func(r Role) any { return r.ID },
+	), nil
 }
 
 func newRoleEvent(rl role.Role, action string) event.DomainEvent {

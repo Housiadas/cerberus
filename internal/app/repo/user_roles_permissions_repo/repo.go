@@ -9,7 +9,7 @@ import (
 
 	"github.com/Housiadas/cerberus/internal/core/domain/name"
 	urp "github.com/Housiadas/cerberus/internal/core/domain/user_roles_permissions"
-	"github.com/Housiadas/cerberus/internal/utils/page"
+	"github.com/Housiadas/cerberus/pkg/cursor"
 	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/Housiadas/cerberus/pkg/order"
 	"github.com/Housiadas/cerberus/pkg/pgsql"
@@ -21,8 +21,6 @@ import (
 var (
 	//go:embed query/user_roles_permissions_query.sql
 	userRolesPermissionsQuerySQL string
-	//go:embed query/user_roles_permissions_count.sql
-	userRolesPermissionsCountSQL string
 	//go:embed query/user_roles_permissions_count.sql
 	userHasPermissionSQL string
 	//go:embed query/user_permissions_by_user_id.sql
@@ -48,15 +46,15 @@ func (s *Store) Query(
 	ctx context.Context,
 	filter urp.QueryFilter,
 	ob order.By,
-	p page.Page,
+	cur cursor.Cursor,
 ) ([]urp.UserRolesPermissions, error) {
 	data := map[string]any{
-		"offset":        (p.Number() - 1) * p.RowsPerPage(),
-		"rows_per_page": p.RowsPerPage(),
+		"limit": cur.Limit() + 1,
 	}
 
 	buf := bytes.NewBufferString(userRolesPermissionsQuerySQL)
 	applyFilter(filter, data, buf)
+	applyCursor(cur, ob, data, buf)
 
 	obc, err := orderByClause(ob)
 	if err != nil {
@@ -64,7 +62,7 @@ func (s *Store) Query(
 	}
 
 	buf.WriteString(obc)
-	buf.WriteString(" OFFSET :offset ROWS FETCH NEXT :rows_per_page ROWS ONLY")
+	buf.WriteString(" FETCH NEXT :limit ROWS ONLY")
 
 	var dbRows []rowDB
 
@@ -74,24 +72,6 @@ func (s *Store) Query(
 	}
 
 	return toDomains(dbRows)
-}
-
-// Count returns the total number of rows that match the filter.
-func (s *Store) Count(ctx context.Context, filter urp.QueryFilter) (int, error) {
-	data := map[string]any{}
-	buf := bytes.NewBufferString(userRolesPermissionsCountSQL)
-	applyFilter(filter, data, buf)
-
-	var cnt struct {
-		Count int `db:"count"`
-	}
-
-	err := pgsql.NamedQueryStruct(ctx, s.log, s.db, buf.String(), data, &cnt)
-	if err != nil {
-		return 0, fmt.Errorf("db count user_roles_permissions: %w", err)
-	}
-
-	return cnt.Count, nil
 }
 
 // QueryPermissionsByUserID returns all distinct permissions (id and name) for the given user.

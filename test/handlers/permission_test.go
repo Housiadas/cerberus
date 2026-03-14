@@ -15,8 +15,8 @@ import (
 	"github.com/Housiadas/cerberus/internal/utils/apitest"
 	"github.com/Housiadas/cerberus/internal/utils/dbtest"
 	"github.com/Housiadas/cerberus/internal/utils/errs"
-	"github.com/Housiadas/cerberus/internal/utils/page"
 	"github.com/Housiadas/cerberus/pkg/clock"
+	"github.com/Housiadas/cerberus/pkg/cursor"
 )
 
 func Test_API_Permission_Query_200(t *testing.T) {
@@ -39,19 +39,16 @@ func Test_API_Permission_Query_200(t *testing.T) {
 	table := []apitest.Table{
 		{
 			Name:        "basic",
-			URL:         "/api/v1/permissions?page=1&rows=10&orderBy=id,ASC&name=Permission",
+			URL:         "/api/v1/permissions?limit=10&orderBy=id,ASC&name=Permission",
 			Method:      http.MethodGet,
 			StatusCode:  http.StatusOK,
 			AccessToken: &sd.Admins[0].AccessToken.Token,
-			GotResp:     &page.Result[permission_usecase.Permission]{},
-			ExpResp: &page.Result[permission_usecase.Permission]{
+			GotResp:     &cursor.Result[permission_usecase.Permission]{},
+			ExpResp: &cursor.Result[permission_usecase.Permission]{
 				Data: toAppPermissions(perms),
-				Metadata: page.Metadata{
-					FirstPage:   1,
-					CurrentPage: 1,
-					LastPage:    1,
-					RowsPerPage: 10,
-					Total:       len(perms),
+				Metadata: cursor.Metadata{
+					HasMore: false,
+					Limit:   10,
 				},
 			},
 			AssertFunc: func(got any, exp any) string {
@@ -75,7 +72,7 @@ func Test_API_Permission_Query_403(t *testing.T) {
 	table := []apitest.Table{
 		{
 			Name:        "permission-list-forbidden",
-			URL:         "/api/v1/permissions?page=1&rows=10",
+			URL:         "/api/v1/permissions?limit=10",
 			Method:      http.MethodGet,
 			StatusCode:  http.StatusForbidden,
 			AccessToken: &sd.Users[0].AccessToken.Token,

@@ -15,8 +15,8 @@ import (
 	"github.com/Housiadas/cerberus/internal/utils/apitest"
 	"github.com/Housiadas/cerberus/internal/utils/dbtest"
 	"github.com/Housiadas/cerberus/internal/utils/errs"
-	"github.com/Housiadas/cerberus/internal/utils/page"
 	"github.com/Housiadas/cerberus/pkg/clock"
+	"github.com/Housiadas/cerberus/pkg/cursor"
 )
 
 func Test_API_Role_Query_200(t *testing.T) {
@@ -39,19 +39,16 @@ func Test_API_Role_Query_200(t *testing.T) {
 	table := []apitest.Table{
 		{
 			Name:        "basic",
-			URL:         "/api/v1/roles?page=1&rows=10&orderBy=id,ASC&name=Name",
+			URL:         "/api/v1/roles?limit=10&orderBy=id,ASC&name=Name",
 			Method:      http.MethodGet,
 			StatusCode:  http.StatusOK,
 			AccessToken: &sd.Admins[0].AccessToken.Token,
-			GotResp:     &page.Result[role_usecase.Role]{},
-			ExpResp: &page.Result[role_usecase.Role]{
+			GotResp:     &cursor.Result[role_usecase.Role]{},
+			ExpResp: &cursor.Result[role_usecase.Role]{
 				Data: toAppRoles(roles),
-				Metadata: page.Metadata{
-					FirstPage:   1,
-					CurrentPage: 1,
-					LastPage:    1,
-					RowsPerPage: 10,
-					Total:       len(roles),
+				Metadata: cursor.Metadata{
+					HasMore: false,
+					Limit:   10,
 				},
 			},
 			AssertFunc: func(got any, exp any) string {
@@ -75,7 +72,7 @@ func Test_API_Role_Query_403(t *testing.T) {
 	table := []apitest.Table{
 		{
 			Name:        "role-list-forbidden",
-			URL:         "/api/v1/roles?page=1&rows=10",
+			URL:         "/api/v1/roles?limit=10",
 			Method:      http.MethodGet,
 			StatusCode:  http.StatusForbidden,
 			AccessToken: &sd.Users[0].AccessToken.Token,

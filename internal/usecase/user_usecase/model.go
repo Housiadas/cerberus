@@ -8,7 +8,6 @@ import (
 	"github.com/Housiadas/cerberus/internal/core/domain/password"
 	"github.com/Housiadas/cerberus/internal/core/domain/user"
 	"github.com/Housiadas/cerberus/internal/utils/errs"
-	"github.com/Housiadas/cerberus/internal/utils/page"
 	"github.com/Housiadas/cerberus/pkg/clock"
 )
 
@@ -50,11 +49,6 @@ func toAppUsers(users []user.User) []User {
 	}
 
 	return app
-}
-
-type UserPageResult struct {
-	Data     []User        `json:"data"`
-	Metadata page.Metadata `json:"metadata"`
 }
 
 // NewUser defines the data needed to add a new user.

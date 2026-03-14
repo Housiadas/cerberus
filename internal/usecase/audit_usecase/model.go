@@ -2,7 +2,6 @@ package audit_usecase
 
 import (
 	"github.com/Housiadas/cerberus/internal/core/domain/audit"
-	"github.com/Housiadas/cerberus/internal/utils/page"
 	"github.com/Housiadas/cerberus/pkg/clock"
 )
 
@@ -17,11 +16,6 @@ type Audit struct {
 	Data      string `json:"data"`
 	Message   string `json:"message"`
 	Timestamp string `json:"timestamp"`
-}
-
-type AuditPageResult struct {
-	Data     []Audit       `json:"data"`
-	Metadata page.Metadata `json:"metadata"`
 }
 
 func toAppAudit(aud audit.Audit) Audit {

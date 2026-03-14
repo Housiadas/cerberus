@@ -9,7 +9,7 @@ import (
 	"fmt"
 
 	"github.com/Housiadas/cerberus/internal/core/domain/role"
-	"github.com/Housiadas/cerberus/internal/utils/page"
+	"github.com/Housiadas/cerberus/pkg/cursor"
 	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/Housiadas/cerberus/pkg/order"
 	"github.com/Housiadas/cerberus/pkg/pgsql"
@@ -29,8 +29,6 @@ var (
 	roleQuerySQL string
 	//go:embed query/role_query_by_id.sql
 	roleQueryByIDSQL string
-	//go:embed query/role_count.sql
-	roleCountSQL string
 )
 
 // Store manages the set of APIs for userDB database access.
@@ -120,15 +118,15 @@ func (s *Store) Query(
 	ctx context.Context,
 	filter role.QueryFilter,
 	orderBy order.By,
-	page page.Page,
+	cur cursor.Cursor,
 ) ([]role.Role, error) {
 	data := map[string]any{
-		"offset":        (page.Number() - 1) * page.RowsPerPage(),
-		"rows_per_page": page.RowsPerPage(),
+		"limit": cur.Limit() + 1,
 	}
 
 	buf := bytes.NewBufferString(roleQuerySQL)
 	applyFilter(filter, data, buf)
+	applyCursor(cur, orderBy, data, buf)
 
 	orderByClause, err := orderByClause(orderBy)
 	if err != nil {
@@ -136,7 +134,7 @@ func (s *Store) Query(
 	}
 
 	buf.WriteString(orderByClause)
-	buf.WriteString(" OFFSET :offset ROWS FETCH NEXT :rows_per_page ROWS ONLY")
+	buf.WriteString(" FETCH NEXT :limit ROWS ONLY")
 
 	var dbRoles []roleDB
 
@@ -146,22 +144,4 @@ func (s *Store) Query(
 	}
 
 	return toRolesDomain(dbRoles)
-}
-
-// Count returns the total number of users in the DB.
-func (s *Store) Count(ctx context.Context, filter role.QueryFilter) (int, error) {
-	data := map[string]any{}
-	buf := bytes.NewBufferString(roleCountSQL)
-	applyFilter(filter, data, buf)
-
-	var count struct {
-		Count int `db:"count"`
-	}
-
-	err := pgsql.NamedQueryStruct(ctx, s.log, s.db, buf.String(), data, &count)
-	if err != nil {
-		return 0, fmt.Errorf("db: %w", err)
-	}
-
-	return count.Count, nil
 }

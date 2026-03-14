@@ -6,7 +6,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Housiadas/cerberus/internal/utils/page"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -15,6 +14,7 @@ import (
 	"github.com/Housiadas/cerberus/internal/core/domain/entity"
 	"github.com/Housiadas/cerberus/internal/core/domain/name"
 	"github.com/Housiadas/cerberus/internal/core/service/audit_service"
+	"github.com/Housiadas/cerberus/pkg/cursor"
 	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/Housiadas/cerberus/pkg/order"
 )
@@ -104,7 +104,7 @@ func TestService_Query_Successful(t *testing.T) {
 	ctx := context.Background()
 	filter := audit.QueryFilter{}
 	orderBy := order.By{Field: "timestamp", Direction: "desc"}
-	page := page.Page{}
+	cur := cursor.Cursor{}
 
 	expectedAudits := []audit.Audit{
 		audit.New(
@@ -123,10 +123,10 @@ func TestService_Query_Successful(t *testing.T) {
 	mLogger := logger.NewMockLogger(t)
 
 	mStorer := audit.NewMockStorer(t)
-	mStorer.EXPECT().Query(ctx, filter, orderBy, page).Return(expectedAudits, nil)
+	mStorer.EXPECT().Query(ctx, filter, orderBy, cur).Return(expectedAudits, nil)
 
 	sut := audit_service.New(mLogger, mStorer)
-	audits, err := sut.Query(ctx, filter, orderBy, page)
+	audits, err := sut.Query(ctx, filter, orderBy, cur)
 
 	assert.NoError(t, err)
 	assert.Len(t, audits, 1)
@@ -137,48 +137,16 @@ func TestService_Query_Error(t *testing.T) {
 	ctx := context.Background()
 	filter := audit.QueryFilter{}
 	orderBy := order.By{Field: "timestamp", Direction: "desc"}
-	page := page.Page{}
+	cur := cursor.Cursor{}
 
 	mLogger := logger.NewMockLogger(t)
 
 	mStorer := audit.NewMockStorer(t)
-	mStorer.EXPECT().Query(ctx, filter, orderBy, page).Return(nil, errors.New("query error"))
+	mStorer.EXPECT().Query(ctx, filter, orderBy, cur).Return(nil, errors.New("query error"))
 
 	sut := audit_service.New(mLogger, mStorer)
-	_, err := sut.Query(ctx, filter, orderBy, page)
+	_, err := sut.Query(ctx, filter, orderBy, cur)
 
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "query error")
-}
-
-func TestService_Count_Successful(t *testing.T) {
-	ctx := context.Background()
-	filter := audit.QueryFilter{}
-
-	mLogger := logger.NewMockLogger(t)
-
-	mStorer := audit.NewMockStorer(t)
-	mStorer.EXPECT().Count(ctx, filter).Return(10, nil)
-
-	sut := audit_service.New(mLogger, mStorer)
-	count, err := sut.Count(ctx, filter)
-
-	assert.NoError(t, err)
-	assert.Equal(t, 10, count)
-}
-
-func TestService_Count_Error(t *testing.T) {
-	ctx := context.Background()
-	filter := audit.QueryFilter{}
-
-	mLogger := logger.NewMockLogger(t)
-
-	mStorer := audit.NewMockStorer(t)
-	mStorer.EXPECT().Count(ctx, filter).Return(0, errors.New("count error"))
-
-	sut := audit_service.New(mLogger, mStorer)
-	_, err := sut.Count(ctx, filter)
-
-	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "count error")
 }

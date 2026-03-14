@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"github.com/Housiadas/cerberus/internal/core/domain/user_roles_permissions"
-	"github.com/Housiadas/cerberus/internal/utils/page"
+	"github.com/Housiadas/cerberus/pkg/cursor"
 	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/Housiadas/cerberus/pkg/order"
 	"github.com/google/uuid"
@@ -30,27 +30,14 @@ func (s *Service) Query(
 	ctx context.Context,
 	filter user_roles_permissions.QueryFilter,
 	orderBy order.By,
-	p page.Page,
+	cur cursor.Cursor,
 ) ([]user_roles_permissions.UserRolesPermissions, error) {
-	userRolesPerms, err := s.storer.Query(ctx, filter, orderBy, p)
+	userRolesPerms, err := s.storer.Query(ctx, filter, orderBy, cur)
 	if err != nil {
 		return nil, fmt.Errorf("user roles permissions query: %w", err)
 	}
 
 	return userRolesPerms, nil
-}
-
-// Count returns the total number of user roles and permissions that match the filter.
-func (s *Service) Count(
-	ctx context.Context,
-	filter user_roles_permissions.QueryFilter,
-) (int, error) {
-	count, err := s.storer.Count(ctx, filter)
-	if err != nil {
-		return 0, fmt.Errorf("user roles permissions count: %w", err)
-	}
-
-	return count, nil
 }
 
 // QueryPermissionsByUserID returns all permissions (id and name) for the given user.

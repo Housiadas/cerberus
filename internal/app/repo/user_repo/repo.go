@@ -10,7 +10,7 @@ import (
 	"net/mail"
 
 	"github.com/Housiadas/cerberus/internal/core/domain/user"
-	"github.com/Housiadas/cerberus/internal/utils/page"
+	"github.com/Housiadas/cerberus/pkg/cursor"
 	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/Housiadas/cerberus/pkg/order"
 	"github.com/Housiadas/cerberus/pkg/pgsql"
@@ -32,8 +32,6 @@ var (
 	userQueryByIDSQL string
 	//go:embed query/user_query_by_email.sql
 	userQueryByEmailSQL string
-	//go:embed query/user_count.sql
-	userCountSQL string
 )
 
 // Store manages the set of APIs for userDB database access.
@@ -109,15 +107,15 @@ func (s *Store) Query(
 	ctx context.Context,
 	filter user.QueryFilter,
 	orderBy order.By,
-	page page.Page,
+	cur cursor.Cursor,
 ) ([]user.User, error) {
 	data := map[string]any{
-		"offset":        (page.Number() - 1) * page.RowsPerPage(),
-		"rows_per_page": page.RowsPerPage(),
+		"limit": cur.Limit() + 1,
 	}
 
 	buf := bytes.NewBufferString(userQuerySQL)
 	applyFilter(filter, data, buf)
+	applyCursor(cur, orderBy, data, buf)
 
 	orderByClause, err := orderByClause(orderBy)
 	if err != nil {
@@ -125,7 +123,7 @@ func (s *Store) Query(
 	}
 
 	buf.WriteString(orderByClause)
-	buf.WriteString(" OFFSET :offset ROWS FETCH NEXT :rows_per_page ROWS ONLY")
+	buf.WriteString(" FETCH NEXT :limit ROWS ONLY")
 
 	var dbUsrs []userDB
 
@@ -135,24 +133,6 @@ func (s *Store) Query(
 	}
 
 	return toUsersDomain(dbUsrs)
-}
-
-// Count returns the total number of users in the DB.
-func (s *Store) Count(ctx context.Context, filter user.QueryFilter) (int, error) {
-	data := map[string]any{}
-	buf := bytes.NewBufferString(userCountSQL)
-	applyFilter(filter, data, buf)
-
-	var count struct {
-		Count int `db:"count"`
-	}
-
-	err := pgsql.NamedQueryStruct(ctx, s.log, s.dbPool, buf.String(), data, &count)
-	if err != nil {
-		return 0, fmt.Errorf("db: %w", err)
-	}
-
-	return count.Count, nil
 }
 
 // QueryByID gets the specified userDB from the database.

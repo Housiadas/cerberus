@@ -3,7 +3,7 @@ package audit
 import (
 	"context"
 
-	"github.com/Housiadas/cerberus/internal/utils/page"
+	"github.com/Housiadas/cerberus/pkg/cursor"
 	"github.com/Housiadas/cerberus/pkg/order"
 	"github.com/Housiadas/cerberus/pkg/pgsql"
 )
@@ -16,7 +16,6 @@ type Storer interface {
 		ctx context.Context,
 		filter QueryFilter,
 		orderBy order.By,
-		page page.Page,
+		cur cursor.Cursor,
 	) ([]Audit, error)
-	Count(ctx context.Context, filter QueryFilter) (int, error)
 }

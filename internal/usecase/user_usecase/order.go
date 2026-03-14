@@ -17,3 +17,18 @@ func getOrderByFields() map[string]string {
 		"enabled": user.OrderByEnabled,
 	}
 }
+
+func userFieldExtractor(orderBy order.By) func(User) any {
+	return func(u User) any {
+		switch orderBy.Field {
+		case user.OrderByName:
+			return u.Name
+		case user.OrderByEmail:
+			return u.Email
+		case user.OrderByEnabled:
+			return u.Enabled
+		default:
+			return u.ID
+		}
+	}
+}
