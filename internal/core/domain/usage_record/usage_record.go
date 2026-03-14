@@ -1,13 +1,10 @@
 package usage_record
 
 import (
-	"errors"
 	"time"
 
 	"github.com/google/uuid"
 )
-
-var ErrNotFound = errors.New("usage record not found")
 
 type UsageRecord struct {
 	id             uuid.UUID

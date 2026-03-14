@@ -1,13 +1,10 @@
 package invoice_item
 
 import (
-	"errors"
 	"time"
 
 	"github.com/google/uuid"
 )
-
-var ErrNotFound = errors.New("invoice item not found")
 
 type InvoiceItem struct {
 	id             uuid.UUID

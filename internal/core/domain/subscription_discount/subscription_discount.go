@@ -1,13 +1,10 @@
 package subscription_discount
 
 import (
-	"errors"
 	"time"
 
 	"github.com/google/uuid"
 )
-
-var ErrNotFound = errors.New("subscription discount not found")
 
 type SubscriptionDiscount struct {
 	id             uuid.UUID

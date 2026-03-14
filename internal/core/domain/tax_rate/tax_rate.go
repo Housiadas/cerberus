@@ -1,14 +1,11 @@
 package tax_rate
 
 import (
-	"errors"
 	"time"
 
 	"github.com/Housiadas/cerberus/internal/core/domain/country"
 	"github.com/google/uuid"
 )
-
-var ErrNotFound = errors.New("tax rate not found")
 
 type TaxRate struct {
 	id          uuid.UUID

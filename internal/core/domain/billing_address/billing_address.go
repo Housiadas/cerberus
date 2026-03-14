@@ -1,14 +1,11 @@
 package billing_address
 
 import (
-	"errors"
 	"time"
 
 	"github.com/Housiadas/cerberus/internal/core/domain/country"
 	"github.com/google/uuid"
 )
-
-var ErrNotFound = errors.New("billing address not found")
 
 type BillingAddress struct {
 	id         uuid.UUID

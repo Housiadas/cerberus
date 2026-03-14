@@ -1,14 +1,11 @@
 package refund
 
 import (
-	"errors"
 	"time"
 
 	"github.com/Housiadas/cerberus/internal/core/domain/payment"
 	"github.com/google/uuid"
 )
-
-var ErrNotFound = errors.New("refund not found")
 
 type Refund struct {
 	id          uuid.UUID
