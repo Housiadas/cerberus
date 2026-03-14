@@ -28,7 +28,7 @@ func applyCursor(cur cursor.Cursor, ob order.By, data map[string]any, buf *bytes
 		op = "<"
 	}
 
-	buf.WriteString(fmt.Sprintf(" AND (%s, user_id) %s (:cursor_value, :cursor_id)", by, op))
+	fmt.Fprintf(buf, " AND (%s, user_id) %s (:cursor_value, :cursor_id)", by, op)
 }
 
 func applyFilter(filter urp.QueryFilter, data map[string]any, buf *bytes.Buffer) {

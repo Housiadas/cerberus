@@ -15,8 +15,8 @@ import (
 	"github.com/Housiadas/cerberus/internal/utils/apitest"
 	"github.com/Housiadas/cerberus/internal/utils/dbtest"
 	"github.com/Housiadas/cerberus/internal/utils/errs"
-	"github.com/Housiadas/cerberus/internal/utils/page"
 	"github.com/Housiadas/cerberus/pkg/clock"
+	"github.com/Housiadas/cerberus/pkg/cursor"
 )
 
 func Test_API_User_GetMe_200(t *testing.T) {
@@ -209,19 +209,16 @@ func Test_API_User_Query_200(t *testing.T) {
 	table := []apitest.Table{
 		{
 			Name:        "basic",
-			URL:         "/api/v1/users?page=1&rows=10&orderBy=user_id,ASC&name=Name",
+			URL:         "/api/v1/users?limit=10&orderBy=user_id,ASC&name=Name",
 			StatusCode:  http.StatusOK,
 			Method:      http.MethodGet,
 			AccessToken: &sd.Admins[0].AccessToken.Token,
-			GotResp:     &page.Result[user_usecase.User]{},
-			ExpResp: &page.Result[user_usecase.User]{
+			GotResp:     &cursor.Result[user_usecase.User]{},
+			ExpResp: &cursor.Result[user_usecase.User]{
 				Data: toAppUsers(usrs),
-				Metadata: page.Metadata{
-					FirstPage:   1,
-					CurrentPage: 1,
-					LastPage:    1,
-					RowsPerPage: 10,
-					Total:       len(usrs),
+				Metadata: cursor.Metadata{
+					HasMore: false,
+					Limit:   10,
 				},
 			},
 			AssertFunc: func(got any, exp any) string {
@@ -272,7 +269,7 @@ func Test_API_User_Query_400(t *testing.T) {
 	table := []apitest.Table{
 		{
 			Name:        "bad-query-filter",
-			URL:         "/api/v1/users?page=1&rows=10&email=a.com",
+			URL:         "/api/v1/users?limit=10&email=a.com",
 			StatusCode:  http.StatusBadRequest,
 			AccessToken: &sd.Admins[0].AccessToken.Token,
 			Method:      http.MethodGet,
@@ -284,7 +281,7 @@ func Test_API_User_Query_400(t *testing.T) {
 		},
 		{
 			Name:        "bad-order-by-value",
-			URL:         "/api/v1/users?page=1&rows=10&orderBy=ser_id,ASC",
+			URL:         "/api/v1/users?limit=10&orderBy=ser_id,ASC",
 			StatusCode:  http.StatusBadRequest,
 			Method:      http.MethodGet,
 			AccessToken: &sd.Admins[0].AccessToken.Token,
@@ -311,7 +308,7 @@ func Test_API_User_Query_403(t *testing.T) {
 	table := []apitest.Table{
 		{
 			Name:        "user-list-forbidden",
-			URL:         "/api/v1/users?page=1&rows=10",
+			URL:         "/api/v1/users?limit=10",
 			StatusCode:  http.StatusForbidden,
 			Method:      http.MethodGet,
 			AccessToken: &sd.Users[0].AccessToken.Token,
@@ -481,8 +478,8 @@ func Test_API_User_Update_200(t *testing.T) {
 				Email:      "chris@housi2.com",
 				Department: "IT0",
 				Enabled:    true,
-				CreatedAt:  func() string { ct := sd.Users[0].CreatedAt(); return clock.Format(&ct) }(),
-				UpdatedAt:  func() string { ut := sd.Users[0].UpdatedAt(); return clock.Format(&ut) }(),
+				CreatedAt:  func() string { ; return clock.Format(new(sd.Users[0].CreatedAt())) }(),
+				UpdatedAt:  func() string { ; return clock.Format(new(sd.Users[0].UpdatedAt())) }(),
 			},
 			AssertFunc: func(got any, exp any) string {
 				gotResp, exists := got.(*user_usecase.User)

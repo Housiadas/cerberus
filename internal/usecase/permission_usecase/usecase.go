@@ -208,7 +208,10 @@ func (uc *UseCase) QueryByID(ctx context.Context, permissionID string) (Permissi
 }
 
 // Query returns a list of permissions with cursor-based paging.
-func (uc *UseCase) Query(ctx context.Context, qp AppQueryParams) (cursor.Result[Permission], error) {
+func (uc *UseCase) Query(
+	ctx context.Context,
+	qp AppQueryParams,
+) (cursor.Result[Permission], error) {
 	cur, err := cursor.Parse(qp.Cursor, qp.Limit)
 	if err != nil {
 		return cursor.Result[Permission]{}, errs.NewFieldErrors("cursor", err)
@@ -240,7 +243,7 @@ func (uc *UseCase) Query(ctx context.Context, qp AppQueryParams) (cursor.Result[
 		cur,
 		orderBy,
 		func(p Permission) string { return p.ID },
-		func(p Permission) any { return p.ID },
+		permissionFieldExtractor(orderBy),
 	), nil
 }
 

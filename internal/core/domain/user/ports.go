@@ -16,7 +16,12 @@ type Storer interface {
 	Create(ctx context.Context, usr User) error
 	Update(ctx context.Context, usr User) error
 	Delete(ctx context.Context, usr User) error
-	Query(ctx context.Context, filter QueryFilter, orderBy order.By, cur cursor.Cursor) ([]User, error)
+	Query(
+		ctx context.Context,
+		filter QueryFilter,
+		orderBy order.By,
+		cur cursor.Cursor,
+	) ([]User, error)
 	QueryByID(ctx context.Context, userID uuid.UUID) (User, error)
 	QueryByEmail(ctx context.Context, email mail.Address) (User, error)
 }

@@ -15,3 +15,14 @@ func getOrderByFields() map[string]string {
 		"name": permission.OrderByName,
 	}
 }
+
+func permissionFieldExtractor(orderBy order.By) func(Permission) any {
+	return func(p Permission) any {
+		switch orderBy.Field {
+		case permission.OrderByName:
+			return p.Name
+		default:
+			return p.ID
+		}
+	}
+}

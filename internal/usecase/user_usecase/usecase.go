@@ -223,7 +223,7 @@ func (a *UseCase) Query(ctx context.Context, qp AppQueryParams) (cursor.Result[U
 		cur,
 		orderBy,
 		func(u User) string { return u.ID },
-		func(u User) any { return u.ID },
+		userFieldExtractor(orderBy),
 	), nil
 }
 

@@ -15,6 +15,11 @@ type Storer interface {
 	Create(ctx context.Context, role Role) error
 	Update(ctx context.Context, role Role) error
 	Delete(ctx context.Context, role Role) error
-	Query(ctx context.Context, filter QueryFilter, orderBy order.By, cur cursor.Cursor) ([]Role, error)
+	Query(
+		ctx context.Context,
+		filter QueryFilter,
+		orderBy order.By,
+		cur cursor.Cursor,
+	) ([]Role, error)
 	QueryByID(ctx context.Context, userID uuid.UUID) (Role, error)
 }

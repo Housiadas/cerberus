@@ -17,8 +17,8 @@ import (
 	"github.com/Housiadas/cerberus/internal/core/domain/role"
 	"github.com/Housiadas/cerberus/internal/core/service/role_service"
 	"github.com/Housiadas/cerberus/internal/utils/dbtest"
-	"github.com/Housiadas/cerberus/internal/utils/page"
 	"github.com/Housiadas/cerberus/internal/utils/unitest"
+	"github.com/Housiadas/cerberus/pkg/cursor"
 	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/Housiadas/cerberus/pkg/uuidgen"
 )
@@ -89,7 +89,7 @@ func queryRole(service *role_service.Service, sd unitest.SeedData) []unitest.Tab
 					Name: dbtest.NamePointer("Name"),
 				}
 
-				resp, err := service.Query(ctx, filter, role.GetDefaultOrderBy(), page.MustParse("1", "10"))
+				resp, err := service.Query(ctx, filter, role.GetDefaultOrderBy(), mustParseCursor("", "10"))
 				if err != nil {
 					return err
 				}
@@ -228,4 +228,13 @@ func deleteRole(service *role_service.Service, sd unitest.SeedData) []unitest.Ta
 			},
 		},
 	}
+}
+
+func mustParseCursor(cursorStr, limitStr string) cursor.Cursor {
+	cur, err := cursor.Parse(cursorStr, limitStr)
+	if err != nil {
+		panic(err)
+	}
+
+	return cur
 }

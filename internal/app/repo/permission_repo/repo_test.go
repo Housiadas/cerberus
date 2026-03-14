@@ -17,8 +17,8 @@ import (
 	"github.com/Housiadas/cerberus/internal/core/domain/permission"
 	"github.com/Housiadas/cerberus/internal/core/service/permission_service"
 	"github.com/Housiadas/cerberus/internal/utils/dbtest"
-	"github.com/Housiadas/cerberus/internal/utils/page"
 	"github.com/Housiadas/cerberus/internal/utils/unitest"
+	"github.com/Housiadas/cerberus/pkg/cursor"
 	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/Housiadas/cerberus/pkg/uuidgen"
 )
@@ -89,7 +89,7 @@ func queryPermission(service *permission_service.Service, sd unitest.SeedData) [
 					Name: dbtest.NamePointer("Permission"),
 				}
 
-				resp, err := service.Query(ctx, filter, permission.GetDefaultOrderBy(), page.MustParse("1", "10"))
+				resp, err := service.Query(ctx, filter, permission.GetDefaultOrderBy(), mustParseCursor("", "10"))
 				if err != nil {
 					return err
 				}
@@ -228,4 +228,13 @@ func deletePermission(service *permission_service.Service, sd unitest.SeedData) 
 			},
 		},
 	}
+}
+
+func mustParseCursor(cursorStr, limitStr string) cursor.Cursor {
+	cur, err := cursor.Parse(cursorStr, limitStr)
+	if err != nil {
+		panic(err)
+	}
+
+	return cur
 }

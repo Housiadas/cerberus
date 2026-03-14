@@ -59,6 +59,6 @@ func (a *UseCase) Query(ctx context.Context, qp AppQueryParams) (cursor.Result[A
 		cur,
 		orderBy,
 		func(a Audit) string { return a.ID },
-		func(a Audit) any { return a.ID },
+		auditFieldExtractor(orderBy),
 	), nil
 }

@@ -131,7 +131,7 @@ func NewResult[T any](
 	data []T,
 	limit int,
 	cur Cursor,
-	orderBy order.By,
+	_ order.By,
 	idExtractor func(T) string,
 	fieldExtractor func(T) any,
 ) Result[T] {
