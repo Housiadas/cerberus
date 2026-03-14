@@ -47,6 +47,45 @@ packages:
   github.com/Housiadas/cerberus/internal/core/domain/email_notification_outbox:
     config:
       all: true
+  github.com/Housiadas/cerberus/internal/core/domain/account:
+    config:
+      all: true
+  github.com/Housiadas/cerberus/internal/core/domain/plan:
+    config:
+      all: true
+  github.com/Housiadas/cerberus/internal/core/domain/subscription:
+    config:
+      all: true
+  github.com/Housiadas/cerberus/internal/core/domain/payment_method:
+    config:
+      all: true
+  github.com/Housiadas/cerberus/internal/core/domain/invoice:
+    config:
+      all: true
+  github.com/Housiadas/cerberus/internal/core/domain/invoice_item:
+    config:
+      all: true
+  github.com/Housiadas/cerberus/internal/core/domain/payment:
+    config:
+      all: true
+  github.com/Housiadas/cerberus/internal/core/domain/usage_record:
+    config:
+      all: true
+  github.com/Housiadas/cerberus/internal/core/domain/coupon:
+    config:
+      all: true
+  github.com/Housiadas/cerberus/internal/core/domain/subscription_discount:
+    config:
+      all: true
+  github.com/Housiadas/cerberus/internal/core/domain/tax_rate:
+    config:
+      all: true
+  github.com/Housiadas/cerberus/internal/core/domain/refund:
+    config:
+      all: true
+  github.com/Housiadas/cerberus/internal/core/domain/billing_address:
+    config:
+      all: true
   # pkg directory
   github.com/Housiadas/cerberus/pkg/kafka:
     config:
