@@ -1,4 +1,4 @@
-// Package outbox_repo contains database related CRUD functionality for outbox.
+// Package outbox_repo contains database-related CRUD functionality for outbox.
 package outbox_repo
 
 import (

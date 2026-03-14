@@ -1,0 +1,3 @@
+INSERT INTO billing_addresses
+(id, account_id, line1, line2, city, state, postal_code, country, created_at, updated_at)
+VALUES (:id, :account_id, :line1, :line2, :city, :state, :postal_code, :country, :created_at, :updated_at)
