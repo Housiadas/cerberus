@@ -37,6 +37,7 @@ func TestService_Create_Successful(t *testing.T) {
 		unitest.MustParseEmail("john@example.com"),
 		[]byte("password123"),
 		name.MustParseNull("Engineering"),
+		nil,
 		true,
 		mTime,
 		mTime,

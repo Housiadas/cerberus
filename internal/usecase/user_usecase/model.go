@@ -9,6 +9,7 @@ import (
 	"github.com/Housiadas/cerberus/internal/core/domain/user"
 	"github.com/Housiadas/cerberus/internal/utils/errs"
 	"github.com/Housiadas/cerberus/pkg/clock"
+	"github.com/google/uuid"
 )
 
 // AuthenticateUser defines the data needed to authenticate a user.
@@ -19,14 +20,15 @@ type AuthenticateUser struct {
 
 // User represents information about an individual user.
 type User struct {
-	ID           string `json:"id"`
-	Name         string `json:"name"`
-	Email        string `json:"email"`
-	PasswordHash []byte `json:"-"`
-	Department   string `json:"department"`
-	Enabled      bool   `json:"enabled"`
-	CreatedAt    string `json:"createdAt"`
-	UpdatedAt    string `json:"updatedAt"`
+	ID           string  `json:"id"`
+	Name         string  `json:"name"`
+	Email        string  `json:"email"`
+	PasswordHash []byte  `json:"-"`
+	Department   string  `json:"department"`
+	AccountID    *string `json:"accountId"`
+	Enabled      bool    `json:"enabled"`
+	CreatedAt    string  `json:"createdAt"`
+	UpdatedAt    string  `json:"updatedAt"`
 }
 
 func toAppUser(bus user.User) User {
@@ -36,6 +38,7 @@ func toAppUser(bus user.User) User {
 		Email:        bus.Email().Address,
 		PasswordHash: bus.PasswordHash(),
 		Department:   bus.Department().String(),
+		AccountID:    toStringPtrFromUUID(bus.AccountID()),
 		Enabled:      bus.Enabled(),
 		CreatedAt:    clock.Format(new(bus.CreatedAt())),
 		UpdatedAt:    clock.Format(new(bus.UpdatedAt())),
@@ -49,6 +52,16 @@ func toAppUsers(users []user.User) []User {
 	}
 
 	return app
+}
+
+func toStringPtrFromUUID(id *uuid.UUID) *string {
+	if id == nil {
+		return nil
+	}
+
+	s := id.String()
+
+	return &s
 }
 
 // NewUser defines the data needed to add a new user.

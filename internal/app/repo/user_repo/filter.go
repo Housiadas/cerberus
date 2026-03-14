@@ -52,6 +52,12 @@ func applyFilter(filter user.QueryFilter, data map[string]any, buf *bytes.Buffer
 		wc = append(wc, "email = :email")
 	}
 
+	if filter.AccountID != nil {
+		data["account_id"] = *filter.AccountID
+
+		wc = append(wc, "account_id = :account_id")
+	}
+
 	if filter.StartCreatedDate != nil {
 		data["start_created_at"] = filter.StartCreatedDate.UTC()
 

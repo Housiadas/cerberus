@@ -5,6 +5,7 @@ INSERT INTO users
     email,
     password_hash,
     department,
+    account_id,
     enabled,
     created_at,
     updated_at
@@ -16,6 +17,7 @@ VALUES
     :email,
     :password_hash,
     :department,
+    :account_id,
     :enabled,
     :created_at,
     :updated_at

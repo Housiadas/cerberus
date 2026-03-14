@@ -26,6 +26,7 @@ type User struct {
 	email        mail.Address
 	passwordHash []byte
 	department   name.Null
+	accountID    *uuid.UUID
 	enabled      bool
 	createdAt    time.Time
 	updatedAt    time.Time
@@ -39,6 +40,7 @@ func New(
 	email mail.Address,
 	passwordHash []byte,
 	department name.Null,
+	accountID *uuid.UUID,
 	enabled bool,
 	createdAt time.Time,
 	updatedAt time.Time,
@@ -50,6 +52,7 @@ func New(
 		email:        email,
 		passwordHash: passwordHash,
 		department:   department,
+		accountID:    accountID,
 		enabled:      enabled,
 		createdAt:    createdAt,
 		updatedAt:    updatedAt,
@@ -71,6 +74,9 @@ func (u User) PasswordHash() []byte { return u.passwordHash }
 
 // Department returns the department.
 func (u User) Department() name.Null { return u.department }
+
+// AccountID returns the account ID.
+func (u User) AccountID() *uuid.UUID { return u.accountID }
 
 // Enabled returns whether the user is enabled.
 func (u User) Enabled() bool { return u.enabled }
@@ -108,6 +114,13 @@ func (u User) WithPasswordHash(h []byte) User {
 // WithDepartment returns a new User with the given department.
 func (u User) WithDepartment(d name.Null) User {
 	u.department = d
+
+	return u
+}
+
+// WithAccountID returns a new User with the given account ID.
+func (u User) WithAccountID(id *uuid.UUID) User {
+	u.accountID = id
 
 	return u
 }
@@ -175,6 +188,7 @@ type QueryFilter struct {
 	ID               *uuid.UUID
 	Name             *name.Name
 	Email            *mail.Address
+	AccountID        *uuid.UUID
 	StartCreatedDate *time.Time
 	EndCreatedDate   *time.Time
 }

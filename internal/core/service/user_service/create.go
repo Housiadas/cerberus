@@ -20,7 +20,7 @@ func (c *Service) Create(ctx context.Context, nu user.NewUser) (user.User, error
 	}
 
 	now := c.clock.Now()
-	usr := user.New(id, nu.Name, nu.Email, hash, nu.Department, true, now, now, nil)
+	usr := user.New(id, nu.Name, nu.Email, hash, nu.Department, nil, true, now, now, nil)
 
 	err = c.storer.Create(ctx, usr)
 	if err != nil {

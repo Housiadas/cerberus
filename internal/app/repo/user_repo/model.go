@@ -17,6 +17,7 @@ type userDB struct {
 	Email        string         `db:"email"`
 	PasswordHash []byte         `db:"password_hash"`
 	Department   sql.NullString `db:"department"`
+	AccountID    uuid.NullUUID  `db:"account_id"`
 	Enabled      bool           `db:"enabled"`
 	CreatedAt    time.Time      `db:"created_at"`
 	UpdatedAt    time.Time      `db:"updated_at"`
@@ -33,6 +34,7 @@ func toUserDB(usr user.User) userDB {
 			String: usr.Department().String(),
 			Valid:  usr.Department().Valid(),
 		},
+		AccountID: toNullUUID(usr.AccountID()),
 		Enabled:   usr.Enabled(),
 		CreatedAt: usr.CreatedAt().UTC(),
 		UpdatedAt: usr.UpdatedAt().UTC(),
@@ -61,11 +63,28 @@ func toUserDomain(db userDB) (user.User, error) {
 		addr,
 		db.PasswordHash,
 		department,
+		fromNullUUID(db.AccountID),
 		db.Enabled,
 		db.CreatedAt.In(time.UTC),
 		db.UpdatedAt.In(time.UTC),
 		fromNullTime(db.DeletedAt),
 	), nil
+}
+
+func toNullUUID(id *uuid.UUID) uuid.NullUUID {
+	if id == nil {
+		return uuid.NullUUID{}
+	}
+
+	return uuid.NullUUID{UUID: *id, Valid: true}
+}
+
+func fromNullUUID(nu uuid.NullUUID) *uuid.UUID {
+	if !nu.Valid {
+		return nil
+	}
+
+	return &nu.UUID
 }
 
 func toNullTime(t *time.Time) sql.NullTime {
