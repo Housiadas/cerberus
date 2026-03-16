@@ -111,6 +111,13 @@ func New(ctx context.Context, cfg Config) *Handler {
 	clk := clock.NewClock()
 	uuidGen := uuidgen.NewV7()
 
+	// http clients
+	stripeClient := stripepkg.New(stripepkg.Config{
+		WebhookSecret: cfg.Stripe.WebhookSecret,
+		SecretKey:     cfg.Stripe.SecretKey,
+		Log:           cfg.Log,
+	})
+
 	// repos
 	auditRepo := audit_repo.NewStore(cfg.Log, cfg.DB)
 	outboxRepo := outbox_repo.NewStore(cfg.Log, cfg.DB)
@@ -150,9 +157,6 @@ func New(ctx context.Context, cfg Config) *Handler {
 	accountSvc := account_service.New(cfg.Log, accountRepo, uuidGen, clk)
 	subscriptionSvc := subscription_service.New(cfg.Log, subscriptionRepo)
 	invoiceSvc := invoice_service.New(cfg.Log, invoiceRepo)
-
-	// stripe client
-	stripeClient := stripepkg.New(cfg.Stripe.SecretKey, cfg.Stripe.WebhookSecret)
 
 	// event dispatcher
 	dispatcher := event_dispatcher.New(outboxSvc, auditService)

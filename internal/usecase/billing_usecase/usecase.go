@@ -56,7 +56,7 @@ func (uc *UseCase) CreateAccountWithStripe(
 	ctx context.Context,
 	accountName, email string,
 ) (account.Account, error) {
-	cust, err := uc.stripeClient.CreateCustomer(accountName, email)
+	cust, err := uc.stripeClient.CreateCustomer(ctx, accountName, email)
 	if err != nil {
 		return account.Account{}, errs.Errorf(
 			errs.Internal,
@@ -115,6 +115,7 @@ func (uc *UseCase) CreateCheckoutSession(
 	}
 
 	sess, err := uc.stripeClient.CreateCheckoutSession(
+		ctx,
 		acc.StripeCustomerID().String,
 		req.PriceID,
 		req.SuccessURL,
@@ -156,6 +157,7 @@ func (uc *UseCase) CreatePortalSession(
 	}
 
 	sess, err := uc.stripeClient.CreateCustomerPortalSession(
+		ctx,
 		acc.StripeCustomerID().String,
 		req.ReturnURL,
 	)
