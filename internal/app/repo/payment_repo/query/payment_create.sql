@@ -1,0 +1,26 @@
+INSERT INTO payments
+(
+    id,
+    account_id,
+    stripe_payment_id,
+    stripe_invoice_id,
+    stripe_customer_id,
+    amount,
+    currency,
+    status,
+    created_at,
+    updated_at
+)
+VALUES
+(
+    :id,
+    :account_id,
+    :stripe_payment_id,
+    :stripe_invoice_id,
+    :stripe_customer_id,
+    :amount,
+    :currency,
+    :status,
+    :created_at,
+    :updated_at
+)

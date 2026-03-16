@@ -1,0 +1,26 @@
+INSERT INTO refunds
+(
+    id,
+    account_id,
+    payment_id,
+    stripe_refund_id,
+    amount,
+    currency,
+    status,
+    reason,
+    created_at,
+    updated_at
+)
+VALUES
+(
+    :id,
+    :account_id,
+    :payment_id,
+    :stripe_refund_id,
+    :amount,
+    :currency,
+    :status,
+    :reason,
+    :created_at,
+    :updated_at
+)

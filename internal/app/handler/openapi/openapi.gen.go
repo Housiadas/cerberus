@@ -9,8 +9,10 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/Housiadas/cerberus/internal/usecase/account_usecase"
 	"github.com/Housiadas/cerberus/internal/usecase/audit_usecase"
 	"github.com/Housiadas/cerberus/internal/usecase/auth_usecase"
+	"github.com/Housiadas/cerberus/internal/usecase/billing_usecase"
 	"github.com/Housiadas/cerberus/internal/usecase/permission_usecase"
 	"github.com/Housiadas/cerberus/internal/usecase/role_usecase"
 	"github.com/Housiadas/cerberus/internal/usecase/system_usecase"
@@ -24,6 +26,15 @@ import (
 const (
 	BearerAuthScopes = "BearerAuth.Scopes"
 )
+
+// Account defines model for Account.
+type Account = account_usecase.Account
+
+// AccountPageResult defines model for AccountPageResult.
+type AccountPageResult struct {
+	Data     *[]Account `json:"data,omitempty"`
+	Metadata *Metadata  `json:"metadata,omitempty"`
+}
 
 // AddRolePermissionReq defines model for AddRolePermissionReq.
 type AddRolePermissionReq struct {
@@ -43,6 +54,12 @@ type AuditPageResult struct {
 	Data     *[]Audit  `json:"data,omitempty"`
 	Metadata *Metadata `json:"metadata,omitempty"`
 }
+
+// CheckoutRequest defines model for CheckoutRequest.
+type CheckoutRequest = billing_usecase.CheckoutRequest
+
+// CheckoutResponse defines model for CheckoutResponse.
+type CheckoutResponse = billing_usecase.CheckoutResponse
 
 // Error defines model for Error.
 type Error struct {
@@ -64,6 +81,9 @@ type ForgotPasswordReq = auth_usecase.ForgotPasswordReq
 // Info defines model for Info.
 type Info = system_usecase.Info
 
+// InvoiceResponse defines model for InvoiceResponse.
+type InvoiceResponse = billing_usecase.InvoiceResponse
+
 // LoginReq defines model for LoginReq.
 type LoginReq = auth_usecase.LoginReq
 
@@ -72,6 +92,9 @@ type LogoutReq = auth_usecase.LogoutReq
 
 // Metadata defines model for Metadata.
 type Metadata = cursor.Metadata
+
+// NewAccount defines model for NewAccount.
+type NewAccount = account_usecase.NewAccount
 
 // NewPermission defines model for NewPermission.
 type NewPermission = permission_usecase.NewPermission
@@ -91,6 +114,12 @@ type PermissionPageResult struct {
 	Metadata *Metadata     `json:"metadata,omitempty"`
 }
 
+// PortalRequest defines model for PortalRequest.
+type PortalRequest = billing_usecase.PortalRequest
+
+// PortalResponse defines model for PortalResponse.
+type PortalResponse = billing_usecase.PortalResponse
+
 // RefreshTokenReq defines model for RefreshTokenReq.
 type RefreshTokenReq = auth_usecase.RefreshTokenReq
 
@@ -109,8 +138,14 @@ type RolePageResult struct {
 // Status defines model for Status.
 type Status = system_usecase.Status
 
+// SubscriptionResponse defines model for SubscriptionResponse.
+type SubscriptionResponse = billing_usecase.SubscriptionResponse
+
 // Token defines model for Token.
 type Token = auth_usecase.Token
+
+// UpdateAccount defines model for UpdateAccount.
+type UpdateAccount = account_usecase.UpdateAccount
 
 // UpdateMe defines model for UpdateMe.
 type UpdateMe = user_usecase.UpdateMe
@@ -136,6 +171,15 @@ type UserPageResult struct {
 // ErrorResponse defines model for ErrorResponse.
 type ErrorResponse = Error
 
+// ListAccountsParams defines parameters for ListAccounts.
+type ListAccountsParams struct {
+	Cursor    *string `form:"cursor,omitempty" json:"cursor,omitempty"`
+	Limit     *string `form:"limit,omitempty" json:"limit,omitempty"`
+	OrderBy   *string `form:"orderBy,omitempty" json:"orderBy,omitempty"`
+	AccountId *string `form:"account_id,omitempty" json:"account_id,omitempty"`
+	Name      *string `form:"name,omitempty" json:"name,omitempty"`
+}
+
 // ListAuditsParams defines parameters for ListAudits.
 type ListAuditsParams struct {
 	Cursor    *string `form:"cursor,omitempty" json:"cursor,omitempty"`
@@ -148,6 +192,16 @@ type ListAuditsParams struct {
 	Action    *string `form:"action,omitempty" json:"action,omitempty"`
 	Since     *string `form:"since,omitempty" json:"since,omitempty"`
 	Until     *string `form:"until,omitempty" json:"until,omitempty"`
+}
+
+// ListInvoicesParams defines parameters for ListInvoices.
+type ListInvoicesParams struct {
+	AccountId string `form:"account_id" json:"account_id"`
+}
+
+// ListSubscriptionsParams defines parameters for ListSubscriptions.
+type ListSubscriptionsParams struct {
+	AccountId string `form:"account_id" json:"account_id"`
 }
 
 // ListPermissionsParams defines parameters for ListPermissions.
@@ -190,6 +244,15 @@ type DeleteUserRoleParams struct {
 	RoleId string `form:"role_id" json:"role_id"`
 }
 
+// StripeWebhookJSONBody defines parameters for StripeWebhook.
+type StripeWebhookJSONBody = map[string]interface{}
+
+// CreateAccountJSONRequestBody defines body for CreateAccount for application/json ContentType.
+type CreateAccountJSONRequestBody = NewAccount
+
+// UpdateAccountJSONRequestBody defines body for UpdateAccount for application/json ContentType.
+type UpdateAccountJSONRequestBody = UpdateAccount
+
 // AuthForgotPasswordJSONRequestBody defines body for AuthForgotPassword for application/json ContentType.
 type AuthForgotPasswordJSONRequestBody = ForgotPasswordReq
 
@@ -207,6 +270,12 @@ type AuthRegisterJSONRequestBody = NewUser
 
 // AuthResetPasswordJSONRequestBody defines body for AuthResetPassword for application/json ContentType.
 type AuthResetPasswordJSONRequestBody = ResetPasswordReq
+
+// CreateCheckoutSessionJSONRequestBody defines body for CreateCheckoutSession for application/json ContentType.
+type CreateCheckoutSessionJSONRequestBody = CheckoutRequest
+
+// CreatePortalSessionJSONRequestBody defines body for CreatePortalSession for application/json ContentType.
+type CreatePortalSessionJSONRequestBody = PortalRequest
 
 // CreatePermissionJSONRequestBody defines body for CreatePermission for application/json ContentType.
 type CreatePermissionJSONRequestBody = NewPermission
@@ -235,8 +304,26 @@ type UpdateUserJSONRequestBody = UpdateUser
 // CreateUserRoleJSONRequestBody defines body for CreateUserRole for application/json ContentType.
 type CreateUserRoleJSONRequestBody = AddUserRoleReq
 
+// StripeWebhookJSONRequestBody defines body for StripeWebhook for application/json ContentType.
+type StripeWebhookJSONRequestBody = StripeWebhookJSONBody
+
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
+	// List accounts
+	// (GET /api/v1/accounts)
+	ListAccounts(w http.ResponseWriter, r *http.Request, params ListAccountsParams)
+	// Create account
+	// (POST /api/v1/accounts)
+	CreateAccount(w http.ResponseWriter, r *http.Request)
+	// Delete account
+	// (DELETE /api/v1/accounts/{account_id})
+	DeleteAccount(w http.ResponseWriter, r *http.Request, accountId string)
+	// Get account
+	// (GET /api/v1/accounts/{account_id})
+	GetAccount(w http.ResponseWriter, r *http.Request, accountId string)
+	// Update account
+	// (PUT /api/v1/accounts/{account_id})
+	UpdateAccount(w http.ResponseWriter, r *http.Request, accountId string)
 	// List audits
 	// (GET /api/v1/audits)
 	ListAudits(w http.ResponseWriter, r *http.Request, params ListAuditsParams)
@@ -258,6 +345,18 @@ type ServerInterface interface {
 	// Reset password
 	// (POST /api/v1/auth/reset-password)
 	AuthResetPassword(w http.ResponseWriter, r *http.Request)
+	// Create checkout session
+	// (POST /api/v1/billing/checkout)
+	CreateCheckoutSession(w http.ResponseWriter, r *http.Request)
+	// List invoices
+	// (GET /api/v1/billing/invoices)
+	ListInvoices(w http.ResponseWriter, r *http.Request, params ListInvoicesParams)
+	// Create portal session
+	// (POST /api/v1/billing/portal)
+	CreatePortalSession(w http.ResponseWriter, r *http.Request)
+	// List subscriptions
+	// (GET /api/v1/billing/subscriptions)
+	ListSubscriptions(w http.ResponseWriter, r *http.Request, params ListSubscriptionsParams)
 	// List permissions
 	// (GET /api/v1/permissions)
 	ListPermissions(w http.ResponseWriter, r *http.Request, params ListPermissionsParams)
@@ -321,11 +420,44 @@ type ServerInterface interface {
 	// Readiness check
 	// (GET /readiness)
 	Readiness(w http.ResponseWriter, r *http.Request)
+	// Stripe webhook
+	// (POST /webhooks/stripe)
+	StripeWebhook(w http.ResponseWriter, r *http.Request)
 }
 
 // Unimplemented server implementation that returns http.StatusNotImplemented for each endpoint.
 
 type Unimplemented struct{}
+
+// List accounts
+// (GET /api/v1/accounts)
+func (_ Unimplemented) ListAccounts(w http.ResponseWriter, r *http.Request, params ListAccountsParams) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// Create account
+// (POST /api/v1/accounts)
+func (_ Unimplemented) CreateAccount(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// Delete account
+// (DELETE /api/v1/accounts/{account_id})
+func (_ Unimplemented) DeleteAccount(w http.ResponseWriter, r *http.Request, accountId string) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// Get account
+// (GET /api/v1/accounts/{account_id})
+func (_ Unimplemented) GetAccount(w http.ResponseWriter, r *http.Request, accountId string) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// Update account
+// (PUT /api/v1/accounts/{account_id})
+func (_ Unimplemented) UpdateAccount(w http.ResponseWriter, r *http.Request, accountId string) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
 
 // List audits
 // (GET /api/v1/audits)
@@ -366,6 +498,30 @@ func (_ Unimplemented) AuthRegister(w http.ResponseWriter, r *http.Request) {
 // Reset password
 // (POST /api/v1/auth/reset-password)
 func (_ Unimplemented) AuthResetPassword(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// Create checkout session
+// (POST /api/v1/billing/checkout)
+func (_ Unimplemented) CreateCheckoutSession(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// List invoices
+// (GET /api/v1/billing/invoices)
+func (_ Unimplemented) ListInvoices(w http.ResponseWriter, r *http.Request, params ListInvoicesParams) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// Create portal session
+// (POST /api/v1/billing/portal)
+func (_ Unimplemented) CreatePortalSession(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// List subscriptions
+// (GET /api/v1/billing/subscriptions)
+func (_ Unimplemented) ListSubscriptions(w http.ResponseWriter, r *http.Request, params ListSubscriptionsParams) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -495,6 +651,12 @@ func (_ Unimplemented) Readiness(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
+// Stripe webhook
+// (POST /webhooks/stripe)
+func (_ Unimplemented) StripeWebhook(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
 // ServerInterfaceWrapper converts contexts to parameters.
 type ServerInterfaceWrapper struct {
 	Handler            ServerInterface
@@ -503,6 +665,184 @@ type ServerInterfaceWrapper struct {
 }
 
 type MiddlewareFunc func(http.Handler) http.Handler
+
+// ListAccounts operation middleware
+func (siw *ServerInterfaceWrapper) ListAccounts(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, BearerAuthScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params ListAccountsParams
+
+	// ------------- Optional query parameter "cursor" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "cursor", r.URL.Query(), &params.Cursor, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "cursor", Err: err})
+		return
+	}
+
+	// ------------- Optional query parameter "limit" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "limit", r.URL.Query(), &params.Limit, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "limit", Err: err})
+		return
+	}
+
+	// ------------- Optional query parameter "orderBy" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "orderBy", r.URL.Query(), &params.OrderBy, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "orderBy", Err: err})
+		return
+	}
+
+	// ------------- Optional query parameter "account_id" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "account_id", r.URL.Query(), &params.AccountId, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "account_id", Err: err})
+		return
+	}
+
+	// ------------- Optional query parameter "name" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "name", r.URL.Query(), &params.Name, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "name", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ListAccounts(w, r, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// CreateAccount operation middleware
+func (siw *ServerInterfaceWrapper) CreateAccount(w http.ResponseWriter, r *http.Request) {
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, BearerAuthScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.CreateAccount(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// DeleteAccount operation middleware
+func (siw *ServerInterfaceWrapper) DeleteAccount(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+
+	// ------------- Path parameter "account_id" -------------
+	var accountId string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "account_id", chi.URLParam(r, "account_id"), &accountId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "account_id", Err: err})
+		return
+	}
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, BearerAuthScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.DeleteAccount(w, r, accountId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetAccount operation middleware
+func (siw *ServerInterfaceWrapper) GetAccount(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+
+	// ------------- Path parameter "account_id" -------------
+	var accountId string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "account_id", chi.URLParam(r, "account_id"), &accountId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "account_id", Err: err})
+		return
+	}
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, BearerAuthScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetAccount(w, r, accountId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// UpdateAccount operation middleware
+func (siw *ServerInterfaceWrapper) UpdateAccount(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+
+	// ------------- Path parameter "account_id" -------------
+	var accountId string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "account_id", chi.URLParam(r, "account_id"), &accountId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "account_id", Err: err})
+		return
+	}
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, BearerAuthScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.UpdateAccount(w, r, accountId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
 
 // ListAudits operation middleware
 func (siw *ServerInterfaceWrapper) ListAudits(w http.ResponseWriter, r *http.Request) {
@@ -690,6 +1030,126 @@ func (siw *ServerInterfaceWrapper) AuthResetPassword(w http.ResponseWriter, r *h
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.AuthResetPassword(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// CreateCheckoutSession operation middleware
+func (siw *ServerInterfaceWrapper) CreateCheckoutSession(w http.ResponseWriter, r *http.Request) {
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, BearerAuthScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.CreateCheckoutSession(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ListInvoices operation middleware
+func (siw *ServerInterfaceWrapper) ListInvoices(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, BearerAuthScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params ListInvoicesParams
+
+	// ------------- Required query parameter "account_id" -------------
+
+	if paramValue := r.URL.Query().Get("account_id"); paramValue != "" {
+
+	} else {
+		siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "account_id"})
+		return
+	}
+
+	err = runtime.BindQueryParameterWithOptions("form", true, true, "account_id", r.URL.Query(), &params.AccountId, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "account_id", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ListInvoices(w, r, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// CreatePortalSession operation middleware
+func (siw *ServerInterfaceWrapper) CreatePortalSession(w http.ResponseWriter, r *http.Request) {
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, BearerAuthScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.CreatePortalSession(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ListSubscriptions operation middleware
+func (siw *ServerInterfaceWrapper) ListSubscriptions(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, BearerAuthScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params ListSubscriptionsParams
+
+	// ------------- Required query parameter "account_id" -------------
+
+	if paramValue := r.URL.Query().Get("account_id"); paramValue != "" {
+
+	} else {
+		siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "account_id"})
+		return
+	}
+
+	err = runtime.BindQueryParameterWithOptions("form", true, true, "account_id", r.URL.Query(), &params.AccountId, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "account_id", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ListSubscriptions(w, r, params)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -1423,6 +1883,20 @@ func (siw *ServerInterfaceWrapper) Readiness(w http.ResponseWriter, r *http.Requ
 	handler.ServeHTTP(w, r)
 }
 
+// StripeWebhook operation middleware
+func (siw *ServerInterfaceWrapper) StripeWebhook(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.StripeWebhook(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 type UnescapedCookieParamError struct {
 	ParamName string
 	Err       error
@@ -1537,6 +2011,21 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	}
 
 	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/v1/accounts", wrapper.ListAccounts)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/api/v1/accounts", wrapper.CreateAccount)
+	})
+	r.Group(func(r chi.Router) {
+		r.Delete(options.BaseURL+"/api/v1/accounts/{account_id}", wrapper.DeleteAccount)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/v1/accounts/{account_id}", wrapper.GetAccount)
+	})
+	r.Group(func(r chi.Router) {
+		r.Put(options.BaseURL+"/api/v1/accounts/{account_id}", wrapper.UpdateAccount)
+	})
+	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/api/v1/audits", wrapper.ListAudits)
 	})
 	r.Group(func(r chi.Router) {
@@ -1556,6 +2045,18 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	})
 	r.Group(func(r chi.Router) {
 		r.Post(options.BaseURL+"/api/v1/auth/reset-password", wrapper.AuthResetPassword)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/api/v1/billing/checkout", wrapper.CreateCheckoutSession)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/v1/billing/invoices", wrapper.ListInvoices)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/api/v1/billing/portal", wrapper.CreatePortalSession)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/v1/billing/subscriptions", wrapper.ListSubscriptions)
 	})
 	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/api/v1/permissions", wrapper.ListPermissions)
@@ -1620,11 +2121,159 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/readiness", wrapper.Readiness)
 	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/webhooks/stripe", wrapper.StripeWebhook)
+	})
 
 	return r
 }
 
 type ErrorResponseJSONResponse Error
+
+type ListAccountsRequestObject struct {
+	Params ListAccountsParams
+}
+
+type ListAccountsResponseObject interface {
+	VisitListAccountsResponse(w http.ResponseWriter) error
+}
+
+type ListAccounts200JSONResponse AccountPageResult
+
+func (response ListAccounts200JSONResponse) VisitListAccountsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ListAccountsdefaultJSONResponse struct {
+	Body       Error
+	StatusCode int
+}
+
+func (response ListAccountsdefaultJSONResponse) VisitListAccountsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+
+	return json.NewEncoder(w).Encode(response.Body)
+}
+
+type CreateAccountRequestObject struct {
+	Body *CreateAccountJSONRequestBody
+}
+
+type CreateAccountResponseObject interface {
+	VisitCreateAccountResponse(w http.ResponseWriter) error
+}
+
+type CreateAccount200JSONResponse Account
+
+func (response CreateAccount200JSONResponse) VisitCreateAccountResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateAccountdefaultJSONResponse struct {
+	Body       Error
+	StatusCode int
+}
+
+func (response CreateAccountdefaultJSONResponse) VisitCreateAccountResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+
+	return json.NewEncoder(w).Encode(response.Body)
+}
+
+type DeleteAccountRequestObject struct {
+	AccountId string `json:"account_id"`
+}
+
+type DeleteAccountResponseObject interface {
+	VisitDeleteAccountResponse(w http.ResponseWriter) error
+}
+
+type DeleteAccount204Response struct {
+}
+
+func (response DeleteAccount204Response) VisitDeleteAccountResponse(w http.ResponseWriter) error {
+	w.WriteHeader(204)
+	return nil
+}
+
+type DeleteAccountdefaultJSONResponse struct {
+	Body       Error
+	StatusCode int
+}
+
+func (response DeleteAccountdefaultJSONResponse) VisitDeleteAccountResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+
+	return json.NewEncoder(w).Encode(response.Body)
+}
+
+type GetAccountRequestObject struct {
+	AccountId string `json:"account_id"`
+}
+
+type GetAccountResponseObject interface {
+	VisitGetAccountResponse(w http.ResponseWriter) error
+}
+
+type GetAccount200JSONResponse Account
+
+func (response GetAccount200JSONResponse) VisitGetAccountResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetAccountdefaultJSONResponse struct {
+	Body       Error
+	StatusCode int
+}
+
+func (response GetAccountdefaultJSONResponse) VisitGetAccountResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+
+	return json.NewEncoder(w).Encode(response.Body)
+}
+
+type UpdateAccountRequestObject struct {
+	AccountId string `json:"account_id"`
+	Body      *UpdateAccountJSONRequestBody
+}
+
+type UpdateAccountResponseObject interface {
+	VisitUpdateAccountResponse(w http.ResponseWriter) error
+}
+
+type UpdateAccount200JSONResponse Account
+
+func (response UpdateAccount200JSONResponse) VisitUpdateAccountResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type UpdateAccountdefaultJSONResponse struct {
+	Body       Error
+	StatusCode int
+}
+
+func (response UpdateAccountdefaultJSONResponse) VisitUpdateAccountResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+
+	return json.NewEncoder(w).Encode(response.Body)
+}
 
 type ListAuditsRequestObject struct {
 	Params ListAuditsParams
@@ -1820,6 +2469,122 @@ type AuthResetPassworddefaultJSONResponse struct {
 }
 
 func (response AuthResetPassworddefaultJSONResponse) VisitAuthResetPasswordResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+
+	return json.NewEncoder(w).Encode(response.Body)
+}
+
+type CreateCheckoutSessionRequestObject struct {
+	Body *CreateCheckoutSessionJSONRequestBody
+}
+
+type CreateCheckoutSessionResponseObject interface {
+	VisitCreateCheckoutSessionResponse(w http.ResponseWriter) error
+}
+
+type CreateCheckoutSession200JSONResponse CheckoutResponse
+
+func (response CreateCheckoutSession200JSONResponse) VisitCreateCheckoutSessionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateCheckoutSessiondefaultJSONResponse struct {
+	Body       Error
+	StatusCode int
+}
+
+func (response CreateCheckoutSessiondefaultJSONResponse) VisitCreateCheckoutSessionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+
+	return json.NewEncoder(w).Encode(response.Body)
+}
+
+type ListInvoicesRequestObject struct {
+	Params ListInvoicesParams
+}
+
+type ListInvoicesResponseObject interface {
+	VisitListInvoicesResponse(w http.ResponseWriter) error
+}
+
+type ListInvoices200JSONResponse []InvoiceResponse
+
+func (response ListInvoices200JSONResponse) VisitListInvoicesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ListInvoicesdefaultJSONResponse struct {
+	Body       Error
+	StatusCode int
+}
+
+func (response ListInvoicesdefaultJSONResponse) VisitListInvoicesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+
+	return json.NewEncoder(w).Encode(response.Body)
+}
+
+type CreatePortalSessionRequestObject struct {
+	Body *CreatePortalSessionJSONRequestBody
+}
+
+type CreatePortalSessionResponseObject interface {
+	VisitCreatePortalSessionResponse(w http.ResponseWriter) error
+}
+
+type CreatePortalSession200JSONResponse PortalResponse
+
+func (response CreatePortalSession200JSONResponse) VisitCreatePortalSessionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreatePortalSessiondefaultJSONResponse struct {
+	Body       Error
+	StatusCode int
+}
+
+func (response CreatePortalSessiondefaultJSONResponse) VisitCreatePortalSessionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+
+	return json.NewEncoder(w).Encode(response.Body)
+}
+
+type ListSubscriptionsRequestObject struct {
+	Params ListSubscriptionsParams
+}
+
+type ListSubscriptionsResponseObject interface {
+	VisitListSubscriptionsResponse(w http.ResponseWriter) error
+}
+
+type ListSubscriptions200JSONResponse []SubscriptionResponse
+
+func (response ListSubscriptions200JSONResponse) VisitListSubscriptionsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ListSubscriptionsdefaultJSONResponse struct {
+	Body       Error
+	StatusCode int
+}
+
+func (response ListSubscriptionsdefaultJSONResponse) VisitListSubscriptionsResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(response.StatusCode)
 
@@ -2432,8 +3197,51 @@ func (response ReadinessdefaultJSONResponse) VisitReadinessResponse(w http.Respo
 	return json.NewEncoder(w).Encode(response.Body)
 }
 
+type StripeWebhookRequestObject struct {
+	Body *StripeWebhookJSONRequestBody
+}
+
+type StripeWebhookResponseObject interface {
+	VisitStripeWebhookResponse(w http.ResponseWriter) error
+}
+
+type StripeWebhook200Response struct {
+}
+
+func (response StripeWebhook200Response) VisitStripeWebhookResponse(w http.ResponseWriter) error {
+	w.WriteHeader(200)
+	return nil
+}
+
+type StripeWebhookdefaultJSONResponse struct {
+	Body       Error
+	StatusCode int
+}
+
+func (response StripeWebhookdefaultJSONResponse) VisitStripeWebhookResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+
+	return json.NewEncoder(w).Encode(response.Body)
+}
+
 // StrictServerInterface represents all server handlers.
 type StrictServerInterface interface {
+	// List accounts
+	// (GET /api/v1/accounts)
+	ListAccounts(ctx context.Context, request ListAccountsRequestObject) (ListAccountsResponseObject, error)
+	// Create account
+	// (POST /api/v1/accounts)
+	CreateAccount(ctx context.Context, request CreateAccountRequestObject) (CreateAccountResponseObject, error)
+	// Delete account
+	// (DELETE /api/v1/accounts/{account_id})
+	DeleteAccount(ctx context.Context, request DeleteAccountRequestObject) (DeleteAccountResponseObject, error)
+	// Get account
+	// (GET /api/v1/accounts/{account_id})
+	GetAccount(ctx context.Context, request GetAccountRequestObject) (GetAccountResponseObject, error)
+	// Update account
+	// (PUT /api/v1/accounts/{account_id})
+	UpdateAccount(ctx context.Context, request UpdateAccountRequestObject) (UpdateAccountResponseObject, error)
 	// List audits
 	// (GET /api/v1/audits)
 	ListAudits(ctx context.Context, request ListAuditsRequestObject) (ListAuditsResponseObject, error)
@@ -2455,6 +3263,18 @@ type StrictServerInterface interface {
 	// Reset password
 	// (POST /api/v1/auth/reset-password)
 	AuthResetPassword(ctx context.Context, request AuthResetPasswordRequestObject) (AuthResetPasswordResponseObject, error)
+	// Create checkout session
+	// (POST /api/v1/billing/checkout)
+	CreateCheckoutSession(ctx context.Context, request CreateCheckoutSessionRequestObject) (CreateCheckoutSessionResponseObject, error)
+	// List invoices
+	// (GET /api/v1/billing/invoices)
+	ListInvoices(ctx context.Context, request ListInvoicesRequestObject) (ListInvoicesResponseObject, error)
+	// Create portal session
+	// (POST /api/v1/billing/portal)
+	CreatePortalSession(ctx context.Context, request CreatePortalSessionRequestObject) (CreatePortalSessionResponseObject, error)
+	// List subscriptions
+	// (GET /api/v1/billing/subscriptions)
+	ListSubscriptions(ctx context.Context, request ListSubscriptionsRequestObject) (ListSubscriptionsResponseObject, error)
 	// List permissions
 	// (GET /api/v1/permissions)
 	ListPermissions(ctx context.Context, request ListPermissionsRequestObject) (ListPermissionsResponseObject, error)
@@ -2518,6 +3338,9 @@ type StrictServerInterface interface {
 	// Readiness check
 	// (GET /readiness)
 	Readiness(ctx context.Context, request ReadinessRequestObject) (ReadinessResponseObject, error)
+	// Stripe webhook
+	// (POST /webhooks/stripe)
+	StripeWebhook(ctx context.Context, request StripeWebhookRequestObject) (StripeWebhookResponseObject, error)
 }
 
 type StrictHandlerFunc = strictnethttp.StrictHTTPHandlerFunc
@@ -2547,6 +3370,148 @@ type strictHandler struct {
 	ssi         StrictServerInterface
 	middlewares []StrictMiddlewareFunc
 	options     StrictHTTPServerOptions
+}
+
+// ListAccounts operation middleware
+func (sh *strictHandler) ListAccounts(w http.ResponseWriter, r *http.Request, params ListAccountsParams) {
+	var request ListAccountsRequestObject
+
+	request.Params = params
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.ListAccounts(ctx, request.(ListAccountsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ListAccounts")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(ListAccountsResponseObject); ok {
+		if err := validResponse.VisitListAccountsResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// CreateAccount operation middleware
+func (sh *strictHandler) CreateAccount(w http.ResponseWriter, r *http.Request) {
+	var request CreateAccountRequestObject
+
+	var body CreateAccountJSONRequestBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.CreateAccount(ctx, request.(CreateAccountRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "CreateAccount")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(CreateAccountResponseObject); ok {
+		if err := validResponse.VisitCreateAccountResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// DeleteAccount operation middleware
+func (sh *strictHandler) DeleteAccount(w http.ResponseWriter, r *http.Request, accountId string) {
+	var request DeleteAccountRequestObject
+
+	request.AccountId = accountId
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.DeleteAccount(ctx, request.(DeleteAccountRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "DeleteAccount")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(DeleteAccountResponseObject); ok {
+		if err := validResponse.VisitDeleteAccountResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetAccount operation middleware
+func (sh *strictHandler) GetAccount(w http.ResponseWriter, r *http.Request, accountId string) {
+	var request GetAccountRequestObject
+
+	request.AccountId = accountId
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.GetAccount(ctx, request.(GetAccountRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetAccount")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(GetAccountResponseObject); ok {
+		if err := validResponse.VisitGetAccountResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// UpdateAccount operation middleware
+func (sh *strictHandler) UpdateAccount(w http.ResponseWriter, r *http.Request, accountId string) {
+	var request UpdateAccountRequestObject
+
+	request.AccountId = accountId
+
+	var body UpdateAccountJSONRequestBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.UpdateAccount(ctx, request.(UpdateAccountRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "UpdateAccount")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(UpdateAccountResponseObject); ok {
+		if err := validResponse.VisitUpdateAccountResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
 }
 
 // ListAudits operation middleware
@@ -2754,6 +3719,120 @@ func (sh *strictHandler) AuthResetPassword(w http.ResponseWriter, r *http.Reques
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
 	} else if validResponse, ok := response.(AuthResetPasswordResponseObject); ok {
 		if err := validResponse.VisitAuthResetPasswordResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// CreateCheckoutSession operation middleware
+func (sh *strictHandler) CreateCheckoutSession(w http.ResponseWriter, r *http.Request) {
+	var request CreateCheckoutSessionRequestObject
+
+	var body CreateCheckoutSessionJSONRequestBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.CreateCheckoutSession(ctx, request.(CreateCheckoutSessionRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "CreateCheckoutSession")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(CreateCheckoutSessionResponseObject); ok {
+		if err := validResponse.VisitCreateCheckoutSessionResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ListInvoices operation middleware
+func (sh *strictHandler) ListInvoices(w http.ResponseWriter, r *http.Request, params ListInvoicesParams) {
+	var request ListInvoicesRequestObject
+
+	request.Params = params
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.ListInvoices(ctx, request.(ListInvoicesRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ListInvoices")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(ListInvoicesResponseObject); ok {
+		if err := validResponse.VisitListInvoicesResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// CreatePortalSession operation middleware
+func (sh *strictHandler) CreatePortalSession(w http.ResponseWriter, r *http.Request) {
+	var request CreatePortalSessionRequestObject
+
+	var body CreatePortalSessionJSONRequestBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.CreatePortalSession(ctx, request.(CreatePortalSessionRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "CreatePortalSession")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(CreatePortalSessionResponseObject); ok {
+		if err := validResponse.VisitCreatePortalSessionResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ListSubscriptions operation middleware
+func (sh *strictHandler) ListSubscriptions(w http.ResponseWriter, r *http.Request, params ListSubscriptionsParams) {
+	var request ListSubscriptionsRequestObject
+
+	request.Params = params
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.ListSubscriptions(ctx, request.(ListSubscriptionsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ListSubscriptions")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(ListSubscriptionsResponseObject); ok {
+		if err := validResponse.VisitListSubscriptionsResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {
@@ -3351,6 +4430,37 @@ func (sh *strictHandler) Readiness(w http.ResponseWriter, r *http.Request) {
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
 	} else if validResponse, ok := response.(ReadinessResponseObject); ok {
 		if err := validResponse.VisitReadinessResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// StripeWebhook operation middleware
+func (sh *strictHandler) StripeWebhook(w http.ResponseWriter, r *http.Request) {
+	var request StripeWebhookRequestObject
+
+	var body StripeWebhookJSONRequestBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.StripeWebhook(ctx, request.(StripeWebhookRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "StripeWebhook")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(StripeWebhookResponseObject); ok {
+		if err := validResponse.VisitStripeWebhookResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {

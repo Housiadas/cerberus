@@ -38,6 +38,7 @@ func TestService_Create_Successful(t *testing.T) {
 		[]byte("password123"),
 		name.MustParseNull("Engineering"),
 		true,
+		nil,
 		mTime,
 		mTime,
 		nil,

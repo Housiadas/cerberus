@@ -513,6 +513,15 @@ github.com/stretchr/testify/assert
 github.com/stretchr/testify/assert/yaml
 github.com/stretchr/testify/mock
 github.com/stretchr/testify/require
+# github.com/stripe/stripe-go/v82 v82.5.1
+## explicit; go 1.18
+github.com/stripe/stripe-go/v82
+github.com/stripe/stripe-go/v82/billingportal/session
+github.com/stripe/stripe-go/v82/checkout/session
+github.com/stripe/stripe-go/v82/customer
+github.com/stripe/stripe-go/v82/form
+github.com/stripe/stripe-go/v82/subscription
+github.com/stripe/stripe-go/v82/webhook
 # github.com/subosito/gotenv v1.6.0
 ## explicit; go 1.18
 github.com/subosito/gotenv

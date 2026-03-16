@@ -27,6 +27,7 @@ type User struct {
 	passwordHash []byte
 	department   name.Null
 	enabled      bool
+	accountID    *uuid.UUID
 	createdAt    time.Time
 	updatedAt    time.Time
 	deletedAt    *time.Time
@@ -40,6 +41,7 @@ func New(
 	passwordHash []byte,
 	department name.Null,
 	enabled bool,
+	accountID *uuid.UUID,
 	createdAt time.Time,
 	updatedAt time.Time,
 	deletedAt *time.Time,
@@ -51,6 +53,7 @@ func New(
 		passwordHash: passwordHash,
 		department:   department,
 		enabled:      enabled,
+		accountID:    accountID,
 		createdAt:    createdAt,
 		updatedAt:    updatedAt,
 		deletedAt:    deletedAt,
@@ -74,6 +77,9 @@ func (u User) Department() name.Null { return u.department }
 
 // Enabled returns whether the user is enabled.
 func (u User) Enabled() bool { return u.enabled }
+
+// AccountID returns the account ID.
+func (u User) AccountID() *uuid.UUID { return u.accountID }
 
 // CreatedAt returns the creation time.
 func (u User) CreatedAt() time.Time { return u.createdAt }
@@ -115,6 +121,13 @@ func (u User) WithDepartment(d name.Null) User {
 // WithEnabled returns a new User with the given enabled state.
 func (u User) WithEnabled(e bool) User {
 	u.enabled = e
+
+	return u
+}
+
+// WithAccountID returns a new User with the given account ID.
+func (u User) WithAccountID(id *uuid.UUID) User {
+	u.accountID = id
 
 	return u
 }
