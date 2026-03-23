@@ -168,6 +168,7 @@ func run(ctx context.Context, log *logger.Service) error {
 		Meter:             tel.MeterProvider().Meter(cfg.App.Name),
 		AccessTokenSecret: jwtSecret,
 		FrontendURL:       cfg.App.FrontendURL,
+		Stripe:            cfg.Stripe,
 	})
 
 	api := http.Server{

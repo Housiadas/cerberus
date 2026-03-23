@@ -656,6 +656,249 @@ paths:
         default:
           $ref: '#/components/responses/ErrorResponse'
 
+  # ---- Accounts ----
+  /api/v1/accounts:
+    post:
+      operationId: createAccount
+      tags: [Accounts]
+      summary: Create account
+      description: Create a new account with Stripe customer
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewAccount'
+      responses:
+        '200':
+          description: Account created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Account'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
+    get:
+      operationId: listAccounts
+      tags: [Accounts]
+      summary: List accounts
+      description: Search accounts
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: cursor
+          in: query
+          schema:
+            type: string
+        - name: limit
+          in: query
+          schema:
+            type: string
+        - name: orderBy
+          in: query
+          schema:
+            type: string
+        - name: account_id
+          in: query
+          schema:
+            type: string
+        - name: name
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Accounts list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountPageResult'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
+  /api/v1/accounts/{account_id}:
+    parameters:
+      - name: account_id
+        in: path
+        required: true
+        schema:
+          type: string
+
+    get:
+      operationId: getAccount
+      tags: [Accounts]
+      summary: Get account
+      description: Get account by ID
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Account found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Account'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
+    put:
+      operationId: updateAccount
+      tags: [Accounts]
+      summary: Update account
+      description: Update an existing account
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateAccount'
+      responses:
+        '200':
+          description: Account updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Account'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
+    delete:
+      operationId: deleteAccount
+      tags: [Accounts]
+      summary: Delete account
+      description: Delete an account
+      security:
+        - BearerAuth: []
+      responses:
+        '204':
+          description: Account deleted
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
+  # ---- Billing ----
+  /api/v1/billing/checkout:
+    post:
+      operationId: createCheckoutSession
+      tags: [Billing]
+      summary: Create checkout session
+      description: Create a Stripe Checkout session
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CheckoutRequest'
+      responses:
+        '200':
+          description: Checkout session created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CheckoutResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
+  /api/v1/billing/portal:
+    post:
+      operationId: createPortalSession
+      tags: [Billing]
+      summary: Create portal session
+      description: Create a Stripe Customer Portal session
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PortalRequest'
+      responses:
+        '200':
+          description: Portal session created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PortalResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
+  /api/v1/billing/subscriptions:
+    get:
+      operationId: listSubscriptions
+      tags: [Billing]
+      summary: List subscriptions
+      description: List subscriptions for an account
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: account_id
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Subscriptions list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SubscriptionResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
+  /api/v1/billing/invoices:
+    get:
+      operationId: listInvoices
+      tags: [Billing]
+      summary: List invoices
+      description: List invoices for an account
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: account_id
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Invoices list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/InvoiceResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
+  /webhooks/stripe:
+    post:
+      operationId: stripeWebhook
+      tags: [Webhooks]
+      summary: Stripe webhook
+      description: Handle Stripe webhook events
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Webhook processed
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
   # ---- Audits ----
   /api/v1/audits:
     get:
@@ -1063,6 +1306,148 @@ components:
             $ref: '#/components/schemas/Audit'
         metadata:
           $ref: '#/components/schemas/Metadata'
+
+    # ---- Accounts ----
+    NewAccount:
+      x-go-type: account_usecase.NewAccount
+      x-go-type-import:
+        path: github.com/Housiadas/cerberus/internal/usecase/account_usecase
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+
+    UpdateAccount:
+      x-go-type: account_usecase.UpdateAccount
+      x-go-type-import:
+        path: github.com/Housiadas/cerberus/internal/usecase/account_usecase
+      type: object
+      properties:
+        name:
+          type: string
+
+    Account:
+      x-go-type: account_usecase.Account
+      x-go-type-import:
+        path: github.com/Housiadas/cerberus/internal/usecase/account_usecase
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        stripeCustomerId:
+          type: string
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+
+    AccountPageResult:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Account'
+        metadata:
+          $ref: '#/components/schemas/Metadata'
+
+    # ---- Billing ----
+    CheckoutRequest:
+      x-go-type: billing_usecase.CheckoutRequest
+      x-go-type-import:
+        path: github.com/Housiadas/cerberus/internal/usecase/billing_usecase
+      type: object
+      required: [accountId, priceId, successUrl, cancelUrl]
+      properties:
+        accountId:
+          type: string
+        priceId:
+          type: string
+        successUrl:
+          type: string
+        cancelUrl:
+          type: string
+
+    CheckoutResponse:
+      x-go-type: billing_usecase.CheckoutResponse
+      x-go-type-import:
+        path: github.com/Housiadas/cerberus/internal/usecase/billing_usecase
+      type: object
+      properties:
+        url:
+          type: string
+
+    PortalRequest:
+      x-go-type: billing_usecase.PortalRequest
+      x-go-type-import:
+        path: github.com/Housiadas/cerberus/internal/usecase/billing_usecase
+      type: object
+      required: [accountId, returnUrl]
+      properties:
+        accountId:
+          type: string
+        returnUrl:
+          type: string
+
+    PortalResponse:
+      x-go-type: billing_usecase.PortalResponse
+      x-go-type-import:
+        path: github.com/Housiadas/cerberus/internal/usecase/billing_usecase
+      type: object
+      properties:
+        url:
+          type: string
+
+    SubscriptionResponse:
+      x-go-type: billing_usecase.SubscriptionResponse
+      x-go-type-import:
+        path: github.com/Housiadas/cerberus/internal/usecase/billing_usecase
+      type: object
+      properties:
+        id:
+          type: string
+        stripeSubscriptionId:
+          type: string
+        stripePriceId:
+          type: string
+        status:
+          type: string
+        currentPeriodStart:
+          type: string
+        currentPeriodEnd:
+          type: string
+        cancelAtPeriodEnd:
+          type: boolean
+        createdAt:
+          type: string
+
+    InvoiceResponse:
+      x-go-type: billing_usecase.InvoiceResponse
+      x-go-type-import:
+        path: github.com/Housiadas/cerberus/internal/usecase/billing_usecase
+      type: object
+      properties:
+        id:
+          type: string
+        stripeInvoiceId:
+          type: string
+        status:
+          type: string
+        amountDue:
+          type: integer
+          format: int64
+        amountPaid:
+          type: integer
+          format: int64
+        currency:
+          type: string
+        invoiceUrl:
+          type: string
+        createdAt:
+          type: string
 
     # ---- Common ----
     Metadata:

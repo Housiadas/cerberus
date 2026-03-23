@@ -21,6 +21,7 @@ type Config struct {
 	Collector Collector
 	Cors      CorsSettings
 	Email     Email
+	Stripe    Stripe
 }
 
 // LoadConfig reads configuration from file or environment variables.

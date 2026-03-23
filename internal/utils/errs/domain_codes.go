@@ -42,4 +42,7 @@ const (
 	CodePermissionDenied = "permission.denied"
 	// CodePermissionCheckErr represents a permission check error.
 	CodePermissionCheckErr = "permission.check_error"
+
+	// CodeAccountNotFound represents an account not found error.
+	CodeAccountNotFound = "account.not_found"
 )

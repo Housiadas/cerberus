@@ -1,5 +1,4 @@
 .idea/
-.claude/
 tls/
 keys/
 bin/
@@ -8,12 +7,17 @@ tools/bin
 tmp/
 cmd/cli/cmd
 
+# config
 .env
 app.env
 config.yaml
 config.yml
 
+# coverage
 cover.out
 coverage.out
 filtered.out
 cover.html
+
+# claude
+.claude/settings.local.json

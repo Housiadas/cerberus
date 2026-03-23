@@ -11,31 +11,39 @@ import (
 	"github.com/Housiadas/cerberus/internal/app/event_dispatcher"
 	"github.com/Housiadas/cerberus/internal/app/handler/openapi"
 	"github.com/Housiadas/cerberus/internal/app/middleware"
+	"github.com/Housiadas/cerberus/internal/app/repo/account_repo"
 	"github.com/Housiadas/cerberus/internal/app/repo/audit_repo"
 	"github.com/Housiadas/cerberus/internal/app/repo/email_notification_outbox_repo"
+	"github.com/Housiadas/cerberus/internal/app/repo/invoice_repo"
 	"github.com/Housiadas/cerberus/internal/app/repo/outbox_repo"
 	"github.com/Housiadas/cerberus/internal/app/repo/permission_repo"
 	"github.com/Housiadas/cerberus/internal/app/repo/refresh_token_repo"
 	"github.com/Housiadas/cerberus/internal/app/repo/reset_token_repo"
 	"github.com/Housiadas/cerberus/internal/app/repo/role_permissions_repo"
 	"github.com/Housiadas/cerberus/internal/app/repo/role_repo"
+	"github.com/Housiadas/cerberus/internal/app/repo/subscription_repo"
 	"github.com/Housiadas/cerberus/internal/app/repo/user_repo"
 	"github.com/Housiadas/cerberus/internal/app/repo/user_roles_permissions_repo"
 	"github.com/Housiadas/cerberus/internal/app/repo/user_roles_repo"
 	"github.com/Housiadas/cerberus/internal/config"
+	"github.com/Housiadas/cerberus/internal/core/service/account_service"
 	"github.com/Housiadas/cerberus/internal/core/service/audit_service"
 	"github.com/Housiadas/cerberus/internal/core/service/email_notification_outbox_service"
+	"github.com/Housiadas/cerberus/internal/core/service/invoice_service"
 	"github.com/Housiadas/cerberus/internal/core/service/outbox_service"
 	"github.com/Housiadas/cerberus/internal/core/service/permission_service"
 	"github.com/Housiadas/cerberus/internal/core/service/refresh_token_service"
 	"github.com/Housiadas/cerberus/internal/core/service/reset_token_service"
 	"github.com/Housiadas/cerberus/internal/core/service/role_permissions_service"
 	"github.com/Housiadas/cerberus/internal/core/service/role_service"
+	"github.com/Housiadas/cerberus/internal/core/service/subscription_service"
 	"github.com/Housiadas/cerberus/internal/core/service/user_roles_permissions_service"
 	"github.com/Housiadas/cerberus/internal/core/service/user_roles_service"
 	"github.com/Housiadas/cerberus/internal/core/service/user_service"
+	"github.com/Housiadas/cerberus/internal/usecase/account_usecase"
 	"github.com/Housiadas/cerberus/internal/usecase/audit_usecase"
 	"github.com/Housiadas/cerberus/internal/usecase/auth_usecase"
+	"github.com/Housiadas/cerberus/internal/usecase/billing_usecase"
 	"github.com/Housiadas/cerberus/internal/usecase/permission_usecase"
 	"github.com/Housiadas/cerberus/internal/usecase/refresh_token_usecase"
 	"github.com/Housiadas/cerberus/internal/usecase/role_permissions_usecase"
@@ -49,6 +57,7 @@ import (
 	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/Housiadas/cerberus/pkg/pgsql"
 	"github.com/Housiadas/cerberus/pkg/redis"
+	stripepkg "github.com/Housiadas/cerberus/pkg/stripe"
 	"github.com/Housiadas/cerberus/pkg/uuidgen"
 	"github.com/jmoiron/sqlx"
 	"go.opentelemetry.io/otel/metric"
@@ -63,6 +72,7 @@ type Config struct {
 	ServiceName       string
 	Build             string
 	Cors              config.CorsSettings
+	Stripe            config.Stripe
 	DB                *sqlx.DB
 	Redis             redis.Client
 	Log               logger.Logger
@@ -91,6 +101,8 @@ type usecase struct {
 	userRoles            *user_roles_usecase.UseCase
 	rolePermissions      *role_permissions_usecase.UseCase
 	system               *system_usecase.UseCase
+	account              *account_usecase.UseCase
+	billing              *billing_usecase.UseCase
 }
 
 func New(ctx context.Context, cfg Config) *Handler {
@@ -98,6 +110,13 @@ func New(ctx context.Context, cfg Config) *Handler {
 	hash := hasher.NewBcrypt()
 	clk := clock.NewClock()
 	uuidGen := uuidgen.NewV7()
+
+	// http clients
+	stripeClient := stripepkg.New(stripepkg.Config{
+		WebhookSecret: cfg.Stripe.WebhookSecret,
+		SecretKey:     cfg.Stripe.SecretKey,
+		Log:           cfg.Log,
+	})
 
 	// repos
 	auditRepo := audit_repo.NewStore(cfg.Log, cfg.DB)
@@ -114,6 +133,9 @@ func New(ctx context.Context, cfg Config) *Handler {
 	rolePermissionsRepo := role_permissions_repo.NewStore(cfg.Log, cfg.DB)
 	refreshTokenRepo := refresh_token_repo.NewStore(cfg.Log, cfg.DB)
 	resetTokenRepo := reset_token_repo.NewStore(cfg.Log, cfg.DB)
+	accountRepo := account_repo.NewStore(cfg.Log, cfg.DB)
+	subscriptionRepo := subscription_repo.NewStore(cfg.Log, cfg.DB)
+	invoiceRepo := invoice_repo.NewStore(cfg.Log, cfg.DB)
 
 	// services
 	auditService := audit_service.New(cfg.Log, auditRepo)
@@ -132,6 +154,9 @@ func New(ctx context.Context, cfg Config) *Handler {
 		cfg.Log,
 		userRolesPermissionsRepo,
 	)
+	accountSvc := account_service.New(cfg.Log, accountRepo, uuidGen, clk)
+	subscriptionSvc := subscription_service.New(cfg.Log, subscriptionRepo)
+	invoiceSvc := invoice_service.New(cfg.Log, invoiceRepo)
 
 	// event dispatcher
 	dispatcher := event_dispatcher.New(outboxSvc, auditService)
@@ -166,6 +191,10 @@ func New(ctx context.Context, cfg Config) *Handler {
 	rolePermissionsUsecase := role_permissions_usecase.NewUseCase(
 		cfg.Log, rolePermsSvc, dispatcher, tx,
 	)
+	accountUsecase := account_usecase.NewUseCase(cfg.Log, accountSvc, tx)
+	billingUsecase := billing_usecase.NewUseCase(
+		stripeClient, accountSvc, subscriptionSvc, invoiceSvc, uuidGen, clk,
+	)
 
 	return &Handler{
 		serviceName: cfg.ServiceName,
@@ -188,6 +217,8 @@ func New(ctx context.Context, cfg Config) *Handler {
 			userRoles:            userRolesUsecase,
 			rolePermissions:      rolePermissionsUsecase,
 			system:               systemUsecase,
+			account:              accountUsecase,
+			billing:              billingUsecase,
 		},
 	}
 }
