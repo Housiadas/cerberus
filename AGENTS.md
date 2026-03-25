@@ -55,7 +55,7 @@
 
 - `.docker` holds docker related files
 - `.kubernetes` holds kubernetes related files
-- `.migrations` holds database migrations
+- `migrations` holds database migrations
 - `bruno` holds the bruno collections for the API client
 - `cmd` holds the application entry point
 - `openapi` holds openapi documentation for the openapi-codegen
