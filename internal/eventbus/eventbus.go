@@ -7,9 +7,7 @@ import (
 
 	ctxPck "github.com/Housiadas/cerberus/internal/context"
 	"github.com/Housiadas/cerberus/internal/core/audit"
-	"github.com/Housiadas/cerberus/internal/core/audit/audit_service"
 	"github.com/Housiadas/cerberus/internal/core/outbox"
-	"github.com/Housiadas/cerberus/internal/core/outbox/outbox_service"
 	errs2 "github.com/Housiadas/cerberus/internal/errs"
 	"github.com/Housiadas/cerberus/internal/types/event"
 	"github.com/Housiadas/cerberus/pkg/pgsql"
@@ -18,14 +16,14 @@ import (
 
 // EventDispatcher dispatches domain events to the outbox and audit log.
 type EventDispatcher struct {
-	outboxSvc *outbox_service.Service
-	auditSvc  *audit_service.Service
+	outboxSvc *outbox.Service
+	auditSvc  *audit.Service
 }
 
 // New constructs an EventDispatcher.
 func New(
-	outboxSvc *outbox_service.Service,
-	auditSvc *audit_service.Service,
+	outboxSvc *outbox.Service,
+	auditSvc *audit.Service,
 ) *EventDispatcher {
 	return &EventDispatcher{
 		outboxSvc: outboxSvc,

@@ -8,7 +8,6 @@ import (
 	"time"
 
 	ur "github.com/Housiadas/cerberus/internal/core/user_roles"
-	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/Housiadas/cerberus/pkg/pgsql"
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
@@ -21,14 +20,28 @@ var (
 	userRoleRemoveSQL string
 )
 
+type logger interface {
+	Debug(ctx context.Context, msg string, args ...any)
+	Debugc(ctx context.Context, caller int, msg string, args ...any)
+	Info(ctx context.Context, msg string, args ...any)
+	Infoc(ctx context.Context, caller int, msg string, args ...any)
+	Warn(ctx context.Context, msg string, args ...any)
+	Warnc(ctx context.Context, caller int, msg string, args ...any)
+	Error(ctx context.Context, msg string, args ...any)
+	Errorc(ctx context.Context, caller int, msg string, args ...any)
+}
+
 // Store manages write operations on the user_roles table.
 type Store struct {
-	log logger.Logger
+	log logger
 	db  sqlx.ExtContext
 }
 
 // NewStore constructs the api for data access.
-func NewStore(log logger.Logger, db *sqlx.DB) *Store {
+func NewStore(
+	log logger,
+	db *sqlx.DB,
+) *Store {
 	return &Store{log: log, db: db}
 }
 

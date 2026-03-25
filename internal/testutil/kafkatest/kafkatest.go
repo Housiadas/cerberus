@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/Housiadas/cerberus/pkg/kafka"
+	ckafka "github.com/confluentinc/confluent-kafka-go/v2/kafka"
 	"github.com/testcontainers/testcontainers-go"
 	tcKafka "github.com/testcontainers/testcontainers-go/modules/kafka"
 )
@@ -15,9 +16,15 @@ const (
 	KafkaClusterID = "test-cluster"
 )
 
+type producer interface {
+	Produce(ctx context.Context, msg *ckafka.Message) error
+	Flush(timeoutMs int) int
+	Close()
+}
+
 // SetupSharedContainer starts a Kafka container for use in TestMain.
 // Returns the Producer and a teardown function to call via defer.
-func SetupSharedContainer(ctx context.Context) (kafka.Producer, func()) {
+func SetupSharedContainer(ctx context.Context) (*kafka.ProducerClient, func()) {
 	t := &mainT{}
 	producer := NewSharedContainer(ctx, t)
 	teardown := func() {
@@ -56,7 +63,7 @@ func NewSharedContainer(ctx context.Context, t interface {
 	Logf(format string, args ...any)
 	Cleanup(fn func())
 },
-) kafka.Producer {
+) *kafka.ProducerClient {
 	t.Helper()
 
 	cfg := newConfig(t)
@@ -82,7 +89,7 @@ func NewSharedContainer(ctx context.Context, t interface {
 		t.Fatal("shared kafka brokers:", err)
 	}
 
-	producer, err := kafka.NewProducer(kafka.ProducerConfig{
+	prod, err := kafka.NewProducer(kafka.ProducerConfig{
 		Brokers:          brokers[0],
 		AddressFamily:    cfg.AddressFamily,
 		SecurityProtocol: cfg.SecurityProtocol,
@@ -94,8 +101,8 @@ func NewSharedContainer(ctx context.Context, t interface {
 	}
 
 	t.Cleanup(func() {
-		producer.Close()
+		prod.Close()
 	})
 
-	return producer
+	return prod
 }

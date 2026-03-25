@@ -7,9 +7,7 @@ import (
 
 	ctxPck "github.com/Housiadas/cerberus/internal/context"
 	audit2 "github.com/Housiadas/cerberus/internal/core/audit"
-	"github.com/Housiadas/cerberus/internal/core/audit/audit_service"
 	"github.com/Housiadas/cerberus/internal/core/outbox"
-	"github.com/Housiadas/cerberus/internal/core/outbox/outbox_service"
 	"github.com/Housiadas/cerberus/internal/eventbus"
 	"github.com/Housiadas/cerberus/internal/types/entity"
 	"github.com/Housiadas/cerberus/internal/types/event"
@@ -59,8 +57,8 @@ func TestDispatch_WithTopicCreatesOutboxAndAudit(t *testing.T) {
 	mClock := clock.NewMockClock(t)
 	mClock.EXPECT().Now().Return(mTime)
 
-	outboxSvc := outbox_service.New(mLogger, outboxStorer, mUuidGen, mClock)
-	auditSvc := audit_service.New(mLogger, auditStorer)
+	outboxSvc := outbox.NewService(mLogger, outboxStorer, mUuidGen, mClock)
+	auditSvc := audit2.NewService(mLogger, auditStorer)
 
 	dispatcher := eventbus.New(outboxSvc, auditSvc)
 
@@ -104,8 +102,8 @@ func TestDispatch_WithoutTopicSkipsOutbox(t *testing.T) {
 	mUuidGen := uuidgen.NewMockGenerator(t)
 	mClock := clock.NewMockClock(t)
 
-	outboxSvc := outbox_service.New(mLogger, outboxStorer, mUuidGen, mClock)
-	auditSvc := audit_service.New(mLogger, auditStorer)
+	outboxSvc := outbox.NewService(mLogger, outboxStorer, mUuidGen, mClock)
+	auditSvc := audit2.NewService(mLogger, auditStorer)
 
 	dispatcher := eventbus.New(outboxSvc, auditSvc)
 
@@ -146,8 +144,8 @@ func TestDispatch_MissingActorIDUsesZeroUUID(t *testing.T) {
 	mUuidGen := uuidgen.NewMockGenerator(t)
 	mClock := clock.NewMockClock(t)
 
-	outboxSvc := outbox_service.New(mLogger, outboxStorer, mUuidGen, mClock)
-	auditSvc := audit_service.New(mLogger, auditStorer)
+	outboxSvc := outbox.NewService(mLogger, outboxStorer, mUuidGen, mClock)
+	auditSvc := audit2.NewService(mLogger, auditStorer)
 
 	dispatcher := eventbus.New(outboxSvc, auditSvc)
 
@@ -180,8 +178,8 @@ func TestDispatch_OutboxStorerTxError(t *testing.T) {
 	mUuidGen := uuidgen.NewMockGenerator(t)
 	mClock := clock.NewMockClock(t)
 
-	outboxSvc := outbox_service.New(mLogger, outboxStorer, mUuidGen, mClock)
-	auditSvc := audit_service.New(mLogger, auditStorer)
+	outboxSvc := outbox.NewService(mLogger, outboxStorer, mUuidGen, mClock)
+	auditSvc := audit2.NewService(mLogger, auditStorer)
 
 	dispatcher := eventbus.New(outboxSvc, auditSvc)
 
@@ -215,8 +213,8 @@ func TestDispatch_AuditStorerTxError(t *testing.T) {
 	mUuidGen := uuidgen.NewMockGenerator(t)
 	mClock := clock.NewMockClock(t)
 
-	outboxSvc := outbox_service.New(mLogger, outboxStorer, mUuidGen, mClock)
-	auditSvc := audit_service.New(mLogger, auditStorer)
+	outboxSvc := outbox.NewService(mLogger, outboxStorer, mUuidGen, mClock)
+	auditSvc := audit2.NewService(mLogger, auditStorer)
 
 	dispatcher := eventbus.New(outboxSvc, auditSvc)
 

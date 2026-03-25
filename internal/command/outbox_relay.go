@@ -8,8 +8,8 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/Housiadas/cerberus/internal/core/outbox"
 	"github.com/Housiadas/cerberus/internal/core/outbox/outbox_repo"
-	"github.com/Housiadas/cerberus/internal/core/outbox/outbox_service"
 	"github.com/Housiadas/cerberus/internal/relay"
 	"github.com/Housiadas/cerberus/pkg/clock"
 	"github.com/Housiadas/cerberus/pkg/kafka"
@@ -45,7 +45,7 @@ func (cmd *Command) OutboxRelay() error {
 	defer kafkaProducer.Close()
 
 	outboxRepo := outbox_repo.NewStore(cmd.log, db)
-	outboxSvc := outbox_service.New(cmd.log, outboxRepo, uuidgen.NewV7(), clock.NewClock())
+	outboxSvc := outbox.NewService(cmd.log, outboxRepo, uuidgen.NewV7(), clock.NewClock())
 
 	outboxRelay := relay.New(
 		cmd.log,

@@ -8,7 +8,6 @@ import (
 	"time"
 
 	outbox2 "github.com/Housiadas/cerberus/internal/core/outbox"
-	"github.com/Housiadas/cerberus/internal/core/outbox/outbox_service"
 	"github.com/Housiadas/cerberus/internal/relay"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
@@ -44,7 +43,7 @@ func TestRelay_ProcessBatch_Successful(t *testing.T) {
 	mClock := clock.NewMockClock(t)
 	mClock.EXPECT().Now().Return(mTime).Maybe()
 
-	outboxSvc := outbox_service.New(mLogger, mStorer, mUuidGen, mClock)
+	outboxSvc := outbox2.NewService(mLogger, mStorer, mUuidGen, mClock)
 
 	mProducer := kafka.NewMockProducer(t)
 	mProducer.EXPECT().Produce(mock.Anything, mock.AnythingOfType("*kafka.Message")).Return(nil).Times(2)
@@ -86,7 +85,7 @@ func TestRelay_ProcessBatch_PartialFailure(t *testing.T) {
 	mClock := clock.NewMockClock(t)
 	mClock.EXPECT().Now().Return(mTime).Maybe()
 
-	outboxSvc := outbox_service.New(mLogger, mStorer, mUuidGen, mClock)
+	outboxSvc := outbox2.NewService(mLogger, mStorer, mUuidGen, mClock)
 
 	mProducer := kafka.NewMockProducer(t)
 	// The first call fails, the second succeeds
@@ -117,7 +116,7 @@ func TestRelay_ProcessBatch_Empty(t *testing.T) {
 	mUuidGen := uuidgen.NewMockGenerator(t)
 	mClock := clock.NewMockClock(t)
 
-	outboxSvc := outbox_service.New(mLogger, mStorer, mUuidGen, mClock)
+	outboxSvc := outbox2.NewService(mLogger, mStorer, mUuidGen, mClock)
 
 	mProducer := kafka.NewMockProducer(t)
 	mProducer.EXPECT().Flush(mock.AnythingOfType("int")).Return(0).Maybe()
@@ -155,7 +154,7 @@ func TestRelay_ProcessBatch_AllFailed_DeadLetter(t *testing.T) {
 	mClock := clock.NewMockClock(t)
 	mClock.EXPECT().Now().Return(mTime).Maybe()
 
-	outboxSvc := outbox_service.New(mLogger, mStorer, mUuidGen, mClock)
+	outboxSvc := outbox2.NewService(mLogger, mStorer, mUuidGen, mClock)
 
 	mProducer := kafka.NewMockProducer(t)
 	mProducer.EXPECT().Produce(mock.Anything, mock.AnythingOfType("*kafka.Message")).Return(errors.New("produce error")).Once()

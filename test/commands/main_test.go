@@ -7,13 +7,19 @@ import (
 
 	"github.com/Housiadas/cerberus/internal/testutil/dbtest"
 	"github.com/Housiadas/cerberus/internal/testutil/kafkatest"
-	"github.com/Housiadas/cerberus/pkg/kafka"
+	ckafka "github.com/confluentinc/confluent-kafka-go/v2/kafka"
 )
 
 var (
 	sc          *dbtest.SharedContainer
-	sharedKafka kafka.Producer
+	sharedKafka producer
 )
+
+type producer interface {
+	Produce(ctx context.Context, msg *ckafka.Message) error
+	Flush(timeoutMs int) int
+	Close()
+}
 
 func TestMain(m *testing.M) {
 	ctx := context.Background()

@@ -7,7 +7,7 @@ import (
 	"errors"
 	"fmt"
 
-	billing_address2 "github.com/Housiadas/cerberus/internal/core/billing_address"
+	"github.com/Housiadas/cerberus/internal/core/billing_address"
 	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/Housiadas/cerberus/pkg/pgsql"
 	"github.com/google/uuid"
@@ -29,12 +29,12 @@ var (
 
 // Store manages the set of APIs for billing address database access.
 type Store struct {
-	log    logger.Logger
+	log    *logger.Service
 	dbPool sqlx.ExtContext
 }
 
 // NewStore constructs the api for data access.
-func NewStore(log logger.Logger, dbPool *sqlx.DB) *Store {
+func NewStore(log *logger.Service, dbPool *sqlx.DB) *Store {
 	return &Store{
 		log:    log,
 		dbPool: dbPool,
@@ -43,7 +43,7 @@ func NewStore(log logger.Logger, dbPool *sqlx.DB) *Store {
 
 // NewWithTx constructs a new Store value replacing the sqlx DB
 // value with a sqlx DB value that is currently inside a transaction.
-func (s *Store) NewWithTx(tx pgsql.CommitRollbacker) (billing_address2.Storer, error) {
+func (s *Store) NewWithTx(tx pgsql.CommitRollbacker) (billing_address.Storer, error) {
 	ec, err := pgsql.GetExtContext(tx)
 	if err != nil {
 		return nil, fmt.Errorf("billing address transaction init error: %w", err)
@@ -58,7 +58,7 @@ func (s *Store) NewWithTx(tx pgsql.CommitRollbacker) (billing_address2.Storer, e
 }
 
 // Create inserts a new billing address into the database.
-func (s *Store) Create(ctx context.Context, addr billing_address2.BillingAddress) error {
+func (s *Store) Create(ctx context.Context, addr billing_address.BillingAddress) error {
 	err := pgsql.NamedExecContext(
 		ctx,
 		s.log,
@@ -74,7 +74,7 @@ func (s *Store) Create(ctx context.Context, addr billing_address2.BillingAddress
 }
 
 // Update replaces a billing address in the database.
-func (s *Store) Update(ctx context.Context, addr billing_address2.BillingAddress) error {
+func (s *Store) Update(ctx context.Context, addr billing_address.BillingAddress) error {
 	err := pgsql.NamedExecContext(
 		ctx,
 		s.log,
@@ -90,7 +90,7 @@ func (s *Store) Update(ctx context.Context, addr billing_address2.BillingAddress
 }
 
 // Delete removes a billing address from the database.
-func (s *Store) Delete(ctx context.Context, addr billing_address2.BillingAddress) error {
+func (s *Store) Delete(ctx context.Context, addr billing_address.BillingAddress) error {
 	err := pgsql.NamedExecContext(
 		ctx,
 		s.log,
@@ -109,7 +109,7 @@ func (s *Store) Delete(ctx context.Context, addr billing_address2.BillingAddress
 func (s *Store) QueryByAccountID(
 	ctx context.Context,
 	accountID uuid.UUID,
-) ([]billing_address2.BillingAddress, error) {
+) ([]billing_address.BillingAddress, error) {
 	data := struct {
 		AccountID string `db:"account_id"`
 	}{
@@ -137,7 +137,7 @@ func (s *Store) QueryByAccountID(
 func (s *Store) QueryByID(
 	ctx context.Context,
 	id uuid.UUID,
-) (billing_address2.BillingAddress, error) {
+) (billing_address.BillingAddress, error) {
 	data := struct {
 		ID string `db:"id"`
 	}{
@@ -149,13 +149,13 @@ func (s *Store) QueryByID(
 	err := pgsql.NamedQueryStruct(ctx, s.log, s.dbPool, billingAddressQueryByIDSQL, data, &dbAddr)
 	if err != nil {
 		if errors.Is(err, pgsql.ErrDBNotFound) {
-			return billing_address2.BillingAddress{}, fmt.Errorf(
+			return billing_address.BillingAddress{}, fmt.Errorf(
 				"db: %w",
-				billing_address2.ErrNotFound,
+				billing_address.ErrNotFound,
 			)
 		}
 
-		return billing_address2.BillingAddress{}, fmt.Errorf("db: %w", err)
+		return billing_address.BillingAddress{}, fmt.Errorf("db: %w", err)
 	}
 
 	return toBillingAddressDomain(dbAddr), nil

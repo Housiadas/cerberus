@@ -6,29 +6,39 @@ import (
 	"fmt"
 
 	"github.com/Housiadas/cerberus/internal/core/audit"
-	"github.com/Housiadas/cerberus/internal/core/role_permissions/role_permissions_service"
+	"github.com/Housiadas/cerberus/internal/core/role_permissions"
 	errs2 "github.com/Housiadas/cerberus/internal/errs"
 	"github.com/Housiadas/cerberus/internal/eventbus"
 	"github.com/Housiadas/cerberus/internal/types/entity"
 	"github.com/Housiadas/cerberus/internal/types/event"
 	"github.com/Housiadas/cerberus/internal/types/name"
-	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/Housiadas/cerberus/pkg/pgsql"
 	"github.com/google/uuid"
 )
 
+type logger interface {
+	Debug(ctx context.Context, msg string, args ...any)
+	Debugc(ctx context.Context, caller int, msg string, args ...any)
+	Info(ctx context.Context, msg string, args ...any)
+	Infoc(ctx context.Context, caller int, msg string, args ...any)
+	Warn(ctx context.Context, msg string, args ...any)
+	Warnc(ctx context.Context, caller int, msg string, args ...any)
+	Error(ctx context.Context, msg string, args ...any)
+	Errorc(ctx context.Context, caller int, msg string, args ...any)
+}
+
 // UseCase manages role-permission assignment operations.
 type UseCase struct {
-	log              logger.Logger
+	log              logger
 	tx               pgsql.Beginner
 	dispatcher       *eventbus.EventDispatcher
-	rolePermsService *role_permissions_service.Service
+	rolePermsService *role_permissions.Service
 }
 
 // NewUseCase constructs a UseCase.
 func NewUseCase(
-	log logger.Logger,
-	rolePermsService *role_permissions_service.Service,
+	log logger,
+	rolePermsService *role_permissions.Service,
 	dispatcher *eventbus.EventDispatcher,
 	tx pgsql.Beginner,
 ) *UseCase {

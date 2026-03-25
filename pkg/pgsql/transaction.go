@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -59,7 +58,7 @@ func GetExtContext(tx CommitRollbacker) (sqlx.ExtContext, error) {
 // If fn returns an error or the commit fails, the transaction is rolled back.
 func RunInTx(
 	ctx context.Context,
-	log logger.Logger,
+	log logger,
 	beginner Beginner,
 	fn func(CommitRollbacker) error,
 ) error {

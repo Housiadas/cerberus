@@ -10,7 +10,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/Housiadas/cerberus/pkg/telemetry"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jmoiron/sqlx"
@@ -30,6 +29,15 @@ var (
 	ErrDBDuplicatedEntry = errors.New("duplicated entry")
 	ErrUndefinedTable    = errors.New("undefined table")
 )
+
+type logger interface {
+	Info(ctx context.Context, msg string, args ...any)
+	Infoc(ctx context.Context, caller int, msg string, args ...any)
+	Warn(ctx context.Context, msg string, args ...any)
+	Warnc(ctx context.Context, caller int, msg string, args ...any)
+	Error(ctx context.Context, msg string, args ...any)
+	Errorc(ctx context.Context, caller int, msg string, args ...any)
+}
 
 // Config is the required properties to use the database.
 type Config struct {
@@ -119,7 +127,7 @@ func StatusCheck(ctx context.Context, dbPool *sqlx.DB) error {
 
 // ExecContext is a helper function to execute a CUD operation with
 // logging and tracing.
-func ExecContext(ctx context.Context, log logger.Logger, db sqlx.ExtContext, query string) error {
+func ExecContext(ctx context.Context, log logger, db sqlx.ExtContext, query string) error {
 	return NamedExecContext(ctx, log, db, query, struct{}{})
 }
 
@@ -127,7 +135,7 @@ func ExecContext(ctx context.Context, log logger.Logger, db sqlx.ExtContext, que
 // logging and tracing where field replacement is necessary.
 func NamedExecContext(
 	ctx context.Context,
-	log logger.Logger,
+	log logger,
 	db sqlx.ExtContext,
 	query string,
 	data any,
@@ -172,7 +180,7 @@ func NamedExecContext(
 // collection of data to be unmarshalled into a slice.
 func QuerySlice[T any](
 	ctx context.Context,
-	log *logger.Service,
+	log logger,
 	db sqlx.ExtContext,
 	query string,
 	dest *[]T,
@@ -185,7 +193,7 @@ func QuerySlice[T any](
 // necessary.
 func NamedQuerySlice[T any](
 	ctx context.Context,
-	log logger.Logger,
+	log logger,
 	db sqlx.ExtContext,
 	query string,
 	data any,
@@ -199,7 +207,7 @@ func NamedQuerySlice[T any](
 // is necessary. Use this if the query has an IN clause.
 func NamedQuerySliceUsingIn[T any](
 	ctx context.Context,
-	log *logger.Service,
+	log logger,
 	db sqlx.ExtContext,
 	query string,
 	data any,
@@ -211,7 +219,7 @@ func NamedQuerySliceUsingIn[T any](
 //nolint:cyclop
 func namedQuerySlice[T any](
 	ctx context.Context,
-	log logger.Logger,
+	log logger,
 	db sqlx.ExtContext,
 	query string,
 	data any,
@@ -292,7 +300,7 @@ func namedQuerySlice[T any](
 // single value to be unmarshalled into a struct type where field replacement is necessary.
 func QueryStruct(
 	ctx context.Context,
-	log *logger.Service,
+	log logger,
 	db sqlx.ExtContext,
 	query string,
 	dest any,
@@ -304,7 +312,7 @@ func QueryStruct(
 // single value to be unmarshalled into a struct type where field replacement is necessary.
 func NamedQueryStruct(
 	ctx context.Context,
-	log logger.Logger,
+	log logger,
 	db sqlx.ExtContext,
 	query string,
 	data any,
@@ -318,7 +326,7 @@ func NamedQueryStruct(
 // is necessary. Use this if the query has an IN clause.
 func NamedQueryStructUsingIn(
 	ctx context.Context,
-	log logger.Logger,
+	log logger,
 	db sqlx.ExtContext,
 	query string,
 	data any,
@@ -330,7 +338,7 @@ func NamedQueryStructUsingIn(
 //nolint:cyclop
 func namedQueryStruct(
 	ctx context.Context,
-	log logger.Logger,
+	log logger,
 	db sqlx.ExtContext,
 	query string,
 	data any,

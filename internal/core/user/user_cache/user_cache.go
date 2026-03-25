@@ -8,13 +8,13 @@ import (
 	"time"
 
 	"github.com/Housiadas/cerberus/internal/core/user"
+	"github.com/Housiadas/cerberus/internal/distributed_storage"
 	"github.com/Housiadas/cerberus/pkg/cachemetrics"
 	"github.com/Housiadas/cerberus/pkg/cursor"
-	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/Housiadas/cerberus/pkg/order"
 	"github.com/Housiadas/cerberus/pkg/pgsql"
-	"github.com/Housiadas/cerberus/pkg/redis"
 	"github.com/google/uuid"
+	"github.com/redis/go-redis/v9"
 	"github.com/viccon/sturdyc"
 )
 
@@ -27,19 +27,38 @@ const (
 
 var ttl = 5 * time.Minute
 
+type logger interface {
+	Debug(ctx context.Context, msg string, args ...any)
+	Debugc(ctx context.Context, caller int, msg string, args ...any)
+	Info(ctx context.Context, msg string, args ...any)
+	Infoc(ctx context.Context, caller int, msg string, args ...any)
+	Warn(ctx context.Context, msg string, args ...any)
+	Warnc(ctx context.Context, caller int, msg string, args ...any)
+	Error(ctx context.Context, msg string, args ...any)
+	Errorc(ctx context.Context, caller int, msg string, args ...any)
+}
+
+// Client defines the interface for Redis operations used by distributed storage.
+type redisClient interface {
+	Get(ctx context.Context, key string) *redis.StringCmd
+	Set(ctx context.Context, key string, value any, expiration time.Duration) *redis.StatusCmd
+	MGet(ctx context.Context, keys ...string) *redis.SliceCmd
+	Pipeline() redis.Pipeliner
+}
+
 // Store manages the set of APIs for user data and caching.
 type Store struct {
 	storer user.Storer
-	log    logger.Logger
+	log    logger
 	cache  *sturdyc.Client[user.User]
 }
 
 // NewStore constructs the api for data and caching access.
 func NewStore(
 	ctx context.Context,
-	log logger.Logger,
+	log logger,
 	storer user.Storer,
-	red redis.Client,
+	red redisClient,
 ) *Store {
 	// Wire up OTel metrics. Errors are non-fatal: the cache works without metrics.
 	recorder, err := cachemetrics.NewMeterRecorder(cacheName)
@@ -47,7 +66,7 @@ func NewStore(
 		log.Error(ctx, "error initializing user cache metrics", err)
 	}
 
-	ds := redis.NewDistributedStorage(red, ttl)
+	ds := distributed_storage.New(red, ttl)
 
 	opts := make([]sturdyc.Option, 0, 6)
 	opts = append(opts, sturdyc.WithDistributedStorage(ds))

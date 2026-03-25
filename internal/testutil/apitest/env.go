@@ -5,24 +5,39 @@ import (
 	"context"
 	"fmt"
 	"testing"
+	"time"
 
 	cfg "github.com/Housiadas/cerberus/internal/config"
 	"github.com/Housiadas/cerberus/internal/testutil/dbtest"
 	"github.com/Housiadas/cerberus/internal/testutil/kafkatest"
 	"github.com/Housiadas/cerberus/internal/testutil/redistest"
 	"github.com/Housiadas/cerberus/internal/web/handler"
-	"github.com/Housiadas/cerberus/pkg/kafka"
 	"github.com/Housiadas/cerberus/pkg/logger"
-	"github.com/Housiadas/cerberus/pkg/redis"
 	"github.com/Housiadas/cerberus/pkg/telemetry"
+	ckafka "github.com/confluentinc/confluent-kafka-go/v2/kafka"
+	"github.com/redis/go-redis/v9"
 )
+
+type producer interface {
+	Produce(ctx context.Context, msg *ckafka.Message) error
+	Flush(timeoutMs int) int
+	Close()
+}
+
+// Client defines the interface for Redis operations used by distributed storage.
+type redisClient interface {
+	Get(ctx context.Context, key string) *redis.StringCmd
+	Set(ctx context.Context, key string, value any, expiration time.Duration) *redis.StatusCmd
+	MGet(ctx context.Context, keys ...string) *redis.SliceCmd
+	Pipeline() redis.Pipeliner
+}
 
 // Env holds shared containers started once for an entire test package via TestMain.
 // Use SetupEnv in TestMain and call StartTest per test function.
 type Env struct {
 	pgShared      *dbtest.SharedContainer
-	redisClient   redis.Client
-	kafkaProducer kafka.Producer
+	redisClient   redisClient
+	kafkaProducer producer
 }
 
 // SetupEnv starts all required containers at once.

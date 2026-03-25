@@ -9,7 +9,6 @@ import (
 
 	"github.com/Housiadas/cerberus/internal/core/audit"
 	"github.com/Housiadas/cerberus/internal/core/user"
-	"github.com/Housiadas/cerberus/internal/core/user/user_service"
 	"github.com/Housiadas/cerberus/internal/errs"
 	"github.com/Housiadas/cerberus/internal/eventbus"
 	"github.com/Housiadas/cerberus/internal/types/entity"
@@ -22,15 +21,15 @@ import (
 )
 
 type UseCase struct {
-	log        logger.Logger
+	log        *logger.Service
 	tx         pgsql.Beginner
-	userCore   *user_service.Service
+	userCore   *user.Service
 	dispatcher *eventbus.EventDispatcher
 }
 
 func NewUseCase(
-	log logger.Logger,
-	userBus *user_service.Service,
+	log *logger.Service,
+	userBus *user.Service,
 	dispatcher *eventbus.EventDispatcher,
 	tx pgsql.Beginner,
 ) *UseCase {

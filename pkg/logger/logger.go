@@ -18,17 +18,6 @@ type TraceIDFn func(ctx context.Context) string
 // RequestIDFn represents a function that can return the request id from the specified context.
 type RequestIDFn func(ctx context.Context) string
 
-type Logger interface {
-	Debug(ctx context.Context, msg string, args ...any)
-	Debugc(ctx context.Context, caller int, msg string, args ...any)
-	Info(ctx context.Context, msg string, args ...any)
-	Infoc(ctx context.Context, caller int, msg string, args ...any)
-	Warn(ctx context.Context, msg string, args ...any)
-	Warnc(ctx context.Context, caller int, msg string, args ...any)
-	Error(ctx context.Context, msg string, args ...any)
-	Errorc(ctx context.Context, caller int, msg string, args ...any)
-}
-
 // Service represents a logger for logging information.
 type Service struct {
 	discard     bool

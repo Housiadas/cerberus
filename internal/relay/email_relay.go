@@ -5,9 +5,8 @@ import (
 	"encoding/json"
 	"time"
 
-	"github.com/Housiadas/cerberus/internal/core/email_notification_outbox/email_notification_outbox_service"
+	"github.com/Housiadas/cerberus/internal/core/email_notification_outbox"
 	"github.com/Housiadas/cerberus/pkg/email"
-	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/Housiadas/cerberus/pkg/telemetry"
 	"github.com/google/uuid"
 	"go.opentelemetry.io/otel/attribute"
@@ -22,7 +21,7 @@ type emailPayload struct {
 // EmailRelay polls in the email_notification_outbox table and sends emails.
 type EmailRelay struct {
 	log            logger.Logger
-	emailOutboxSvc *email_notification_outbox_service.Service
+	emailOutboxSvc *email_notification_outbox.Service
 	emailClient    *email.Client
 	interval       time.Duration
 	batchSize      int
@@ -32,7 +31,7 @@ type EmailRelay struct {
 // NewEmailRelay constructs a new EmailRelay.
 func NewEmailRelay(
 	log logger.Logger,
-	emailOutboxSvc *email_notification_outbox_service.Service,
+	emailOutboxSvc *email_notification_outbox.Service,
 	emailClient *email.Client,
 	interval time.Duration,
 	batchSize int,

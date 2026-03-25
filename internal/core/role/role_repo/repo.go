@@ -33,12 +33,12 @@ var (
 
 // Store manages the set of APIs for userDB database access.
 type Store struct {
-	log logger.Logger
+	log *logger.Service
 	db  sqlx.ExtContext
 }
 
 // NewStore constructs the api for data access.
-func NewStore(log logger.Logger, db *sqlx.DB) *Store {
+func NewStore(log *logger.Service, db *sqlx.DB) *Store {
 	return &Store{
 		log: log,
 		db:  db,

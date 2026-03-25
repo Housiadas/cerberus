@@ -8,8 +8,8 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/Housiadas/cerberus/internal/core/email_notification_outbox"
 	"github.com/Housiadas/cerberus/internal/core/email_notification_outbox/email_notification_outbox_repo"
-	"github.com/Housiadas/cerberus/internal/core/email_notification_outbox/email_notification_outbox_service"
 	"github.com/Housiadas/cerberus/internal/relay"
 	"github.com/Housiadas/cerberus/pkg/clock"
 	"github.com/Housiadas/cerberus/pkg/email"
@@ -35,7 +35,7 @@ func (cmd *Command) EmailNotificationRelay() error {
 	emailClient := email.New(cmd.emailConfig)
 
 	emailOutboxRepo := email_notification_outbox_repo.NewStore(cmd.log, db)
-	emailOutboxSvc := email_notification_outbox_service.New(
+	emailOutboxSvc := email_notification_outbox.NewService(
 		cmd.log, emailOutboxRepo, uuidgen.NewV7(), clock.NewClock(),
 	)
 

@@ -7,39 +7,42 @@ import (
 	"fmt"
 	"time"
 
-	account2 "github.com/Housiadas/cerberus/internal/core/account"
-	"github.com/Housiadas/cerberus/internal/core/account/account_service"
+	"github.com/Housiadas/cerberus/internal/core/account"
 	"github.com/Housiadas/cerberus/internal/core/invoice"
-	"github.com/Housiadas/cerberus/internal/core/invoice/invoice_service"
 	"github.com/Housiadas/cerberus/internal/core/subscription"
-	"github.com/Housiadas/cerberus/internal/core/subscription/subscription_service"
 	"github.com/Housiadas/cerberus/internal/errs"
-	"github.com/Housiadas/cerberus/pkg/clock"
 	"github.com/Housiadas/cerberus/pkg/cursor"
 	stripepkg "github.com/Housiadas/cerberus/pkg/stripe"
-	"github.com/Housiadas/cerberus/pkg/uuidgen"
 	"github.com/google/uuid"
 	"github.com/stripe/stripe-go/v82"
 )
 
+type generator interface {
+	Generate() (uuid.UUID, error)
+}
+
+type clock interface {
+	Now() time.Time
+}
+
 // UseCase manages the set of APIs for billing use cases.
 type UseCase struct {
 	stripeClient    *stripepkg.Client
-	accountSvc      *account_service.Service
-	subscriptionSvc *subscription_service.Service
-	invoiceSvc      *invoice_service.Service
-	uuidGen         uuidgen.Generator
-	clock           clock.Clock
+	accountSvc      *account.Service
+	subscriptionSvc *subscription.Service
+	invoiceSvc      *invoice.Service
+	uuidGen         generator
+	clock           clock
 }
 
 // NewUseCase constructs a use case for billing operations.
 func NewUseCase(
 	stripeClient *stripepkg.Client,
-	accountSvc *account_service.Service,
-	subscriptionSvc *subscription_service.Service,
-	invoiceSvc *invoice_service.Service,
-	uuidGen uuidgen.Generator,
-	clock clock.Clock,
+	accountSvc *account.Service,
+	subscriptionSvc *subscription.Service,
+	invoiceSvc *invoice.Service,
+	uuidGen generator,
+	clock clock,
 ) *UseCase {
 	return &UseCase{
 		stripeClient:    stripeClient,
@@ -55,10 +58,10 @@ func NewUseCase(
 func (uc *UseCase) CreateAccountWithStripe(
 	ctx context.Context,
 	accountName, email string,
-) (account2.Account, error) {
+) (account.Account, error) {
 	cust, err := uc.stripeClient.CreateCustomer(ctx, accountName, email)
 	if err != nil {
-		return account2.Account{}, errs.Errorf(
+		return account.Account{}, errs.Errorf(
 			errs.Internal,
 			errs.CodeInternal,
 			"stripe create customer: %s",
@@ -66,21 +69,21 @@ func (uc *UseCase) CreateAccountWithStripe(
 		)
 	}
 
-	na := account2.NewAccount{Name: accountName}
+	na := account.NewAccount{Name: accountName}
 
 	created, err := uc.accountSvc.Create(ctx, na)
 	if err != nil {
-		return account2.Account{}, fmt.Errorf("create account: %w", err)
+		return account.Account{}, fmt.Errorf("create account: %w", err)
 	}
 
 	// Update with Stripe customer ID
-	ua := account2.UpdateAccount{
+	ua := account.UpdateAccount{
 		StripeCustomerID: &sql.NullString{String: cust.ID, Valid: true},
 	}
 
 	updated, err := uc.accountSvc.Update(ctx, created, ua)
 	if err != nil {
-		return account2.Account{}, fmt.Errorf("update account stripe id: %w", err)
+		return account.Account{}, fmt.Errorf("update account stripe id: %w", err)
 	}
 
 	return updated, nil
@@ -218,7 +221,7 @@ func (uc *UseCase) HandleWebhookSubscription(
 ) error {
 	existing, err := uc.subscriptionSvc.QueryByStripeID(ctx, stripeSub.ID)
 	if err != nil {
-		// New subscription - create it
+		// NewService subscription - create it
 		return uc.createSubscriptionFromStripe(ctx, stripeSub)
 	}
 
@@ -258,7 +261,7 @@ func (uc *UseCase) HandleWebhookSubscription(
 func (uc *UseCase) HandleWebhookInvoice(ctx context.Context, stripeInv *stripe.Invoice) error {
 	existing, err := uc.invoiceSvc.QueryByStripeID(ctx, stripeInv.ID)
 	if err != nil {
-		// New invoice - create it
+		// NewService invoice - create it
 		return uc.createInvoiceFromStripe(ctx, stripeInv)
 	}
 
@@ -399,11 +402,11 @@ func (uc *UseCase) findAccountIDByStripeCustomer(
 	ctx context.Context,
 	stripeCustomerID string,
 ) (uuid.UUID, error) {
-	filter := account2.QueryFilter{
+	filter := account.QueryFilter{
 		StripeCustomerID: &stripeCustomerID,
 	}
 
-	accs, err := uc.accountSvc.Query(ctx, filter, account2.GetDefaultOrderBy(), defaultCursor())
+	accs, err := uc.accountSvc.Query(ctx, filter, account.GetDefaultOrderBy(), defaultCursor())
 	if err != nil {
 		return uuid.UUID{}, fmt.Errorf("query accounts: %w", err)
 	}

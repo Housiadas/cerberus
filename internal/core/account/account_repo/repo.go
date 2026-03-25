@@ -8,7 +8,7 @@ import (
 	"errors"
 	"fmt"
 
-	account2 "github.com/Housiadas/cerberus/internal/core/account"
+	"github.com/Housiadas/cerberus/internal/core/account"
 	"github.com/Housiadas/cerberus/pkg/cursor"
 	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/Housiadas/cerberus/pkg/order"
@@ -33,12 +33,15 @@ var (
 
 // Store manages the set of APIs for account database access.
 type Store struct {
-	log    logger.Logger
+	log    *logger.Service
 	dbPool sqlx.ExtContext
 }
 
 // NewStore constructs the api for data access.
-func NewStore(log logger.Logger, dbPool *sqlx.DB) *Store {
+func NewStore(
+	log *logger.Service,
+	dbPool *sqlx.DB,
+) *Store {
 	return &Store{
 		log:    log,
 		dbPool: dbPool,
@@ -47,7 +50,7 @@ func NewStore(log logger.Logger, dbPool *sqlx.DB) *Store {
 
 // NewWithTx constructs a new Store value replacing the sqlx DB
 // value with a sqlx DB value that is currently inside a transaction.
-func (s *Store) NewWithTx(tx pgsql.CommitRollbacker) (account2.Storer, error) {
+func (s *Store) NewWithTx(tx pgsql.CommitRollbacker) (account.Storer, error) {
 	ec, err := pgsql.GetExtContext(tx)
 	if err != nil {
 		return nil, fmt.Errorf("account transaction init error: %w", err)
@@ -62,7 +65,7 @@ func (s *Store) NewWithTx(tx pgsql.CommitRollbacker) (account2.Storer, error) {
 }
 
 // Create inserts a new account into the database.
-func (s *Store) Create(ctx context.Context, acc account2.Account) error {
+func (s *Store) Create(ctx context.Context, acc account.Account) error {
 	err := pgsql.NamedExecContext(ctx, s.log, s.dbPool, accountCreateSQL, toAccountDB(acc))
 	if err != nil {
 		return fmt.Errorf("named_exec_context: %w", err)
@@ -72,7 +75,7 @@ func (s *Store) Create(ctx context.Context, acc account2.Account) error {
 }
 
 // Update replaces an account document in the database.
-func (s *Store) Update(ctx context.Context, acc account2.Account) error {
+func (s *Store) Update(ctx context.Context, acc account.Account) error {
 	err := pgsql.NamedExecContext(ctx, s.log, s.dbPool, accountUpdateSQL, toAccountDB(acc))
 	if err != nil {
 		return fmt.Errorf("named_exec_context: %w", err)
@@ -82,7 +85,7 @@ func (s *Store) Update(ctx context.Context, acc account2.Account) error {
 }
 
 // Delete removes an account from the database.
-func (s *Store) Delete(ctx context.Context, acc account2.Account) error {
+func (s *Store) Delete(ctx context.Context, acc account.Account) error {
 	err := pgsql.NamedExecContext(ctx, s.log, s.dbPool, accountDeleteSQL, toAccountDB(acc))
 	if err != nil {
 		return fmt.Errorf("named_exec_context: %w", err)
@@ -94,10 +97,10 @@ func (s *Store) Delete(ctx context.Context, acc account2.Account) error {
 // Query retrieves a list of existing accounts from the database.
 func (s *Store) Query(
 	ctx context.Context,
-	filter account2.QueryFilter,
+	filter account.QueryFilter,
 	orderBy order.By,
 	cur cursor.Cursor,
-) ([]account2.Account, error) {
+) ([]account.Account, error) {
 	data := map[string]any{
 		"limit": cur.Limit() + 1,
 	}
@@ -125,7 +128,7 @@ func (s *Store) Query(
 }
 
 // QueryByID gets the specified account from the database.
-func (s *Store) QueryByID(ctx context.Context, accountID uuid.UUID) (account2.Account, error) {
+func (s *Store) QueryByID(ctx context.Context, accountID uuid.UUID) (account.Account, error) {
 	data := struct {
 		ID string `db:"id"`
 	}{
@@ -137,10 +140,10 @@ func (s *Store) QueryByID(ctx context.Context, accountID uuid.UUID) (account2.Ac
 	err := pgsql.NamedQueryStruct(ctx, s.log, s.dbPool, accountQueryByIDSQL, data, &dbAcc)
 	if err != nil {
 		if errors.Is(err, pgsql.ErrDBNotFound) {
-			return account2.Account{}, fmt.Errorf("db: %w", account2.ErrNotFound)
+			return account.Account{}, fmt.Errorf("db: %w", account.ErrNotFound)
 		}
 
-		return account2.Account{}, fmt.Errorf("db: %w", err)
+		return account.Account{}, fmt.Errorf("db: %w", err)
 	}
 
 	return toAccountDomain(dbAcc), nil

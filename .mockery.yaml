@@ -1,19 +1,22 @@
 all: false
 dir: '{{.InterfaceDir}}'
-filename: mock.go
+filename: mock_test.go
 force-file-write: true
 formatter: goimports
 generate: true
 include-auto-generated: false
 log-level: info
 structname: '{{.Mock}}{{.InterfaceName}}'
-pkgname: '{{.SrcPackageName}}'
+pkgname: '{{.SrcPackageName}}_test'
 recursive: false
 require-template-schema-exists: true
 template: testify
 template-schema: '{{.Template}}.schema.json'
 packages:
   # core directory
+  github.com/Housiadas/cerberus/internal/core/account:
+    config:
+      all: true
   github.com/Housiadas/cerberus/internal/core/user:
     config:
       all: true
@@ -47,9 +50,6 @@ packages:
   github.com/Housiadas/cerberus/internal/core/email_notification_outbox:
     config:
       all: true
-  github.com/Housiadas/cerberus/internal/core/account:
-    config:
-      all: true
   github.com/Housiadas/cerberus/internal/core/subscription:
     config:
       all: true
@@ -63,24 +63,5 @@ packages:
     config:
       all: true
   github.com/Housiadas/cerberus/internal/core/billing_address:
-    config:
-      all: true
-  # pkg directory
-  github.com/Housiadas/cerberus/pkg/kafka:
-    config:
-      all: true
-  github.com/Housiadas/cerberus/pkg/clock:
-    config:
-      all: true
-  github.com/Housiadas/cerberus/pkg/hasher:
-    config:
-      all: true
-  github.com/Housiadas/cerberus/pkg/redis:
-    config:
-      all: true
-  github.com/Housiadas/cerberus/pkg/logger:
-    config:
-      all: true
-  github.com/Housiadas/cerberus/pkg/uuidgen:
     config:
       all: true

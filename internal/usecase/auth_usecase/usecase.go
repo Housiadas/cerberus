@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/Housiadas/cerberus/internal/core/email_notification_outbox/email_notification_outbox_service"
-	"github.com/Housiadas/cerberus/internal/core/reset_token/reset_token_service"
-	"github.com/Housiadas/cerberus/internal/core/user/user_service"
+	"github.com/Housiadas/cerberus/internal/core/email_notification_outbox"
+	"github.com/Housiadas/cerberus/internal/core/reset_token"
+	"github.com/Housiadas/cerberus/internal/core/user"
 	"github.com/Housiadas/cerberus/internal/usecase/refresh_token_usecase"
 	"github.com/Housiadas/cerberus/internal/usecase/user_roles_permissions_usecase"
 	"github.com/Housiadas/cerberus/internal/usecase/user_usecase"
@@ -27,12 +27,12 @@ type Config struct {
 	FrontendURL                string
 	AccessTokenSecret          []byte
 	DB                         pgsql.Beginner
-	Log                        logger.Logger
+	Log                        *logger.Service
 	UserUsecase                *user_usecase.UseCase
-	UserService                *user_service.Service
+	UserService                *user.Service
 	RefreshTokenUsecase        *refresh_token_usecase.UseCase
-	ResetTokenService          *reset_token_service.Service
-	EmailNotificationOutboxSvc *email_notification_outbox_service.Service
+	ResetTokenService          *reset_token.Service
+	EmailNotificationOutboxSvc *email_notification_outbox.Service
 	UserRolesPermissions       *user_roles_permissions_usecase.UseCase
 }
 
@@ -43,14 +43,14 @@ type UseCase struct {
 	secret                     []byte
 	frontendURL                string
 	parser                     *jwt.Parser
-	log                        logger.Logger
+	log                        *logger.Service
 	tx                         pgsql.Beginner
 	method                     jwt.SigningMethod
 	userUsecase                *user_usecase.UseCase
-	userService                *user_service.Service
+	userService                *user.Service
 	refreshTokenUsecase        *refresh_token_usecase.UseCase
-	resetTokenSvc              *reset_token_service.Service
-	emailNotificationOutboxSvc *email_notification_outbox_service.Service
+	resetTokenSvc              *reset_token.Service
+	emailNotificationOutboxSvc *email_notification_outbox.Service
 	userRolesPermissions       *user_roles_permissions_usecase.UseCase
 }
 

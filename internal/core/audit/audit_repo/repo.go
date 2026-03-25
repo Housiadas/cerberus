@@ -7,7 +7,7 @@ import (
 	_ "embed"
 	"fmt"
 
-	audit2 "github.com/Housiadas/cerberus/internal/core/audit"
+	"github.com/Housiadas/cerberus/internal/core/audit"
 	"github.com/Housiadas/cerberus/pkg/cursor"
 	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/Housiadas/cerberus/pkg/order"
@@ -25,12 +25,15 @@ var (
 
 // Store manages the set of APIs for auditDB database access.
 type Store struct {
-	log    logger.Logger
+	log    *logger.Service
 	dbPool sqlx.ExtContext
 }
 
 // NewStore constructs the API for data access.
-func NewStore(log logger.Logger, dbPool *sqlx.DB) *Store {
+func NewStore(
+	log *logger.Service,
+	dbPool *sqlx.DB,
+) *Store {
 	return &Store{
 		log:    log,
 		dbPool: dbPool,
@@ -39,7 +42,7 @@ func NewStore(log logger.Logger, dbPool *sqlx.DB) *Store {
 
 // NewWithTx constructs a new Store value replacing the sqlx DB with a sqlx DB that is
 // running within a transaction.
-func (s *Store) NewWithTx(tx pgsql.CommitRollbacker) (audit2.Storer, error) {
+func (s *Store) NewWithTx(tx pgsql.CommitRollbacker) (audit.Storer, error) {
 	ec, err := pgsql.GetExtContext(tx)
 	if err != nil {
 		return nil, fmt.Errorf("audit transaction init error: %w", err)
@@ -54,7 +57,7 @@ func (s *Store) NewWithTx(tx pgsql.CommitRollbacker) (audit2.Storer, error) {
 }
 
 // Create inserts a new auditDB record into the database.
-func (s *Store) Create(ctx context.Context, a audit2.Audit) error {
+func (s *Store) Create(ctx context.Context, a audit.Audit) error {
 	dbAudit := toDBAudit(a)
 
 	err := pgsql.NamedExecContext(ctx, s.log, s.dbPool, auditCreateSQL, dbAudit)
@@ -68,10 +71,10 @@ func (s *Store) Create(ctx context.Context, a audit2.Audit) error {
 // Query retrieves a list of existing audit records from the database.
 func (s *Store) Query(
 	ctx context.Context,
-	filter audit2.QueryFilter,
+	filter audit.QueryFilter,
 	orderBy order.By,
 	cur cursor.Cursor,
-) ([]audit2.Audit, error) {
+) ([]audit.Audit, error) {
 	data := map[string]any{
 		"limit": cur.Limit() + 1,
 	}

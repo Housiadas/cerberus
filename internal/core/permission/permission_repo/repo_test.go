@@ -10,7 +10,6 @@ import (
 
 	permission2 "github.com/Housiadas/cerberus/internal/core/permission"
 	"github.com/Housiadas/cerberus/internal/core/permission/permission_repo"
-	permission_service2 "github.com/Housiadas/cerberus/internal/core/permission/permission_service"
 	"github.com/Housiadas/cerberus/internal/types/name"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
@@ -34,7 +33,7 @@ func Test_Permission(t *testing.T) {
 	log := logger.New(&buf, logger.LevelInfo, "TEST", traceIDFn, requestIDFn)
 
 	uuidGen := uuidgen.NewV7()
-	permService := permission_service2.New(log, permission_repo.NewStore(log, db), uuidGen)
+	permService := permission2.NewService(log, permission_repo.NewStore(log, db), uuidGen)
 
 	sd, err := insertSeedData(permService)
 	if err != nil {
@@ -47,10 +46,10 @@ func Test_Permission(t *testing.T) {
 	unitest.Run(t, deletePermission(permService, sd), "delete")
 }
 
-func insertSeedData(service *permission_service2.Service) (unitest.SeedData, error) {
+func insertSeedData(service *permission2.Service) (unitest.SeedData, error) {
 	ctx := context.Background()
 
-	perms, err := permission_service2.TestSeedPermissions(ctx, 2, service)
+	perms, err := permission2.TestSeedPermissions(ctx, 2, service)
 	if err != nil {
 		return unitest.SeedData{}, fmt.Errorf("seeding permissions: %w", err)
 	}
@@ -65,7 +64,7 @@ func insertSeedData(service *permission_service2.Service) (unitest.SeedData, err
 	return sd, nil
 }
 
-func queryPermission(service *permission_service2.Service, sd unitest.SeedData) []unitest.Table {
+func queryPermission(service *permission2.Service, sd unitest.SeedData) []unitest.Table {
 	perms := make([]permission2.Permission, 0, len(sd.Permissions))
 	for _, p := range sd.Permissions {
 		perms = append(perms, p.Permission)
@@ -132,7 +131,7 @@ func queryPermission(service *permission_service2.Service, sd unitest.SeedData) 
 	}
 }
 
-func createPermission(service *permission_service2.Service) []unitest.Table {
+func createPermission(service *permission2.Service) []unitest.Table {
 	return []unitest.Table{
 		{
 			Name: "basic",
@@ -171,7 +170,7 @@ func createPermission(service *permission_service2.Service) []unitest.Table {
 	}
 }
 
-func updatePermission(service *permission_service2.Service, sd unitest.SeedData) []unitest.Table {
+func updatePermission(service *permission2.Service, sd unitest.SeedData) []unitest.Table {
 	newName := name.MustParse("UpdatedPermission")
 
 	return []unitest.Table{
@@ -211,7 +210,7 @@ func updatePermission(service *permission_service2.Service, sd unitest.SeedData)
 	}
 }
 
-func deletePermission(service *permission_service2.Service, sd unitest.SeedData) []unitest.Table {
+func deletePermission(service *permission2.Service, sd unitest.SeedData) []unitest.Table {
 	return []unitest.Table{
 		{
 			Name:    "permission",

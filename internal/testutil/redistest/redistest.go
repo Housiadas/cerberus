@@ -4,9 +4,10 @@ package redistest
 import (
 	"context"
 	"strings"
+	"time"
 
 	"github.com/Housiadas/cerberus/internal/config"
-	pkgRedis "github.com/Housiadas/cerberus/pkg/redis"
+	"github.com/redis/go-redis/v9"
 	"github.com/testcontainers/testcontainers-go"
 	tcRedis "github.com/testcontainers/testcontainers-go/modules/redis"
 )
@@ -19,7 +20,7 @@ func NewSharedContainer(ctx context.Context, t interface {
 	Logf(format string, args ...any)
 	Cleanup(fn func())
 },
-) pkgRedis.Client {
+) *redis.Client {
 	t.Helper()
 
 	appCfg, err := config.LoadConfig()
@@ -44,11 +45,16 @@ func NewSharedContainer(ctx context.Context, t interface {
 		t.Fatal("shared redis connection string:", err)
 	}
 
-	client, err := pkgRedis.Open(ctx, pkgRedis.Config{
-		Host: strings.TrimPrefix(connStr, "redis://"),
+	client := redis.NewClient(&redis.Options{
+		Addr: strings.TrimPrefix(connStr, "redis://"),
 	})
+
+	pingCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	err = client.Ping(pingCtx).Err()
 	if err != nil {
-		t.Fatal("open shared redis client:", err)
+		t.Fatal("open redis client:", err)
 	}
 
 	t.Cleanup(func() {

@@ -10,7 +10,6 @@ import (
 	"github.com/google/uuid"
 )
 
-// Set of error variables for CRUD operations.
 var (
 	ErrNotFound = errors.New("account not found")
 )

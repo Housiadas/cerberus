@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/Housiadas/cerberus/internal/core/user/user_repo"
-	user_service2 "github.com/Housiadas/cerberus/internal/core/user/user_service"
 	"github.com/Housiadas/cerberus/internal/testutil/dbtest"
 	"github.com/Housiadas/cerberus/internal/testutil/unitest"
 	"github.com/Housiadas/cerberus/internal/types/name"
@@ -48,7 +47,7 @@ func Test_User(t *testing.T) {
 	hash := hasher.NewBcrypt()
 	clk := clock.NewClock()
 	uuidGen := uuidgen.NewV7()
-	userService := user_service2.New(log, user_repo.NewStore(log, db), uuidGen, clk, hash)
+	userService := user.NewService(log, user_repo.NewStore(log, db), uuidGen, clk, hash)
 
 	// seed
 	sd, err := insertSeedData(userService)
@@ -64,10 +63,10 @@ func Test_User(t *testing.T) {
 
 // =============================================================================
 
-func insertSeedData(service *user_service2.Service) (unitest.SeedData, error) {
+func insertSeedData(service *user.Service) (unitest.SeedData, error) {
 	ctx := context.Background()
 
-	usrs, err := user_service2.TestSeedUsers(ctx, 2, service)
+	usrs, err := user.TestSeedUsers(ctx, 2, service)
 	if err != nil {
 		return unitest.SeedData{}, fmt.Errorf("seeding users : %w", err)
 	}
@@ -91,7 +90,7 @@ func insertSeedData(service *user_service2.Service) (unitest.SeedData, error) {
 
 // =============================================================================
 
-func queryUser(service *user_service2.Service, sd unitest.SeedData) []unitest.Table {
+func queryUser(service *user.Service, sd unitest.SeedData) []unitest.Table {
 	usrs := make([]user.User, 0, len(sd.Users))
 
 	for _, usr := range sd.Users {
@@ -161,7 +160,7 @@ func queryUser(service *user_service2.Service, sd unitest.SeedData) []unitest.Ta
 	return table
 }
 
-func createUser(service *user_service2.Service) []unitest.Table {
+func createUser(service *user.Service) []unitest.Table {
 	email, _ := mail.ParseAddress("bill@ardanlabs.com")
 
 	table := []unitest.Table{
@@ -227,7 +226,7 @@ func createUser(service *user_service2.Service) []unitest.Table {
 	return table
 }
 
-func updateUser(service *user_service2.Service, sd unitest.SeedData) []unitest.Table {
+func updateUser(service *user.Service, sd unitest.SeedData) []unitest.Table {
 	email, _ := mail.ParseAddress("jack@housi.com")
 
 	table := []unitest.Table{
@@ -293,7 +292,7 @@ func updateUser(service *user_service2.Service, sd unitest.SeedData) []unitest.T
 	return table
 }
 
-func deleteUser(service *user_service2.Service, sd unitest.SeedData) []unitest.Table {
+func deleteUser(service *user.Service, sd unitest.SeedData) []unitest.Table {
 	table := []unitest.Table{
 		{
 			Name:    "user",

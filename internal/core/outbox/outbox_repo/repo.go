@@ -1,4 +1,4 @@
-// Package outbox_repo contains database related CRUD functionality for outbox.
+// Package outbox_repo contains database-related CRUD functionality for outbox.
 package outbox_repo
 
 import (
@@ -7,8 +7,7 @@ import (
 	"fmt"
 	"time"
 
-	outbox2 "github.com/Housiadas/cerberus/internal/core/outbox"
-	"github.com/Housiadas/cerberus/pkg/logger"
+	"github.com/Housiadas/cerberus/internal/core/outbox"
 	"github.com/Housiadas/cerberus/pkg/pgsql"
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
@@ -25,14 +24,28 @@ var (
 	outboxIncrementRetrySQL string
 )
 
+type logger interface {
+	Debug(ctx context.Context, msg string, args ...any)
+	Debugc(ctx context.Context, caller int, msg string, args ...any)
+	Info(ctx context.Context, msg string, args ...any)
+	Infoc(ctx context.Context, caller int, msg string, args ...any)
+	Warn(ctx context.Context, msg string, args ...any)
+	Warnc(ctx context.Context, caller int, msg string, args ...any)
+	Error(ctx context.Context, msg string, args ...any)
+	Errorc(ctx context.Context, caller int, msg string, args ...any)
+}
+
 // Store manages the set of APIs for outbox database access.
 type Store struct {
-	log    logger.Logger
+	log    logger
 	dbPool sqlx.ExtContext
 }
 
 // NewStore constructs the api for data access.
-func NewStore(log logger.Logger, dbPool *sqlx.DB) *Store {
+func NewStore(
+	log logger,
+	dbPool *sqlx.DB,
+) *Store {
 	return &Store{
 		log:    log,
 		dbPool: dbPool,
@@ -41,7 +54,7 @@ func NewStore(log logger.Logger, dbPool *sqlx.DB) *Store {
 
 // NewWithTx constructs a new Store value replacing the sqlx DB
 // value with a sqlx DB value that is currently inside a transaction.
-func (s *Store) NewWithTx(tx pgsql.CommitRollbacker) (outbox2.Storer, error) {
+func (s *Store) NewWithTx(tx pgsql.CommitRollbacker) (outbox.Storer, error) {
 	ec, err := pgsql.GetExtContext(tx)
 	if err != nil {
 		return nil, fmt.Errorf("outbox transaction init error: %w", err)
@@ -56,7 +69,7 @@ func (s *Store) NewWithTx(tx pgsql.CommitRollbacker) (outbox2.Storer, error) {
 }
 
 // Create inserts a new outbox entry into the database.
-func (s *Store) Create(ctx context.Context, o outbox2.Outbox) error {
+func (s *Store) Create(ctx context.Context, o outbox.Outbox) error {
 	err := pgsql.NamedExecContext(ctx, s.log, s.dbPool, outboxCreateSQL, toOutboxDB(o))
 	if err != nil {
 		return fmt.Errorf("named_exec_context: %w", err)
@@ -70,7 +83,7 @@ func (s *Store) QueryUnprocessed(
 	ctx context.Context,
 	limit int,
 	maxRetries int,
-) ([]outbox2.Outbox, error) {
+) ([]outbox.Outbox, error) {
 	data := struct {
 		Limit      int `db:"limit"`
 		MaxRetries int `db:"max_retries"`
@@ -86,7 +99,7 @@ func (s *Store) QueryUnprocessed(
 		return nil, fmt.Errorf("named_query_slice: %w", err)
 	}
 
-	result := make([]outbox2.Outbox, len(dbRows))
+	result := make([]outbox.Outbox, len(dbRows))
 	for i, row := range dbRows {
 		result[i] = toOutboxDomain(row)
 	}

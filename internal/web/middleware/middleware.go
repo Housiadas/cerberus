@@ -11,7 +11,6 @@ import (
 	"github.com/Housiadas/cerberus/internal/usecase/auth_usecase"
 	"github.com/Housiadas/cerberus/internal/usecase/user_roles_permissions_usecase"
 	"github.com/Housiadas/cerberus/internal/usecase/user_usecase"
-	"github.com/Housiadas/cerberus/pkg/logger"
 	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/trace"
 	"golang.org/x/sync/singleflight"
@@ -22,8 +21,13 @@ const (
 	contentTypeJSON = "application/json"
 )
 
+type logger interface {
+	Info(ctx context.Context, msg string, args ...any)
+	Error(ctx context.Context, msg string, args ...any)
+}
+
 type Config struct {
-	Log                  logger.Logger
+	Log                  logger
 	Tracer               trace.Tracer
 	Meter                metric.Meter
 	AuthUseCase          *auth_usecase.UseCase
@@ -32,7 +36,7 @@ type Config struct {
 }
 
 type Middleware struct {
-	log         logger.Logger
+	log         logger
 	tracer      trace.Tracer
 	meter       metric.Meter
 	useCase     useCase

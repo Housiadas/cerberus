@@ -6,14 +6,14 @@ import (
 	"fmt"
 	"time"
 
-	permission2 "github.com/Housiadas/cerberus/internal/core/permission"
+	"github.com/Housiadas/cerberus/internal/core/permission"
+	"github.com/Housiadas/cerberus/internal/distributed_storage"
 	"github.com/Housiadas/cerberus/pkg/cachemetrics"
 	"github.com/Housiadas/cerberus/pkg/cursor"
-	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/Housiadas/cerberus/pkg/order"
 	"github.com/Housiadas/cerberus/pkg/pgsql"
-	"github.com/Housiadas/cerberus/pkg/redis"
 	"github.com/google/uuid"
+	redisPck "github.com/redis/go-redis/v9"
 	"github.com/viccon/sturdyc"
 )
 
@@ -26,26 +26,45 @@ const (
 
 var ttl = 5 * time.Minute
 
+// Client defines the interface for Redis operations used by distributed storage.
+type redisService interface {
+	Get(ctx context.Context, key string) *redisPck.StringCmd
+	Set(ctx context.Context, key string, value any, expiration time.Duration) *redisPck.StatusCmd
+	MGet(ctx context.Context, keys ...string) *redisPck.SliceCmd
+	Pipeline() redisPck.Pipeliner
+}
+
+type logger interface {
+	Debug(ctx context.Context, msg string, args ...any)
+	Debugc(ctx context.Context, caller int, msg string, args ...any)
+	Info(ctx context.Context, msg string, args ...any)
+	Infoc(ctx context.Context, caller int, msg string, args ...any)
+	Warn(ctx context.Context, msg string, args ...any)
+	Warnc(ctx context.Context, caller int, msg string, args ...any)
+	Error(ctx context.Context, msg string, args ...any)
+	Errorc(ctx context.Context, caller int, msg string, args ...any)
+}
+
 // Store manages the set of APIs for permission data and caching.
 type Store struct {
-	storer permission2.Storer
-	log    logger.Logger
-	cache  *sturdyc.Client[permission2.Permission]
+	storer permission.Storer
+	log    logger
+	cache  *sturdyc.Client[permission.Permission]
 }
 
 // NewStore constructs the api for data and caching access.
 func NewStore(
 	ctx context.Context,
-	log logger.Logger,
-	storer permission2.Storer,
-	red redis.Client,
+	log logger,
+	storer permission.Storer,
+	red redisService,
 ) *Store {
 	recorder, err := cachemetrics.NewMeterRecorder(cacheName)
 	if err != nil {
 		log.Error(ctx, "error initializing permission cache metrics", err)
 	}
 
-	ds := redis.NewDistributedStorage(red, ttl)
+	ds := distributed_storage.New(red, ttl)
 
 	opts := make([]sturdyc.Option, 0, 3)
 	opts = append(opts, sturdyc.WithDistributedStorage(ds))
@@ -55,7 +74,7 @@ func NewStore(
 	return &Store{
 		log:    log,
 		storer: storer,
-		cache: sturdyc.New[permission2.Permission](
+		cache: sturdyc.New[permission.Permission](
 			capacity,
 			numShards,
 			ttl,
@@ -66,7 +85,7 @@ func NewStore(
 
 // NewWithTx creates a new Store that uses the specified transaction.
 // Transaction operations bypass the cache.
-func (s *Store) NewWithTx(tx pgsql.CommitRollbacker) (permission2.Storer, error) {
+func (s *Store) NewWithTx(tx pgsql.CommitRollbacker) (permission.Storer, error) {
 	storer, err := s.storer.NewWithTx(tx)
 	if err != nil {
 		return nil, fmt.Errorf("permission cache new with tx: %w", err)
@@ -76,7 +95,7 @@ func (s *Store) NewWithTx(tx pgsql.CommitRollbacker) (permission2.Storer, error)
 }
 
 // Create inserts a new permission into the database.
-func (s *Store) Create(ctx context.Context, p permission2.Permission) error {
+func (s *Store) Create(ctx context.Context, p permission.Permission) error {
 	err := s.storer.Create(ctx, p)
 	if err != nil {
 		return fmt.Errorf("permission cache create: %w", err)
@@ -86,7 +105,7 @@ func (s *Store) Create(ctx context.Context, p permission2.Permission) error {
 }
 
 // Update modifies an existing permission in the database and invalidates the cache.
-func (s *Store) Update(ctx context.Context, p permission2.Permission) error {
+func (s *Store) Update(ctx context.Context, p permission.Permission) error {
 	err := s.storer.Update(ctx, p)
 	if err != nil {
 		return fmt.Errorf("permission cache update: %w", err)
@@ -98,7 +117,7 @@ func (s *Store) Update(ctx context.Context, p permission2.Permission) error {
 }
 
 // Delete removes a permission from the database and invalidates the cache.
-func (s *Store) Delete(ctx context.Context, p permission2.Permission) error {
+func (s *Store) Delete(ctx context.Context, p permission.Permission) error {
 	err := s.storer.Delete(ctx, p)
 	if err != nil {
 		return fmt.Errorf("permission cache delete: %w", err)
@@ -112,10 +131,10 @@ func (s *Store) Delete(ctx context.Context, p permission2.Permission) error {
 // Query retrieves a list of existing permissions from the database.
 func (s *Store) Query(
 	ctx context.Context,
-	filter permission2.QueryFilter,
+	filter permission.QueryFilter,
 	orderBy order.By,
 	cur cursor.Cursor,
-) ([]permission2.Permission, error) {
+) ([]permission.Permission, error) {
 	perms, err := s.storer.Query(ctx, filter, orderBy, cur)
 	if err != nil {
 		return nil, fmt.Errorf("permission cache query: %w", err)
@@ -128,16 +147,16 @@ func (s *Store) Query(
 func (s *Store) QueryByID(
 	ctx context.Context,
 	permissionID uuid.UUID,
-) (permission2.Permission, error) {
+) (permission.Permission, error) {
 	p, err := s.cache.GetOrFetch(
 		ctx,
 		permissionID.String(),
-		func(ctx context.Context) (permission2.Permission, error) {
+		func(ctx context.Context) (permission.Permission, error) {
 			return s.storer.QueryByID(ctx, permissionID)
 		},
 	)
 	if err != nil {
-		return permission2.Permission{}, fmt.Errorf("permission cache query by id: %w", err)
+		return permission.Permission{}, fmt.Errorf("permission cache query by id: %w", err)
 	}
 
 	return p, nil

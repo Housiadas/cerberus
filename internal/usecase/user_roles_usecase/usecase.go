@@ -6,7 +6,7 @@ import (
 	"fmt"
 
 	"github.com/Housiadas/cerberus/internal/core/audit"
-	"github.com/Housiadas/cerberus/internal/core/user_roles/user_roles_service"
+	"github.com/Housiadas/cerberus/internal/core/user_roles"
 	errs2 "github.com/Housiadas/cerberus/internal/errs"
 	"github.com/Housiadas/cerberus/internal/eventbus"
 	"github.com/Housiadas/cerberus/internal/types/entity"
@@ -19,16 +19,16 @@ import (
 
 // UseCase manages user-role assignment operations.
 type UseCase struct {
-	log              logger.Logger
-	userRolesService *user_roles_service.Service
+	log              *logger.Service
+	userRolesService *user_roles.Service
 	dispatcher       *eventbus.EventDispatcher
 	tx               pgsql.Beginner
 }
 
 // NewUseCase constructs a UseCase.
 func NewUseCase(
-	log logger.Logger,
-	userRolesService *user_roles_service.Service,
+	log *logger.Service,
+	userRolesService *user_roles.Service,
 	dispatcher *eventbus.EventDispatcher,
 	tx pgsql.Beginner,
 ) *UseCase {

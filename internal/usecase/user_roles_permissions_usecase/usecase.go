@@ -4,7 +4,7 @@ package user_roles_permissions_usecase
 import (
 	"context"
 
-	"github.com/Housiadas/cerberus/internal/core/user_roles_permissions/user_roles_permissions_service"
+	"github.com/Housiadas/cerberus/internal/core/user_roles_permissions"
 	errs2 "github.com/Housiadas/cerberus/internal/errs"
 	"github.com/Housiadas/cerberus/pkg/cursor"
 	"github.com/Housiadas/cerberus/pkg/order"
@@ -13,12 +13,12 @@ import (
 
 // UseCase provides read access to the user-roles-permissions view.
 type UseCase struct {
-	service *user_roles_permissions_service.Service
+	service *user_roles_permissions.Service
 }
 
 // Config holds the dependencies for the use case.
 type Config struct {
-	Service *user_roles_permissions_service.Service
+	Service *user_roles_permissions.Service
 }
 
 func NewUseCase(cfg Config) *UseCase {

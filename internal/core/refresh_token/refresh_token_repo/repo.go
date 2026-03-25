@@ -27,11 +27,11 @@ var (
 )
 
 type Store struct {
-	log    logger.Logger
+	log    *logger.Service
 	dbPool sqlx.ExtContext
 }
 
-func NewStore(log logger.Logger, dbPool *sqlx.DB) *Store {
+func NewStore(log *logger.Service, dbPool *sqlx.DB) *Store {
 	return &Store{
 		log:    log,
 		dbPool: dbPool,

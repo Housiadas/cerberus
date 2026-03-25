@@ -7,8 +7,7 @@ import (
 	"fmt"
 	"time"
 
-	email_notification_outbox2 "github.com/Housiadas/cerberus/internal/core/email_notification_outbox"
-	"github.com/Housiadas/cerberus/pkg/logger"
+	"github.com/Housiadas/cerberus/internal/core/email_notification_outbox"
 	"github.com/Housiadas/cerberus/pkg/pgsql"
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
@@ -25,14 +24,28 @@ var (
 	emailOutboxIncrementRetrySQL string
 )
 
+type logger interface {
+	Debug(ctx context.Context, msg string, args ...any)
+	Debugc(ctx context.Context, caller int, msg string, args ...any)
+	Info(ctx context.Context, msg string, args ...any)
+	Infoc(ctx context.Context, caller int, msg string, args ...any)
+	Warn(ctx context.Context, msg string, args ...any)
+	Warnc(ctx context.Context, caller int, msg string, args ...any)
+	Error(ctx context.Context, msg string, args ...any)
+	Errorc(ctx context.Context, caller int, msg string, args ...any)
+}
+
 // Store manages the set of APIs for email notification outbox database access.
 type Store struct {
-	log    logger.Logger
+	log    logger
 	dbPool sqlx.ExtContext
 }
 
 // NewStore constructs the api for data access.
-func NewStore(log logger.Logger, dbPool *sqlx.DB) *Store {
+func NewStore(
+	log logger,
+	dbPool *sqlx.DB,
+) *Store {
 	return &Store{
 		log:    log,
 		dbPool: dbPool,
@@ -41,7 +54,7 @@ func NewStore(log logger.Logger, dbPool *sqlx.DB) *Store {
 
 // NewWithTx constructs a new Store value replacing the sqlx DB
 // value with a sqlx DB value that is currently inside a transaction.
-func (s *Store) NewWithTx(tx pgsql.CommitRollbacker) (email_notification_outbox2.Storer, error) {
+func (s *Store) NewWithTx(tx pgsql.CommitRollbacker) (email_notification_outbox.Storer, error) {
 	ec, err := pgsql.GetExtContext(tx)
 	if err != nil {
 		return nil, fmt.Errorf("email_notification_outbox transaction init error: %w", err)
@@ -58,7 +71,7 @@ func (s *Store) NewWithTx(tx pgsql.CommitRollbacker) (email_notification_outbox2
 // Create inserts a new email notification outbox entry into the database.
 func (s *Store) Create(
 	ctx context.Context,
-	e email_notification_outbox2.EmailNotificationOutbox,
+	e email_notification_outbox.EmailNotificationOutbox,
 ) error {
 	err := pgsql.NamedExecContext(ctx, s.log, s.dbPool, emailOutboxCreateSQL, toEmailOutboxDB(e))
 	if err != nil {
@@ -73,7 +86,7 @@ func (s *Store) QueryUnprocessed(
 	ctx context.Context,
 	limit int,
 	maxRetries int,
-) ([]email_notification_outbox2.EmailNotificationOutbox, error) {
+) ([]email_notification_outbox.EmailNotificationOutbox, error) {
 	data := struct {
 		Limit      int `db:"limit"`
 		MaxRetries int `db:"max_retries"`
@@ -96,7 +109,7 @@ func (s *Store) QueryUnprocessed(
 		return nil, fmt.Errorf("named_query_slice: %w", err)
 	}
 
-	result := make([]email_notification_outbox2.EmailNotificationOutbox, len(dbRows))
+	result := make([]email_notification_outbox.EmailNotificationOutbox, len(dbRows))
 	for i, row := range dbRows {
 		result[i] = toEmailOutboxDomain(row)
 	}

@@ -22,13 +22,6 @@ type Handler func(ctx context.Context, msg *kafka.Message) error
 // Flusher is called with a batch of successfully processed messages.
 type Flusher func(ctx context.Context, msgs []*kafka.Message) error
 
-// Consumer defines the interface for a Kafka consumer.
-type Consumer interface {
-	Subscribe(topic string) error
-	Consume(ctx context.Context, handler Handler, flusher Flusher) error
-	Close()
-}
-
 // ConsumerConfig holds configuration for ConsumerClient.
 type ConsumerConfig struct {
 	Brokers          string

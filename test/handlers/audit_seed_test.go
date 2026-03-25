@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/Housiadas/cerberus/internal/core/audit/audit_service"
-	"github.com/Housiadas/cerberus/internal/core/user/user_service"
+	"github.com/Housiadas/cerberus/internal/core/audit"
+	"github.com/Housiadas/cerberus/internal/core/user"
 	apitest2 "github.com/Housiadas/cerberus/internal/testutil/apitest"
 	"github.com/Housiadas/cerberus/internal/types/entity"
 )
@@ -13,12 +13,12 @@ import (
 func insertAuditSeedData(test *apitest2.Test) (apitest2.SeedData, error) {
 	ctx := context.Background()
 
-	usrs, err := user_service.TestSeedUsers(ctx, 2, test.Core.User)
+	usrs, err := user.TestSeedUsers(ctx, 2, test.Core.User)
 	if err != nil {
 		return apitest2.SeedData{}, fmt.Errorf("seeding users : %w", err)
 	}
 
-	audits, err := audit_service.TestSeedAudits(
+	audits, err := audit.TestSeedAudits(
 		ctx, 2, usrs[0].ID(), entity.New(entity.UserEntity), "create", test.Core.Audit,
 	)
 	if err != nil {

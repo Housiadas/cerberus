@@ -5,7 +5,7 @@ import (
 	"context"
 	"errors"
 
-	"github.com/Housiadas/cerberus/internal/core/audit/audit_service"
+	"github.com/Housiadas/cerberus/internal/core/audit"
 	"github.com/Housiadas/cerberus/internal/core/user"
 	errs2 "github.com/Housiadas/cerberus/internal/errs"
 	"github.com/Housiadas/cerberus/pkg/cursor"
@@ -13,10 +13,10 @@ import (
 )
 
 type UseCase struct {
-	AuditService *audit_service.Service
+	AuditService *audit.Service
 }
 
-func NewUseCase(service *audit_service.Service) *UseCase {
+func NewUseCase(service *audit.Service) *UseCase {
 	return &UseCase{
 		AuditService: service,
 	}

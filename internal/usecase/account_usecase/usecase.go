@@ -7,7 +7,6 @@ import (
 	"fmt"
 
 	"github.com/Housiadas/cerberus/internal/core/account"
-	"github.com/Housiadas/cerberus/internal/core/account/account_service"
 	errs2 "github.com/Housiadas/cerberus/internal/errs"
 	"github.com/Housiadas/cerberus/pkg/cursor"
 	"github.com/Housiadas/cerberus/pkg/logger"
@@ -18,15 +17,15 @@ import (
 
 // UseCase manages the set of APIs for account use cases.
 type UseCase struct {
-	log        logger.Logger
+	log        *logger.Service
 	tx         pgsql.Beginner
-	accountSvc *account_service.Service
+	accountSvc *account.Service
 }
 
 // NewUseCase constructs a use case for account operations.
 func NewUseCase(
-	log logger.Logger,
-	accountSvc *account_service.Service,
+	log *logger.Service,
+	accountSvc *account.Service,
 	tx pgsql.Beginner,
 ) *UseCase {
 	return &UseCase{

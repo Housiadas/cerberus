@@ -7,19 +7,22 @@ import (
 	"runtime"
 	"time"
 
-	errs2 "github.com/Housiadas/cerberus/internal/errs"
-	"github.com/Housiadas/cerberus/pkg/logger"
+	"github.com/Housiadas/cerberus/internal/errs"
 	"github.com/Housiadas/cerberus/pkg/pgsql"
 	"github.com/jmoiron/sqlx"
 )
 
+type logger interface {
+	Info(ctx context.Context, msg string, args ...any)
+}
+
 type UseCase struct {
 	build string
-	log   logger.Logger
+	log   logger
 	db    *sqlx.DB
 }
 
-func NewUseCase(build string, log logger.Logger, db *sqlx.DB) *UseCase {
+func NewUseCase(build string, log logger, db *sqlx.DB) *UseCase {
 	return &UseCase{
 		build: build,
 		log:   log,
@@ -38,7 +41,7 @@ func (a *UseCase) Readiness(ctx context.Context) error {
 	if err != nil {
 		a.log.Info(ctx, "readiness failure", "ERROR", err)
 
-		return errs2.New(errs2.Internal, errs2.CodeInternal, err)
+		return errs.New(errs.Internal, errs.CodeInternal, err)
 	}
 
 	return nil

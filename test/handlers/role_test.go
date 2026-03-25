@@ -7,7 +7,7 @@ import (
 	"sort"
 	"testing"
 
-	"github.com/Housiadas/cerberus/internal/core/role/role_service"
+	"github.com/Housiadas/cerberus/internal/core/role"
 	errs2 "github.com/Housiadas/cerberus/internal/errs"
 	"github.com/Housiadas/cerberus/internal/testutil/apitest"
 	"github.com/Housiadas/cerberus/internal/testutil/dbtest"
@@ -29,7 +29,7 @@ func Test_API_Role_Query_200(t *testing.T) {
 	require.NoError(t, err)
 
 	ctx := context.Background()
-	roles, err := role_service.TestSeedRoles(ctx, 2, test.Core.Role)
+	roles, err := role.TestSeedRoles(ctx, 2, test.Core.Role)
 	require.NoError(t, err)
 
 	sort.Slice(roles, func(i, j int) bool {
@@ -212,7 +212,7 @@ func Test_API_Role_Update_200(t *testing.T) {
 	require.NoError(t, err)
 
 	ctx := context.Background()
-	roles, err := role_service.TestSeedRoles(ctx, 1, test.Core.Role)
+	roles, err := role.TestSeedRoles(ctx, 1, test.Core.Role)
 	require.NoError(t, err)
 
 	table := []apitest.Table{
@@ -263,7 +263,7 @@ func Test_API_Role_Update_403(t *testing.T) {
 	require.NoError(t, err)
 
 	ctx := context.Background()
-	roles, err := role_service.TestSeedRoles(ctx, 1, test.Core.Role)
+	roles, err := role.TestSeedRoles(ctx, 1, test.Core.Role)
 	require.NoError(t, err)
 
 	table := []apitest.Table{
@@ -297,7 +297,7 @@ func Test_API_Role_Delete_204(t *testing.T) {
 	require.NoError(t, err)
 
 	ctx := context.Background()
-	roles, err := role_service.TestSeedRoles(ctx, 1, test.Core.Role)
+	roles, err := role.TestSeedRoles(ctx, 1, test.Core.Role)
 	require.NoError(t, err)
 
 	table := []apitest.Table{
@@ -323,7 +323,7 @@ func Test_API_Role_Delete_403(t *testing.T) {
 	require.NoError(t, err)
 
 	ctx := context.Background()
-	roles, err := role_service.TestSeedRoles(ctx, 1, test.Core.Role)
+	roles, err := role.TestSeedRoles(ctx, 1, test.Core.Role)
 	require.NoError(t, err)
 
 	table := []apitest.Table{

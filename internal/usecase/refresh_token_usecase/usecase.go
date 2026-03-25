@@ -4,16 +4,16 @@ import (
 	"context"
 	"time"
 
-	"github.com/Housiadas/cerberus/internal/core/refresh_token/refresh_token_service"
+	"github.com/Housiadas/cerberus/internal/core/refresh_token"
 	errs2 "github.com/Housiadas/cerberus/internal/errs"
 	"github.com/google/uuid"
 )
 
 type UseCase struct {
-	refreshTokenService *refresh_token_service.Service
+	refreshTokenService *refresh_token.Service
 }
 
-func NewUseCase(refreshTokenService *refresh_token_service.Service) *UseCase {
+func NewUseCase(refreshTokenService *refresh_token.Service) *UseCase {
 	return &UseCase{
 		refreshTokenService: refreshTokenService,
 	}

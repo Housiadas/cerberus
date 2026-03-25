@@ -9,7 +9,6 @@ import (
 
 	"github.com/Housiadas/cerberus/internal/core/email_notification_outbox"
 	"github.com/Housiadas/cerberus/internal/core/email_notification_outbox/email_notification_outbox_repo"
-	"github.com/Housiadas/cerberus/internal/core/email_notification_outbox/email_notification_outbox_service"
 	"github.com/Housiadas/cerberus/internal/relay"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
@@ -35,7 +34,7 @@ func Test_EmailNotificationRelay_RetriesFailedEntries(t *testing.T) {
 	outboxRepo := email_notification_outbox_repo.NewStore(log, db)
 	uuidGen := uuidgen.NewV7()
 	clk := clock.NewClock()
-	outboxSvc := email_notification_outbox_service.New(log, outboxRepo, uuidGen, clk)
+	outboxSvc := email_notification_outbox.NewService(log, outboxRepo, uuidGen, clk)
 
 	payload, err := json.Marshal(map[string]string{
 		"subject": "Reset your password",
@@ -90,7 +89,7 @@ func Test_EmailNotificationRelay_MarkProcessed(t *testing.T) {
 	outboxRepo := email_notification_outbox_repo.NewStore(log, db)
 	uuidGen := uuidgen.NewV7()
 	clk := clock.NewClock()
-	outboxSvc := email_notification_outbox_service.New(log, outboxRepo, uuidGen, clk)
+	outboxSvc := email_notification_outbox.NewService(log, outboxRepo, uuidGen, clk)
 
 	payload, err := json.Marshal(map[string]string{
 		"subject": "Reset your password",
@@ -138,7 +137,7 @@ func Test_EmailNotificationRelay_ProcessesBatch_InvalidSMTP(t *testing.T) {
 	outboxRepo := email_notification_outbox_repo.NewStore(log, db)
 	uuidGen := uuidgen.NewV7()
 	clk := clock.NewClock()
-	outboxSvc := email_notification_outbox_service.New(log, outboxRepo, uuidGen, clk)
+	outboxSvc := email_notification_outbox.NewService(log, outboxRepo, uuidGen, clk)
 
 	payload, err := json.Marshal(map[string]string{
 		"subject": "Reset your password",

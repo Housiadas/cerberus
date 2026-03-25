@@ -4,39 +4,40 @@ package handler
 
 import (
 	"context"
+	"time"
 
 	"github.com/Housiadas/cerberus/internal/config"
+	"github.com/Housiadas/cerberus/internal/core/account"
 	"github.com/Housiadas/cerberus/internal/core/account/account_repo"
-	"github.com/Housiadas/cerberus/internal/core/account/account_service"
+	"github.com/Housiadas/cerberus/internal/core/audit"
 	"github.com/Housiadas/cerberus/internal/core/audit/audit_repo"
-	"github.com/Housiadas/cerberus/internal/core/audit/audit_service"
+	"github.com/Housiadas/cerberus/internal/core/email_notification_outbox"
 	"github.com/Housiadas/cerberus/internal/core/email_notification_outbox/email_notification_outbox_repo"
-	"github.com/Housiadas/cerberus/internal/core/email_notification_outbox/email_notification_outbox_service"
+	"github.com/Housiadas/cerberus/internal/core/invoice"
 	"github.com/Housiadas/cerberus/internal/core/invoice/invoice_repo"
-	"github.com/Housiadas/cerberus/internal/core/invoice/invoice_service"
+	"github.com/Housiadas/cerberus/internal/core/outbox"
 	"github.com/Housiadas/cerberus/internal/core/outbox/outbox_repo"
-	"github.com/Housiadas/cerberus/internal/core/outbox/outbox_service"
+	"github.com/Housiadas/cerberus/internal/core/permission"
 	"github.com/Housiadas/cerberus/internal/core/permission/permission_cache"
 	"github.com/Housiadas/cerberus/internal/core/permission/permission_repo"
-	"github.com/Housiadas/cerberus/internal/core/permission/permission_service"
+	"github.com/Housiadas/cerberus/internal/core/refresh_token"
 	"github.com/Housiadas/cerberus/internal/core/refresh_token/refresh_token_repo"
-	"github.com/Housiadas/cerberus/internal/core/refresh_token/refresh_token_service"
+	"github.com/Housiadas/cerberus/internal/core/reset_token"
 	"github.com/Housiadas/cerberus/internal/core/reset_token/reset_token_repo"
-	"github.com/Housiadas/cerberus/internal/core/reset_token/reset_token_service"
+	"github.com/Housiadas/cerberus/internal/core/role"
 	"github.com/Housiadas/cerberus/internal/core/role/role_cache"
 	"github.com/Housiadas/cerberus/internal/core/role/role_repo"
-	"github.com/Housiadas/cerberus/internal/core/role/role_service"
+	"github.com/Housiadas/cerberus/internal/core/role_permissions"
 	"github.com/Housiadas/cerberus/internal/core/role_permissions/role_permissions_repo"
-	"github.com/Housiadas/cerberus/internal/core/role_permissions/role_permissions_service"
+	"github.com/Housiadas/cerberus/internal/core/subscription"
 	"github.com/Housiadas/cerberus/internal/core/subscription/subscription_repo"
-	"github.com/Housiadas/cerberus/internal/core/subscription/subscription_service"
+	"github.com/Housiadas/cerberus/internal/core/user"
 	"github.com/Housiadas/cerberus/internal/core/user/user_cache"
 	"github.com/Housiadas/cerberus/internal/core/user/user_repo"
-	"github.com/Housiadas/cerberus/internal/core/user/user_service"
+	"github.com/Housiadas/cerberus/internal/core/user_roles"
 	"github.com/Housiadas/cerberus/internal/core/user_roles/user_roles_repo"
-	"github.com/Housiadas/cerberus/internal/core/user_roles/user_roles_service"
+	"github.com/Housiadas/cerberus/internal/core/user_roles_permissions"
 	"github.com/Housiadas/cerberus/internal/core/user_roles_permissions/user_roles_permissions_repo"
-	"github.com/Housiadas/cerberus/internal/core/user_roles_permissions/user_roles_permissions_service"
 	"github.com/Housiadas/cerberus/internal/eventbus"
 	"github.com/Housiadas/cerberus/internal/usecase/account_usecase"
 	"github.com/Housiadas/cerberus/internal/usecase/audit_usecase"
@@ -56,16 +57,24 @@ import (
 	"github.com/Housiadas/cerberus/pkg/hasher"
 	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/Housiadas/cerberus/pkg/pgsql"
-	"github.com/Housiadas/cerberus/pkg/redis"
 	stripepkg "github.com/Housiadas/cerberus/pkg/stripe"
 	"github.com/Housiadas/cerberus/pkg/uuidgen"
 	"github.com/jmoiron/sqlx"
+	"github.com/redis/go-redis/v9"
 	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/trace"
 )
 
 // Ensure Handler implements the strict server interface at compile time.
 var _ openapi.StrictServerInterface = (*Handler)(nil)
+
+// Client defines the interface for Redis operations used by distributed storage.
+type redisClient interface {
+	Get(ctx context.Context, key string) *redis.StringCmd
+	Set(ctx context.Context, key string, value any, expiration time.Duration) *redis.StatusCmd
+	MGet(ctx context.Context, keys ...string) *redis.SliceCmd
+	Pipeline() redis.Pipeliner
+}
 
 // Config represents the configuration for the Handler.
 type Config struct {
@@ -74,8 +83,8 @@ type Config struct {
 	Cors              config.CorsSettings
 	Stripe            config.Stripe
 	DB                *sqlx.DB
-	Redis             redis.Client
-	Log               logger.Logger
+	Redis             redisClient
+	Log               *logger.Service
 	Tracer            trace.Tracer
 	Meter             metric.Meter
 	AccessTokenSecret []byte
@@ -138,25 +147,25 @@ func New(ctx context.Context, cfg Config) *Handler {
 	invoiceRepo := invoice_repo.NewStore(cfg.Log, cfg.DB)
 
 	// services
-	auditService := audit_service.New(cfg.Log, auditRepo)
-	outboxSvc := outbox_service.New(cfg.Log, outboxRepo, uuidGen, clk)
-	emailNotifOutboxSvc := email_notification_outbox_service.New(
+	auditService := audit.NewService(cfg.Log, auditRepo)
+	outboxSvc := outbox.NewService(cfg.Log, outboxRepo, uuidGen, clk)
+	emailNotifOutboxSvc := email_notification_outbox.NewService(
 		cfg.Log, emailNotifOutboxRepo, uuidGen, clk,
 	)
-	userService := user_service.New(cfg.Log, userCacheStore, uuidGen, clk, hash)
-	roleService := role_service.New(cfg.Log, roleCacheStore, uuidGen)
-	permissionService := permission_service.New(cfg.Log, permissionCacheStore, uuidGen)
-	refreshTokenService := refresh_token_service.New(cfg.Log, refreshTokenRepo, uuidGen, clk)
-	resetTokenService := reset_token_service.New(cfg.Log, resetTokenRepo, uuidGen, clk)
-	userRolesSvc := user_roles_service.New(cfg.Log, userRolesRepo)
-	rolePermsSvc := role_permissions_service.New(cfg.Log, rolePermissionsRepo)
-	userRolesPermissionsService := user_roles_permissions_service.New(
+	userService := user.NewService(cfg.Log, userCacheStore, uuidGen, clk, hash)
+	roleService := role.NewService(cfg.Log, roleCacheStore, uuidGen)
+	permissionService := permission.NewService(cfg.Log, permissionCacheStore, uuidGen)
+	refreshTokenService := refresh_token.NewService(cfg.Log, refreshTokenRepo, uuidGen, clk)
+	resetTokenService := reset_token.NewService(resetTokenRepo, uuidGen, clk)
+	userRolesSvc := user_roles.NewService(cfg.Log, userRolesRepo)
+	rolePermsSvc := role_permissions.NewService(cfg.Log, rolePermissionsRepo)
+	userRolesPermissionsService := user_roles_permissions.NewService(
 		cfg.Log,
 		userRolesPermissionsRepo,
 	)
-	accountSvc := account_service.New(cfg.Log, accountRepo, uuidGen, clk)
-	subscriptionSvc := subscription_service.New(cfg.Log, subscriptionRepo)
-	invoiceSvc := invoice_service.New(cfg.Log, invoiceRepo)
+	accountSvc := account.NewService(cfg.Log, accountRepo, uuidGen, clk)
+	subscriptionSvc := subscription.NewService(cfg.Log, subscriptionRepo)
+	invoiceSvc := invoice.NewService(cfg.Log, invoiceRepo)
 
 	// event dispatcher
 	dispatcher := eventbus.New(outboxSvc, auditService)

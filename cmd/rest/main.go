@@ -9,6 +9,7 @@ import (
 	"os/signal"
 	"runtime"
 	"syscall"
+	"time"
 
 	"github.com/Housiadas/cerberus/internal/config"
 	ctxPck "github.com/Housiadas/cerberus/internal/context"
@@ -16,11 +17,10 @@ import (
 	"github.com/Housiadas/cerberus/pkg/debug"
 	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/Housiadas/cerberus/pkg/pgsql"
-	pkgRedis "github.com/Housiadas/cerberus/pkg/redis"
 	"github.com/Housiadas/cerberus/pkg/telemetry"
 	"github.com/Housiadas/cerberus/pkg/vault"
 	_ "github.com/jackc/pgx/v5/stdlib"
-	goRedis "github.com/redis/go-redis/v9"
+	"github.com/redis/go-redis/v9"
 )
 
 var build = "develop"
@@ -101,11 +101,11 @@ func run(ctx context.Context, log *logger.Service) error {
 	// -------------------------------------------------------------------------
 	log.Info(ctx, "startup", "status", "initializing redis", "host", cfg.Redis.Host)
 
-	redisClient, err := initRedis(ctx, cfg)
+	redisClient, redClose, err := initRedis(ctx, cfg)
 	if err != nil {
 		return fmt.Errorf("initializing redis: %w", err)
 	}
-	defer redisClient.Close()
+	defer redClose()
 
 	// -------------------------------------------------------------------------
 	// Initialize Telemetry
@@ -216,17 +216,25 @@ func run(ctx context.Context, log *logger.Service) error {
 func initRedis(
 	ctx context.Context,
 	cfg config.Config,
-) (*goRedis.Client, error) {
-	client, err := pkgRedis.Open(ctx, pkgRedis.Config{
-		Host:     cfg.Redis.Host,
+) (*redis.Client, func(), error) {
+	client := redis.NewClient(&redis.Options{
+		Addr:     cfg.Redis.Host,
 		Password: cfg.Redis.Password,
 		DB:       cfg.Redis.DB,
 	})
-	if err != nil {
-		return nil, fmt.Errorf("error connecting to redis: %w", err)
+	teardown := func() {
+		client.Close()
 	}
 
-	return client, nil
+	pingCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	err := client.Ping(pingCtx).Err()
+	if err != nil {
+		return nil, nil, fmt.Errorf("redis ping: %w", err)
+	}
+
+	return client, teardown, nil
 }
 
 func initVault(ctx context.Context, cfg config.Config) ([]byte, error) {
@@ -249,7 +257,7 @@ func initVault(ctx context.Context, cfg config.Config) ([]byte, error) {
 func initTelemetry(
 	ctx context.Context,
 	cfg config.Config,
-	log logger.Logger,
+	log *logger.Service,
 ) (*telemetry.Provider, error) {
 	log.Info(ctx, "startup", "status", "initializing telemetry")
 

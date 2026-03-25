@@ -1,0 +1,137 @@
+// Package permission_service provides internal access to permission.
+package permission
+
+import (
+	"context"
+	"fmt"
+	"time"
+
+	"github.com/Housiadas/cerberus/pkg/cursor"
+	"github.com/Housiadas/cerberus/pkg/order"
+	"github.com/Housiadas/cerberus/pkg/pgsql"
+	"github.com/google/uuid"
+)
+
+type logger interface {
+	Debug(ctx context.Context, msg string, args ...any)
+	Debugc(ctx context.Context, caller int, msg string, args ...any)
+	Info(ctx context.Context, msg string, args ...any)
+	Infoc(ctx context.Context, caller int, msg string, args ...any)
+	Warn(ctx context.Context, msg string, args ...any)
+	Warnc(ctx context.Context, caller int, msg string, args ...any)
+	Error(ctx context.Context, msg string, args ...any)
+	Errorc(ctx context.Context, caller int, msg string, args ...any)
+}
+
+type generator interface {
+	Generate() (uuid.UUID, error)
+}
+
+// Service manages the set of APIs for permission access.
+type Service struct {
+	log     logger
+	storer  Storer
+	uuidGen generator
+}
+
+// NewService constructor.
+func NewService(
+	log logger,
+	storer Storer,
+	uuidGen generator,
+) *Service {
+	return &Service{log: log, storer: storer, uuidGen: uuidGen}
+}
+
+// NewWithTx constructs a new internal value that will use the
+// specified transaction in any store-related calls.
+func (s *Service) NewWithTx(tx pgsql.CommitRollbacker) (*Service, error) {
+	storer, err := s.storer.NewWithTx(tx)
+	if err != nil {
+		return nil, fmt.Errorf("permission transaction issue: %w", err)
+	}
+
+	bus := Service{
+		log:     s.log,
+		storer:  storer,
+		uuidGen: s.uuidGen,
+	}
+
+	return &bus, nil
+}
+
+// Create adds a new permission to the system.
+func (s *Service) Create(
+	ctx context.Context,
+	np NewPermission,
+) (Permission, error) {
+	id, err := s.uuidGen.Generate()
+	if err != nil {
+		return Permission{}, fmt.Errorf("permission uuid generate: %w", err)
+	}
+
+	now := time.Now()
+	p := New(id, np.Name, now, now, nil)
+
+	err = s.storer.Create(ctx, p)
+	if err != nil {
+		return Permission{}, fmt.Errorf("permission create: %w", err)
+	}
+
+	return p, nil
+}
+
+// Update modifies information about a permission.
+func (s *Service) Update(
+	ctx context.Context,
+	p Permission,
+	up UpdatePermission,
+) (Permission, error) {
+	if up.Name != nil {
+		p = p.WithName(*up.Name)
+	}
+
+	p = p.WithUpdatedAt(time.Now())
+
+	err := s.storer.Update(ctx, p)
+	if err != nil {
+		return Permission{}, fmt.Errorf("permission update: %w", err)
+	}
+
+	return p, nil
+}
+
+// Delete removes the specified permission.
+func (s *Service) Delete(ctx context.Context, p Permission) error {
+	err := s.storer.Delete(ctx, p)
+	if err != nil {
+		return fmt.Errorf("permission delete: %w", err)
+	}
+
+	return nil
+}
+
+// QueryByID finds the permission by the specified ID.
+func (s *Service) QueryByID(ctx context.Context, id uuid.UUID) (Permission, error) {
+	p, err := s.storer.QueryByID(ctx, id)
+	if err != nil {
+		return Permission{}, fmt.Errorf("query: permissionID[%s]: %w", id, err)
+	}
+
+	return p, nil
+}
+
+// Query retrieves a list of existing permissions.
+func (s *Service) Query(
+	ctx context.Context,
+	filter QueryFilter,
+	orderBy order.By,
+	cur cursor.Cursor,
+) ([]Permission, error) {
+	ps, err := s.storer.Query(ctx, filter, orderBy, cur)
+	if err != nil {
+		return nil, fmt.Errorf("permission query: %w", err)
+	}
+
+	return ps, nil
+}

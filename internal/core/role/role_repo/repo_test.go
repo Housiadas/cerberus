@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/Housiadas/cerberus/internal/core/role/role_repo"
-	role_service2 "github.com/Housiadas/cerberus/internal/core/role/role_service"
 	"github.com/Housiadas/cerberus/internal/types/name"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
@@ -34,7 +33,7 @@ func Test_Role(t *testing.T) {
 	log := logger.New(&buf, logger.LevelInfo, "TEST", traceIDFn, requestIDFn)
 
 	uuidGen := uuidgen.NewV7()
-	roleService := role_service2.New(log, role_repo.NewStore(log, db), uuidGen)
+	roleService := role.NewService(log, role_repo.NewStore(log, db), uuidGen)
 
 	sd, err := insertSeedData(roleService)
 	if err != nil {
@@ -47,10 +46,10 @@ func Test_Role(t *testing.T) {
 	unitest.Run(t, deleteRole(roleService, sd), "delete")
 }
 
-func insertSeedData(service *role_service2.Service) (unitest.SeedData, error) {
+func insertSeedData(service *role.Service) (unitest.SeedData, error) {
 	ctx := context.Background()
 
-	roles, err := role_service2.TestSeedRoles(ctx, 2, service)
+	roles, err := role.TestSeedRoles(ctx, 2, service)
 	if err != nil {
 		return unitest.SeedData{}, fmt.Errorf("seeding roles: %w", err)
 	}
@@ -65,7 +64,7 @@ func insertSeedData(service *role_service2.Service) (unitest.SeedData, error) {
 	return sd, nil
 }
 
-func queryRole(service *role_service2.Service, sd unitest.SeedData) []unitest.Table {
+func queryRole(service *role.Service, sd unitest.SeedData) []unitest.Table {
 	roles := make([]role.Role, 0, len(sd.Roles))
 	for _, r := range sd.Roles {
 		roles = append(roles, r.Role)
@@ -132,7 +131,7 @@ func queryRole(service *role_service2.Service, sd unitest.SeedData) []unitest.Ta
 	}
 }
 
-func createRole(service *role_service2.Service) []unitest.Table {
+func createRole(service *role.Service) []unitest.Table {
 	return []unitest.Table{
 		{
 			Name: "basic",
@@ -171,7 +170,7 @@ func createRole(service *role_service2.Service) []unitest.Table {
 	}
 }
 
-func updateRole(service *role_service2.Service, sd unitest.SeedData) []unitest.Table {
+func updateRole(service *role.Service, sd unitest.SeedData) []unitest.Table {
 	newName := name.MustParse("UpdatedRole")
 
 	return []unitest.Table{
@@ -211,7 +210,7 @@ func updateRole(service *role_service2.Service, sd unitest.SeedData) []unitest.T
 	}
 }
 
-func deleteRole(service *role_service2.Service, sd unitest.SeedData) []unitest.Table {
+func deleteRole(service *role.Service, sd unitest.SeedData) []unitest.Table {
 	return []unitest.Table{
 		{
 			Name:    "role",

@@ -7,7 +7,7 @@ import (
 	"sort"
 	"testing"
 
-	"github.com/Housiadas/cerberus/internal/core/permission/permission_service"
+	"github.com/Housiadas/cerberus/internal/core/permission"
 	errs2 "github.com/Housiadas/cerberus/internal/errs"
 	"github.com/Housiadas/cerberus/internal/testutil/apitest"
 	"github.com/Housiadas/cerberus/internal/testutil/dbtest"
@@ -29,7 +29,7 @@ func Test_API_Permission_Query_200(t *testing.T) {
 	require.NoError(t, err)
 
 	ctx := context.Background()
-	perms, err := permission_service.TestSeedPermissions(ctx, 2, test.Core.Permission)
+	perms, err := permission.TestSeedPermissions(ctx, 2, test.Core.Permission)
 	require.NoError(t, err)
 
 	sort.Slice(perms, func(i, j int) bool {
@@ -212,7 +212,7 @@ func Test_API_Permission_Update_200(t *testing.T) {
 	require.NoError(t, err)
 
 	ctx := context.Background()
-	perms, err := permission_service.TestSeedPermissions(ctx, 1, test.Core.Permission)
+	perms, err := permission.TestSeedPermissions(ctx, 1, test.Core.Permission)
 	require.NoError(t, err)
 
 	table := []apitest.Table{
@@ -261,7 +261,7 @@ func Test_API_Permission_Update_403(t *testing.T) {
 	require.NoError(t, err)
 
 	ctx := context.Background()
-	perms, err := permission_service.TestSeedPermissions(ctx, 1, test.Core.Permission)
+	perms, err := permission.TestSeedPermissions(ctx, 1, test.Core.Permission)
 	require.NoError(t, err)
 
 	table := []apitest.Table{
@@ -295,7 +295,7 @@ func Test_API_Permission_Delete_204(t *testing.T) {
 	require.NoError(t, err)
 
 	ctx := context.Background()
-	perms, err := permission_service.TestSeedPermissions(ctx, 1, test.Core.Permission)
+	perms, err := permission.TestSeedPermissions(ctx, 1, test.Core.Permission)
 	require.NoError(t, err)
 
 	table := []apitest.Table{
@@ -321,7 +321,7 @@ func Test_API_Permission_Delete_403(t *testing.T) {
 	require.NoError(t, err)
 
 	ctx := context.Background()
-	perms, err := permission_service.TestSeedPermissions(ctx, 1, test.Core.Permission)
+	perms, err := permission.TestSeedPermissions(ctx, 1, test.Core.Permission)
 	require.NoError(t, err)
 
 	table := []apitest.Table{

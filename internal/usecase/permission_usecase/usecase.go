@@ -7,28 +7,37 @@ import (
 
 	"github.com/Housiadas/cerberus/internal/core/audit"
 	"github.com/Housiadas/cerberus/internal/core/permission"
-	"github.com/Housiadas/cerberus/internal/core/permission/permission_service"
 	errs2 "github.com/Housiadas/cerberus/internal/errs"
 	"github.com/Housiadas/cerberus/internal/eventbus"
 	"github.com/Housiadas/cerberus/internal/types/entity"
 	"github.com/Housiadas/cerberus/internal/types/event"
 	"github.com/Housiadas/cerberus/pkg/cursor"
-	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/Housiadas/cerberus/pkg/order"
 	"github.com/Housiadas/cerberus/pkg/pgsql"
 	"github.com/google/uuid"
 )
 
+type logger interface {
+	Debug(ctx context.Context, msg string, args ...any)
+	Debugc(ctx context.Context, caller int, msg string, args ...any)
+	Info(ctx context.Context, msg string, args ...any)
+	Infoc(ctx context.Context, caller int, msg string, args ...any)
+	Warn(ctx context.Context, msg string, args ...any)
+	Warnc(ctx context.Context, caller int, msg string, args ...any)
+	Error(ctx context.Context, msg string, args ...any)
+	Errorc(ctx context.Context, caller int, msg string, args ...any)
+}
+
 type UseCase struct {
-	log               logger.Logger
-	permissionService *permission_service.Service
+	log               logger
+	permissionService *permission.Service
 	dispatcher        *eventbus.EventDispatcher
 	tx                pgsql.Beginner
 }
 
 func NewUseCase(
-	log logger.Logger,
-	permissionService *permission_service.Service,
+	log logger,
+	permissionService *permission.Service,
 	dispatcher *eventbus.EventDispatcher,
 	tx pgsql.Beginner,
 ) *UseCase {

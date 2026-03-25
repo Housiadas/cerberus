@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/Housiadas/cerberus/internal/core/user/user_service"
+	"github.com/Housiadas/cerberus/internal/core/user"
 	apitest2 "github.com/Housiadas/cerberus/internal/testutil/apitest"
 	"github.com/google/uuid"
 )
@@ -12,7 +12,7 @@ import (
 func insertUserSeedData(test *apitest2.Test) (apitest2.SeedData, error) {
 	ctx := context.Background()
 
-	usrs, err := user_service.TestSeedUsers(ctx, 2, test.Core.User)
+	usrs, err := user.TestSeedUsers(ctx, 2, test.Core.User)
 	if err != nil {
 		return apitest2.SeedData{}, fmt.Errorf("seeding users : %w", err)
 	}
