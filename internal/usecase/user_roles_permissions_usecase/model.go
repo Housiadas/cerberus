@@ -1,7 +1,7 @@
 package user_roles_permissions_usecase
 
 import (
-	urp "github.com/Housiadas/cerberus/internal/core/domain/user_roles_permissions"
+	urp "github.com/Housiadas/cerberus/internal/core/user_roles_permissions"
 )
 
 // Permission represents a permission with its ID and name for the app layer.

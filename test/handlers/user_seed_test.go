@@ -4,10 +4,9 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/Housiadas/cerberus/internal/core/user/user_service"
 	apitest2 "github.com/Housiadas/cerberus/internal/testutil/apitest"
 	"github.com/google/uuid"
-
-	"github.com/Housiadas/cerberus/internal/core/service/user_service"
 )
 
 func insertUserSeedData(test *apitest2.Test) (apitest2.SeedData, error) {

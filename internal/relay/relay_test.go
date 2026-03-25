@@ -7,13 +7,13 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Housiadas/cerberus/internal/core/service/outbox_service"
+	outbox2 "github.com/Housiadas/cerberus/internal/core/outbox"
+	"github.com/Housiadas/cerberus/internal/core/outbox/outbox_service"
 	"github.com/Housiadas/cerberus/internal/relay"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 
-	"github.com/Housiadas/cerberus/internal/core/domain/outbox"
 	"github.com/Housiadas/cerberus/pkg/clock"
 	"github.com/Housiadas/cerberus/pkg/kafka"
 	"github.com/Housiadas/cerberus/pkg/logger"
@@ -26,16 +26,16 @@ func TestRelay_ProcessBatch_Successful(t *testing.T) {
 	id1 := uuid.MustParse("11111111-1111-7111-1111-111111111111")
 	id2 := uuid.MustParse("22222222-2222-7222-2222-222222222222")
 
-	entries := []outbox.Outbox{
-		outbox.New(id1, "user.created", uuid.MustParse("aaaaaaaa-aaaa-7aaa-aaaa-aaaaaaaaaaaa"), "user-events", json.RawMessage(`{"name":"John"}`), 0, mTime, nil),
-		outbox.New(id2, "user.updated", uuid.MustParse("bbbbbbbb-bbbb-7bbb-bbbb-bbbbbbbbbbbb"), "user-events", json.RawMessage(`{"name":"Jane"}`), 0, mTime, nil),
+	entries := []outbox2.Outbox{
+		outbox2.New(id1, "user.created", uuid.MustParse("aaaaaaaa-aaaa-7aaa-aaaa-aaaaaaaaaaaa"), "user-events", json.RawMessage(`{"name":"John"}`), 0, mTime, nil),
+		outbox2.New(id2, "user.updated", uuid.MustParse("bbbbbbbb-bbbb-7bbb-bbbb-bbbbbbbbbbbb"), "user-events", json.RawMessage(`{"name":"Jane"}`), 0, mTime, nil),
 	}
 
 	mLogger := logger.NewMockLogger(t)
 	mLogger.EXPECT().Info(mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Maybe()
 	mLogger.EXPECT().Info(mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Maybe()
 
-	mStorer := outbox.NewMockStorer(t)
+	mStorer := outbox2.NewMockStorer(t)
 	mStorer.EXPECT().QueryUnprocessed(mock.Anything, 100, 5).Return(entries, nil).Once()
 	mStorer.EXPECT().QueryUnprocessed(mock.Anything, 100, 5).Return(nil, nil).Maybe()
 	mStorer.EXPECT().MarkProcessed(mock.Anything, []uuid.UUID{id1, id2}, mTime).Return(nil).Once()
@@ -65,9 +65,9 @@ func TestRelay_ProcessBatch_PartialFailure(t *testing.T) {
 	id1 := uuid.MustParse("11111111-1111-7111-1111-111111111111")
 	id2 := uuid.MustParse("22222222-2222-7222-2222-222222222222")
 
-	entries := []outbox.Outbox{
-		outbox.New(id1, "user.created", uuid.MustParse("aaaaaaaa-aaaa-7aaa-aaaa-aaaaaaaaaaaa"), "user-events", json.RawMessage(`{"name":"John"}`), 0, mTime, nil),
-		outbox.New(id2, "user.updated", uuid.MustParse("bbbbbbbb-bbbb-7bbb-bbbb-bbbbbbbbbbbb"), "user-events", json.RawMessage(`{"name":"Jane"}`), 0, mTime, nil),
+	entries := []outbox2.Outbox{
+		outbox2.New(id1, "user.created", uuid.MustParse("aaaaaaaa-aaaa-7aaa-aaaa-aaaaaaaaaaaa"), "user-events", json.RawMessage(`{"name":"John"}`), 0, mTime, nil),
+		outbox2.New(id2, "user.updated", uuid.MustParse("bbbbbbbb-bbbb-7bbb-bbbb-bbbbbbbbbbbb"), "user-events", json.RawMessage(`{"name":"Jane"}`), 0, mTime, nil),
 	}
 
 	mLogger := logger.NewMockLogger(t)
@@ -75,7 +75,7 @@ func TestRelay_ProcessBatch_PartialFailure(t *testing.T) {
 	mLogger.EXPECT().Info(mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Maybe()
 	mLogger.EXPECT().Error(mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Maybe()
 
-	mStorer := outbox.NewMockStorer(t)
+	mStorer := outbox2.NewMockStorer(t)
 	mStorer.EXPECT().QueryUnprocessed(mock.Anything, 100, 5).Return(entries, nil).Once()
 	mStorer.EXPECT().QueryUnprocessed(mock.Anything, 100, 5).Return(nil, nil).Maybe()
 	// Only id2 should be marked processed since id1 fails
@@ -111,7 +111,7 @@ func TestRelay_ProcessBatch_Empty(t *testing.T) {
 	mLogger.EXPECT().Info(mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Maybe()
 	mLogger.EXPECT().Info(mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Maybe()
 
-	mStorer := outbox.NewMockStorer(t)
+	mStorer := outbox2.NewMockStorer(t)
 	mStorer.EXPECT().QueryUnprocessed(mock.Anything, 100, 5).Return(nil, nil).Maybe()
 
 	mUuidGen := uuidgen.NewMockGenerator(t)
@@ -137,8 +137,8 @@ func TestRelay_ProcessBatch_AllFailed_DeadLetter(t *testing.T) {
 	mTime := time.Date(2026, 1, 1, 10, 30, 0, 0, time.UTC)
 	id1 := uuid.MustParse("11111111-1111-7111-1111-111111111111")
 
-	entries := []outbox.Outbox{
-		outbox.New(id1, "user.created", uuid.MustParse("aaaaaaaa-aaaa-7aaa-aaaa-aaaaaaaaaaaa"), "user-events", json.RawMessage(`{"name":"John"}`), 0, mTime, nil),
+	entries := []outbox2.Outbox{
+		outbox2.New(id1, "user.created", uuid.MustParse("aaaaaaaa-aaaa-7aaa-aaaa-aaaaaaaaaaaa"), "user-events", json.RawMessage(`{"name":"John"}`), 0, mTime, nil),
 	}
 
 	mLogger := logger.NewMockLogger(t)
@@ -146,7 +146,7 @@ func TestRelay_ProcessBatch_AllFailed_DeadLetter(t *testing.T) {
 	mLogger.EXPECT().Info(mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Maybe()
 	mLogger.EXPECT().Error(mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Maybe()
 
-	mStorer := outbox.NewMockStorer(t)
+	mStorer := outbox2.NewMockStorer(t)
 	mStorer.EXPECT().QueryUnprocessed(mock.Anything, 100, 5).Return(entries, nil).Once()
 	mStorer.EXPECT().QueryUnprocessed(mock.Anything, 100, 5).Return(nil, nil).Maybe()
 	mStorer.EXPECT().IncrementRetryCount(mock.Anything, []uuid.UUID{id1}).Return(nil).Once()

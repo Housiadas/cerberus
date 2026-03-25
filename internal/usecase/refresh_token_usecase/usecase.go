@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/Housiadas/cerberus/internal/core/service/refresh_token_service"
+	"github.com/Housiadas/cerberus/internal/core/refresh_token/refresh_token_service"
 	errs2 "github.com/Housiadas/cerberus/internal/errs"
 	"github.com/google/uuid"
 )

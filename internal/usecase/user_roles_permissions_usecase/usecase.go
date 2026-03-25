@@ -4,7 +4,7 @@ package user_roles_permissions_usecase
 import (
 	"context"
 
-	"github.com/Housiadas/cerberus/internal/core/service/user_roles_permissions_service"
+	"github.com/Housiadas/cerberus/internal/core/user_roles_permissions/user_roles_permissions_service"
 	errs2 "github.com/Housiadas/cerberus/internal/errs"
 	"github.com/Housiadas/cerberus/pkg/cursor"
 	"github.com/Housiadas/cerberus/pkg/order"

@@ -6,8 +6,8 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/Housiadas/cerberus/internal/core/domain/account"
-	"github.com/Housiadas/cerberus/internal/core/service/account_service"
+	"github.com/Housiadas/cerberus/internal/core/account"
+	"github.com/Housiadas/cerberus/internal/core/account/account_service"
 	errs2 "github.com/Housiadas/cerberus/internal/errs"
 	"github.com/Housiadas/cerberus/pkg/cursor"
 	"github.com/Housiadas/cerberus/pkg/logger"

@@ -8,9 +8,9 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/Housiadas/cerberus/internal/core/domain/email_notification_outbox/email_notification_outbox_repo"
-	"github.com/Housiadas/cerberus/internal/core/service/email_notification_outbox_service"
-	"github.com/Housiadas/cerberus/internal/email_relay"
+	"github.com/Housiadas/cerberus/internal/core/email_notification_outbox/email_notification_outbox_repo"
+	"github.com/Housiadas/cerberus/internal/core/email_notification_outbox/email_notification_outbox_service"
+	"github.com/Housiadas/cerberus/internal/relay"
 	"github.com/Housiadas/cerberus/pkg/clock"
 	"github.com/Housiadas/cerberus/pkg/email"
 	"github.com/Housiadas/cerberus/pkg/pgsql"
@@ -39,7 +39,7 @@ func (cmd *Command) EmailNotificationRelay() error {
 		cmd.log, emailOutboxRepo, uuidgen.NewV7(), clock.NewClock(),
 	)
 
-	relay := email_relay.NewEmailRelay(
+	emailRelay := relay.NewEmailRelay(
 		cmd.log,
 		emailOutboxSvc,
 		emailClient,
@@ -59,19 +59,19 @@ func (cmd *Command) EmailNotificationRelay() error {
 	done := make(chan struct{})
 
 	go func() {
-		relay.Start(ctx)
+		emailRelay.Start(ctx)
 		close(done)
 	}()
 
-	cmd.log.Info(ctx, "startup", "status", "email notification relay started")
+	cmd.log.Info(ctx, "startup", "status", "email notification emailRelay started")
 
 	sig := <-shutdown
-	cmd.log.Info(ctx, "shutdown", "status", "email notification relay stopping", "signal", sig)
+	cmd.log.Info(ctx, "shutdown", "status", "email notification emailRelay stopping", "signal", sig)
 
 	cancel()
 	<-done
 
-	cmd.log.Info(ctx, "shutdown", "status", "email notification relay stopped")
+	cmd.log.Info(ctx, "shutdown", "status", "email notification emailRelay stopped")
 
 	return nil
 }

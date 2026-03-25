@@ -1,7 +1,7 @@
 package user_usecase
 
 import (
-	"github.com/Housiadas/cerberus/internal/core/domain/user"
+	"github.com/Housiadas/cerberus/internal/core/user"
 	"github.com/Housiadas/cerberus/pkg/order"
 )
 

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net/mail"
 
-	"github.com/Housiadas/cerberus/internal/core/domain/user"
+	"github.com/Housiadas/cerberus/internal/core/user"
 	"github.com/Housiadas/cerberus/internal/errs"
 	"github.com/Housiadas/cerberus/internal/types/name"
 	password2 "github.com/Housiadas/cerberus/internal/types/password"

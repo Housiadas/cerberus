@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/Housiadas/cerberus/internal/core/service/user_service"
+	"github.com/Housiadas/cerberus/internal/core/user/user_service"
 	apitest2 "github.com/Housiadas/cerberus/internal/testutil/apitest"
 )
 

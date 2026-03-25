@@ -1,7 +1,7 @@
 package permission_usecase
 
 import (
-	"github.com/Housiadas/cerberus/internal/core/domain/permission"
+	"github.com/Housiadas/cerberus/internal/core/permission"
 	"github.com/Housiadas/cerberus/internal/errs"
 	"github.com/Housiadas/cerberus/internal/types/name"
 	"github.com/google/uuid"

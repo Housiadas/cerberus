@@ -7,12 +7,12 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/Housiadas/cerberus/internal/core/domain/account"
-	"github.com/Housiadas/cerberus/internal/core/domain/invoice"
-	"github.com/Housiadas/cerberus/internal/core/domain/subscription"
-	"github.com/Housiadas/cerberus/internal/core/service/account_service"
-	"github.com/Housiadas/cerberus/internal/core/service/invoice_service"
-	"github.com/Housiadas/cerberus/internal/core/service/subscription_service"
+	account2 "github.com/Housiadas/cerberus/internal/core/account"
+	"github.com/Housiadas/cerberus/internal/core/account/account_service"
+	"github.com/Housiadas/cerberus/internal/core/invoice"
+	"github.com/Housiadas/cerberus/internal/core/invoice/invoice_service"
+	"github.com/Housiadas/cerberus/internal/core/subscription"
+	"github.com/Housiadas/cerberus/internal/core/subscription/subscription_service"
 	"github.com/Housiadas/cerberus/internal/errs"
 	"github.com/Housiadas/cerberus/pkg/clock"
 	"github.com/Housiadas/cerberus/pkg/cursor"
@@ -55,10 +55,10 @@ func NewUseCase(
 func (uc *UseCase) CreateAccountWithStripe(
 	ctx context.Context,
 	accountName, email string,
-) (account.Account, error) {
+) (account2.Account, error) {
 	cust, err := uc.stripeClient.CreateCustomer(ctx, accountName, email)
 	if err != nil {
-		return account.Account{}, errs.Errorf(
+		return account2.Account{}, errs.Errorf(
 			errs.Internal,
 			errs.CodeInternal,
 			"stripe create customer: %s",
@@ -66,21 +66,21 @@ func (uc *UseCase) CreateAccountWithStripe(
 		)
 	}
 
-	na := account.NewAccount{Name: accountName}
+	na := account2.NewAccount{Name: accountName}
 
 	created, err := uc.accountSvc.Create(ctx, na)
 	if err != nil {
-		return account.Account{}, fmt.Errorf("create account: %w", err)
+		return account2.Account{}, fmt.Errorf("create account: %w", err)
 	}
 
 	// Update with Stripe customer ID
-	ua := account.UpdateAccount{
+	ua := account2.UpdateAccount{
 		StripeCustomerID: &sql.NullString{String: cust.ID, Valid: true},
 	}
 
 	updated, err := uc.accountSvc.Update(ctx, created, ua)
 	if err != nil {
-		return account.Account{}, fmt.Errorf("update account stripe id: %w", err)
+		return account2.Account{}, fmt.Errorf("update account stripe id: %w", err)
 	}
 
 	return updated, nil
@@ -399,11 +399,11 @@ func (uc *UseCase) findAccountIDByStripeCustomer(
 	ctx context.Context,
 	stripeCustomerID string,
 ) (uuid.UUID, error) {
-	filter := account.QueryFilter{
+	filter := account2.QueryFilter{
 		StripeCustomerID: &stripeCustomerID,
 	}
 
-	accs, err := uc.accountSvc.Query(ctx, filter, account.GetDefaultOrderBy(), defaultCursor())
+	accs, err := uc.accountSvc.Query(ctx, filter, account2.GetDefaultOrderBy(), defaultCursor())
 	if err != nil {
 		return uuid.UUID{}, fmt.Errorf("query accounts: %w", err)
 	}

@@ -6,7 +6,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/Housiadas/cerberus/internal/core/service/outbox_service"
+	"github.com/Housiadas/cerberus/internal/core/outbox/outbox_service"
 	"github.com/Housiadas/cerberus/pkg/kafka"
 	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/Housiadas/cerberus/pkg/telemetry"

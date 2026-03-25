@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/Housiadas/cerberus/internal/core/domain/refresh_token"
+	"github.com/Housiadas/cerberus/internal/core/refresh_token"
 	"github.com/Housiadas/cerberus/internal/errs"
 	"github.com/Housiadas/cerberus/pkg/clock"
 	"github.com/google/uuid"

@@ -8,8 +8,8 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/Housiadas/cerberus/internal/core/domain/outbox/outbox_repo"
-	"github.com/Housiadas/cerberus/internal/core/service/outbox_service"
+	"github.com/Housiadas/cerberus/internal/core/outbox/outbox_repo"
+	"github.com/Housiadas/cerberus/internal/core/outbox/outbox_service"
 	"github.com/Housiadas/cerberus/internal/relay"
 	"github.com/Housiadas/cerberus/pkg/clock"
 	"github.com/Housiadas/cerberus/pkg/kafka"

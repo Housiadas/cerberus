@@ -3,10 +3,10 @@ package unitest
 import (
 	"context"
 
-	"github.com/Housiadas/cerberus/internal/core/domain/audit"
-	"github.com/Housiadas/cerberus/internal/core/domain/permission"
-	"github.com/Housiadas/cerberus/internal/core/domain/role"
-	"github.com/Housiadas/cerberus/internal/core/domain/user"
+	"github.com/Housiadas/cerberus/internal/core/audit"
+	"github.com/Housiadas/cerberus/internal/core/permission"
+	"github.com/Housiadas/cerberus/internal/core/role"
+	"github.com/Housiadas/cerberus/internal/core/user"
 )
 
 // User represents a user specified for the test.

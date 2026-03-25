@@ -6,9 +6,9 @@ import (
 	"net/mail"
 	"time"
 
-	"github.com/Housiadas/cerberus/internal/core/domain/user"
-	"github.com/Housiadas/cerberus/internal/core/domain/user/user_repo"
-	"github.com/Housiadas/cerberus/internal/core/service/user_service"
+	"github.com/Housiadas/cerberus/internal/core/user"
+	"github.com/Housiadas/cerberus/internal/core/user/user_repo"
+	"github.com/Housiadas/cerberus/internal/core/user/user_service"
 	namePck "github.com/Housiadas/cerberus/internal/types/name"
 	"github.com/Housiadas/cerberus/internal/types/password"
 	"github.com/Housiadas/cerberus/pkg/clock"

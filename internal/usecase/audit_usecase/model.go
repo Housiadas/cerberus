@@ -1,7 +1,7 @@
 package audit_usecase
 
 import (
-	"github.com/Housiadas/cerberus/internal/core/domain/audit"
+	"github.com/Housiadas/cerberus/internal/core/audit"
 	"github.com/Housiadas/cerberus/pkg/clock"
 )
 

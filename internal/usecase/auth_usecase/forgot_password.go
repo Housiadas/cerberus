@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"net/mail"
 
-	"github.com/Housiadas/cerberus/internal/core/domain/email_notification_outbox"
+	"github.com/Housiadas/cerberus/internal/core/email_notification_outbox"
 	errs2 "github.com/Housiadas/cerberus/internal/errs"
 	"github.com/Housiadas/cerberus/internal/types/event"
 	"github.com/Housiadas/cerberus/pkg/pgsql"

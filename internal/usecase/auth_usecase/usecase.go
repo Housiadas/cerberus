@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/Housiadas/cerberus/internal/core/service/email_notification_outbox_service"
-	"github.com/Housiadas/cerberus/internal/core/service/reset_token_service"
-	"github.com/Housiadas/cerberus/internal/core/service/user_service"
+	"github.com/Housiadas/cerberus/internal/core/email_notification_outbox/email_notification_outbox_service"
+	"github.com/Housiadas/cerberus/internal/core/reset_token/reset_token_service"
+	"github.com/Housiadas/cerberus/internal/core/user/user_service"
 	"github.com/Housiadas/cerberus/internal/usecase/refresh_token_usecase"
 	"github.com/Housiadas/cerberus/internal/usecase/user_roles_permissions_usecase"
 	"github.com/Housiadas/cerberus/internal/usecase/user_usecase"

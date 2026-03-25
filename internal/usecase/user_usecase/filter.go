@@ -4,7 +4,7 @@ import (
 	"net/mail"
 	"time"
 
-	"github.com/Housiadas/cerberus/internal/core/domain/user"
+	"github.com/Housiadas/cerberus/internal/core/user"
 	"github.com/Housiadas/cerberus/internal/errs"
 	"github.com/Housiadas/cerberus/internal/types/name"
 	"github.com/google/uuid"

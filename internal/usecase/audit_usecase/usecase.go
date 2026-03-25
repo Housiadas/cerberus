@@ -5,8 +5,8 @@ import (
 	"context"
 	"errors"
 
-	"github.com/Housiadas/cerberus/internal/core/domain/user"
-	"github.com/Housiadas/cerberus/internal/core/service/audit_service"
+	"github.com/Housiadas/cerberus/internal/core/audit/audit_service"
+	"github.com/Housiadas/cerberus/internal/core/user"
 	errs2 "github.com/Housiadas/cerberus/internal/errs"
 	"github.com/Housiadas/cerberus/pkg/cursor"
 	"github.com/Housiadas/cerberus/pkg/order"

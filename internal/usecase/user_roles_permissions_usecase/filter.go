@@ -3,7 +3,7 @@ package user_roles_permissions_usecase
 import (
 	"net/mail"
 
-	urp "github.com/Housiadas/cerberus/internal/core/domain/user_roles_permissions"
+	urp "github.com/Housiadas/cerberus/internal/core/user_roles_permissions"
 	"github.com/Housiadas/cerberus/internal/errs"
 	"github.com/Housiadas/cerberus/internal/types/name"
 	"github.com/google/uuid"
