@@ -4,31 +4,6 @@ A monitoring system built with Go `v1.26`.
 ### OpenAPI Specification
 The OpenAPI specification is located under [openapi](./openapi/openapi.yaml)
 
-## Project Structure
-
-- `.docker` holds docker related files
-- `.kubernetes` holds kubernetes related files
-- `.migrations` holds database migrations
-- `bruno` holds the bruno collections for the API client
-- `cmd` holds the application entry point
-- `openapi` holds openapi documentation
-- `internal` holds the project logic
-- `pkg` holds shared code and libraries
-- `test` holds integration tests
-
-## Architectural Principles
-Inspired by Clean Architecture and Hexagonal architecture
-
-- `cmd`, holds the application entry points
-- `internal`, holds the project logic
-- `pkg`, holds shared libraries that are not specific to any project
-
-The `internal` directory is organized as follows:
-- `app`, holds the application logic (adapters), like repositories, handlers, middlewares, commands
-- `core`, holds the domain logic, separated to domain (models) and services
-
-The `usecases` directory is responsible for combaning different domain areas and business rules
-
 ## Development
 
 Spin up containers
@@ -96,13 +71,13 @@ make k8s/undeploy
 ### Helm Charts
 Each service has its own Helm chart under `.kubernetes/`:
 
-| Chart | Service | Ports |
-|-------|---------|-------|
-| `postgres/` | PostgreSQL 17.5 | 5432 |
-| `vault/` | Hashicorp Vault 1.21 | 8200 |
-| `tempo/` | Grafana Tempo | 3200, 4317, 4318 |
-| `grafana/` | Grafana 11.6.0 | 3000 |
-| `app/` | Cerberus REST API | 4000, 4010 |
+| Chart       | Service              | Ports            |
+|-------------|----------------------|------------------|
+| `postgres/` | PostgreSQL 17.5      | 5432             |
+| `vault/`    | Hashicorp Vault 1.21 | 8200             |
+| `tempo/`    | Grafana Tempo        | 3200, 4317, 4318 |
+| `grafana/`  | Grafana 11.6.0       | 3000             |
+| `app/`      | Cerberus REST API    | 4000, 4010       |
 
 All services run in the `cerberus` namespace
 
@@ -114,12 +89,12 @@ and **Prometheus** (metrics). **Grafana** provides a unified UI over both.
 
 ### Stack overview
 
-| Component | Role | Local port |
-|-----------|------|-----------|
+| Component      | Role                                           | Local port               |
+|----------------|------------------------------------------------|--------------------------|
 | OTel Collector | Receives OTLP from the app, routes to backends | 4317 (gRPC), 4318 (HTTP) |
-| Grafana Tempo | Distributed trace storage & query | 3200 |
-| Prometheus | Metrics storage & query | 9090 |
-| Grafana | Dashboards, trace & metric exploration | 3000 |
+| Grafana Tempo  | Distributed trace storage & query              | 3200                     |
+| Prometheus     | Metrics storage & query                        | 9090                     |
+| Grafana        | Dashboards, trace & metric exploration         | 3000                     |
 
 ### Start the observability stack
 
@@ -137,10 +112,10 @@ collector:
 Grafana is pre-configured with two datasources (no login required in the
 default dev setup):
 
-| Datasource | UID | What it shows |
-|------------|-----|---------------|
+| Datasource | UID          | What it shows                                                  |
+|------------|--------------|----------------------------------------------------------------|
 | Prometheus | `prometheus` | HTTP request rates, durations, cache hit/miss, active requests |
-| Tempo | `tempo` | Distributed traces, per-request spans |
+| Tempo      | `tempo`      | Distributed traces, per-request spans                          |
 
 **Explore traces**
 
@@ -156,17 +131,17 @@ default dev setup):
 1. Open **Explore** and select the **Prometheus** datasource.
 2. Useful metric names to start with:
 
-| Metric | Description |
-|--------|-------------|
-| `cerberus_http_server_request_total` | Total HTTP requests (by method, path, status) |
-| `cerberus_http_server_request_duration_seconds` | Request latency histogram |
-| `cerberus_http_server_active_requests` | In-flight requests gauge |
-| `cerberus_cache_hit_total` | In-memory (L1) cache hits |
-| `cerberus_cache_miss_total` | In-memory (L1) cache misses |
-| `cerberus_cache_distributed_hit_total` | Redis (L2) cache hits |
-| `cerberus_cache_distributed_miss_total` | Redis (L2) cache misses |
-| `cerberus_cache_size` | Current number of entries in the in-memory cache |
-| `cerberus_http_client_request_total` | Outgoing HTTP requests to downstream services |
+| Metric                                          | Description                                      |
+|-------------------------------------------------|--------------------------------------------------|
+| `cerberus_http_server_request_total`            | Total HTTP requests (by method, path, status)    |
+| `cerberus_http_server_request_duration_seconds` | Request latency histogram                        |
+| `cerberus_http_server_active_requests`          | In-flight requests gauge                         |
+| `cerberus_cache_hit_total`                      | In-memory (L1) cache hits                        |
+| `cerberus_cache_miss_total`                     | In-memory (L1) cache misses                      |
+| `cerberus_cache_distributed_hit_total`          | Redis (L2) cache hits                            |
+| `cerberus_cache_distributed_miss_total`         | Redis (L2) cache misses                          |
+| `cerberus_cache_size`                           | Current number of entries in the in-memory cache |
+| `cerberus_http_client_request_total`            | Outgoing HTTP requests to downstream services    |
 
 Example PromQL — HTTP error rate over the last 5 minutes:
 
