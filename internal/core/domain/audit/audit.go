@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"time"
 
-	"github.com/Housiadas/cerberus/internal/core/domain/entity"
-	"github.com/Housiadas/cerberus/internal/core/domain/name"
+	"github.com/Housiadas/cerberus/internal/types/entity"
+	"github.com/Housiadas/cerberus/internal/types/name"
 	"github.com/google/uuid"
 )
 

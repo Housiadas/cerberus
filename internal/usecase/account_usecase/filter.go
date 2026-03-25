@@ -2,7 +2,7 @@ package account_usecase
 
 import (
 	"github.com/Housiadas/cerberus/internal/core/domain/account"
-	"github.com/Housiadas/cerberus/internal/utils/errs"
+	"github.com/Housiadas/cerberus/internal/errs"
 	"github.com/google/uuid"
 )
 

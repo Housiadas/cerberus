@@ -6,13 +6,13 @@ import (
 	"testing"
 	"time"
 
+	"github.com/Housiadas/cerberus/internal/types/name"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/Housiadas/cerberus/internal/core/domain/name"
 	"github.com/Housiadas/cerberus/internal/core/domain/user"
 	"github.com/Housiadas/cerberus/internal/core/service/user_service"
-	"github.com/Housiadas/cerberus/internal/utils/unitest"
+	"github.com/Housiadas/cerberus/internal/testutil/unitest"
 	"github.com/Housiadas/cerberus/pkg/clock"
 	"github.com/Housiadas/cerberus/pkg/hasher"
 	"github.com/Housiadas/cerberus/pkg/logger"

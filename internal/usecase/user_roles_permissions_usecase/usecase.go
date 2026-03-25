@@ -5,7 +5,7 @@ import (
 	"context"
 
 	"github.com/Housiadas/cerberus/internal/core/service/user_roles_permissions_service"
-	"github.com/Housiadas/cerberus/internal/utils/errs"
+	errs2 "github.com/Housiadas/cerberus/internal/errs"
 	"github.com/Housiadas/cerberus/pkg/cursor"
 	"github.com/Housiadas/cerberus/pkg/order"
 	"github.com/google/uuid"
@@ -34,7 +34,7 @@ func (uc *UseCase) Query(
 ) (cursor.Result[UserRolesPermissions], error) {
 	cur, err := cursor.Parse(qp.Cursor, qp.Limit)
 	if err != nil {
-		return cursor.Result[UserRolesPermissions]{}, errs.NewFieldErrors("cursor", err)
+		return cursor.Result[UserRolesPermissions]{}, errs2.NewFieldErrors("cursor", err)
 	}
 
 	filter, err := parseFilter(qp)
@@ -44,14 +44,14 @@ func (uc *UseCase) Query(
 
 	ob, err := order.Parse(getOrderByFields(), qp.OrderBy, getDefaultOrderBy())
 	if err != nil {
-		return cursor.Result[UserRolesPermissions]{}, errs.NewFieldErrors("order", err)
+		return cursor.Result[UserRolesPermissions]{}, errs2.NewFieldErrors("order", err)
 	}
 
 	rows, err := uc.service.Query(ctx, filter, ob, cur)
 	if err != nil {
-		return cursor.Result[UserRolesPermissions]{}, errs.Errorf(
-			errs.Internal,
-			errs.CodeInternal,
+		return cursor.Result[UserRolesPermissions]{}, errs2.Errorf(
+			errs2.Internal,
+			errs2.CodeInternal,
 			"query: %s",
 			err,
 		)
@@ -74,9 +74,9 @@ func (uc *UseCase) QueryPermissionsByUserID(
 ) ([]Permission, error) {
 	userUUID, err := uuid.Parse(userID)
 	if err != nil {
-		return nil, errs.Errorf(
-			errs.InvalidArgument,
-			errs.CodeValidation,
+		return nil, errs2.Errorf(
+			errs2.InvalidArgument,
+			errs2.CodeValidation,
 			"could not parse uuid: %s",
 			err,
 		)
@@ -84,9 +84,9 @@ func (uc *UseCase) QueryPermissionsByUserID(
 
 	perms, err := uc.service.QueryPermissionsByUserID(ctx, userUUID)
 	if err != nil {
-		return nil, errs.Errorf(
-			errs.Internal,
-			errs.CodeInternal,
+		return nil, errs2.Errorf(
+			errs2.Internal,
+			errs2.CodeInternal,
 			"query_permissions_by_user_id: %s",
 			err,
 		)
@@ -107,9 +107,9 @@ func (uc *UseCase) QueryPermissionsByUserID(
 func (uc *UseCase) HasPermission(ctx context.Context, userID, permissionName string) (bool, error) {
 	userUUID, err := uuid.Parse(userID)
 	if err != nil {
-		return false, errs.Errorf(
-			errs.InvalidArgument,
-			errs.CodeValidation,
+		return false, errs2.Errorf(
+			errs2.InvalidArgument,
+			errs2.CodeValidation,
 			"could not parse uuid: %s",
 			err,
 		)
@@ -117,7 +117,7 @@ func (uc *UseCase) HasPermission(ctx context.Context, userID, permissionName str
 
 	hasPermission, err := uc.service.HasPermission(ctx, userUUID, permissionName)
 	if err != nil {
-		return false, errs.Errorf(errs.Internal, errs.CodeInternal, "has_permission: %s", err)
+		return false, errs2.Errorf(errs2.Internal, errs2.CodeInternal, "has_permission: %s", err)
 	}
 
 	return hasPermission, nil

@@ -5,13 +5,13 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/Housiadas/cerberus/internal/app/event_dispatcher"
 	"github.com/Housiadas/cerberus/internal/core/domain/audit"
-	"github.com/Housiadas/cerberus/internal/core/domain/entity"
-	"github.com/Housiadas/cerberus/internal/core/domain/event"
-	"github.com/Housiadas/cerberus/internal/core/domain/name"
 	"github.com/Housiadas/cerberus/internal/core/service/role_permissions_service"
-	"github.com/Housiadas/cerberus/internal/utils/errs"
+	errs2 "github.com/Housiadas/cerberus/internal/errs"
+	"github.com/Housiadas/cerberus/internal/eventbus"
+	"github.com/Housiadas/cerberus/internal/types/entity"
+	"github.com/Housiadas/cerberus/internal/types/event"
+	"github.com/Housiadas/cerberus/internal/types/name"
 	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/Housiadas/cerberus/pkg/pgsql"
 	"github.com/google/uuid"
@@ -21,7 +21,7 @@ import (
 type UseCase struct {
 	log              logger.Logger
 	tx               pgsql.Beginner
-	dispatcher       *event_dispatcher.EventDispatcher
+	dispatcher       *eventbus.EventDispatcher
 	rolePermsService *role_permissions_service.Service
 }
 
@@ -29,7 +29,7 @@ type UseCase struct {
 func NewUseCase(
 	log logger.Logger,
 	rolePermsService *role_permissions_service.Service,
-	dispatcher *event_dispatcher.EventDispatcher,
+	dispatcher *eventbus.EventDispatcher,
 	tx pgsql.Beginner,
 ) *UseCase {
 	return &UseCase{
@@ -56,9 +56,9 @@ func (uc *UseCase) modifyRolePermission(
 ) error {
 	roleUUID, err := uuid.Parse(roleID)
 	if err != nil {
-		return errs.Errorf(
-			errs.InvalidArgument,
-			errs.CodeValidation,
+		return errs2.Errorf(
+			errs2.InvalidArgument,
+			errs2.CodeValidation,
 			"could not parse role uuid: %s",
 			err,
 		)
@@ -66,9 +66,9 @@ func (uc *UseCase) modifyRolePermission(
 
 	permUUID, err := uuid.Parse(permissionID)
 	if err != nil {
-		return errs.Errorf(
-			errs.InvalidArgument,
-			errs.CodeValidation,
+		return errs2.Errorf(
+			errs2.InvalidArgument,
+			errs2.CodeValidation,
 			"could not parse permission uuid: %s",
 			err,
 		)
@@ -77,9 +77,9 @@ func (uc *UseCase) modifyRolePermission(
 	txErr := pgsql.RunInTx(ctx, uc.log, uc.tx, func(tran pgsql.CommitRollbacker) error {
 		rolePermsTx, initErr := uc.rolePermsService.NewWithTx(tran)
 		if initErr != nil {
-			return errs.Errorf(
-				errs.Internal,
-				errs.CodeInternal,
+			return errs2.Errorf(
+				errs2.Internal,
+				errs2.CodeInternal,
 				"role_permissions tx: %s",
 				initErr,
 			)
@@ -93,9 +93,9 @@ func (uc *UseCase) modifyRolePermission(
 		}
 
 		if opErr != nil {
-			return errs.Errorf(
-				errs.Internal,
-				errs.CodeInternal,
+			return errs2.Errorf(
+				errs2.Internal,
+				errs2.CodeInternal,
 				"role_permission %s: %s",
 				action,
 				opErr,

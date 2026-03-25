@@ -13,7 +13,7 @@ import (
 	"github.com/Housiadas/cerberus/internal/core/service/account_service"
 	"github.com/Housiadas/cerberus/internal/core/service/invoice_service"
 	"github.com/Housiadas/cerberus/internal/core/service/subscription_service"
-	"github.com/Housiadas/cerberus/internal/utils/errs"
+	"github.com/Housiadas/cerberus/internal/errs"
 	"github.com/Housiadas/cerberus/pkg/clock"
 	"github.com/Housiadas/cerberus/pkg/cursor"
 	stripepkg "github.com/Housiadas/cerberus/pkg/stripe"

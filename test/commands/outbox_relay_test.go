@@ -7,10 +7,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Housiadas/cerberus/internal/app/relay"
-	"github.com/Housiadas/cerberus/internal/app/repo/outbox_repo"
 	"github.com/Housiadas/cerberus/internal/core/domain/outbox"
+	"github.com/Housiadas/cerberus/internal/core/domain/outbox/outbox_repo"
 	"github.com/Housiadas/cerberus/internal/core/service/outbox_service"
+	"github.com/Housiadas/cerberus/internal/relay"
 	"github.com/Housiadas/cerberus/pkg/clock"
 	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/Housiadas/cerberus/pkg/uuidgen"

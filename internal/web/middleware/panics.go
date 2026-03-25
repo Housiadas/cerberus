@@ -1,0 +1,38 @@
+package middleware
+
+import (
+	"net/http"
+	"runtime/debug"
+
+	errs2 "github.com/Housiadas/cerberus/internal/errs"
+)
+
+// Recoverer recovers from panics and converts the panic to an error,
+// so it is reported in Metrics and handled in Errors.
+func (m *Middleware) Recoverer() func(next http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			ctx := r.Context()
+
+			// Defer a function to recover from panic
+			defer func() {
+				if rec := recover(); rec != nil {
+					trace := debug.Stack()
+					err := errs2.Errorf(
+						errs2.InternalOnlyLog,
+						errs2.CodePanic,
+						"PANIC [%v] TRACE[%s]",
+						rec,
+						string(trace),
+					)
+					m.log.Error(ctx, "panic mid", err)
+					m.Error(w, err, http.StatusInternalServerError)
+
+					return
+				}
+			}()
+
+			next.ServeHTTP(w, r.WithContext(ctx))
+		})
+	}
+}

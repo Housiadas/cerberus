@@ -7,13 +7,13 @@ import (
 	"fmt"
 	"net/mail"
 
-	"github.com/Housiadas/cerberus/internal/app/event_dispatcher"
 	"github.com/Housiadas/cerberus/internal/core/domain/audit"
-	"github.com/Housiadas/cerberus/internal/core/domain/entity"
-	"github.com/Housiadas/cerberus/internal/core/domain/event"
 	"github.com/Housiadas/cerberus/internal/core/domain/user"
 	"github.com/Housiadas/cerberus/internal/core/service/user_service"
-	"github.com/Housiadas/cerberus/internal/utils/errs"
+	"github.com/Housiadas/cerberus/internal/errs"
+	"github.com/Housiadas/cerberus/internal/eventbus"
+	"github.com/Housiadas/cerberus/internal/types/entity"
+	"github.com/Housiadas/cerberus/internal/types/event"
 	"github.com/Housiadas/cerberus/pkg/cursor"
 	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/Housiadas/cerberus/pkg/order"
@@ -25,13 +25,13 @@ type UseCase struct {
 	log        logger.Logger
 	tx         pgsql.Beginner
 	userCore   *user_service.Service
-	dispatcher *event_dispatcher.EventDispatcher
+	dispatcher *eventbus.EventDispatcher
 }
 
 func NewUseCase(
 	log logger.Logger,
 	userBus *user_service.Service,
-	dispatcher *event_dispatcher.EventDispatcher,
+	dispatcher *eventbus.EventDispatcher,
 	tx pgsql.Beginner,
 ) *UseCase {
 	return &UseCase{

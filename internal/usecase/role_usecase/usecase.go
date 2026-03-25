@@ -5,13 +5,13 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/Housiadas/cerberus/internal/app/event_dispatcher"
 	"github.com/Housiadas/cerberus/internal/core/domain/audit"
-	"github.com/Housiadas/cerberus/internal/core/domain/entity"
-	"github.com/Housiadas/cerberus/internal/core/domain/event"
 	"github.com/Housiadas/cerberus/internal/core/domain/role"
 	"github.com/Housiadas/cerberus/internal/core/service/role_service"
-	"github.com/Housiadas/cerberus/internal/utils/errs"
+	errs2 "github.com/Housiadas/cerberus/internal/errs"
+	"github.com/Housiadas/cerberus/internal/eventbus"
+	"github.com/Housiadas/cerberus/internal/types/entity"
+	"github.com/Housiadas/cerberus/internal/types/event"
 	"github.com/Housiadas/cerberus/pkg/cursor"
 	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/Housiadas/cerberus/pkg/order"
@@ -23,13 +23,13 @@ type UseCase struct {
 	log         logger.Logger
 	tx          pgsql.Beginner
 	roleService *role_service.Service
-	dispatcher  *event_dispatcher.EventDispatcher
+	dispatcher  *eventbus.EventDispatcher
 }
 
 func NewUseCase(
 	log logger.Logger,
 	roleService *role_service.Service,
-	dispatcher *event_dispatcher.EventDispatcher,
+	dispatcher *eventbus.EventDispatcher,
 	tx pgsql.Beginner,
 ) *UseCase {
 	return &UseCase{
@@ -44,7 +44,7 @@ func NewUseCase(
 func (uc *UseCase) Create(ctx context.Context, nrole NewRole) (Role, error) {
 	nc, err := toBusNewRole(nrole)
 	if err != nil {
-		return Role{}, errs.New(errs.InvalidArgument, errs.CodeValidation, err)
+		return Role{}, errs2.New(errs2.InvalidArgument, errs2.CodeValidation, err)
 	}
 
 	var rol role.Role
@@ -52,14 +52,14 @@ func (uc *UseCase) Create(ctx context.Context, nrole NewRole) (Role, error) {
 	txErr := pgsql.RunInTx(ctx, uc.log, uc.tx, func(tran pgsql.CommitRollbacker) error {
 		roleServiceTx, initErr := uc.roleService.NewWithTx(tran)
 		if initErr != nil {
-			return errs.Errorf(errs.Internal, errs.CodeInternal, "role tx: %s", initErr)
+			return errs2.Errorf(errs2.Internal, errs2.CodeInternal, "role tx: %s", initErr)
 		}
 
 		rol, err = roleServiceTx.Create(ctx, nc)
 		if err != nil {
-			return errs.Errorf(
-				errs.Internal,
-				errs.CodeInternal,
+			return errs2.Errorf(
+				errs2.Internal,
+				errs2.CodeInternal,
 				"create: rol[%+v]: %s",
 				rol,
 				err,
@@ -79,14 +79,14 @@ func (uc *UseCase) Create(ctx context.Context, nrole NewRole) (Role, error) {
 func (uc *UseCase) Update(ctx context.Context, res UpdateRole, roleID string) (Role, error) {
 	uu, err := toBusUpdateUser(res)
 	if err != nil {
-		return Role{}, errs.New(errs.InvalidArgument, errs.CodeValidation, err)
+		return Role{}, errs2.New(errs2.InvalidArgument, errs2.CodeValidation, err)
 	}
 
 	roleUUID, err := uuid.Parse(roleID)
 	if err != nil {
-		return Role{}, errs.Errorf(
-			errs.InvalidArgument,
-			errs.CodeValidation,
+		return Role{}, errs2.Errorf(
+			errs2.InvalidArgument,
+			errs2.CodeValidation,
 			"could not parse uuid: %s",
 			err,
 		)
@@ -94,7 +94,7 @@ func (uc *UseCase) Update(ctx context.Context, res UpdateRole, roleID string) (R
 
 	currentRole, err := uc.roleService.QueryByID(ctx, roleUUID)
 	if err != nil {
-		return Role{}, errs.Errorf(errs.Internal, errs.CodeInternal, "role query by id: %s", err)
+		return Role{}, errs2.Errorf(errs2.Internal, errs2.CodeInternal, "role query by id: %s", err)
 	}
 
 	var updRole role.Role
@@ -102,14 +102,14 @@ func (uc *UseCase) Update(ctx context.Context, res UpdateRole, roleID string) (R
 	txErr := pgsql.RunInTx(ctx, uc.log, uc.tx, func(tran pgsql.CommitRollbacker) error {
 		roleServiceTx, initErr := uc.roleService.NewWithTx(tran)
 		if initErr != nil {
-			return errs.Errorf(errs.Internal, errs.CodeInternal, "role tx: %s", initErr)
+			return errs2.Errorf(errs2.Internal, errs2.CodeInternal, "role tx: %s", initErr)
 		}
 
 		updRole, err = roleServiceTx.Update(ctx, currentRole, uu)
 		if err != nil {
-			return errs.Errorf(
-				errs.Internal,
-				errs.CodeInternal,
+			return errs2.Errorf(
+				errs2.Internal,
+				errs2.CodeInternal,
 				"update: roleID[%s] uu[%+v]: %s",
 				roleID,
 				uu,
@@ -130,9 +130,9 @@ func (uc *UseCase) Update(ctx context.Context, res UpdateRole, roleID string) (R
 func (uc *UseCase) Delete(ctx context.Context, roleID string) error {
 	roleUUID, err := uuid.Parse(roleID)
 	if err != nil {
-		return errs.Errorf(
-			errs.InvalidArgument,
-			errs.CodeValidation,
+		return errs2.Errorf(
+			errs2.InvalidArgument,
+			errs2.CodeValidation,
 			"could not parse uuid: %s",
 			err,
 		)
@@ -140,20 +140,20 @@ func (uc *UseCase) Delete(ctx context.Context, roleID string) error {
 
 	currentRole, err := uc.roleService.QueryByID(ctx, roleUUID)
 	if err != nil {
-		return errs.Errorf(errs.Internal, errs.CodeInternal, "role query by id: %s", err)
+		return errs2.Errorf(errs2.Internal, errs2.CodeInternal, "role query by id: %s", err)
 	}
 
 	txErr := pgsql.RunInTx(ctx, uc.log, uc.tx, func(tran pgsql.CommitRollbacker) error {
 		roleServiceTx, initErr := uc.roleService.NewWithTx(tran)
 		if initErr != nil {
-			return errs.Errorf(errs.Internal, errs.CodeInternal, "role tx: %s", initErr)
+			return errs2.Errorf(errs2.Internal, errs2.CodeInternal, "role tx: %s", initErr)
 		}
 
 		deleteErr := roleServiceTx.Delete(ctx, currentRole)
 		if deleteErr != nil {
-			return errs.Errorf(
-				errs.Internal,
-				errs.CodeInternal,
+			return errs2.Errorf(
+				errs2.Internal,
+				errs2.CodeInternal,
 				"delete: roleID[%s]: %s",
 				roleUUID,
 				deleteErr,
@@ -173,9 +173,9 @@ func (uc *UseCase) Delete(ctx context.Context, roleID string) error {
 func (uc *UseCase) QueryByID(ctx context.Context, roleID string) (Role, error) {
 	roleUUID, err := uuid.Parse(roleID)
 	if err != nil {
-		return Role{}, errs.Errorf(
-			errs.InvalidArgument,
-			errs.CodeValidation,
+		return Role{}, errs2.Errorf(
+			errs2.InvalidArgument,
+			errs2.CodeValidation,
 			"could not parse uuid: %s",
 			err,
 		)
@@ -183,7 +183,7 @@ func (uc *UseCase) QueryByID(ctx context.Context, roleID string) (Role, error) {
 
 	rol, err := uc.roleService.QueryByID(ctx, roleUUID)
 	if err != nil {
-		return Role{}, errs.Errorf(errs.Internal, errs.CodeInternal, "role query by id: %s", err)
+		return Role{}, errs2.Errorf(errs2.Internal, errs2.CodeInternal, "role query by id: %s", err)
 	}
 
 	return toAppRole(rol), nil
@@ -193,7 +193,7 @@ func (uc *UseCase) QueryByID(ctx context.Context, roleID string) (Role, error) {
 func (uc *UseCase) Query(ctx context.Context, qp AppQueryParams) (cursor.Result[Role], error) {
 	cur, err := cursor.Parse(qp.Cursor, qp.Limit)
 	if err != nil {
-		return cursor.Result[Role]{}, errs.NewFieldErrors("cursor", err)
+		return cursor.Result[Role]{}, errs2.NewFieldErrors("cursor", err)
 	}
 
 	filter, err := parseFilter(qp)
@@ -203,14 +203,14 @@ func (uc *UseCase) Query(ctx context.Context, qp AppQueryParams) (cursor.Result[
 
 	orderBy, err := order.Parse(getOrderByFields(), qp.OrderBy, getDefaultOrderBy())
 	if err != nil {
-		return cursor.Result[Role]{}, errs.NewFieldErrors("order", err)
+		return cursor.Result[Role]{}, errs2.NewFieldErrors("order", err)
 	}
 
 	roles, err := uc.roleService.Query(ctx, filter, orderBy, cur)
 	if err != nil {
-		return cursor.Result[Role]{}, errs.Errorf(
-			errs.Internal,
-			errs.CodeInternal,
+		return cursor.Result[Role]{}, errs2.Errorf(
+			errs2.Internal,
+			errs2.CodeInternal,
 			"query: %s",
 			err,
 		)

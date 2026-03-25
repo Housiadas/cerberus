@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"net/mail"
 
-	"github.com/Housiadas/cerberus/internal/core/domain/name"
-	"github.com/Housiadas/cerberus/internal/core/domain/password"
 	"github.com/Housiadas/cerberus/internal/core/domain/user"
-	"github.com/Housiadas/cerberus/internal/utils/errs"
+	"github.com/Housiadas/cerberus/internal/errs"
+	"github.com/Housiadas/cerberus/internal/types/name"
+	password2 "github.com/Housiadas/cerberus/internal/types/password"
 	"github.com/Housiadas/cerberus/pkg/clock"
 )
 
@@ -78,7 +78,7 @@ func toBusNewUser(app NewUser) (user.NewUser, error) {
 		errors.Add("department", err)
 	}
 
-	pass, err := password.ParseConfirm(app.Password, app.PasswordConfirm)
+	pass, err := password2.ParseConfirm(app.Password, app.PasswordConfirm)
 	if err != nil {
 		errors.Add("password", err)
 	}
@@ -160,7 +160,7 @@ func toBusUpdateUser(app UpdateUser) (user.UpdateUser, error) {
 	return bus, nil
 }
 
-func validateUpdateUserFields(app UpdateUser) (*mail.Address, *password.Password, error) {
+func validateUpdateUserFields(app UpdateUser) (*mail.Address, *password2.Password, error) {
 	var errors errs.FieldErrors
 
 	var addr *mail.Address
@@ -174,10 +174,10 @@ func validateUpdateUserFields(app UpdateUser) (*mail.Address, *password.Password
 		}
 	}
 
-	var pass *password.Password
+	var pass *password2.Password
 
 	if app.Password != nil || app.PasswordConfirm != nil {
-		p, err := password.ParseConfirmPointers(app.Password, app.PasswordConfirm)
+		p, err := password2.ParseConfirmPointers(app.Password, app.PasswordConfirm)
 		if err != nil {
 			errors.Add("password", err)
 		}

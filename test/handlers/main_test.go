@@ -4,7 +4,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/Housiadas/cerberus/internal/utils/apitest"
+	"github.com/Housiadas/cerberus/internal/testutil/apitest"
 )
 
 var env *apitest.Env

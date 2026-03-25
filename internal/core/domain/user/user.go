@@ -7,8 +7,8 @@ import (
 	"net/mail"
 	"time"
 
-	"github.com/Housiadas/cerberus/internal/core/domain/name"
-	"github.com/Housiadas/cerberus/internal/core/domain/password"
+	"github.com/Housiadas/cerberus/internal/types/name"
+	"github.com/Housiadas/cerberus/internal/types/password"
 	"github.com/google/uuid"
 )
 

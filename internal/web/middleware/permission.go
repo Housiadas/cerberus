@@ -1,0 +1,99 @@
+package middleware
+
+import (
+	"context"
+	"net/http"
+	"slices"
+
+	ctxPck "github.com/Housiadas/cerberus/internal/context"
+	errs2 "github.com/Housiadas/cerberus/internal/errs"
+	"github.com/Housiadas/cerberus/internal/usecase/user_roles_permissions_usecase"
+	"github.com/Housiadas/cerberus/internal/web/handler/openapi"
+)
+
+// operationPermissions maps each operationID to its required permission.
+// Operations not listed here do not require permission checks.
+var operationPermissions = map[string]string{
+	"GetUser":              "user:read",
+	"ListUsers":            "user:read:all",
+	"CreateUser":           "user:write",
+	"UpdateUser":           "user:write",
+	"DeleteUser":           "user:delete",
+	"ListRoles":            "role:read:all",
+	"CreateRole":           "role:write",
+	"UpdateRole":           "role:write",
+	"DeleteRole":           "role:delete",
+	"CreateRolePermission": "role:write",
+	"CreateUserRole":       "user:write",
+	"DeleteUserRole":       "user:role:delete",
+	"ListPermissions":      "permission:read",
+	"CreatePermission":     "permission:write",
+	"UpdatePermission":     "permission:write",
+	"DeletePermission":     "permission:delete",
+	"ListAudits":           "audit:read",
+}
+
+// Permission checks if the authenticated user has the required permission for the operation.
+func (m *Middleware) Permission() openapi.StrictMiddlewareFunc {
+	return func(
+		f openapi.StrictHandlerFunc,
+		operationID string,
+	) openapi.StrictHandlerFunc {
+		permissionName, ok := operationPermissions[operationID]
+		if !ok {
+			return f
+		}
+
+		return func(ctx context.Context, w http.ResponseWriter, r *http.Request, request any) (any, error) {
+			userID := ctxPck.GetActorID(ctx)
+
+			sfKey := "permissions:" + userID
+
+			result, err, _ := m.permSflight.Do(sfKey, func() (any, error) {
+				return m.useCase.userRolesPermissions.QueryPermissionsByUserID(ctx, userID)
+			})
+			if err != nil {
+				m.log.Error(ctx, "error checking permissions", err)
+
+				return nil, errs2.New(
+					errs2.Internal,
+					errs2.CodePermissionCheckErr,
+					ErrCheckingPermission,
+				)
+			}
+
+			permissions, ok := result.([]user_roles_permissions_usecase.Permission)
+			if !ok {
+				m.log.Error(ctx, "error casting permissions", err)
+
+				return nil, errs2.New(
+					errs2.Internal,
+					errs2.CodePermissionCheckErr,
+					ErrCheckingPermission,
+				)
+			}
+
+			hasPermission := slices.ContainsFunc(
+				permissions,
+				func(p user_roles_permissions_usecase.Permission) bool {
+					return p.Name == permissionName
+				},
+			)
+			if !hasPermission {
+				m.log.Info(ctx, "access denied",
+					"user_id", userID,
+					"permission", permissionName,
+					"operation", operationID,
+				)
+
+				return nil, errs2.New(
+					errs2.PermissionDenied,
+					errs2.CodePermissionDenied,
+					ErrPermissionDenied,
+				)
+			}
+
+			return f(ctx, w, r, request)
+		}
+	}
+}

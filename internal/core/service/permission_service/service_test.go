@@ -6,11 +6,11 @@ import (
 	"testing"
 	"time"
 
+	"github.com/Housiadas/cerberus/internal/types/name"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 
-	"github.com/Housiadas/cerberus/internal/core/domain/name"
 	"github.com/Housiadas/cerberus/internal/core/domain/permission"
 	"github.com/Housiadas/cerberus/internal/core/service/permission_service"
 	"github.com/Housiadas/cerberus/pkg/cursor"

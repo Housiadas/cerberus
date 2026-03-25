@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/Housiadas/cerberus/internal/core/domain/name"
 	"github.com/Housiadas/cerberus/internal/core/domain/permission"
+	"github.com/Housiadas/cerberus/internal/types/name"
 )
 
 // TestNewPermissions is a helper method for testing.

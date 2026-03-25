@@ -8,7 +8,7 @@ import (
 
 	"github.com/Housiadas/cerberus/internal/core/domain/account"
 	"github.com/Housiadas/cerberus/internal/core/service/account_service"
-	"github.com/Housiadas/cerberus/internal/utils/errs"
+	errs2 "github.com/Housiadas/cerberus/internal/errs"
 	"github.com/Housiadas/cerberus/pkg/cursor"
 	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/Housiadas/cerberus/pkg/order"
@@ -47,12 +47,12 @@ func (uc *UseCase) Create(ctx context.Context, app NewAccount) (Account, error) 
 	txErr := pgsql.RunInTx(ctx, uc.log, uc.tx, func(tran pgsql.CommitRollbacker) error {
 		svcTx, err := uc.accountSvc.NewWithTx(tran)
 		if err != nil {
-			return errs.Errorf(errs.Internal, errs.CodeInternal, "account tx: %s", err)
+			return errs2.Errorf(errs2.Internal, errs2.CodeInternal, "account tx: %s", err)
 		}
 
 		acc, err = svcTx.Create(ctx, na)
 		if err != nil {
-			return errs.Errorf(errs.Internal, errs.CodeInternal, "create: %s", err)
+			return errs2.Errorf(errs2.Internal, errs2.CodeInternal, "create: %s", err)
 		}
 
 		return nil
@@ -72,15 +72,15 @@ func (uc *UseCase) Update(
 ) (Account, error) {
 	accountUUID, err := uuid.Parse(accountID)
 	if err != nil {
-		return Account{}, errs.Errorf(
-			errs.InvalidArgument, errs.CodeValidation, "could not parse uuid: %s", err,
+		return Account{}, errs2.Errorf(
+			errs2.InvalidArgument, errs2.CodeValidation, "could not parse uuid: %s", err,
 		)
 	}
 
 	currentAcc, err := uc.accountSvc.QueryByID(ctx, accountUUID)
 	if err != nil {
-		return Account{}, errs.Errorf(
-			errs.Internal, errs.CodeInternal, "query by id: accountID[%s]: %s", accountUUID, err,
+		return Account{}, errs2.Errorf(
+			errs2.Internal, errs2.CodeInternal, "query by id: accountID[%s]: %s", accountUUID, err,
 		)
 	}
 
@@ -93,14 +93,14 @@ func (uc *UseCase) Update(
 	txErr := pgsql.RunInTx(ctx, uc.log, uc.tx, func(tran pgsql.CommitRollbacker) error {
 		svcTx, initErr := uc.accountSvc.NewWithTx(tran)
 		if initErr != nil {
-			return errs.Errorf(errs.Internal, errs.CodeInternal, "account tx: %s", initErr)
+			return errs2.Errorf(errs2.Internal, errs2.CodeInternal, "account tx: %s", initErr)
 		}
 
 		var updateErr error
 
 		updAcc, updateErr = svcTx.Update(ctx, currentAcc, ua)
 		if updateErr != nil {
-			return errs.Errorf(errs.Internal, errs.CodeInternal, "update: %s", updateErr)
+			return errs2.Errorf(errs2.Internal, errs2.CodeInternal, "update: %s", updateErr)
 		}
 
 		return nil
@@ -116,27 +116,27 @@ func (uc *UseCase) Update(
 func (uc *UseCase) Delete(ctx context.Context, accountID string) error {
 	accountUUID, err := uuid.Parse(accountID)
 	if err != nil {
-		return errs.Errorf(
-			errs.InvalidArgument, errs.CodeValidation, "could not parse uuid: %s", err,
+		return errs2.Errorf(
+			errs2.InvalidArgument, errs2.CodeValidation, "could not parse uuid: %s", err,
 		)
 	}
 
 	currentAcc, err := uc.accountSvc.QueryByID(ctx, accountUUID)
 	if err != nil {
-		return errs.Errorf(
-			errs.Internal, errs.CodeInternal, "query by id: accountID[%s]: %s", accountUUID, err,
+		return errs2.Errorf(
+			errs2.Internal, errs2.CodeInternal, "query by id: accountID[%s]: %s", accountUUID, err,
 		)
 	}
 
 	txErr := pgsql.RunInTx(ctx, uc.log, uc.tx, func(tran pgsql.CommitRollbacker) error {
 		svcTx, initErr := uc.accountSvc.NewWithTx(tran)
 		if initErr != nil {
-			return errs.Errorf(errs.Internal, errs.CodeInternal, "account tx: %s", initErr)
+			return errs2.Errorf(errs2.Internal, errs2.CodeInternal, "account tx: %s", initErr)
 		}
 
 		deleteErr := svcTx.Delete(ctx, currentAcc)
 		if deleteErr != nil {
-			return errs.Errorf(errs.Internal, errs.CodeInternal, "delete: %s", deleteErr)
+			return errs2.Errorf(errs2.Internal, errs2.CodeInternal, "delete: %s", deleteErr)
 		}
 
 		return nil
@@ -152,7 +152,7 @@ func (uc *UseCase) Delete(ctx context.Context, accountID string) error {
 func (uc *UseCase) Query(ctx context.Context, qp AppQueryParams) (cursor.Result[Account], error) {
 	cur, err := cursor.Parse(qp.Cursor, qp.Limit)
 	if err != nil {
-		return cursor.Result[Account]{}, errs.NewFieldErrors("cursor", err)
+		return cursor.Result[Account]{}, errs2.NewFieldErrors("cursor", err)
 	}
 
 	filter, err := parseFilter(qp)
@@ -162,14 +162,14 @@ func (uc *UseCase) Query(ctx context.Context, qp AppQueryParams) (cursor.Result[
 
 	orderBy, err := order.Parse(getOrderByFields(), qp.OrderBy, getDefaultOrderBy())
 	if err != nil {
-		return cursor.Result[Account]{}, errs.NewFieldErrors("order", err)
+		return cursor.Result[Account]{}, errs2.NewFieldErrors("order", err)
 	}
 
 	accs, err := uc.accountSvc.Query(ctx, filter, orderBy, cur)
 	if err != nil {
-		return cursor.Result[Account]{}, errs.Errorf(
-			errs.Internal,
-			errs.CodeInternal,
+		return cursor.Result[Account]{}, errs2.Errorf(
+			errs2.Internal,
+			errs2.CodeInternal,
 			"query: %s",
 			err,
 		)
@@ -189,18 +189,18 @@ func (uc *UseCase) Query(ctx context.Context, qp AppQueryParams) (cursor.Result[
 func (uc *UseCase) QueryByID(ctx context.Context, accountID string) (Account, error) {
 	accountUUID, err := uuid.Parse(accountID)
 	if err != nil {
-		return Account{}, errs.Errorf(
-			errs.InvalidArgument, errs.CodeValidation, "could not parse uuid: %s", err,
+		return Account{}, errs2.Errorf(
+			errs2.InvalidArgument, errs2.CodeValidation, "could not parse uuid: %s", err,
 		)
 	}
 
 	acc, err := uc.accountSvc.QueryByID(ctx, accountUUID)
 	if err != nil {
 		if errors.Is(err, account.ErrNotFound) {
-			return Account{}, errs.New(errs.NotFound, errs.CodeAccountNotFound, err)
+			return Account{}, errs2.New(errs2.NotFound, errs2.CodeAccountNotFound, err)
 		}
 
-		return Account{}, errs.New(errs.Internal, errs.CodeInternal, err)
+		return Account{}, errs2.New(errs2.Internal, errs2.CodeInternal, err)
 	}
 
 	return toAppAccount(acc), nil

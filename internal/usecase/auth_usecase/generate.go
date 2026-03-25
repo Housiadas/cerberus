@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/Housiadas/cerberus/internal/utils/errs"
+	errs2 "github.com/Housiadas/cerberus/internal/errs"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 )
@@ -17,9 +17,9 @@ type AccessToken struct {
 func (u *UseCase) GenerateAccessToken(ctx context.Context, userID string) (AccessToken, error) {
 	perms, err := u.userRolesPermissions.QueryPermissionsByUserID(ctx, userID)
 	if err != nil {
-		return AccessToken{}, errs.Errorf(
-			errs.Internal,
-			errs.CodeInternal,
+		return AccessToken{}, errs2.Errorf(
+			errs2.Internal,
+			errs2.CodeInternal,
 			"query permissions: %s",
 			err,
 		)
@@ -43,9 +43,9 @@ func (u *UseCase) GenerateAccessToken(ctx context.Context, userID string) (Acces
 
 	accessTokenID, genErr := uuid.NewV7()
 	if genErr != nil {
-		return AccessToken{}, errs.Errorf(
-			errs.Internal,
-			errs.CodeInternal,
+		return AccessToken{}, errs2.Errorf(
+			errs2.Internal,
+			errs2.CodeInternal,
 			"uuid v7: %s",
 			genErr,
 		)
@@ -68,9 +68,9 @@ func (u *UseCase) GenerateAccessToken(ctx context.Context, userID string) (Acces
 
 	accessTokenString, err := aToken.SignedString(u.secret)
 	if err != nil {
-		return AccessToken{}, errs.Errorf(
-			errs.InvalidArgument,
-			errs.CodeInvalidToken,
+		return AccessToken{}, errs2.Errorf(
+			errs2.InvalidArgument,
+			errs2.CodeInvalidToken,
 			"failed to sign access Token: %s",
 			err,
 		)
@@ -78,9 +78,9 @@ func (u *UseCase) GenerateAccessToken(ctx context.Context, userID string) (Acces
 
 	expirationDate, err := aToken.Claims.GetExpirationTime()
 	if err != nil {
-		return AccessToken{}, errs.Errorf(
-			errs.InvalidArgument,
-			errs.CodeInvalidToken,
+		return AccessToken{}, errs2.Errorf(
+			errs2.InvalidArgument,
+			errs2.CodeInvalidToken,
 			"expiration time: %s",
 			err,
 		)

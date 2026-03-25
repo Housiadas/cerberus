@@ -6,8 +6,8 @@ import (
 	"net/mail"
 
 	"github.com/Housiadas/cerberus/internal/core/domain/email_notification_outbox"
-	"github.com/Housiadas/cerberus/internal/core/domain/event"
-	"github.com/Housiadas/cerberus/internal/utils/errs"
+	errs2 "github.com/Housiadas/cerberus/internal/errs"
+	"github.com/Housiadas/cerberus/internal/types/event"
 	"github.com/Housiadas/cerberus/pkg/pgsql"
 )
 
@@ -23,7 +23,7 @@ type emailPayload struct {
 func (u *UseCase) ForgotPassword(ctx context.Context, req ForgotPasswordReq) error {
 	addr, err := mail.ParseAddress(req.Email)
 	if err != nil {
-		return errs.NewFieldErrors("email", err)
+		return errs2.NewFieldErrors("email", err)
 	}
 
 	usr, lookupErr := u.userService.QueryByEmail(ctx, *addr)
@@ -37,14 +37,14 @@ func (u *UseCase) ForgotPassword(ctx context.Context, req ForgotPasswordReq) err
 	txErr := pgsql.RunInTx(ctx, u.log, u.tx, func(tran pgsql.CommitRollbacker) error {
 		emailOutboxTx, initErr := u.emailNotificationOutboxSvc.NewWithTx(tran)
 		if initErr != nil {
-			return errs.Errorf(errs.Internal, errs.CodeInternal, "email_outbox tx: %s", initErr)
+			return errs2.Errorf(errs2.Internal, errs2.CodeInternal, "email_outbox tx: %s", initErr)
 		}
 
 		tkn, createErr := u.resetTokenSvc.Create(ctx, usr.ID())
 		if createErr != nil {
-			return errs.Errorf(
-				errs.Internal,
-				errs.CodeInternal,
+			return errs2.Errorf(
+				errs2.Internal,
+				errs2.CodeInternal,
 				"create reset token: %s",
 				createErr,
 			)
@@ -64,9 +64,9 @@ func (u *UseCase) ForgotPassword(ctx context.Context, req ForgotPasswordReq) err
 			Payload:   payload,
 		})
 		if createErr != nil {
-			return errs.Errorf(
-				errs.Internal,
-				errs.CodeInternal,
+			return errs2.Errorf(
+				errs2.Internal,
+				errs2.CodeInternal,
 				"email_outbox create: %s",
 				createErr,
 			)

@@ -3,8 +3,8 @@ package permission_usecase
 import (
 	"fmt"
 
-	"github.com/Housiadas/cerberus/internal/core/domain/name"
 	"github.com/Housiadas/cerberus/internal/core/domain/permission"
+	"github.com/Housiadas/cerberus/internal/types/name"
 	"github.com/Housiadas/cerberus/pkg/clock"
 )
 

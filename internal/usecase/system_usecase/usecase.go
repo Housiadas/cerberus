@@ -7,7 +7,7 @@ import (
 	"runtime"
 	"time"
 
-	"github.com/Housiadas/cerberus/internal/utils/errs"
+	errs2 "github.com/Housiadas/cerberus/internal/errs"
 	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/Housiadas/cerberus/pkg/pgsql"
 	"github.com/jmoiron/sqlx"
@@ -38,7 +38,7 @@ func (a *UseCase) Readiness(ctx context.Context) error {
 	if err != nil {
 		a.log.Info(ctx, "readiness failure", "ERROR", err)
 
-		return errs.New(errs.Internal, errs.CodeInternal, err)
+		return errs2.New(errs2.Internal, errs2.CodeInternal, err)
 	}
 
 	return nil

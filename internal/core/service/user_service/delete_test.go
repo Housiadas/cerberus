@@ -7,10 +7,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/Housiadas/cerberus/internal/types/name"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/Housiadas/cerberus/internal/core/domain/name"
 	"github.com/Housiadas/cerberus/internal/core/domain/user"
 	"github.com/Housiadas/cerberus/internal/core/service/user_service"
 	"github.com/Housiadas/cerberus/pkg/clock"

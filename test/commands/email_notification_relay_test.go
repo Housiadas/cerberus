@@ -7,14 +7,14 @@ import (
 	"testing"
 	"time"
 
+	"github.com/Housiadas/cerberus/internal/core/domain/email_notification_outbox"
+	"github.com/Housiadas/cerberus/internal/core/domain/email_notification_outbox/email_notification_outbox_repo"
+	"github.com/Housiadas/cerberus/internal/core/service/email_notification_outbox_service"
+	"github.com/Housiadas/cerberus/internal/email_relay"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/Housiadas/cerberus/internal/app/email_relay"
-	"github.com/Housiadas/cerberus/internal/app/repo/email_notification_outbox_repo"
-	"github.com/Housiadas/cerberus/internal/core/domain/email_notification_outbox"
-	"github.com/Housiadas/cerberus/internal/core/service/email_notification_outbox_service"
 	"github.com/Housiadas/cerberus/pkg/clock"
 	"github.com/Housiadas/cerberus/pkg/email"
 	"github.com/Housiadas/cerberus/pkg/logger"
@@ -171,7 +171,7 @@ func Test_EmailNotificationRelay_ProcessesBatch_InvalidSMTP(t *testing.T) {
 		From:     "noreply@example.com",
 	})
 
-	relay := email_relay.New(log, outboxSvc, emailClient, 200*time.Millisecond, 100, 3)
+	relay := email_relay.NewEmailRelay(log, outboxSvc, emailClient, 200*time.Millisecond, 100, 3)
 
 	relayCtx, relayCancel := context.WithCancel(ctx)
 	done := make(chan struct{})

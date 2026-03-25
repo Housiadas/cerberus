@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/Housiadas/cerberus/internal/core/domain/name"
 	"github.com/Housiadas/cerberus/internal/core/domain/role"
+	"github.com/Housiadas/cerberus/internal/types/name"
 )
 
 // TestNewRoles is a helper method for testing.

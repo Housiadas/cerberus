@@ -5,8 +5,8 @@ import (
 	"os"
 	"testing"
 
-	"github.com/Housiadas/cerberus/internal/utils/dbtest"
-	"github.com/Housiadas/cerberus/internal/utils/kafkatest"
+	"github.com/Housiadas/cerberus/internal/testutil/dbtest"
+	"github.com/Housiadas/cerberus/internal/testutil/kafkatest"
 	"github.com/Housiadas/cerberus/pkg/kafka"
 )
 
