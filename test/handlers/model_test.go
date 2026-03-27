@@ -5,94 +5,95 @@ import (
 	"github.com/Housiadas/cerberus/internal/core/permission"
 	"github.com/Housiadas/cerberus/internal/core/role"
 	"github.com/Housiadas/cerberus/internal/core/user"
-	"github.com/Housiadas/cerberus/internal/usecase/audit_usecase"
-	"github.com/Housiadas/cerberus/internal/usecase/permission_usecase"
-	"github.com/Housiadas/cerberus/internal/usecase/role_usecase"
-	"github.com/Housiadas/cerberus/internal/usecase/user_usecase"
+	"github.com/Housiadas/cerberus/internal/web/handler/openapi"
 	"github.com/Housiadas/cerberus/pkg/clock"
 )
 
-func toAppAudit(bus audit.Audit) audit_usecase.Audit {
-	return audit_usecase.Audit{
-		ID:        bus.ID().String(),
-		ObjID:     bus.ObjID().String(),
-		ObjEntity: bus.ObjEntity().String(),
-		ObjName:   bus.ObjName().String(),
-		ActorID:   bus.ActorID().String(),
-		Action:    bus.Action(),
-		Data:      string(bus.Data()),
-		Message:   bus.Message(),
-		Timestamp: clock.Format(new(bus.Timestamp())),
+// ptr returns a pointer to the given value.
+func ptr[T any](v T) *T { return &v }
+
+func toTestAudit(a audit.Audit) openapi.Audit {
+	return openapi.Audit{
+		Id:        new(a.ID().String()),
+		ObjId:     new(a.ObjID().String()),
+		ObjEntity: new(a.ObjEntity().String()),
+		ObjName:   new(a.ObjName().String()),
+		ActorId:   new(a.ActorID().String()),
+		Action:    new(a.Action()),
+		Data:      new(string(a.Data())),
+		Message:   new(a.Message()),
+		Timestamp: new(clock.Format(ptr(a.Timestamp()))),
 	}
 }
 
-func toAppAudits(audits []audit.Audit) []audit_usecase.Audit {
-	app := make([]audit_usecase.Audit, len(audits))
-	for i, adt := range audits {
-		app[i] = toAppAudit(adt)
+func toTestAudits(audits []audit.Audit) []openapi.Audit {
+	out := make([]openapi.Audit, len(audits))
+	for i, a := range audits {
+		out[i] = toTestAudit(a)
 	}
 
-	return app
+	return out
 }
 
-func toAppPermission(p permission.Permission) permission_usecase.Permission {
-	return permission_usecase.Permission{
-		ID:        p.ID().String(),
-		Name:      p.Name().String(),
-		CreatedAt: clock.Format(new(p.CreatedAt())),
-		UpdatedAt: clock.Format(new(p.UpdatedAt())),
+func toTestPermission(p permission.Permission) openapi.Permission {
+	return openapi.Permission{
+		Id:        new(p.ID().String()),
+		Name:      new(p.Name().String()),
+		CreatedAt: new(clock.Format(ptr(p.CreatedAt()))),
+		UpdatedAt: new(clock.Format(ptr(p.UpdatedAt()))),
 	}
 }
 
-func toAppPermissions(perms []permission.Permission) []permission_usecase.Permission {
-	items := make([]permission_usecase.Permission, len(perms))
+func toTestPermissions(perms []permission.Permission) []openapi.Permission {
+	out := make([]openapi.Permission, len(perms))
 	for i, p := range perms {
-		items[i] = toAppPermission(p)
+		out[i] = toTestPermission(p)
 	}
 
-	return items
+	return out
 }
 
-func toAppRole(r role.Role) role_usecase.Role {
-	return role_usecase.Role{
-		ID:        r.ID().String(),
-		Name:      r.Name().String(),
-		CreatedAt: clock.Format(new(r.CreatedAt())),
-		UpdatedAt: clock.Format(new(r.UpdatedAt())),
+func toTestRole(r role.Role) openapi.Role {
+	return openapi.Role{
+		Id:        new(r.ID().String()),
+		Name:      new(r.Name().String()),
+		CreatedAt: new(clock.Format(ptr(r.CreatedAt()))),
+		UpdatedAt: new(clock.Format(ptr(r.UpdatedAt()))),
 	}
 }
 
-func toAppRoles(roles []role.Role) []role_usecase.Role {
-	items := make([]role_usecase.Role, len(roles))
+func toTestRoles(roles []role.Role) []openapi.Role {
+	out := make([]openapi.Role, len(roles))
 	for i, r := range roles {
-		items[i] = toAppRole(r)
+		out[i] = toTestRole(r)
 	}
 
-	return items
+	return out
 }
 
-func toAppUser(bus user.User) user_usecase.User {
-	return user_usecase.User{
-		ID:           bus.ID().String(),
-		Name:         bus.Name().String(),
-		Email:        bus.Email().Address,
-		PasswordHash: nil,
-		Department:   bus.Department().String(),
-		Enabled:      bus.Enabled(),
-		CreatedAt:    clock.Format(new(bus.CreatedAt())),
-		UpdatedAt:    clock.Format(new(bus.UpdatedAt())),
+func toUserResponse(bus user.User) openapi.User {
+	return openapi.User{
+		Id:         bus.ID().String(),
+		Name:       bus.Name().String(),
+		Email:      bus.Email().Address,
+		Department: bus.Department().String(),
+		Enabled:    bus.Enabled(),
+		CreatedAt:  clock.Format(ptr(bus.CreatedAt())),
+		UpdatedAt:  clock.Format(ptr(bus.UpdatedAt())),
 	}
 }
 
-func toAppUsers(users []user.User) []user_usecase.User {
-	items := make([]user_usecase.User, len(users))
+func toUserResponses(users []user.User) []openapi.User {
+	items := make([]openapi.User, len(users))
 	for i, usr := range users {
-		items[i] = toAppUser(usr)
+		items[i] = toUserResponse(usr)
 	}
 
 	return items
 }
 
-func toAppUserPtr(bus user.User) *user_usecase.User {
-	return new(toAppUser(bus))
+func toUserResponsePtr(bus user.User) *openapi.User {
+	resp := toUserResponse(bus)
+
+	return &resp
 }

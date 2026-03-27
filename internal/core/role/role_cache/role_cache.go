@@ -45,9 +45,23 @@ type redisClient interface {
 	Pipeline() redis.Pipeliner
 }
 
+type storer interface {
+	NewWithTx(tx pgsql.CommitRollbacker) (role.Storer, error)
+	Create(ctx context.Context, role role.Role) error
+	Update(ctx context.Context, role role.Role) error
+	Delete(ctx context.Context, role role.Role) error
+	Query(
+		ctx context.Context,
+		filter role.QueryFilter,
+		orderBy order.By,
+		cur cursor.Cursor,
+	) ([]role.Role, error)
+	QueryByID(ctx context.Context, userID uuid.UUID) (role.Role, error)
+}
+
 // Store manages the set of APIs for role data and caching.
 type Store struct {
-	storer role.Storer
+	storer storer
 	log    logger
 	cache  *sturdyc.Client[role.Role]
 }

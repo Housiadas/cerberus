@@ -45,9 +45,23 @@ type logger interface {
 	Errorc(ctx context.Context, caller int, msg string, args ...any)
 }
 
+type storer interface {
+	NewWithTx(tx pgsql.CommitRollbacker) (permission.Storer, error)
+	Create(ctx context.Context, p permission.Permission) error
+	Update(ctx context.Context, p permission.Permission) error
+	Delete(ctx context.Context, p permission.Permission) error
+	Query(
+		ctx context.Context,
+		filter permission.QueryFilter,
+		orderBy order.By,
+		cur cursor.Cursor,
+	) ([]permission.Permission, error)
+	QueryByID(ctx context.Context, permissionID uuid.UUID) (permission.Permission, error)
+}
+
 // Store manages the set of APIs for permission data and caching.
 type Store struct {
-	storer permission.Storer
+	storer storer
 	log    logger
 	cache  *sturdyc.Client[permission.Permission]
 }

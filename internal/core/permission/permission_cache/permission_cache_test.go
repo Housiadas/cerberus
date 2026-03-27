@@ -1,14 +1,13 @@
-package permission_cache
+package permission_cache_test
 
 import (
 	"context"
 	"testing"
 	"time"
 
-	permission2 "github.com/Housiadas/cerberus/internal/core/permission"
+	"github.com/Housiadas/cerberus/internal/core/permission"
+	"github.com/Housiadas/cerberus/internal/core/permission/permission_cache"
 	"github.com/Housiadas/cerberus/internal/types/name"
-	"github.com/Housiadas/cerberus/pkg/logger"
-	"github.com/Housiadas/cerberus/pkg/redis"
 	goredis "github.com/redis/go-redis/v9"
 
 	"github.com/google/uuid"
@@ -17,13 +16,13 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func newTestStore(t *testing.T) (*Store, *permission2.MockStorer, *redis.MockClient) {
+func newTestStore(t *testing.T) (*permission_cache.Store, *mockstorer, *mockredisService) {
 	t.Helper()
 
-	mockStorer := permission2.NewMockStorer(t)
-	mLogger := logger.NewMockLogger(t)
-	mRed := redis.NewMockClient(t)
-	store := NewStore(t.Context(), mLogger, mockStorer, mRed)
+	mockStorer := newMockstorer(t)
+	mLogger := newMocklogger(t)
+	mRed := newMockredisService(t)
+	store := permission_cache.NewStore(t.Context(), mLogger, mockStorer, mRed)
 
 	return store, mockStorer, mRed
 }
@@ -40,7 +39,7 @@ func TestQueryByID_CacheMiss(t *testing.T) {
 	ctx := context.Background()
 
 	id := uuid.New()
-	expected := permission2.New(id, name.Name{}, time.Time{}, time.Time{}, nil)
+	expected := permission.New(id, name.Name{}, time.Time{}, time.Time{}, nil)
 
 	redisCacheMiss(red)
 	mockStorer.On("QueryByID", ctx, id).Return(expected, nil)
@@ -55,7 +54,7 @@ func TestQueryByID_CacheHit(t *testing.T) {
 	ctx := context.Background()
 
 	id := uuid.New()
-	expected := permission2.New(id, name.Name{}, time.Time{}, time.Time{}, nil)
+	expected := permission.New(id, name.Name{}, time.Time{}, time.Time{}, nil)
 
 	redisCacheMiss(red)
 	mockStorer.On("QueryByID", ctx, id).Return(expected, nil).Once()
@@ -73,7 +72,7 @@ func TestCreate_DelegatesToStorer(t *testing.T) {
 	store, mockStorer, _ := newTestStore(t)
 	ctx := context.Background()
 
-	p := permission2.New(uuid.New(), name.Name{}, time.Time{}, time.Time{}, nil)
+	p := permission.New(uuid.New(), name.Name{}, time.Time{}, time.Time{}, nil)
 
 	mockStorer.On("Create", ctx, p).Return(nil)
 
@@ -85,7 +84,7 @@ func TestUpdate_DelegatesToStorerAndInvalidatesCache(t *testing.T) {
 	store, mockStorer, _ := newTestStore(t)
 	ctx := context.Background()
 
-	p := permission2.New(uuid.New(), name.Name{}, time.Time{}, time.Time{}, nil)
+	p := permission.New(uuid.New(), name.Name{}, time.Time{}, time.Time{}, nil)
 
 	mockStorer.On("Update", ctx, p).Return(nil)
 
@@ -97,7 +96,7 @@ func TestDelete_DelegatesToStorerAndInvalidatesCache(t *testing.T) {
 	store, mockStorer, _ := newTestStore(t)
 	ctx := context.Background()
 
-	p := permission2.New(uuid.New(), name.Name{}, time.Time{}, time.Time{}, nil)
+	p := permission.New(uuid.New(), name.Name{}, time.Time{}, time.Time{}, nil)
 
 	mockStorer.On("Delete", ctx, p).Return(nil)
 

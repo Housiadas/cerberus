@@ -4,11 +4,11 @@ import (
 	"context"
 	"encoding/base64"
 	"net/http"
+	"net/mail"
 	"strings"
 
 	ctxPck "github.com/Housiadas/cerberus/internal/context"
 	errs2 "github.com/Housiadas/cerberus/internal/errs"
-	"github.com/Housiadas/cerberus/internal/usecase/user_usecase"
 	"github.com/Housiadas/cerberus/internal/web/handler/openapi"
 )
 
@@ -76,12 +76,18 @@ func (m *Middleware) AuthenticateBasic() func(next http.Handler) http.Handler {
 				return
 			}
 
-			authUsr := user_usecase.AuthenticateUser{
-				Email:    email,
-				Password: pass,
+			addr, parseErr := mail.ParseAddress(email)
+			if parseErr != nil {
+				m.Error(w, errs2.New(
+					errs2.Unauthenticated,
+					errs2.CodeUnauthenticated,
+					ErrInvalidBasicAuth,
+				), http.StatusUnauthorized)
+
+				return
 			}
 
-			_, err := m.useCase.user.Authenticate(ctx, authUsr)
+			_, err := m.useCase.user.Authenticate(ctx, *addr, pass)
 			if err != nil {
 				m.Error(w, err, http.StatusUnauthorized)
 

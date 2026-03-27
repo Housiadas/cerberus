@@ -1,4 +1,4 @@
-// Package user_service it is the service of the user domain
+// Package user is the service of the user domain
 package user
 
 import (
@@ -7,6 +7,9 @@ import (
 	"net/mail"
 	"time"
 
+	"github.com/Housiadas/cerberus/internal/core/audit"
+	"github.com/Housiadas/cerberus/internal/types/entity"
+	"github.com/Housiadas/cerberus/internal/types/event"
 	"github.com/Housiadas/cerberus/pkg/cursor"
 	"github.com/Housiadas/cerberus/pkg/order"
 	"github.com/Housiadas/cerberus/pkg/pgsql"
@@ -15,6 +18,11 @@ import (
 
 type logger interface {
 	Info(ctx context.Context, msg string, args ...any)
+	Infoc(ctx context.Context, caller int, msg string, args ...any)
+	Warn(ctx context.Context, msg string, args ...any)
+	Warnc(ctx context.Context, caller int, msg string, args ...any)
+	Error(ctx context.Context, msg string, args ...any)
+	Errorc(ctx context.Context, caller int, msg string, args ...any)
 }
 
 type generator interface {
@@ -25,18 +33,32 @@ type clock interface {
 	Now() time.Time
 }
 
-// Hasher defines the interface for password hashing operations.
+// hasher defines the interface for password hashing operations.
 type hasher interface {
 	Hash(password string) ([]byte, error)
 	Compare(hashedPassword []byte, password string) error
 }
 
+// dispatcher defines the interface for domain event dispatching.
+type dispatcher interface {
+	Dispatch(ctx context.Context, tran pgsql.CommitRollbacker, ev event.DomainEvent) error
+}
+
+// Beginner represents a value that can begin a transaction.
+type beginner interface {
+	Begin() (CommitRollbacker, error)
+}
+
+// Service manages user domain operations including persistence,
+// transaction management, and event dispatching.
 type Service struct {
-	log     logger
-	storer  Storer
-	uuidGen generator
-	clock   clock
-	hasher  hasher
+	log        logger
+	storer     Storer
+	uuidGen    generator
+	clock      clock
+	hasher     hasher
+	tx         pgsql.Beginner
+	dispatcher dispatcher
 }
 
 // NewService constructs the service.
@@ -46,17 +68,21 @@ func NewService(
 	uuidGen generator,
 	clock clock,
 	hasher hasher,
+	tx pgsql.Beginner,
+	dispatcher dispatcher,
 ) *Service {
 	return &Service{
-		log:     log,
-		storer:  storer,
-		uuidGen: uuidGen,
-		clock:   clock,
-		hasher:  hasher,
+		log:        log,
+		storer:     storer,
+		uuidGen:    uuidGen,
+		clock:      clock,
+		hasher:     hasher,
+		tx:         tx,
+		dispatcher: dispatcher,
 	}
 }
 
-// NewWithTx constructs a new internal value that will use the
+// NewWithTx constructs a new Service that will use the
 // specified transaction in any store-related calls.
 func (c *Service) NewWithTx(tx pgsql.CommitRollbacker) (*Service, error) {
 	storer, err := c.storer.NewWithTx(tx)
@@ -64,15 +90,17 @@ func (c *Service) NewWithTx(tx pgsql.CommitRollbacker) (*Service, error) {
 		return nil, fmt.Errorf("user transaction issue: %w", err)
 	}
 
-	bus := Service{
-		log:     c.log,
-		storer:  storer,
-		uuidGen: c.uuidGen,
-		clock:   c.clock,
-		hasher:  c.hasher,
+	svc := Service{
+		log:        c.log,
+		storer:     storer,
+		uuidGen:    c.uuidGen,
+		clock:      c.clock,
+		hasher:     c.hasher,
+		tx:         c.tx,
+		dispatcher: c.dispatcher,
 	}
 
-	return &bus, nil
+	return &svc, nil
 }
 
 // Authenticate finds a user by their email and verifies their password. On
@@ -99,7 +127,8 @@ func (c *Service) Authenticate(
 	return usr, nil
 }
 
-// Create adds a new User to the system.
+// Create adds a new User to the system within a transaction
+// and dispatches a UserCreated domain event.
 func (c *Service) Create(ctx context.Context, nu NewUser) (User, error) {
 	id, err := c.uuidGen.Generate()
 	if err != nil {
@@ -114,9 +143,20 @@ func (c *Service) Create(ctx context.Context, nu NewUser) (User, error) {
 	now := c.clock.Now()
 	usr := New(id, nu.Name, nu.Email, hash, nu.Department, true, nil, now, now, nil)
 
-	err = c.storer.Create(ctx, usr)
-	if err != nil {
-		return User{}, fmt.Errorf("create: %w", err)
+	txErr := pgsql.RunInTx(ctx, c.log, c.tx, func(tran pgsql.CommitRollbacker) error {
+		storerTx, err := c.storer.NewWithTx(tran)
+		if err != nil {
+			return fmt.Errorf("user tx: %w", err)
+		}
+
+		if err = storerTx.Create(ctx, usr); err != nil {
+			return fmt.Errorf("create: %w", err)
+		}
+
+		return c.dispatcher.Dispatch(ctx, tran, newUserEvent(usr, event.UserCreated, audit.ActionCreate))
+	})
+	if txErr != nil {
+		return User{}, fmt.Errorf("create user: %w", txErr)
 	}
 
 	return usr, nil
@@ -157,7 +197,8 @@ func (c *Service) QueryByEmail(ctx context.Context, email mail.Address) (User, e
 	return usr, nil
 }
 
-// Update modifies information about a user.User.
+// Update modifies information about a user.User within a transaction
+// and dispatches a UserUpdated domain event.
 func (c *Service) Update(
 	ctx context.Context,
 	usr User,
@@ -190,19 +231,42 @@ func (c *Service) Update(
 
 	usr = usr.WithUpdatedAt(c.clock.Now())
 
-	err := c.storer.Update(ctx, usr)
-	if err != nil {
-		return User{}, fmt.Errorf("update: %w", err)
+	txErr := pgsql.RunInTx(ctx, c.log, c.tx, func(tran pgsql.CommitRollbacker) error {
+		storerTx, err := c.storer.NewWithTx(tran)
+		if err != nil {
+			return fmt.Errorf("user tx: %w", err)
+		}
+
+		if err = storerTx.Update(ctx, usr); err != nil {
+			return fmt.Errorf("update: %w", err)
+		}
+
+		return c.dispatcher.Dispatch(ctx, tran, newUserEvent(usr, event.UserUpdated, audit.ActionUpdate))
+	})
+	if txErr != nil {
+		return User{}, fmt.Errorf("update user: %w", txErr)
 	}
 
 	return usr, nil
 }
 
-// Delete removes the specified user.
+// Delete removes the specified user within a transaction
+// and dispatches a UserDeleted domain event.
 func (c *Service) Delete(ctx context.Context, usr User) error {
-	err := c.storer.Delete(ctx, usr)
-	if err != nil {
-		return fmt.Errorf("delete: %w", err)
+	txErr := pgsql.RunInTx(ctx, c.log, c.tx, func(tran pgsql.CommitRollbacker) error {
+		storerTx, err := c.storer.NewWithTx(tran)
+		if err != nil {
+			return fmt.Errorf("user tx: %w", err)
+		}
+
+		if err = storerTx.Delete(ctx, usr); err != nil {
+			return fmt.Errorf("delete: %w", err)
+		}
+
+		return c.dispatcher.Dispatch(ctx, tran, newUserEvent(usr, event.UserDeleted, audit.ActionDelete))
+	})
+	if txErr != nil {
+		return fmt.Errorf("delete user: %w", txErr)
 	}
 
 	return nil
@@ -217,4 +281,18 @@ func (c *Service) VerifyPassword(usr User, plainPassword string) error {
 	}
 
 	return nil
+}
+
+// newUserEvent creates a DomainEvent for user operations.
+func newUserEvent(usr User, eventType string, action string) event.DomainEvent {
+	return event.DomainEvent{
+		EventType:   eventType,
+		AggregateID: usr.ID(),
+		Topic:       event.UserTopic,
+		Payload:     usr,
+		ObjEntity:   entity.New(entity.UserEntity),
+		ObjName:     usr.Name(),
+		Action:      action,
+		Message:     "user " + action,
+	}
 }

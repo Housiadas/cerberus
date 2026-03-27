@@ -20,7 +20,7 @@ type CommitRollbacker interface {
 	Rollback() error
 }
 
-// DBBeginner implements the Beginner interface,.
+// DBBeginner implements the Beginner interface,
 type DBBeginner struct {
 	sqlxDB *sqlx.DB
 }

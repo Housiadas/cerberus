@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/Housiadas/cerberus/internal/core/user"
+	"github.com/Housiadas/cerberus/internal/types/event"
 	"github.com/Housiadas/cerberus/pkg/cursor"
 	"github.com/Housiadas/cerberus/pkg/order"
 	"github.com/Housiadas/cerberus/pkg/pgsql"
@@ -516,6 +517,132 @@ func (_m *mocklogger) EXPECT() *mocklogger_Expecter {
 	return &mocklogger_Expecter{mock: &_m.Mock}
 }
 
+// Error provides a mock function for the type mocklogger
+func (_mock *mocklogger) Error(ctx context.Context, msg string, args ...any) {
+	if len(args) > 0 {
+		_mock.Called(ctx, msg, args)
+	} else {
+		_mock.Called(ctx, msg)
+	}
+
+	return
+}
+
+// mocklogger_Error_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Error'
+type mocklogger_Error_Call struct {
+	*mock.Call
+}
+
+// Error is a helper method to define mock.On call
+//   - ctx context.Context
+//   - msg string
+//   - args ...any
+func (_e *mocklogger_Expecter) Error(ctx interface{}, msg interface{}, args ...interface{}) *mocklogger_Error_Call {
+	return &mocklogger_Error_Call{Call: _e.mock.On("Error",
+		append([]interface{}{ctx, msg}, args...)...)}
+}
+
+func (_c *mocklogger_Error_Call) Run(run func(ctx context.Context, msg string, args ...any)) *mocklogger_Error_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		var arg2 []any
+		var variadicArgs []any
+		if len(args) > 2 {
+			variadicArgs = args[2].([]any)
+		}
+		arg2 = variadicArgs
+		run(
+			arg0,
+			arg1,
+			arg2...,
+		)
+	})
+	return _c
+}
+
+func (_c *mocklogger_Error_Call) Return() *mocklogger_Error_Call {
+	_c.Call.Return()
+	return _c
+}
+
+func (_c *mocklogger_Error_Call) RunAndReturn(run func(ctx context.Context, msg string, args ...any)) *mocklogger_Error_Call {
+	_c.Run(run)
+	return _c
+}
+
+// Errorc provides a mock function for the type mocklogger
+func (_mock *mocklogger) Errorc(ctx context.Context, caller int, msg string, args ...any) {
+	if len(args) > 0 {
+		_mock.Called(ctx, caller, msg, args)
+	} else {
+		_mock.Called(ctx, caller, msg)
+	}
+
+	return
+}
+
+// mocklogger_Errorc_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Errorc'
+type mocklogger_Errorc_Call struct {
+	*mock.Call
+}
+
+// Errorc is a helper method to define mock.On call
+//   - ctx context.Context
+//   - caller int
+//   - msg string
+//   - args ...any
+func (_e *mocklogger_Expecter) Errorc(ctx interface{}, caller interface{}, msg interface{}, args ...interface{}) *mocklogger_Errorc_Call {
+	return &mocklogger_Errorc_Call{Call: _e.mock.On("Errorc",
+		append([]interface{}{ctx, caller, msg}, args...)...)}
+}
+
+func (_c *mocklogger_Errorc_Call) Run(run func(ctx context.Context, caller int, msg string, args ...any)) *mocklogger_Errorc_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 int
+		if args[1] != nil {
+			arg1 = args[1].(int)
+		}
+		var arg2 string
+		if args[2] != nil {
+			arg2 = args[2].(string)
+		}
+		var arg3 []any
+		var variadicArgs []any
+		if len(args) > 3 {
+			variadicArgs = args[3].([]any)
+		}
+		arg3 = variadicArgs
+		run(
+			arg0,
+			arg1,
+			arg2,
+			arg3...,
+		)
+	})
+	return _c
+}
+
+func (_c *mocklogger_Errorc_Call) Return() *mocklogger_Errorc_Call {
+	_c.Call.Return()
+	return _c
+}
+
+func (_c *mocklogger_Errorc_Call) RunAndReturn(run func(ctx context.Context, caller int, msg string, args ...any)) *mocklogger_Errorc_Call {
+	_c.Run(run)
+	return _c
+}
+
 // Info provides a mock function for the type mocklogger
 func (_mock *mocklogger) Info(ctx context.Context, msg string, args ...any) {
 	if len(args) > 0 {
@@ -572,6 +699,198 @@ func (_c *mocklogger_Info_Call) Return() *mocklogger_Info_Call {
 }
 
 func (_c *mocklogger_Info_Call) RunAndReturn(run func(ctx context.Context, msg string, args ...any)) *mocklogger_Info_Call {
+	_c.Run(run)
+	return _c
+}
+
+// Infoc provides a mock function for the type mocklogger
+func (_mock *mocklogger) Infoc(ctx context.Context, caller int, msg string, args ...any) {
+	if len(args) > 0 {
+		_mock.Called(ctx, caller, msg, args)
+	} else {
+		_mock.Called(ctx, caller, msg)
+	}
+
+	return
+}
+
+// mocklogger_Infoc_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Infoc'
+type mocklogger_Infoc_Call struct {
+	*mock.Call
+}
+
+// Infoc is a helper method to define mock.On call
+//   - ctx context.Context
+//   - caller int
+//   - msg string
+//   - args ...any
+func (_e *mocklogger_Expecter) Infoc(ctx interface{}, caller interface{}, msg interface{}, args ...interface{}) *mocklogger_Infoc_Call {
+	return &mocklogger_Infoc_Call{Call: _e.mock.On("Infoc",
+		append([]interface{}{ctx, caller, msg}, args...)...)}
+}
+
+func (_c *mocklogger_Infoc_Call) Run(run func(ctx context.Context, caller int, msg string, args ...any)) *mocklogger_Infoc_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 int
+		if args[1] != nil {
+			arg1 = args[1].(int)
+		}
+		var arg2 string
+		if args[2] != nil {
+			arg2 = args[2].(string)
+		}
+		var arg3 []any
+		var variadicArgs []any
+		if len(args) > 3 {
+			variadicArgs = args[3].([]any)
+		}
+		arg3 = variadicArgs
+		run(
+			arg0,
+			arg1,
+			arg2,
+			arg3...,
+		)
+	})
+	return _c
+}
+
+func (_c *mocklogger_Infoc_Call) Return() *mocklogger_Infoc_Call {
+	_c.Call.Return()
+	return _c
+}
+
+func (_c *mocklogger_Infoc_Call) RunAndReturn(run func(ctx context.Context, caller int, msg string, args ...any)) *mocklogger_Infoc_Call {
+	_c.Run(run)
+	return _c
+}
+
+// Warn provides a mock function for the type mocklogger
+func (_mock *mocklogger) Warn(ctx context.Context, msg string, args ...any) {
+	if len(args) > 0 {
+		_mock.Called(ctx, msg, args)
+	} else {
+		_mock.Called(ctx, msg)
+	}
+
+	return
+}
+
+// mocklogger_Warn_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Warn'
+type mocklogger_Warn_Call struct {
+	*mock.Call
+}
+
+// Warn is a helper method to define mock.On call
+//   - ctx context.Context
+//   - msg string
+//   - args ...any
+func (_e *mocklogger_Expecter) Warn(ctx interface{}, msg interface{}, args ...interface{}) *mocklogger_Warn_Call {
+	return &mocklogger_Warn_Call{Call: _e.mock.On("Warn",
+		append([]interface{}{ctx, msg}, args...)...)}
+}
+
+func (_c *mocklogger_Warn_Call) Run(run func(ctx context.Context, msg string, args ...any)) *mocklogger_Warn_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		var arg2 []any
+		var variadicArgs []any
+		if len(args) > 2 {
+			variadicArgs = args[2].([]any)
+		}
+		arg2 = variadicArgs
+		run(
+			arg0,
+			arg1,
+			arg2...,
+		)
+	})
+	return _c
+}
+
+func (_c *mocklogger_Warn_Call) Return() *mocklogger_Warn_Call {
+	_c.Call.Return()
+	return _c
+}
+
+func (_c *mocklogger_Warn_Call) RunAndReturn(run func(ctx context.Context, msg string, args ...any)) *mocklogger_Warn_Call {
+	_c.Run(run)
+	return _c
+}
+
+// Warnc provides a mock function for the type mocklogger
+func (_mock *mocklogger) Warnc(ctx context.Context, caller int, msg string, args ...any) {
+	if len(args) > 0 {
+		_mock.Called(ctx, caller, msg, args)
+	} else {
+		_mock.Called(ctx, caller, msg)
+	}
+
+	return
+}
+
+// mocklogger_Warnc_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Warnc'
+type mocklogger_Warnc_Call struct {
+	*mock.Call
+}
+
+// Warnc is a helper method to define mock.On call
+//   - ctx context.Context
+//   - caller int
+//   - msg string
+//   - args ...any
+func (_e *mocklogger_Expecter) Warnc(ctx interface{}, caller interface{}, msg interface{}, args ...interface{}) *mocklogger_Warnc_Call {
+	return &mocklogger_Warnc_Call{Call: _e.mock.On("Warnc",
+		append([]interface{}{ctx, caller, msg}, args...)...)}
+}
+
+func (_c *mocklogger_Warnc_Call) Run(run func(ctx context.Context, caller int, msg string, args ...any)) *mocklogger_Warnc_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 int
+		if args[1] != nil {
+			arg1 = args[1].(int)
+		}
+		var arg2 string
+		if args[2] != nil {
+			arg2 = args[2].(string)
+		}
+		var arg3 []any
+		var variadicArgs []any
+		if len(args) > 3 {
+			variadicArgs = args[3].([]any)
+		}
+		arg3 = variadicArgs
+		run(
+			arg0,
+			arg1,
+			arg2,
+			arg3...,
+		)
+	})
+	return _c
+}
+
+func (_c *mocklogger_Warnc_Call) Return() *mocklogger_Warnc_Call {
+	_c.Call.Return()
+	return _c
+}
+
+func (_c *mocklogger_Warnc_Call) RunAndReturn(run func(ctx context.Context, caller int, msg string, args ...any)) *mocklogger_Warnc_Call {
 	_c.Run(run)
 	return _c
 }
@@ -871,6 +1190,96 @@ func (_c *mockhasher_Hash_Call) Return(bytes []byte, err error) *mockhasher_Hash
 }
 
 func (_c *mockhasher_Hash_Call) RunAndReturn(run func(password string) ([]byte, error)) *mockhasher_Hash_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// newMockdispatcher creates a new instance of mockdispatcher. It also registers a testing interface on the mock and a cleanup function to assert the mocks expectations.
+// The first argument is typically a *testing.T value.
+func newMockdispatcher(t interface {
+	mock.TestingT
+	Cleanup(func())
+}) *mockdispatcher {
+	mock := &mockdispatcher{}
+	mock.Mock.Test(t)
+
+	t.Cleanup(func() { mock.AssertExpectations(t) })
+
+	return mock
+}
+
+// mockdispatcher is an autogenerated mock type for the dispatcher type
+type mockdispatcher struct {
+	mock.Mock
+}
+
+type mockdispatcher_Expecter struct {
+	mock *mock.Mock
+}
+
+func (_m *mockdispatcher) EXPECT() *mockdispatcher_Expecter {
+	return &mockdispatcher_Expecter{mock: &_m.Mock}
+}
+
+// Dispatch provides a mock function for the type mockdispatcher
+func (_mock *mockdispatcher) Dispatch(ctx context.Context, tran pgsql.CommitRollbacker, ev event.DomainEvent) error {
+	ret := _mock.Called(ctx, tran, ev)
+
+	if len(ret) == 0 {
+		panic("no return value specified for Dispatch")
+	}
+
+	var r0 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, pgsql.CommitRollbacker, event.DomainEvent) error); ok {
+		r0 = returnFunc(ctx, tran, ev)
+	} else {
+		r0 = ret.Error(0)
+	}
+	return r0
+}
+
+// mockdispatcher_Dispatch_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Dispatch'
+type mockdispatcher_Dispatch_Call struct {
+	*mock.Call
+}
+
+// Dispatch is a helper method to define mock.On call
+//   - ctx context.Context
+//   - tran pgsql.CommitRollbacker
+//   - ev event.DomainEvent
+func (_e *mockdispatcher_Expecter) Dispatch(ctx interface{}, tran interface{}, ev interface{}) *mockdispatcher_Dispatch_Call {
+	return &mockdispatcher_Dispatch_Call{Call: _e.mock.On("Dispatch", ctx, tran, ev)}
+}
+
+func (_c *mockdispatcher_Dispatch_Call) Run(run func(ctx context.Context, tran pgsql.CommitRollbacker, ev event.DomainEvent)) *mockdispatcher_Dispatch_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 pgsql.CommitRollbacker
+		if args[1] != nil {
+			arg1 = args[1].(pgsql.CommitRollbacker)
+		}
+		var arg2 event.DomainEvent
+		if args[2] != nil {
+			arg2 = args[2].(event.DomainEvent)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+		)
+	})
+	return _c
+}
+
+func (_c *mockdispatcher_Dispatch_Call) Return(err error) *mockdispatcher_Dispatch_Call {
+	_c.Call.Return(err)
+	return _c
+}
+
+func (_c *mockdispatcher_Dispatch_Call) RunAndReturn(run func(ctx context.Context, tran pgsql.CommitRollbacker, ev event.DomainEvent) error) *mockdispatcher_Dispatch_Call {
 	_c.Call.Return(run)
 	return _c
 }

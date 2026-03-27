@@ -11,12 +11,11 @@ import (
 	errs2 "github.com/Housiadas/cerberus/internal/errs"
 	"github.com/Housiadas/cerberus/internal/testutil/apitest"
 	"github.com/Housiadas/cerberus/internal/testutil/dbtest"
+	"github.com/Housiadas/cerberus/internal/web/handler/openapi"
 	"github.com/google/go-cmp/cmp"
 	"github.com/stretchr/testify/require"
 
-	"github.com/Housiadas/cerberus/internal/usecase/role_usecase"
 	"github.com/Housiadas/cerberus/pkg/clock"
-	"github.com/Housiadas/cerberus/pkg/cursor"
 )
 
 func Test_API_Role_Query_200(t *testing.T) {
@@ -36,6 +35,12 @@ func Test_API_Role_Query_200(t *testing.T) {
 		return roles[i].ID().String() <= roles[j].ID().String()
 	})
 
+	expData := toTestRoles(roles)
+	expMd := openapi.Metadata{
+		HasMore: new(false),
+		Limit:   new(10),
+	}
+
 	table := []apitest.Table{
 		{
 			Name:        "basic",
@@ -43,13 +48,10 @@ func Test_API_Role_Query_200(t *testing.T) {
 			Method:      http.MethodGet,
 			StatusCode:  http.StatusOK,
 			AccessToken: &sd.Admins[0].AccessToken.Token,
-			GotResp:     &cursor.Result[role_usecase.Role]{},
-			ExpResp: &cursor.Result[role_usecase.Role]{
-				Data: toAppRoles(roles),
-				Metadata: cursor.Metadata{
-					HasMore: false,
-					Limit:   10,
-				},
+			GotResp:     &openapi.RolePageResult{},
+			ExpResp: &openapi.RolePageResult{
+				Data:     &expData,
+				Metadata: &expMd,
 			},
 			AssertFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
@@ -103,21 +105,21 @@ func Test_API_Role_Create_200(t *testing.T) {
 			Method:      http.MethodPost,
 			StatusCode:  http.StatusOK,
 			AccessToken: &sd.Admins[0].AccessToken.Token,
-			Input: &role_usecase.NewRole{
+			Input: &openapi.NewRole{
 				Name: "editor",
 			},
-			GotResp: &role_usecase.Role{},
-			ExpResp: &role_usecase.Role{
-				Name: "editor",
+			GotResp: &openapi.Role{},
+			ExpResp: &openapi.Role{
+				Name: new("editor"),
 			},
 			AssertFunc: func(got any, exp any) string {
-				gotResp, exists := got.(*role_usecase.Role)
+				gotResp, exists := got.(*openapi.Role)
 				if !exists {
 					return "error occurred"
 				}
 
-				expResp := exp.(*role_usecase.Role)
-				expResp.ID = gotResp.ID
+				expResp := exp.(*openapi.Role)
+				expResp.Id = gotResp.Id
 				expResp.CreatedAt = gotResp.CreatedAt
 				expResp.UpdatedAt = gotResp.UpdatedAt
 
@@ -145,7 +147,7 @@ func Test_API_Role_Create_400(t *testing.T) {
 			Method:      http.MethodPost,
 			StatusCode:  http.StatusBadRequest,
 			AccessToken: &sd.Admins[0].AccessToken.Token,
-			Input:       &role_usecase.NewRole{},
+			Input:       &openapi.NewRole{},
 			GotResp:     &errs2.Error{},
 			ExpResp: &errs2.Error{
 				Status:  errs2.InvalidArgument,
@@ -162,7 +164,7 @@ func Test_API_Role_Create_400(t *testing.T) {
 			URL:        "/api/v1/roles",
 			Method:     http.MethodPost,
 			StatusCode: http.StatusUnauthorized,
-			Input:      &role_usecase.NewRole{Name: "editor"},
+			Input:      &openapi.NewRole{Name: "editor"},
 			GotResp:    &errs2.Error{},
 			ExpResp:    errs2.Errorf(errs2.Unauthenticated, errs2.CodeUnauthenticated, "expected authorization header format: Bearer <token>"),
 			AssertFunc: func(got any, exp any) string {
@@ -190,7 +192,7 @@ func Test_API_Role_Create_403(t *testing.T) {
 			Method:      http.MethodPost,
 			StatusCode:  http.StatusForbidden,
 			AccessToken: &sd.Users[0].AccessToken.Token,
-			Input:       &role_usecase.NewRole{Name: "editor"},
+			Input:       &openapi.NewRole{Name: "editor"},
 			GotResp:     &errs2.Error{},
 			ExpResp:     errs2.Errorf(errs2.PermissionDenied, errs2.CodePermissionDenied, "permission denied"),
 			AssertFunc: func(got any, exp any) string {
@@ -222,27 +224,27 @@ func Test_API_Role_Update_200(t *testing.T) {
 			Method:      http.MethodPut,
 			StatusCode:  http.StatusOK,
 			AccessToken: &sd.Admins[0].AccessToken.Token,
-			Input: &role_usecase.UpdateRole{
+			Input: &openapi.UpdateRole{
 				Name: dbtest.StringPointer("UpdatedRole"),
 			},
-			GotResp: &role_usecase.Role{},
-			ExpResp: func() *role_usecase.Role {
+			GotResp: &openapi.Role{},
+			ExpResp: func() *openapi.Role {
 				createdAt := roles[0].CreatedAt()
 				updatedAt := roles[0].UpdatedAt()
-				return &role_usecase.Role{
-					ID:        roles[0].ID().String(),
-					Name:      "UpdatedRole",
-					CreatedAt: clock.Format(&createdAt),
-					UpdatedAt: clock.Format(&updatedAt),
+				return &openapi.Role{
+					Id:        new(roles[0].ID().String()),
+					Name:      new("UpdatedRole"),
+					CreatedAt: new(clock.Format(&createdAt)),
+					UpdatedAt: new(clock.Format(&updatedAt)),
 				}
 			}(),
 			AssertFunc: func(got any, exp any) string {
-				gotResp, exists := got.(*role_usecase.Role)
+				gotResp, exists := got.(*openapi.Role)
 				if !exists {
 					return "error occurred"
 				}
 
-				expResp := exp.(*role_usecase.Role)
+				expResp := exp.(*openapi.Role)
 				gotResp.UpdatedAt = expResp.UpdatedAt
 
 				return cmp.Diff(gotResp, expResp)
@@ -273,7 +275,7 @@ func Test_API_Role_Update_403(t *testing.T) {
 			Method:      http.MethodPut,
 			StatusCode:  http.StatusForbidden,
 			AccessToken: &sd.Users[0].AccessToken.Token,
-			Input: &role_usecase.UpdateRole{
+			Input: &openapi.UpdateRole{
 				Name: dbtest.StringPointer("UpdatedRole"),
 			},
 			GotResp: &errs2.Error{},

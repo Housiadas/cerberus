@@ -6,9 +6,10 @@ import (
 	"slices"
 
 	ctxPck "github.com/Housiadas/cerberus/internal/context"
+	"github.com/Housiadas/cerberus/internal/core/user_roles_permissions"
 	errs2 "github.com/Housiadas/cerberus/internal/errs"
-	"github.com/Housiadas/cerberus/internal/usecase/user_roles_permissions_usecase"
 	"github.com/Housiadas/cerberus/internal/web/handler/openapi"
+	"github.com/google/uuid"
 )
 
 // operationPermissions maps each operationID to its required permission.
@@ -47,10 +48,19 @@ func (m *Middleware) Permission() openapi.StrictMiddlewareFunc {
 		return func(ctx context.Context, w http.ResponseWriter, r *http.Request, request any) (any, error) {
 			userID := ctxPck.GetActorID(ctx)
 
+			userUUID, parseErr := uuid.Parse(userID)
+			if parseErr != nil {
+				return nil, errs2.New(
+					errs2.Unauthenticated,
+					errs2.CodeUnauthenticated,
+					parseErr,
+				)
+			}
+
 			sfKey := "permissions:" + userID
 
 			result, err, _ := m.permSflight.Do(sfKey, func() (any, error) {
-				return m.useCase.userRolesPermissions.QueryPermissionsByUserID(ctx, userID)
+				return m.useCase.userRolesPermissions.QueryPermissionsByUserID(ctx, userUUID)
 			})
 			if err != nil {
 				m.log.Error(ctx, "error checking permissions", err)
@@ -62,7 +72,7 @@ func (m *Middleware) Permission() openapi.StrictMiddlewareFunc {
 				)
 			}
 
-			permissions, ok := result.([]user_roles_permissions_usecase.Permission)
+			permissions, ok := result.([]user_roles_permissions.Permission)
 			if !ok {
 				m.log.Error(ctx, "error casting permissions", err)
 
@@ -75,7 +85,7 @@ func (m *Middleware) Permission() openapi.StrictMiddlewareFunc {
 
 			hasPermission := slices.ContainsFunc(
 				permissions,
-				func(p user_roles_permissions_usecase.Permission) bool {
+				func(p user_roles_permissions.Permission) bool {
 					return p.Name == permissionName
 				},
 			)

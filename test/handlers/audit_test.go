@@ -8,11 +8,9 @@ import (
 
 	errs2 "github.com/Housiadas/cerberus/internal/errs"
 	"github.com/Housiadas/cerberus/internal/testutil/apitest"
+	"github.com/Housiadas/cerberus/internal/web/handler/openapi"
 	"github.com/google/go-cmp/cmp"
 	"github.com/stretchr/testify/require"
-
-	"github.com/Housiadas/cerberus/internal/usecase/audit_usecase"
-	"github.com/Housiadas/cerberus/pkg/cursor"
 )
 
 func Test_API_Audit_Query_200(t *testing.T) {
@@ -28,6 +26,12 @@ func Test_API_Audit_Query_200(t *testing.T) {
 		return sd.Admins[0].Audits[i].ObjName().String() <= sd.Admins[0].Audits[j].ObjName().String()
 	})
 
+	expData := toTestAudits(sd.Admins[0].Audits)
+	expMd := openapi.Metadata{
+		HasMore: new(false),
+		Limit:   new(10),
+	}
+
 	table := []apitest.Table{
 		{
 			Name:        "basic",
@@ -35,29 +39,38 @@ func Test_API_Audit_Query_200(t *testing.T) {
 			StatusCode:  http.StatusOK,
 			Method:      http.MethodGet,
 			AccessToken: &sd.Admins[0].AccessToken.Token,
-			GotResp:     &cursor.Result[audit_usecase.Audit]{},
-			ExpResp: &cursor.Result[audit_usecase.Audit]{
-				Metadata: cursor.Metadata{
-					HasMore: false,
-					Limit:   10,
-				},
-				Data: toAppAudits(sd.Admins[0].Audits),
+			GotResp:     &openapi.AuditPageResult{},
+			ExpResp: &openapi.AuditPageResult{
+				Metadata: &expMd,
+				Data:     &expData,
 			},
 			AssertFunc: func(got any, exp any) string {
-				gotResp, exists := got.(*cursor.Result[audit_usecase.Audit])
+				gotResp, exists := got.(*openapi.AuditPageResult)
 				if !exists {
 					return "error occurred"
 				}
 
-				expResp := exp.(*cursor.Result[audit_usecase.Audit])
+				expResp := exp.(*openapi.AuditPageResult)
 
-				for i := range gotResp.Data {
-					if gotResp.Data[i].Timestamp == expResp.Data[i].Timestamp {
-						expResp.Data[i].Timestamp = gotResp.Data[i].Timestamp
+				if gotResp.Data != nil && expResp.Data != nil {
+					for i := range *gotResp.Data {
+						gotA := &(*gotResp.Data)[i]
+						expA := &(*expResp.Data)[i]
+
+						if gotA.Timestamp != nil && expA.Timestamp != nil && *gotA.Timestamp == *expA.Timestamp {
+							expA.Timestamp = gotA.Timestamp
+						}
+
+						if gotA.Data != nil {
+							cleaned := strings.ReplaceAll(*gotA.Data, " ", "")
+							gotA.Data = &cleaned
+						}
+
+						if expA.Data != nil {
+							cleaned := strings.ReplaceAll(*expA.Data, " ", "")
+							expA.Data = &cleaned
+						}
 					}
-
-					gotResp.Data[i].Data = strings.ReplaceAll(gotResp.Data[i].Data, " ", "")
-					expResp.Data[i].Data = strings.ReplaceAll(expResp.Data[i].Data, " ", "")
 				}
 
 				return cmp.Diff(gotResp, expResp)

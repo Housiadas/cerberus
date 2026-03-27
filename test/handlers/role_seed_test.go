@@ -56,12 +56,12 @@ func insertRoleSeedData(test *apitest2.Test) (apitest2.SeedData, error) {
 		return apitest2.SeedData{}, fmt.Errorf("seeding regular user role: %w", err)
 	}
 
-	tkn1, err := test.Usecase.Auth.GenerateAccessToken(ctx, usrs[0].ID().String())
+	tkn1, err := test.Auth.GenerateAccessToken(ctx, usrs[0].ID().String())
 	if err != nil {
 		return apitest2.SeedData{}, fmt.Errorf("seeding token: %w", err)
 	}
 
-	tkn2, err := test.Usecase.Auth.GenerateAccessToken(ctx, usrs[1].ID().String())
+	tkn2, err := test.Auth.GenerateAccessToken(ctx, usrs[1].ID().String())
 	if err != nil {
 		return apitest2.SeedData{}, fmt.Errorf("seeding token: %w", err)
 	}

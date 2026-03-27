@@ -1,4 +1,4 @@
-package user_cache
+package user_cache_test
 
 import (
 	"context"
@@ -7,9 +7,8 @@ import (
 	"time"
 
 	"github.com/Housiadas/cerberus/internal/core/user"
+	"github.com/Housiadas/cerberus/internal/core/user/user_cache"
 	"github.com/Housiadas/cerberus/internal/types/name"
-	"github.com/Housiadas/cerberus/pkg/logger"
-	"github.com/Housiadas/cerberus/pkg/redis"
 	goredis "github.com/redis/go-redis/v9"
 
 	"github.com/google/uuid"
@@ -18,20 +17,20 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func newTestStore(t *testing.T) (*Store, *user.MockStorer, *redis.MockClient) {
+func newTestStore(t *testing.T) (*user_cache.Store, *mockstorer, *mockredisClient) {
 	t.Helper()
 
-	mockStorer := user.NewMockStorer(t)
-	mLogger := logger.NewMockLogger(t)
-	mRed := redis.NewMockClient(t)
-	store := NewStore(t.Context(), mLogger, mockStorer, mRed)
+	mLogger := newMocklogger(t)
+	mRed := newMockredisClient(t)
+	mockStorer := newMockstorer(t)
+	store := user_cache.NewStore(t.Context(), mLogger, mockStorer, mRed)
 
 	return store, mockStorer, mRed
 }
 
 // redisCacheMiss sets up the redis mock to simulate an L2 cache miss (Get returns redis.Nil)
 // and then a Set to store the fetched value.
-func redisCacheMiss(red *redis.MockClient) {
+func redisCacheMiss(red *mockredisClient) {
 	red.On("Get", mock.Anything, mock.Anything).
 		Return(goredis.NewStringResult("", goredis.Nil)).Once()
 	red.On("Set", mock.Anything, mock.Anything, mock.Anything, mock.Anything).

@@ -20,7 +20,7 @@ type emailPayload struct {
 
 // EmailRelay polls in the email_notification_outbox table and sends emails.
 type EmailRelay struct {
-	log            logger.Logger
+	log            logger
 	emailOutboxSvc *email_notification_outbox.Service
 	emailClient    *email.Client
 	interval       time.Duration
@@ -30,7 +30,7 @@ type EmailRelay struct {
 
 // NewEmailRelay constructs a new EmailRelay.
 func NewEmailRelay(
-	log logger.Logger,
+	log logger,
 	emailOutboxSvc *email_notification_outbox.Service,
 	emailClient *email.Client,
 	interval time.Duration,

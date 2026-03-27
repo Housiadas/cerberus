@@ -1,4 +1,4 @@
-// Package account_service is the service of the account domain
+// Package account is the service of the account domain
 package account
 
 import (
@@ -14,8 +14,6 @@ import (
 )
 
 type logger interface {
-	Debug(ctx context.Context, msg string, args ...any)
-	Debugc(ctx context.Context, caller int, msg string, args ...any)
 	Info(ctx context.Context, msg string, args ...any)
 	Infoc(ctx context.Context, caller int, msg string, args ...any)
 	Warn(ctx context.Context, msg string, args ...any)
@@ -37,6 +35,7 @@ type Service struct {
 	storer  Storer
 	uuidGen generator
 	clock   clock
+	tx      pgsql.Beginner
 }
 
 // NewService constructs the service.
@@ -45,12 +44,14 @@ func NewService(
 	storer Storer,
 	uuidGen generator,
 	clock clock,
+	tx pgsql.Beginner,
 ) *Service {
 	return &Service{
 		log:     log,
 		storer:  storer,
 		uuidGen: uuidGen,
 		clock:   clock,
+		tx:      tx,
 	}
 }
 
@@ -67,12 +68,13 @@ func (s *Service) NewWithTx(tx pgsql.CommitRollbacker) (*Service, error) {
 		storer:  storer,
 		uuidGen: s.uuidGen,
 		clock:   s.clock,
+		tx:      s.tx,
 	}
 
 	return &svc, nil
 }
 
-// Create adds a new Account to the system.
+// Create adds a new Account to the system within a transaction.
 func (s *Service) Create(ctx context.Context, na NewAccount) (Account, error) {
 	id, err := s.uuidGen.Generate()
 	if err != nil {
@@ -82,15 +84,22 @@ func (s *Service) Create(ctx context.Context, na NewAccount) (Account, error) {
 	now := s.clock.Now()
 	acc := New(id, na.Name, sql.NullString{}, now, now, nil)
 
-	err = s.storer.Create(ctx, acc)
-	if err != nil {
-		return Account{}, fmt.Errorf("create: %w", err)
+	txErr := pgsql.RunInTx(ctx, s.log, s.tx, func(tran pgsql.CommitRollbacker) error {
+		storerTx, err := s.storer.NewWithTx(tran)
+		if err != nil {
+			return fmt.Errorf("account tx: %w", err)
+		}
+
+		return storerTx.Create(ctx, acc)
+	})
+	if txErr != nil {
+		return Account{}, fmt.Errorf("create account: %w", txErr)
 	}
 
 	return acc, nil
 }
 
-// Update modifies information about an account.
+// Update modifies information about an account within a transaction.
 func (s *Service) Update(
 	ctx context.Context,
 	acc Account,
@@ -106,9 +115,16 @@ func (s *Service) Update(
 
 	acc = acc.WithUpdatedAt(s.clock.Now())
 
-	err := s.storer.Update(ctx, acc)
-	if err != nil {
-		return Account{}, fmt.Errorf("update: %w", err)
+	txErr := pgsql.RunInTx(ctx, s.log, s.tx, func(tran pgsql.CommitRollbacker) error {
+		storerTx, err := s.storer.NewWithTx(tran)
+		if err != nil {
+			return fmt.Errorf("account tx: %w", err)
+		}
+
+		return storerTx.Update(ctx, acc)
+	})
+	if txErr != nil {
+		return Account{}, fmt.Errorf("update account: %w", txErr)
 	}
 
 	return acc, nil
@@ -139,11 +155,18 @@ func (s *Service) QueryByID(ctx context.Context, accountID uuid.UUID) (Account, 
 	return acc, nil
 }
 
-// Delete removes the specified account.
+// Delete removes the specified account within a transaction.
 func (s *Service) Delete(ctx context.Context, acc Account) error {
-	err := s.storer.Delete(ctx, acc)
-	if err != nil {
-		return fmt.Errorf("delete: %w", err)
+	txErr := pgsql.RunInTx(ctx, s.log, s.tx, func(tran pgsql.CommitRollbacker) error {
+		storerTx, err := s.storer.NewWithTx(tran)
+		if err != nil {
+			return fmt.Errorf("account tx: %w", err)
+		}
+
+		return storerTx.Delete(ctx, acc)
+	})
+	if txErr != nil {
+		return fmt.Errorf("delete account: %w", txErr)
 	}
 
 	return nil

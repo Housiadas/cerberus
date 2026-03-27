@@ -11,6 +11,8 @@ import (
 	"github.com/Housiadas/cerberus/internal/core/account/account_repo"
 	"github.com/Housiadas/cerberus/internal/core/audit"
 	"github.com/Housiadas/cerberus/internal/core/audit/audit_repo"
+	"github.com/Housiadas/cerberus/internal/core/auth"
+	"github.com/Housiadas/cerberus/internal/core/billing"
 	"github.com/Housiadas/cerberus/internal/core/email_notification_outbox"
 	"github.com/Housiadas/cerberus/internal/core/email_notification_outbox/email_notification_outbox_repo"
 	"github.com/Housiadas/cerberus/internal/core/invoice"
@@ -39,18 +41,6 @@ import (
 	"github.com/Housiadas/cerberus/internal/core/user_roles_permissions"
 	"github.com/Housiadas/cerberus/internal/core/user_roles_permissions/user_roles_permissions_repo"
 	"github.com/Housiadas/cerberus/internal/eventbus"
-	"github.com/Housiadas/cerberus/internal/usecase/account_usecase"
-	"github.com/Housiadas/cerberus/internal/usecase/audit_usecase"
-	"github.com/Housiadas/cerberus/internal/usecase/auth_usecase"
-	"github.com/Housiadas/cerberus/internal/usecase/billing_usecase"
-	"github.com/Housiadas/cerberus/internal/usecase/permission_usecase"
-	"github.com/Housiadas/cerberus/internal/usecase/refresh_token_usecase"
-	"github.com/Housiadas/cerberus/internal/usecase/role_permissions_usecase"
-	"github.com/Housiadas/cerberus/internal/usecase/role_usecase"
-	"github.com/Housiadas/cerberus/internal/usecase/system_usecase"
-	"github.com/Housiadas/cerberus/internal/usecase/user_roles_permissions_usecase"
-	"github.com/Housiadas/cerberus/internal/usecase/user_roles_usecase"
-	"github.com/Housiadas/cerberus/internal/usecase/user_usecase"
 	"github.com/Housiadas/cerberus/internal/web/handler/openapi"
 	"github.com/Housiadas/cerberus/internal/web/middleware"
 	"github.com/Housiadas/cerberus/pkg/clock"
@@ -94,24 +84,26 @@ type Config struct {
 // Handler contains all the mandatory systems required by Handler.
 type Handler struct {
 	serviceName string
+	build       string
+	db          *sqlx.DB
+	log         *logger.Service
 	cors        config.CorsSettings
 	middleware  *middleware.Middleware
-	usecase     usecase
+	svc         services
 }
 
-// usecase represents the use case layer.
-type usecase struct {
-	auth                 *auth_usecase.UseCase
-	user                 *user_usecase.UseCase
-	role                 *role_usecase.UseCase
-	audit                *audit_usecase.UseCase
-	permission           *permission_usecase.UseCase
-	userRolesPermissions *user_roles_permissions_usecase.UseCase
-	userRoles            *user_roles_usecase.UseCase
-	rolePermissions      *role_permissions_usecase.UseCase
-	system               *system_usecase.UseCase
-	account              *account_usecase.UseCase
-	billing              *billing_usecase.UseCase
+// services holds direct references to all domain services.
+type services struct {
+	auth                 *auth.Service
+	user                 *user.Service
+	role                 *role.Service
+	permission           *permission.Service
+	audit                *audit.Service
+	userRolesPermissions *user_roles_permissions.Service
+	userRoles            *user_roles.Service
+	rolePermissions      *role_permissions.Service
+	account              *account.Service
+	billing              *billing.Service
 }
 
 func New(ctx context.Context, cfg Config) *Handler {
@@ -147,87 +139,71 @@ func New(ctx context.Context, cfg Config) *Handler {
 	invoiceRepo := invoice_repo.NewStore(cfg.Log, cfg.DB)
 
 	// services
+	tx := pgsql.NewBeginner(cfg.DB)
 	auditService := audit.NewService(cfg.Log, auditRepo)
 	outboxSvc := outbox.NewService(cfg.Log, outboxRepo, uuidGen, clk)
-	emailNotifOutboxSvc := email_notification_outbox.NewService(
-		cfg.Log, emailNotifOutboxRepo, uuidGen, clk,
-	)
-	userService := user.NewService(cfg.Log, userCacheStore, uuidGen, clk, hash)
-	roleService := role.NewService(cfg.Log, roleCacheStore, uuidGen)
-	permissionService := permission.NewService(cfg.Log, permissionCacheStore, uuidGen)
+	emailNotifOutboxSvc := email_notification_outbox.NewService(cfg.Log, emailNotifOutboxRepo, uuidGen, clk)
+
+	// event dispatcher and transaction beginner (used by services for CUD operations)
+	dispatcher := eventbus.New(outboxSvc, auditService)
+
+	userService := user.NewService(cfg.Log, userCacheStore, uuidGen, clk, hash, tx, dispatcher)
+	roleService := role.NewService(cfg.Log, roleCacheStore, uuidGen, tx, dispatcher)
+	permissionService := permission.NewService(cfg.Log, permissionCacheStore, uuidGen, tx, dispatcher)
 	refreshTokenService := refresh_token.NewService(cfg.Log, refreshTokenRepo, uuidGen, clk)
 	resetTokenService := reset_token.NewService(resetTokenRepo, uuidGen, clk)
-	userRolesSvc := user_roles.NewService(cfg.Log, userRolesRepo)
-	rolePermsSvc := role_permissions.NewService(cfg.Log, rolePermissionsRepo)
+	userRolesSvc := user_roles.NewService(cfg.Log, userRolesRepo, tx, dispatcher)
+	rolePermsSvc := role_permissions.NewService(cfg.Log, rolePermissionsRepo, tx, dispatcher)
 	userRolesPermissionsService := user_roles_permissions.NewService(
 		cfg.Log,
 		userRolesPermissionsRepo,
 	)
-	accountSvc := account.NewService(cfg.Log, accountRepo, uuidGen, clk)
+	accountSvc := account.NewService(cfg.Log, accountRepo, uuidGen, clk, tx)
 	subscriptionSvc := subscription.NewService(cfg.Log, subscriptionRepo)
 	invoiceSvc := invoice.NewService(cfg.Log, invoiceRepo)
 
-	// event dispatcher
-	dispatcher := eventbus.New(outboxSvc, auditService)
-
-	// usecase
-	tx := pgsql.NewBeginner(cfg.DB)
-	auditUsecase := audit_usecase.NewUseCase(auditService)
-	userUsecase := user_usecase.NewUseCase(cfg.Log, userService, dispatcher, tx)
-	refreshTokenUsecase := refresh_token_usecase.NewUseCase(refreshTokenService)
-	userRolesPermissionsUsecase := user_roles_permissions_usecase.NewUseCase(
-		user_roles_permissions_usecase.Config{
-			Service: userRolesPermissionsService,
-		},
-	)
-	authUsecase := auth_usecase.NewUseCase(auth_usecase.Config{
+	authService := auth.NewService(auth.Config{
 		Issuer:                     cfg.ServiceName,
 		AccessTokenSecret:          cfg.AccessTokenSecret,
 		Log:                        cfg.Log,
-		UserUsecase:                userUsecase,
 		UserService:                userService,
-		RefreshTokenUsecase:        refreshTokenUsecase,
+		RefreshTokenService:        refreshTokenService,
 		ResetTokenService:          resetTokenService,
 		EmailNotificationOutboxSvc: emailNotifOutboxSvc,
 		DB:                         tx,
 		FrontendURL:                cfg.FrontendURL,
-		UserRolesPermissions:       userRolesPermissionsUsecase,
+		UserRolesPermissions:       userRolesPermissionsService,
 	})
-	roleUsecase := role_usecase.NewUseCase(cfg.Log, roleService, dispatcher, tx)
-	permissionUsecase := permission_usecase.NewUseCase(cfg.Log, permissionService, dispatcher, tx)
-	systemUsecase := system_usecase.NewUseCase(cfg.Build, cfg.Log, cfg.DB)
-	userRolesUsecase := user_roles_usecase.NewUseCase(cfg.Log, userRolesSvc, dispatcher, tx)
-	rolePermissionsUsecase := role_permissions_usecase.NewUseCase(
-		cfg.Log, rolePermsSvc, dispatcher, tx,
-	)
-	accountUsecase := account_usecase.NewUseCase(cfg.Log, accountSvc, tx)
-	billingUsecase := billing_usecase.NewUseCase(
+
+	billingService := billing.NewService(
 		stripeClient, accountSvc, subscriptionSvc, invoiceSvc, uuidGen, clk,
 	)
 
 	return &Handler{
 		serviceName: cfg.ServiceName,
+		build:       cfg.Build,
+		db:          cfg.DB,
+		log:         cfg.Log,
 		cors:        cfg.Cors,
 		middleware: middleware.New(ctx, middleware.Config{
 			Log:                  cfg.Log,
 			Tracer:               cfg.Tracer,
 			Meter:                cfg.Meter,
-			UserUseCase:          userUsecase,
-			AuthUseCase:          authUsecase,
-			UserRolesPermissions: userRolesPermissionsUsecase,
+			UserService:          userService,
+			AuthUseCase:          authService,
+			UserRolesPermissions: userRolesPermissionsService,
 		}),
-		usecase: usecase{
-			audit:                auditUsecase,
-			auth:                 authUsecase,
-			user:                 userUsecase,
-			role:                 roleUsecase,
-			permission:           permissionUsecase,
-			userRolesPermissions: userRolesPermissionsUsecase,
-			userRoles:            userRolesUsecase,
-			rolePermissions:      rolePermissionsUsecase,
-			system:               systemUsecase,
-			account:              accountUsecase,
-			billing:              billingUsecase,
+		svc: services{
+			audit:                auditService,
+			auth:                 authService,
+			user:                 userService,
+			role:                 roleService,
+			permission:           permissionService,
+			userRolesPermissions: userRolesPermissionsService,
+			userRoles:            userRolesSvc,
+			rolePermissions:      rolePermsSvc,
+			account:              accountSvc,
+			billing:              billingService,
 		},
 	}
 }

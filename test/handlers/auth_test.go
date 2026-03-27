@@ -10,8 +10,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/Housiadas/cerberus/internal/core/auth"
 	"github.com/Housiadas/cerberus/internal/core/user"
-	"github.com/Housiadas/cerberus/internal/usecase/auth_usecase"
 )
 
 func Test_API_Auth_Login_200(t *testing.T) {
@@ -34,14 +34,14 @@ func Test_API_Auth_Login_200(t *testing.T) {
 			URL:        "/api/v1/auth/login",
 			Method:     http.MethodPost,
 			StatusCode: http.StatusOK,
-			Input: &auth_usecase.LoginReq{
+			Input: &auth.LoginReq{
 				Email:    usrs[0].Email().Address,
 				Password: "Secret123!@#",
 			},
-			GotResp: &auth_usecase.Token{},
-			ExpResp: &auth_usecase.Token{},
+			GotResp: &auth.Token{},
+			ExpResp: &auth.Token{},
 			AssertFunc: func(got any, exp any) string {
-				gotResp, exists := got.(*auth_usecase.Token)
+				gotResp, exists := got.(*auth.Token)
 				if !exists {
 					return "error occurred"
 				}
@@ -78,7 +78,7 @@ func Test_API_Auth_Login_400(t *testing.T) {
 			URL:        "/api/v1/auth/login",
 			Method:     http.MethodPost,
 			StatusCode: http.StatusBadRequest,
-			Input: &auth_usecase.LoginReq{
+			Input: &auth.LoginReq{
 				Email: usrs[0].Email().Address,
 			},
 			GotResp: &errs.Error{},
@@ -118,7 +118,7 @@ func Test_API_Auth_ForgotPassword_204(t *testing.T) {
 			URL:        "/api/v1/auth/forgot-password",
 			Method:     http.MethodPost,
 			StatusCode: http.StatusNoContent,
-			Input: &auth_usecase.ForgotPasswordReq{
+			Input: &auth.ForgotPasswordReq{
 				Email: usrs[0].Email().Address,
 			},
 		},
@@ -127,7 +127,7 @@ func Test_API_Auth_ForgotPassword_204(t *testing.T) {
 			URL:        "/api/v1/auth/forgot-password",
 			Method:     http.MethodPost,
 			StatusCode: http.StatusNoContent,
-			Input: &auth_usecase.ForgotPasswordReq{
+			Input: &auth.ForgotPasswordReq{
 				Email: "nonexistent@example.com",
 			},
 		},
@@ -148,7 +148,7 @@ func Test_API_Auth_ForgotPassword_400(t *testing.T) {
 			URL:        "/api/v1/auth/forgot-password",
 			Method:     http.MethodPost,
 			StatusCode: http.StatusBadRequest,
-			Input:      &auth_usecase.ForgotPasswordReq{},
+			Input:      &auth.ForgotPasswordReq{},
 			GotResp:    &errs.Error{},
 			AssertFunc: func(got any, exp any) string {
 				gotResp, exists := got.(*errs.Error)
@@ -192,7 +192,7 @@ func Test_API_Auth_ResetPassword_204(t *testing.T) {
 			Method:      http.MethodPost,
 			StatusCode:  http.StatusNoContent,
 			AccessToken: &sd.Users[0].AccessToken.Token,
-			Input: &auth_usecase.ResetPasswordReq{
+			Input: &auth.ResetPasswordReq{
 				Token:           tkn.Token(),
 				OldPassword:     "Secret123!@#",
 				Password:        "NewSecret456!@#",
@@ -231,7 +231,7 @@ func Test_API_Auth_ResetPassword_400(t *testing.T) {
 			Method:      http.MethodPost,
 			StatusCode:  http.StatusNotFound,
 			AccessToken: &sd.Users[0].AccessToken.Token,
-			Input: &auth_usecase.ResetPasswordReq{
+			Input: &auth.ResetPasswordReq{
 				Token:           "invalid-token",
 				OldPassword:     "Secret123!@#",
 				Password:        "NewSecret456!@#",
@@ -253,7 +253,7 @@ func Test_API_Auth_ResetPassword_400(t *testing.T) {
 			Method:      http.MethodPost,
 			StatusCode:  http.StatusBadRequest,
 			AccessToken: &sd.Users[0].AccessToken.Token,
-			Input: &auth_usecase.ResetPasswordReq{
+			Input: &auth.ResetPasswordReq{
 				Token:           tkn.Token(),
 				OldPassword:     "WrongPassword123!",
 				Password:        "NewSecret456!@#",

@@ -309,7 +309,7 @@ generate:
 ## generate/api: Generate API code from OpenAPI spec
 .PHONY: generate/api
 generate/api:
-	go generate ./internal/app/handler/...
+	go generate ./internal/web/handler/...
 
 ## mockery: Generate mocks
 .PHONY: mockery

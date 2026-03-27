@@ -7,7 +7,7 @@ import (
 	"github.com/Housiadas/cerberus/internal/web/handler/openapi"
 )
 
-var errBillingNotConfigured = errors.New("billing usecase not configured")
+var errBillingNotConfigured = errors.New("billing service not configured")
 
 func (h *Handler) StripeWebhook(
 	_ context.Context,
@@ -17,7 +17,7 @@ func (h *Handler) StripeWebhook(
 	// for verification via ConstructWebhookEvent. The strict server interface
 	// parses the body as JSON, so a custom chi route should be used instead
 	// for proper signature verification. This is a placeholder implementation.
-	if h.usecase.billing == nil {
+	if h.svc.billing == nil {
 		return nil, errBillingNotConfigured
 	}
 

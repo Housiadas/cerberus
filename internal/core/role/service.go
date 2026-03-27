@@ -1,4 +1,4 @@
-// Package role_service provides internal access to user core.
+// Package role is the service of the role domain
 package role
 
 import (
@@ -6,6 +6,9 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/Housiadas/cerberus/internal/core/audit"
+	"github.com/Housiadas/cerberus/internal/types/entity"
+	"github.com/Housiadas/cerberus/internal/types/event"
 	"github.com/Housiadas/cerberus/pkg/cursor"
 	"github.com/Housiadas/cerberus/pkg/order"
 	"github.com/Housiadas/cerberus/pkg/pgsql"
@@ -18,14 +21,26 @@ type generator interface {
 
 type logger interface {
 	Info(ctx context.Context, msg string, args ...any)
+	Infoc(ctx context.Context, caller int, msg string, args ...any)
+	Warn(ctx context.Context, msg string, args ...any)
+	Warnc(ctx context.Context, caller int, msg string, args ...any)
 	Error(ctx context.Context, msg string, args ...any)
+	Errorc(ctx context.Context, caller int, msg string, args ...any)
 }
 
-// Service manages the set of APIs for user access.
+// dispatcher defines the interface for domain event dispatching.
+type dispatcher interface {
+	Dispatch(ctx context.Context, tran pgsql.CommitRollbacker, ev event.DomainEvent) error
+}
+
+// Service manages role domain operations including persistence,
+// transaction management, and event dispatching.
 type Service struct {
-	log     logger
-	storer  Storer
-	uuidGen generator
+	log        logger
+	storer     Storer
+	uuidGen    generator
+	tx         pgsql.Beginner
+	dispatcher dispatcher
 }
 
 // NewService constructor.
@@ -33,15 +48,19 @@ func NewService(
 	log logger,
 	storer Storer,
 	uuidGen generator,
+	tx pgsql.Beginner,
+	dispatcher dispatcher,
 ) *Service {
 	return &Service{
-		log:     log,
-		storer:  storer,
-		uuidGen: uuidGen,
+		log:        log,
+		storer:     storer,
+		uuidGen:    uuidGen,
+		tx:         tx,
+		dispatcher: dispatcher,
 	}
 }
 
-// NewWithTx constructs a new internal value that will use the
+// NewWithTx constructs a new Service that will use the
 // specified transaction in any store-related calls.
 func (c *Service) NewWithTx(tx pgsql.CommitRollbacker) (*Service, error) {
 	storer, err := c.storer.NewWithTx(tx)
@@ -49,16 +68,19 @@ func (c *Service) NewWithTx(tx pgsql.CommitRollbacker) (*Service, error) {
 		return nil, fmt.Errorf("role transaction issue: %w", err)
 	}
 
-	bus := Service{
-		log:     c.log,
-		storer:  storer,
-		uuidGen: c.uuidGen,
+	svc := Service{
+		log:        c.log,
+		storer:     storer,
+		uuidGen:    c.uuidGen,
+		tx:         c.tx,
+		dispatcher: c.dispatcher,
 	}
 
-	return &bus, nil
+	return &svc, nil
 }
 
-// Create adds a new role.Role to the system.
+// Create adds a new Role to the system within a transaction
+// and dispatches a domain event.
 func (c *Service) Create(ctx context.Context, nr NewRole) (Role, error) {
 	id, err := c.uuidGen.Generate()
 	if err != nil {
@@ -68,15 +90,27 @@ func (c *Service) Create(ctx context.Context, nr NewRole) (Role, error) {
 	now := time.Now()
 	rol := New(id, nr.Name, now, now, nil)
 
-	err = c.storer.Create(ctx, rol)
-	if err != nil {
-		return Role{}, fmt.Errorf("role create: %w", err)
+	txErr := pgsql.RunInTx(ctx, c.log, c.tx, func(tran pgsql.CommitRollbacker) error {
+		storerTx, err := c.storer.NewWithTx(tran)
+		if err != nil {
+			return fmt.Errorf("role tx: %w", err)
+		}
+
+		if err = storerTx.Create(ctx, rol); err != nil {
+			return fmt.Errorf("create: %w", err)
+		}
+
+		return c.dispatcher.Dispatch(ctx, tran, newRoleEvent(rol, audit.ActionCreate))
+	})
+	if txErr != nil {
+		return Role{}, fmt.Errorf("create role: %w", txErr)
 	}
 
 	return rol, nil
 }
 
-// Update modifies information about a role.Role.
+// Update modifies information about a Role within a transaction
+// and dispatches a domain event.
 func (c *Service) Update(
 	ctx context.Context,
 	rl Role,
@@ -88,25 +122,48 @@ func (c *Service) Update(
 
 	rl = rl.WithUpdatedAt(time.Now())
 
-	err := c.storer.Update(ctx, rl)
-	if err != nil {
-		return Role{}, fmt.Errorf("role update: %w", err)
+	txErr := pgsql.RunInTx(ctx, c.log, c.tx, func(tran pgsql.CommitRollbacker) error {
+		storerTx, err := c.storer.NewWithTx(tran)
+		if err != nil {
+			return fmt.Errorf("role tx: %w", err)
+		}
+
+		if err = storerTx.Update(ctx, rl); err != nil {
+			return fmt.Errorf("update: %w", err)
+		}
+
+		return c.dispatcher.Dispatch(ctx, tran, newRoleEvent(rl, audit.ActionUpdate))
+	})
+	if txErr != nil {
+		return Role{}, fmt.Errorf("update role: %w", txErr)
 	}
 
 	return rl, nil
 }
 
-// Delete removes the specified role.Role.
+// Delete removes the specified Role within a transaction
+// and dispatches a domain event.
 func (c *Service) Delete(ctx context.Context, rl Role) error {
-	err := c.storer.Delete(ctx, rl)
-	if err != nil {
-		return fmt.Errorf("role delete: %w", err)
+	txErr := pgsql.RunInTx(ctx, c.log, c.tx, func(tran pgsql.CommitRollbacker) error {
+		storerTx, err := c.storer.NewWithTx(tran)
+		if err != nil {
+			return fmt.Errorf("role tx: %w", err)
+		}
+
+		if err = storerTx.Delete(ctx, rl); err != nil {
+			return fmt.Errorf("delete: %w", err)
+		}
+
+		return c.dispatcher.Dispatch(ctx, tran, newRoleEvent(rl, audit.ActionDelete))
+	})
+	if txErr != nil {
+		return fmt.Errorf("delete role: %w", txErr)
 	}
 
 	return nil
 }
 
-// QueryByID finds the user by the specified ID.
+// QueryByID finds the role by the specified ID.
 func (c *Service) QueryByID(ctx context.Context, roleID uuid.UUID) (Role, error) {
 	rl, err := c.storer.QueryByID(ctx, roleID)
 	if err != nil {
@@ -116,7 +173,7 @@ func (c *Service) QueryByID(ctx context.Context, roleID uuid.UUID) (Role, error)
 	return rl, nil
 }
 
-// Query retrieves a list of existing users.
+// Query retrieves a list of existing roles.
 func (c *Service) Query(
 	ctx context.Context,
 	filter QueryFilter,
@@ -129,4 +186,16 @@ func (c *Service) Query(
 	}
 
 	return roles, nil
+}
+
+// newRoleEvent creates a DomainEvent for role operations.
+func newRoleEvent(rl Role, action string) event.DomainEvent {
+	return event.DomainEvent{
+		AggregateID: rl.ID(),
+		Payload:     rl,
+		ObjEntity:   entity.New(entity.RoleEntity),
+		ObjName:     rl.Name(),
+		Action:      action,
+		Message:     "role " + action,
+	}
 }

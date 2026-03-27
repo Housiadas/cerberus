@@ -1,4 +1,4 @@
-package role_cache
+package role_cache_test
 
 import (
 	"context"
@@ -6,9 +6,8 @@ import (
 	"time"
 
 	"github.com/Housiadas/cerberus/internal/core/role"
+	"github.com/Housiadas/cerberus/internal/core/role/role_cache"
 	"github.com/Housiadas/cerberus/internal/types/name"
-	"github.com/Housiadas/cerberus/pkg/logger"
-	"github.com/Housiadas/cerberus/pkg/redis"
 	goredis "github.com/redis/go-redis/v9"
 
 	"github.com/google/uuid"
@@ -17,18 +16,18 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func newTestStore(t *testing.T) (*Store, *role.MockStorer, *redis.MockClient) {
+func newTestStore(t *testing.T) (*role_cache.Store, *mockstorer, *mockredisClient) {
 	t.Helper()
 
-	mockStorer := role.NewMockStorer(t)
-	mLogger := logger.NewMockLogger(t)
-	mRed := redis.NewMockClient(t)
-	store := NewStore(t.Context(), mLogger, mockStorer, mRed)
+	mockStorer := newMockstorer(t)
+	mLogger := newMocklogger(t)
+	mRed := newMockredisClient(t)
+	store := role_cache.NewStore(t.Context(), mLogger, mockStorer, mRed)
 
 	return store, mockStorer, mRed
 }
 
-func redisCacheMiss(red *redis.MockClient) {
+func redisCacheMiss(red *mockredisClient) {
 	red.On("Get", mock.Anything, mock.Anything).
 		Return(goredis.NewStringResult("", goredis.Nil)).Once()
 	red.On("Set", mock.Anything, mock.Anything, mock.Anything, mock.Anything).

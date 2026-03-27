@@ -8,9 +8,9 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/Housiadas/cerberus/internal/usecase/auth_usecase"
-	"github.com/Housiadas/cerberus/internal/usecase/user_roles_permissions_usecase"
-	"github.com/Housiadas/cerberus/internal/usecase/user_usecase"
+	"github.com/Housiadas/cerberus/internal/core/auth"
+	"github.com/Housiadas/cerberus/internal/core/user"
+	"github.com/Housiadas/cerberus/internal/core/user_roles_permissions"
 	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/trace"
 	"golang.org/x/sync/singleflight"
@@ -30,9 +30,9 @@ type Config struct {
 	Log                  logger
 	Tracer               trace.Tracer
 	Meter                metric.Meter
-	AuthUseCase          *auth_usecase.UseCase
-	UserUseCase          *user_usecase.UseCase
-	UserRolesPermissions *user_roles_permissions_usecase.UseCase
+	AuthUseCase          *auth.Service
+	UserService          *user.Service
+	UserRolesPermissions *user_roles_permissions.Service
 }
 
 type Middleware struct {
@@ -45,9 +45,9 @@ type Middleware struct {
 }
 
 type useCase struct {
-	auth                 *auth_usecase.UseCase
-	user                 *user_usecase.UseCase
-	userRolesPermissions *user_roles_permissions_usecase.UseCase
+	auth                 *auth.Service
+	user                 *user.Service
+	userRolesPermissions *user_roles_permissions.Service
 }
 
 func New(ctx context.Context, cfg Config) *Middleware {
@@ -56,7 +56,7 @@ func New(ctx context.Context, cfg Config) *Middleware {
 	return &Middleware{
 		useCase: useCase{
 			auth:                 cfg.AuthUseCase,
-			user:                 cfg.UserUseCase,
+			user:                 cfg.UserService,
 			userRolesPermissions: cfg.UserRolesPermissions,
 		},
 		log:     cfg.Log,

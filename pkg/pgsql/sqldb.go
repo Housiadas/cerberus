@@ -125,12 +125,6 @@ func StatusCheck(ctx context.Context, dbPool *sqlx.DB) error {
 	return fmt.Errorf("query row context error: %w", err)
 }
 
-// ExecContext is a helper function to execute a CUD operation with
-// logging and tracing.
-func ExecContext(ctx context.Context, log logger, db sqlx.ExtContext, query string) error {
-	return NamedExecContext(ctx, log, db, query, struct{}{})
-}
-
 // NamedExecContext is a helper function to execute a CRUD operation with
 // logging and tracing where field replacement is necessary.
 func NamedExecContext(

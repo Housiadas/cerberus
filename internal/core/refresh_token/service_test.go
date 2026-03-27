@@ -1,4 +1,4 @@
-package refresh_token
+package refresh_token_test
 
 import (
 	"context"
@@ -6,12 +6,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/Housiadas/cerberus/internal/core/user"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
-
-	"github.com/Housiadas/cerberus/pkg/clock"
-	"github.com/Housiadas/cerberus/pkg/logger"
 )
 
 func TestService_Create_Successful(t *testing.T) {
@@ -22,7 +20,7 @@ func TestService_Create_Successful(t *testing.T) {
 	mTime := time.Date(2026, 1, 1, 10, 30, 0, 0, time.UTC)
 	ttl := 24 * time.Hour
 
-	mLogger := logger.NewMockLogger(t)
+	mLogger := newMocklogger(t)
 
 	mStorer := NewMockStorer(t)
 	mStorer.EXPECT().Create(ctx, mock.AnythingOfType("refresh_token.RefreshToken")).Return(nil)
@@ -31,10 +29,10 @@ func TestService_Create_Successful(t *testing.T) {
 	mUuidGen.EXPECT().Generate().Return(mID, nil).Once()
 	mUuidGen.EXPECT().Generate().Return(mTokenID, nil).Once()
 
-	mClock := clock.NewMockClock(t)
+	mClock := newMockclock(t)
 	mClock.EXPECT().Now().Return(mTime)
 
-	sut := NewService(mLogger, mStorer, mUuidGen, mClock)
+	sut := user.NewService(mLogger, mStorer, mUuidGen, mClock)
 	tkn, err := sut.Create(ctx, userID, ttl)
 
 	assert.NoError(t, err)

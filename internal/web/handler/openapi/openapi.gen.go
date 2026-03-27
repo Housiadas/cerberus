@@ -9,15 +9,6 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/Housiadas/cerberus/internal/usecase/account_usecase"
-	"github.com/Housiadas/cerberus/internal/usecase/audit_usecase"
-	"github.com/Housiadas/cerberus/internal/usecase/auth_usecase"
-	"github.com/Housiadas/cerberus/internal/usecase/billing_usecase"
-	"github.com/Housiadas/cerberus/internal/usecase/permission_usecase"
-	"github.com/Housiadas/cerberus/internal/usecase/role_usecase"
-	"github.com/Housiadas/cerberus/internal/usecase/system_usecase"
-	"github.com/Housiadas/cerberus/internal/usecase/user_usecase"
-	"github.com/Housiadas/cerberus/pkg/cursor"
 	"github.com/go-chi/chi/v5"
 	"github.com/oapi-codegen/runtime"
 	strictnethttp "github.com/oapi-codegen/runtime/strictmiddleware/nethttp"
@@ -28,7 +19,13 @@ const (
 )
 
 // Account defines model for Account.
-type Account = account_usecase.Account
+type Account struct {
+	CreatedAt        *string `json:"createdAt,omitempty"`
+	Id               *string `json:"id,omitempty"`
+	Name             *string `json:"name,omitempty"`
+	StripeCustomerId *string `json:"stripeCustomerId,omitempty"`
+	UpdatedAt        *string `json:"updatedAt,omitempty"`
+}
 
 // AccountPageResult defines model for AccountPageResult.
 type AccountPageResult struct {
@@ -47,7 +44,17 @@ type AddUserRoleReq struct {
 }
 
 // Audit defines model for Audit.
-type Audit = audit_usecase.Audit
+type Audit struct {
+	Action    *string `json:"action,omitempty"`
+	ActorId   *string `json:"actorId,omitempty"`
+	Data      *string `json:"data,omitempty"`
+	Id        *string `json:"id,omitempty"`
+	Message   *string `json:"message,omitempty"`
+	ObjEntity *string `json:"objEntity,omitempty"`
+	ObjId     *string `json:"objId,omitempty"`
+	ObjName   *string `json:"objName,omitempty"`
+	Timestamp *string `json:"timestamp,omitempty"`
+}
 
 // AuditPageResult defines model for AuditPageResult.
 type AuditPageResult struct {
@@ -56,10 +63,17 @@ type AuditPageResult struct {
 }
 
 // CheckoutRequest defines model for CheckoutRequest.
-type CheckoutRequest = billing_usecase.CheckoutRequest
+type CheckoutRequest struct {
+	AccountId  string `json:"accountId"`
+	CancelUrl  string `json:"cancelUrl"`
+	PriceId    string `json:"priceId"`
+	SuccessUrl string `json:"successUrl"`
+}
 
 // CheckoutResponse defines model for CheckoutResponse.
-type CheckoutResponse = billing_usecase.CheckoutResponse
+type CheckoutResponse struct {
+	Url *string `json:"url,omitempty"`
+}
 
 // Error defines model for Error.
 type Error struct {
@@ -76,37 +90,84 @@ type FieldError struct {
 }
 
 // ForgotPasswordReq defines model for ForgotPasswordReq.
-type ForgotPasswordReq = auth_usecase.ForgotPasswordReq
+type ForgotPasswordReq struct {
+	Email string `json:"email"`
+}
 
 // Info defines model for Info.
-type Info = system_usecase.Info
+type Info struct {
+	Build      *string `json:"build,omitempty"`
+	Gomaxprocs *int    `json:"gomaxprocs,omitempty"`
+	Host       *string `json:"host,omitempty"`
+	Name       *string `json:"name,omitempty"`
+	Namespace  *string `json:"namespace,omitempty"`
+	Node       *string `json:"node,omitempty"`
+	PodIp      *string `json:"podIp,omitempty"`
+	Status     *string `json:"status,omitempty"`
+}
 
 // InvoiceResponse defines model for InvoiceResponse.
-type InvoiceResponse = billing_usecase.InvoiceResponse
+type InvoiceResponse struct {
+	AmountDue       *int64  `json:"amountDue,omitempty"`
+	AmountPaid      *int64  `json:"amountPaid,omitempty"`
+	CreatedAt       *string `json:"createdAt,omitempty"`
+	Currency        *string `json:"currency,omitempty"`
+	Id              *string `json:"id,omitempty"`
+	InvoiceUrl      *string `json:"invoiceUrl,omitempty"`
+	Status          *string `json:"status,omitempty"`
+	StripeInvoiceId *string `json:"stripeInvoiceId,omitempty"`
+}
 
 // LoginReq defines model for LoginReq.
-type LoginReq = auth_usecase.LoginReq
+type LoginReq struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
 
 // LogoutReq defines model for LogoutReq.
-type LogoutReq = auth_usecase.LogoutReq
+type LogoutReq struct {
+	RefreshToken string `json:"refreshToken"`
+}
 
 // Metadata defines model for Metadata.
-type Metadata = cursor.Metadata
+type Metadata struct {
+	HasMore    *bool   `json:"hasMore,omitempty"`
+	Limit      *int    `json:"limit,omitempty"`
+	NextCursor *string `json:"nextCursor,omitempty"`
+	PrevCursor *string `json:"prevCursor,omitempty"`
+}
 
 // NewAccount defines model for NewAccount.
-type NewAccount = account_usecase.NewAccount
+type NewAccount struct {
+	Name string `json:"name"`
+}
 
 // NewPermission defines model for NewPermission.
-type NewPermission = permission_usecase.NewPermission
+type NewPermission struct {
+	Name string `json:"name"`
+}
 
 // NewRole defines model for NewRole.
-type NewRole = role_usecase.NewRole
+type NewRole struct {
+	Name string `json:"name"`
+}
 
 // NewUser defines model for NewUser.
-type NewUser = user_usecase.NewUser
+type NewUser struct {
+	Department      *string `json:"department,omitempty"`
+	Email           string  `json:"email"`
+	Name            string  `json:"name"`
+	Password        string  `json:"password"`
+	PasswordConfirm string  `json:"passwordConfirm"`
+}
 
 // Permission defines model for Permission.
-type Permission = permission_usecase.Permission
+type Permission struct {
+	CreatedAt *string `json:"createdAt,omitempty"`
+	Id        *string `json:"id,omitempty"`
+	Name      *string `json:"name,omitempty"`
+	UpdatedAt *string `json:"updatedAt,omitempty"`
+}
 
 // PermissionPageResult defines model for PermissionPageResult.
 type PermissionPageResult struct {
@@ -115,19 +176,36 @@ type PermissionPageResult struct {
 }
 
 // PortalRequest defines model for PortalRequest.
-type PortalRequest = billing_usecase.PortalRequest
+type PortalRequest struct {
+	AccountId string `json:"accountId"`
+	ReturnUrl string `json:"returnUrl"`
+}
 
 // PortalResponse defines model for PortalResponse.
-type PortalResponse = billing_usecase.PortalResponse
+type PortalResponse struct {
+	Url *string `json:"url,omitempty"`
+}
 
 // RefreshTokenReq defines model for RefreshTokenReq.
-type RefreshTokenReq = auth_usecase.RefreshTokenReq
+type RefreshTokenReq struct {
+	RefreshToken string `json:"refreshToken"`
+}
 
 // ResetPasswordReq defines model for ResetPasswordReq.
-type ResetPasswordReq = auth_usecase.ResetPasswordReq
+type ResetPasswordReq struct {
+	OldPassword     string `json:"oldPassword"`
+	Password        string `json:"password"`
+	PasswordConfirm string `json:"passwordConfirm"`
+	Token           string `json:"token"`
+}
 
 // Role defines model for Role.
-type Role = role_usecase.Role
+type Role struct {
+	CreatedAt *string `json:"createdAt,omitempty"`
+	Id        *string `json:"id,omitempty"`
+	Name      *string `json:"name,omitempty"`
+	UpdatedAt *string `json:"updatedAt,omitempty"`
+}
 
 // RolePageResult defines model for RolePageResult.
 type RolePageResult struct {
@@ -136,31 +214,73 @@ type RolePageResult struct {
 }
 
 // Status defines model for Status.
-type Status = system_usecase.Status
+type Status struct {
+	Status *string `json:"status,omitempty"`
+}
 
 // SubscriptionResponse defines model for SubscriptionResponse.
-type SubscriptionResponse = billing_usecase.SubscriptionResponse
+type SubscriptionResponse struct {
+	CancelAtPeriodEnd    *bool   `json:"cancelAtPeriodEnd,omitempty"`
+	CreatedAt            *string `json:"createdAt,omitempty"`
+	CurrentPeriodEnd     *string `json:"currentPeriodEnd,omitempty"`
+	CurrentPeriodStart   *string `json:"currentPeriodStart,omitempty"`
+	Id                   *string `json:"id,omitempty"`
+	Status               *string `json:"status,omitempty"`
+	StripePriceId        *string `json:"stripePriceId,omitempty"`
+	StripeSubscriptionId *string `json:"stripeSubscriptionId,omitempty"`
+}
 
 // Token defines model for Token.
-type Token = auth_usecase.Token
+type Token struct {
+	AccessToken  *string `json:"accessToken,omitempty"`
+	ExpiresIn    *int64  `json:"expiresIn,omitempty"`
+	RefreshToken *string `json:"refreshToken,omitempty"`
+}
 
 // UpdateAccount defines model for UpdateAccount.
-type UpdateAccount = account_usecase.UpdateAccount
+type UpdateAccount struct {
+	Name *string `json:"name,omitempty"`
+}
 
 // UpdateMe defines model for UpdateMe.
-type UpdateMe = user_usecase.UpdateMe
+type UpdateMe struct {
+	Department      *string `json:"department,omitempty"`
+	Email           *string `json:"email,omitempty"`
+	Name            *string `json:"name,omitempty"`
+	Password        *string `json:"password,omitempty"`
+	PasswordConfirm *string `json:"passwordConfirm,omitempty"`
+}
 
 // UpdatePermission defines model for UpdatePermission.
-type UpdatePermission = permission_usecase.UpdatePermission
+type UpdatePermission struct {
+	Name *string `json:"name,omitempty"`
+}
 
 // UpdateRole defines model for UpdateRole.
-type UpdateRole = role_usecase.UpdateRole
+type UpdateRole struct {
+	Name *string `json:"name,omitempty"`
+}
 
 // UpdateUser defines model for UpdateUser.
-type UpdateUser = user_usecase.UpdateUser
+type UpdateUser struct {
+	Department      *string `json:"department,omitempty"`
+	Email           *string `json:"email,omitempty"`
+	Enabled         *bool   `json:"enabled,omitempty"`
+	Name            *string `json:"name,omitempty"`
+	Password        *string `json:"password,omitempty"`
+	PasswordConfirm *string `json:"passwordConfirm,omitempty"`
+}
 
 // User defines model for User.
-type User = user_usecase.User
+type User struct {
+	CreatedAt  string `json:"createdAt"`
+	Department string `json:"department"`
+	Email      string `json:"email"`
+	Enabled    bool   `json:"enabled"`
+	Id         string `json:"id"`
+	Name       string `json:"name"`
+	UpdatedAt  string `json:"updatedAt"`
+}
 
 // UserPageResult defines model for UserPageResult.
 type UserPageResult struct {

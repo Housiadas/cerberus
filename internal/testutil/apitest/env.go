@@ -137,5 +137,5 @@ func (e *Env) StartTest(t *testing.T, testName string) (*Test, error) {
 		)
 	})
 
-	return New(db, h.Routes(), dep.Core, dep.Usecase), nil
+	return New(db, h.Routes(), dep.Core, dep.Auth), nil
 }

@@ -5,26 +5,26 @@ import (
 	"net/http"
 
 	"github.com/Housiadas/cerberus/internal/core/audit"
+	"github.com/Housiadas/cerberus/internal/core/auth"
 	"github.com/Housiadas/cerberus/internal/core/user"
-	"github.com/Housiadas/cerberus/internal/usecase/auth_usecase"
 	"github.com/jmoiron/sqlx"
 )
 
 // Test contains functions for executing an integration test.
 type Test struct {
-	DB      *sqlx.DB
-	Mux     http.Handler
-	Usecase *Usecase
-	Core    *Core
+	DB   *sqlx.DB
+	Mux  http.Handler
+	Auth *auth.Service
+	Core *Core
 }
 
 // New constructs a Test value for running api tests.
-func New(db *sqlx.DB, mux http.Handler, c *Core, u *Usecase) *Test {
+func New(db *sqlx.DB, mux http.Handler, c *Core, authSvc *auth.Service) *Test {
 	return &Test{
-		DB:      db,
-		Mux:     mux,
-		Core:    c,
-		Usecase: u,
+		DB:   db,
+		Mux:  mux,
+		Core: c,
+		Auth: authSvc,
 	}
 }
 
@@ -32,7 +32,7 @@ func New(db *sqlx.DB, mux http.Handler, c *Core, u *Usecase) *Test {
 type User struct {
 	user.User
 
-	AccessToken auth_usecase.AccessToken
+	AccessToken auth.AccessToken
 	Audits      []audit.Audit
 }
 

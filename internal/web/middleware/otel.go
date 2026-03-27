@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/Housiadas/cerberus/pkg/telemetry"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
@@ -85,7 +84,7 @@ func (m *Middleware) Otel() func(next http.Handler) http.Handler {
 func initOTelMetrics(
 	ctx context.Context,
 	meter metric.Meter,
-	log logger.Logger,
+	log logger,
 ) middlewareMetrics {
 	requestCount, err := meter.Int64Counter("http.server.request.total",
 		metric.WithDescription("Total number of HTTP requests"),

@@ -46,9 +46,25 @@ type redisClient interface {
 	Pipeline() redis.Pipeliner
 }
 
+// Storer interface declares the behavior this package needs to persist and retrieve data.
+type storer interface {
+	NewWithTx(tx pgsql.CommitRollbacker) (user.Storer, error)
+	Create(ctx context.Context, usr user.User) error
+	Update(ctx context.Context, usr user.User) error
+	Delete(ctx context.Context, usr user.User) error
+	Query(
+		ctx context.Context,
+		filter user.QueryFilter,
+		orderBy order.By,
+		cur cursor.Cursor,
+	) ([]user.User, error)
+	QueryByID(ctx context.Context, userID uuid.UUID) (user.User, error)
+	QueryByEmail(ctx context.Context, email mail.Address) (user.User, error)
+}
+
 // Store manages the set of APIs for user data and caching.
 type Store struct {
-	storer user.Storer
+	storer storer
 	log    logger
 	cache  *sturdyc.Client[user.User]
 }
@@ -57,7 +73,7 @@ type Store struct {
 func NewStore(
 	ctx context.Context,
 	log logger,
-	storer user.Storer,
+	storer storer,
 	red redisClient,
 ) *Store {
 	// Wire up OTel metrics. Errors are non-fatal: the cache works without metrics.

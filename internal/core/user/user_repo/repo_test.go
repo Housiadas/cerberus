@@ -20,10 +20,12 @@ import (
 	"golang.org/x/crypto/bcrypt"
 
 	"github.com/Housiadas/cerberus/internal/core/user"
+	"github.com/Housiadas/cerberus/internal/eventbus"
 	"github.com/Housiadas/cerberus/pkg/clock"
 	"github.com/Housiadas/cerberus/pkg/cursor"
 	"github.com/Housiadas/cerberus/pkg/hasher"
 	"github.com/Housiadas/cerberus/pkg/logger"
+	"github.com/Housiadas/cerberus/pkg/pgsql"
 	"github.com/Housiadas/cerberus/pkg/uuidgen"
 )
 
@@ -47,7 +49,15 @@ func Test_User(t *testing.T) {
 	hash := hasher.NewBcrypt()
 	clk := clock.NewClock()
 	uuidGen := uuidgen.NewV7()
-	userService := user.NewService(log, user_repo.NewStore(log, db), uuidGen, clk, hash)
+	userService := user.NewService(
+		log,
+		user_repo.NewStore(log, db),
+		uuidGen,
+		clk,
+		hash,
+		pgsql.NewBeginner(db),
+		eventbus.NewNop(),
+	)
 
 	// seed
 	sd, err := insertSeedData(userService)

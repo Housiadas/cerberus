@@ -8,6 +8,7 @@ import (
 
 	"github.com/Housiadas/cerberus/internal/core/user"
 	"github.com/Housiadas/cerberus/internal/core/user/user_repo"
+	"github.com/Housiadas/cerberus/internal/eventbus"
 	namePck "github.com/Housiadas/cerberus/internal/types/name"
 	"github.com/Housiadas/cerberus/internal/types/password"
 	"github.com/Housiadas/cerberus/pkg/clock"
@@ -36,7 +37,15 @@ func (cmd *Command) UserAdd(name, email, pass string) error {
 	hash := hasher.NewBcrypt()
 	clk := clock.NewClock()
 	uuidGen := uuidgen.NewV7()
-	userBus := user.NewService(cmd.log, user_repo.NewStore(cmd.log, db), uuidGen, clk, hash)
+	userBus := user.NewService(
+		cmd.log,
+		user_repo.NewStore(cmd.log, db),
+		uuidGen,
+		clk,
+		hash,
+		pgsql.NewBeginner(db),
+		eventbus.NewNop(),
+	)
 
 	addr, err := mail.ParseAddress(email)
 	if err != nil {

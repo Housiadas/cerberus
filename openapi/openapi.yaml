@@ -976,18 +976,12 @@ components:
   schemas:
     # ---- System ----
     Status:
-      x-go-type: system_usecase.Status
-      x-go-type-import:
-        path: github.com/Housiadas/cerberus/internal/usecase/system_usecase
       type: object
       properties:
         status:
           type: string
 
     Info:
-      x-go-type: system_usecase.Info
-      x-go-type-import:
-        path: github.com/Housiadas/cerberus/internal/usecase/system_usecase
       type: object
       properties:
         status:
@@ -1009,9 +1003,6 @@ components:
 
     # ---- Auth ----
     LoginReq:
-      x-go-type: auth_usecase.LoginReq
-      x-go-type-import:
-        path: github.com/Housiadas/cerberus/internal/usecase/auth_usecase
       type: object
       required: [email, password]
       properties:
@@ -1021,9 +1012,6 @@ components:
           type: string
 
     RefreshTokenReq:
-      x-go-type: auth_usecase.RefreshTokenReq
-      x-go-type-import:
-        path: github.com/Housiadas/cerberus/internal/usecase/auth_usecase
       type: object
       required: [refreshToken]
       properties:
@@ -1031,9 +1019,6 @@ components:
           type: string
 
     LogoutReq:
-      x-go-type: auth_usecase.LogoutReq
-      x-go-type-import:
-        path: github.com/Housiadas/cerberus/internal/usecase/auth_usecase
       type: object
       required: [refreshToken]
       properties:
@@ -1041,9 +1026,6 @@ components:
           type: string
 
     ForgotPasswordReq:
-      x-go-type: auth_usecase.ForgotPasswordReq
-      x-go-type-import:
-        path: github.com/Housiadas/cerberus/internal/usecase/auth_usecase
       type: object
       required: [email]
       properties:
@@ -1051,9 +1033,6 @@ components:
           type: string
 
     ResetPasswordReq:
-      x-go-type: auth_usecase.ResetPasswordReq
-      x-go-type-import:
-        path: github.com/Housiadas/cerberus/internal/usecase/auth_usecase
       type: object
       required: [token, oldPassword, password, passwordConfirm]
       properties:
@@ -1067,9 +1046,6 @@ components:
           type: string
 
     Token:
-      x-go-type: auth_usecase.Token
-      x-go-type-import:
-        path: github.com/Housiadas/cerberus/internal/usecase/auth_usecase
       type: object
       properties:
         accessToken:
@@ -1082,9 +1058,6 @@ components:
 
     # ---- Users ----
     NewUser:
-      x-go-type: user_usecase.NewUser
-      x-go-type-import:
-        path: github.com/Housiadas/cerberus/internal/usecase/user_usecase
       type: object
       required: [name, email, password, passwordConfirm]
       properties:
@@ -1100,9 +1073,6 @@ components:
           type: string
 
     UpdateUser:
-      x-go-type: user_usecase.UpdateUser
-      x-go-type-import:
-        path: github.com/Housiadas/cerberus/internal/usecase/user_usecase
       type: object
       properties:
         name:
@@ -1119,9 +1089,6 @@ components:
           type: boolean
 
     UpdateMe:
-      x-go-type: user_usecase.UpdateMe
-      x-go-type-import:
-        path: github.com/Housiadas/cerberus/internal/usecase/user_usecase
       type: object
       properties:
         name:
@@ -1136,10 +1103,8 @@ components:
           type: string
 
     User:
-      x-go-type: user_usecase.User
-      x-go-type-import:
-        path: github.com/Housiadas/cerberus/internal/usecase/user_usecase
       type: object
+      required: [id, name, email, department, enabled, createdAt, updatedAt]
       properties:
         id:
           type: string
@@ -1183,9 +1148,6 @@ components:
 
     # ---- Roles ----
     NewRole:
-      x-go-type: role_usecase.NewRole
-      x-go-type-import:
-        path: github.com/Housiadas/cerberus/internal/usecase/role_usecase
       type: object
       required: [name]
       properties:
@@ -1193,18 +1155,12 @@ components:
           type: string
 
     UpdateRole:
-      x-go-type: role_usecase.UpdateRole
-      x-go-type-import:
-        path: github.com/Housiadas/cerberus/internal/usecase/role_usecase
       type: object
       properties:
         name:
           type: string
 
     Role:
-      x-go-type: role_usecase.Role
-      x-go-type-import:
-        path: github.com/Housiadas/cerberus/internal/usecase/role_usecase
       type: object
       properties:
         id:
@@ -1228,9 +1184,6 @@ components:
 
     # ---- Permissions ----
     NewPermission:
-      x-go-type: permission_usecase.NewPermission
-      x-go-type-import:
-        path: github.com/Housiadas/cerberus/internal/usecase/permission_usecase
       type: object
       required: [name]
       properties:
@@ -1238,18 +1191,12 @@ components:
           type: string
 
     UpdatePermission:
-      x-go-type: permission_usecase.UpdatePermission
-      x-go-type-import:
-        path: github.com/Housiadas/cerberus/internal/usecase/permission_usecase
       type: object
       properties:
         name:
           type: string
 
     Permission:
-      x-go-type: permission_usecase.Permission
-      x-go-type-import:
-        path: github.com/Housiadas/cerberus/internal/usecase/permission_usecase
       type: object
       properties:
         id:
@@ -1273,9 +1220,6 @@ components:
 
     # ---- Audits ----
     Audit:
-      x-go-type: audit_usecase.Audit
-      x-go-type-import:
-        path: github.com/Housiadas/cerberus/internal/usecase/audit_usecase
       type: object
       properties:
         id:
@@ -1309,9 +1253,6 @@ components:
 
     # ---- Accounts ----
     NewAccount:
-      x-go-type: account_usecase.NewAccount
-      x-go-type-import:
-        path: github.com/Housiadas/cerberus/internal/usecase/account_usecase
       type: object
       required: [name]
       properties:
@@ -1319,18 +1260,12 @@ components:
           type: string
 
     UpdateAccount:
-      x-go-type: account_usecase.UpdateAccount
-      x-go-type-import:
-        path: github.com/Housiadas/cerberus/internal/usecase/account_usecase
       type: object
       properties:
         name:
           type: string
 
     Account:
-      x-go-type: account_usecase.Account
-      x-go-type-import:
-        path: github.com/Housiadas/cerberus/internal/usecase/account_usecase
       type: object
       properties:
         id:
@@ -1356,9 +1291,6 @@ components:
 
     # ---- Billing ----
     CheckoutRequest:
-      x-go-type: billing_usecase.CheckoutRequest
-      x-go-type-import:
-        path: github.com/Housiadas/cerberus/internal/usecase/billing_usecase
       type: object
       required: [accountId, priceId, successUrl, cancelUrl]
       properties:
@@ -1372,18 +1304,12 @@ components:
           type: string
 
     CheckoutResponse:
-      x-go-type: billing_usecase.CheckoutResponse
-      x-go-type-import:
-        path: github.com/Housiadas/cerberus/internal/usecase/billing_usecase
       type: object
       properties:
         url:
           type: string
 
     PortalRequest:
-      x-go-type: billing_usecase.PortalRequest
-      x-go-type-import:
-        path: github.com/Housiadas/cerberus/internal/usecase/billing_usecase
       type: object
       required: [accountId, returnUrl]
       properties:
@@ -1393,18 +1319,12 @@ components:
           type: string
 
     PortalResponse:
-      x-go-type: billing_usecase.PortalResponse
-      x-go-type-import:
-        path: github.com/Housiadas/cerberus/internal/usecase/billing_usecase
       type: object
       properties:
         url:
           type: string
 
     SubscriptionResponse:
-      x-go-type: billing_usecase.SubscriptionResponse
-      x-go-type-import:
-        path: github.com/Housiadas/cerberus/internal/usecase/billing_usecase
       type: object
       properties:
         id:
@@ -1425,9 +1345,6 @@ components:
           type: string
 
     InvoiceResponse:
-      x-go-type: billing_usecase.InvoiceResponse
-      x-go-type-import:
-        path: github.com/Housiadas/cerberus/internal/usecase/billing_usecase
       type: object
       properties:
         id:
@@ -1451,9 +1368,6 @@ components:
 
     # ---- Common ----
     Metadata:
-      x-go-type: cursor.Metadata
-      x-go-type-import:
-        path: github.com/Housiadas/cerberus/pkg/cursor
       type: object
       properties:
         nextCursor:

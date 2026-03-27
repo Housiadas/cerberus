@@ -2,9 +2,13 @@ package handler
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	ctxPck "github.com/Housiadas/cerberus/internal/context"
+	"github.com/Housiadas/cerberus/internal/core/auth"
+	"github.com/Housiadas/cerberus/internal/core/user"
+	"github.com/Housiadas/cerberus/internal/errs"
 	"github.com/Housiadas/cerberus/internal/web/handler/openapi"
 )
 
@@ -12,24 +16,36 @@ func (h *Handler) AuthLogin(
 	ctx context.Context,
 	request openapi.AuthLoginRequestObject,
 ) (openapi.AuthLoginResponseObject, error) {
-	token, err := h.usecase.auth.Login(ctx, *request.Body)
+	token, err := h.svc.auth.Login(ctx, auth.LoginReq{
+		Email:    request.Body.Email,
+		Password: request.Body.Password,
+	})
 	if err != nil {
 		return nil, fmt.Errorf("auth login: %w", err)
 	}
 
-	return openapi.AuthLogin200JSONResponse(token), nil
+	return openapi.AuthLogin200JSONResponse(toOpenAPIToken(token)), nil
 }
 
 func (h *Handler) AuthRegister(
 	ctx context.Context,
 	request openapi.AuthRegisterRequestObject,
 ) (openapi.AuthRegisterResponseObject, error) {
-	usr, err := h.usecase.user.Create(ctx, *request.Body)
+	nu, err := parseNewUser(request.Body)
 	if err != nil {
+		return nil, errs.New(errs.InvalidArgument, errs.CodeValidation, err)
+	}
+
+	usr, err := h.svc.user.Create(ctx, nu)
+	if err != nil {
+		if errors.Is(err, user.ErrUniqueEmail) {
+			return nil, errs.New(errs.Aborted, errs.CodeUniqueEmail, user.ErrUniqueEmail)
+		}
+
 		return nil, fmt.Errorf("auth register: %w", err)
 	}
 
-	return openapi.AuthRegister200JSONResponse(usr), nil
+	return openapi.AuthRegister200JSONResponse(toOpenAPIUser(usr)), nil
 }
 
 func (h *Handler) AuthLogout(
@@ -38,7 +54,9 @@ func (h *Handler) AuthLogout(
 ) (openapi.AuthLogoutResponseObject, error) {
 	actorID := ctxPck.GetActorID(ctx)
 
-	err := h.usecase.auth.Logout(ctx, actorID, *request.Body)
+	err := h.svc.auth.Logout(ctx, actorID, auth.LogoutReq{
+		Token: request.Body.RefreshToken,
+	})
 	if err != nil {
 		return nil, fmt.Errorf("auth logout: %w", err)
 	}
@@ -50,19 +68,23 @@ func (h *Handler) AuthRefresh(
 	ctx context.Context,
 	request openapi.AuthRefreshRequestObject,
 ) (openapi.AuthRefreshResponseObject, error) {
-	token, err := h.usecase.auth.RefreshAccessToken(ctx, *request.Body)
+	token, err := h.svc.auth.RefreshAccessToken(ctx, auth.RefreshTokenReq{
+		Token: request.Body.RefreshToken,
+	})
 	if err != nil {
 		return nil, fmt.Errorf("auth refresh: %w", err)
 	}
 
-	return openapi.AuthRefresh200JSONResponse(token), nil
+	return openapi.AuthRefresh200JSONResponse(toOpenAPIToken(token)), nil
 }
 
 func (h *Handler) AuthForgotPassword(
 	ctx context.Context,
 	request openapi.AuthForgotPasswordRequestObject,
 ) (openapi.AuthForgotPasswordResponseObject, error) {
-	err := h.usecase.auth.ForgotPassword(ctx, *request.Body)
+	err := h.svc.auth.ForgotPassword(ctx, auth.ForgotPasswordReq{
+		Email: request.Body.Email,
+	})
 	if err != nil {
 		return nil, fmt.Errorf("auth forgot password: %w", err)
 	}
@@ -74,7 +96,12 @@ func (h *Handler) AuthResetPassword(
 	ctx context.Context,
 	request openapi.AuthResetPasswordRequestObject,
 ) (openapi.AuthResetPasswordResponseObject, error) {
-	err := h.usecase.auth.ResetPassword(ctx, *request.Body)
+	err := h.svc.auth.ResetPassword(ctx, auth.ResetPasswordReq{
+		Token:           request.Body.Token,
+		OldPassword:     request.Body.OldPassword,
+		Password:        request.Body.Password,
+		PasswordConfirm: request.Body.PasswordConfirm,
+	})
 	if err != nil {
 		return nil, fmt.Errorf("auth reset password: %w", err)
 	}
