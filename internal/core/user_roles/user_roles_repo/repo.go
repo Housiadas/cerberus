@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"time"
 
-	ur "github.com/Housiadas/cerberus/internal/core/user_roles"
 	"github.com/Housiadas/cerberus/pkg/pgsql"
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
@@ -34,7 +33,7 @@ type logger interface {
 // Store manages write operations on the user_roles table.
 type Store struct {
 	log logger
-	db  sqlx.ExtContext
+	db  *sqlx.DB
 }
 
 // NewStore constructs the api for data access.
@@ -43,22 +42,6 @@ func NewStore(
 	db *sqlx.DB,
 ) *Store {
 	return &Store{log: log, db: db}
-}
-
-// NewWithTx constructs a new Store value replacing the sqlx DB
-// value with a sqlx DB value that is currently inside a transaction.
-func (s *Store) NewWithTx(tx pgsql.CommitRollbacker) (ur.Storer, error) {
-	ec, err := pgsql.GetExtContext(tx)
-	if err != nil {
-		return nil, fmt.Errorf("user_roles transaction init error: %w", err)
-	}
-
-	store := Store{
-		log: s.log,
-		db:  ec,
-	}
-
-	return &store, nil
 }
 
 // Add inserts a user-role relationship.
@@ -75,7 +58,7 @@ func (s *Store) Add(ctx context.Context, userID uuid.UUID, roleID uuid.UUID) err
 		UpdatedAt: time.Now().UTC(),
 	}
 
-	err := pgsql.NamedExecContext(ctx, s.log, s.db, userRoleAddSQL, data)
+	err := pgsql.NamedExecContext(ctx, s.log, pgsql.Conn(ctx, s.db), userRoleAddSQL, data)
 	if err != nil {
 		return fmt.Errorf("user_roles add: %w", err)
 	}
@@ -93,7 +76,7 @@ func (s *Store) Remove(ctx context.Context, userID uuid.UUID, roleID uuid.UUID) 
 		RoleID: roleID,
 	}
 
-	err := pgsql.NamedExecContext(ctx, s.log, s.db, userRoleRemoveSQL, data)
+	err := pgsql.NamedExecContext(ctx, s.log, pgsql.Conn(ctx, s.db), userRoleRemoveSQL, data)
 	if err != nil {
 		return fmt.Errorf("user_roles remove: %w", err)
 	}

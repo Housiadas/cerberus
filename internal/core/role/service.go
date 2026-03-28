@@ -13,6 +13,7 @@ import (
 	"github.com/Housiadas/cerberus/pkg/order"
 	"github.com/Housiadas/cerberus/pkg/pgsql"
 	"github.com/google/uuid"
+	"github.com/jmoiron/sqlx"
 )
 
 type generator interface {
@@ -30,7 +31,7 @@ type logger interface {
 
 // dispatcher defines the interface for domain event dispatching.
 type dispatcher interface {
-	Dispatch(ctx context.Context, tran pgsql.CommitRollbacker, ev event.DomainEvent) error
+	Dispatch(ctx context.Context, ev event.DomainEvent) error
 }
 
 // Service manages role domain operations including persistence,
@@ -39,7 +40,7 @@ type Service struct {
 	log        logger
 	storer     Storer
 	uuidGen    generator
-	tx         pgsql.Beginner
+	db         *sqlx.DB
 	dispatcher dispatcher
 }
 
@@ -48,35 +49,16 @@ func NewService(
 	log logger,
 	storer Storer,
 	uuidGen generator,
-	tx pgsql.Beginner,
+	db *sqlx.DB,
 	dispatcher dispatcher,
 ) *Service {
 	return &Service{
 		log:        log,
 		storer:     storer,
 		uuidGen:    uuidGen,
-		tx:         tx,
+		db:         db,
 		dispatcher: dispatcher,
 	}
-}
-
-// NewWithTx constructs a new Service that will use the
-// specified transaction in any store-related calls.
-func (c *Service) NewWithTx(tx pgsql.CommitRollbacker) (*Service, error) {
-	storer, err := c.storer.NewWithTx(tx)
-	if err != nil {
-		return nil, fmt.Errorf("role transaction issue: %w", err)
-	}
-
-	svc := Service{
-		log:        c.log,
-		storer:     storer,
-		uuidGen:    c.uuidGen,
-		tx:         c.tx,
-		dispatcher: c.dispatcher,
-	}
-
-	return &svc, nil
 }
 
 // Create adds a new Role to the system within a transaction
@@ -90,17 +72,12 @@ func (c *Service) Create(ctx context.Context, nr NewRole) (Role, error) {
 	now := time.Now()
 	rol := New(id, nr.Name, now, now, nil)
 
-	txErr := pgsql.RunInTx(ctx, c.log, c.tx, func(tran pgsql.CommitRollbacker) error {
-		storerTx, err := c.storer.NewWithTx(tran)
-		if err != nil {
-			return fmt.Errorf("role tx: %w", err)
-		}
-
-		if err = storerTx.Create(ctx, rol); err != nil {
+	txErr := pgsql.RunInTx(ctx, c.log, c.db, func(txCtx context.Context) error {
+		if err = c.storer.Create(txCtx, rol); err != nil {
 			return fmt.Errorf("create: %w", err)
 		}
 
-		return c.dispatcher.Dispatch(ctx, tran, newRoleEvent(rol, audit.ActionCreate))
+		return c.dispatcher.Dispatch(txCtx, newRoleEvent(rol, audit.ActionCreate))
 	})
 	if txErr != nil {
 		return Role{}, fmt.Errorf("create role: %w", txErr)
@@ -122,17 +99,12 @@ func (c *Service) Update(
 
 	rl = rl.WithUpdatedAt(time.Now())
 
-	txErr := pgsql.RunInTx(ctx, c.log, c.tx, func(tran pgsql.CommitRollbacker) error {
-		storerTx, err := c.storer.NewWithTx(tran)
-		if err != nil {
-			return fmt.Errorf("role tx: %w", err)
-		}
-
-		if err = storerTx.Update(ctx, rl); err != nil {
+	txErr := pgsql.RunInTx(ctx, c.log, c.db, func(txCtx context.Context) error {
+		if err := c.storer.Update(txCtx, rl); err != nil {
 			return fmt.Errorf("update: %w", err)
 		}
 
-		return c.dispatcher.Dispatch(ctx, tran, newRoleEvent(rl, audit.ActionUpdate))
+		return c.dispatcher.Dispatch(txCtx, newRoleEvent(rl, audit.ActionUpdate))
 	})
 	if txErr != nil {
 		return Role{}, fmt.Errorf("update role: %w", txErr)
@@ -144,17 +116,12 @@ func (c *Service) Update(
 // Delete removes the specified Role within a transaction
 // and dispatches a domain event.
 func (c *Service) Delete(ctx context.Context, rl Role) error {
-	txErr := pgsql.RunInTx(ctx, c.log, c.tx, func(tran pgsql.CommitRollbacker) error {
-		storerTx, err := c.storer.NewWithTx(tran)
-		if err != nil {
-			return fmt.Errorf("role tx: %w", err)
-		}
-
-		if err = storerTx.Delete(ctx, rl); err != nil {
+	txErr := pgsql.RunInTx(ctx, c.log, c.db, func(txCtx context.Context) error {
+		if err := c.storer.Delete(txCtx, rl); err != nil {
 			return fmt.Errorf("delete: %w", err)
 		}
 
-		return c.dispatcher.Dispatch(ctx, tran, newRoleEvent(rl, audit.ActionDelete))
+		return c.dispatcher.Dispatch(txCtx, newRoleEvent(rl, audit.ActionDelete))
 	})
 	if txErr != nil {
 		return fmt.Errorf("delete role: %w", txErr)

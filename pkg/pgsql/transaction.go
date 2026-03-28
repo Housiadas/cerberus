@@ -39,6 +39,7 @@ func RunInTx(
 	db *sqlx.DB,
 	fn func(ctx context.Context) error,
 ) error {
+	// begin a transaction
 	sqlxTx, err := db.Beginx()
 	if err != nil {
 		return fmt.Errorf("begin transaction: %w", err)
@@ -58,6 +59,7 @@ func RunInTx(
 		}
 	}()
 
+	// inject transaction to context
 	txCtx := context.WithValue(ctx, ctxKey{}, st)
 
 	// run the callback function

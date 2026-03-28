@@ -11,7 +11,6 @@ import (
 	"github.com/Housiadas/cerberus/pkg/cachemetrics"
 	"github.com/Housiadas/cerberus/pkg/cursor"
 	"github.com/Housiadas/cerberus/pkg/order"
-	"github.com/Housiadas/cerberus/pkg/pgsql"
 	"github.com/google/uuid"
 	"github.com/redis/go-redis/v9"
 	"github.com/viccon/sturdyc"
@@ -46,7 +45,6 @@ type redisClient interface {
 }
 
 type storer interface {
-	NewWithTx(tx pgsql.CommitRollbacker) (role.Storer, error)
 	Create(ctx context.Context, role role.Role) error
 	Update(ctx context.Context, role role.Role) error
 	Delete(ctx context.Context, role role.Role) error
@@ -90,17 +88,6 @@ func NewStore(
 		storer: storer,
 		cache:  sturdyc.New[role.Role](capacity, numShards, ttl, evictionPercentage, opts...),
 	}
-}
-
-// NewWithTx creates a new Store that uses the specified transaction.
-// Transaction operations bypass the cache.
-func (s *Store) NewWithTx(tx pgsql.CommitRollbacker) (role.Storer, error) {
-	storer, err := s.storer.NewWithTx(tx)
-	if err != nil {
-		return nil, fmt.Errorf("role cache new with tx: %w", err)
-	}
-
-	return storer, nil
 }
 
 // Create inserts a new role into the database.

@@ -5,7 +5,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/Housiadas/cerberus/pkg/pgsql"
 	"github.com/google/uuid"
 )
 
@@ -26,16 +25,6 @@ func NewService(log logger, storer Storer) *Service {
 		log:    log,
 		storer: storer,
 	}
-}
-
-// NewWithTx constructs a new Service that uses the specified transaction.
-func (s *Service) NewWithTx(tx pgsql.CommitRollbacker) (*Service, error) {
-	storer, err := s.storer.NewWithTx(tx)
-	if err != nil {
-		return nil, fmt.Errorf("invoice transaction issue: %w", err)
-	}
-
-	return &Service{log: s.log, storer: storer}, nil
 }
 
 // Create adds a new invoice to the system.

@@ -34,13 +34,8 @@ func (s *Service) ForgotPassword(ctx context.Context, req ForgotPasswordReq) err
 		return nil //nolint:nilerr
 	}
 
-	txErr := pgsql.RunInTx(ctx, s.log, s.tx, func(tran pgsql.CommitRollbacker) error {
-		emailOutboxTx, initErr := s.emailNotificationOutboxSvc.NewWithTx(tran)
-		if initErr != nil {
-			return errs2.Errorf(errs2.Internal, errs2.CodeInternal, "email_outbox tx: %s", initErr)
-		}
-
-		tkn, createErr := s.resetTokenSvc.Create(ctx, usr.ID())
+	txErr := pgsql.RunInTx(ctx, s.log, s.db, func(txCtx context.Context) error {
+		tkn, createErr := s.resetTokenSvc.Create(txCtx, usr.ID())
 		if createErr != nil {
 			return errs2.Errorf(
 				errs2.Internal,
@@ -58,7 +53,7 @@ func (s *Service) ForgotPassword(ctx context.Context, req ForgotPasswordReq) err
 			ResetURL: resetURL,
 		}
 
-		createErr = emailOutboxTx.Create(ctx, email_notification_outbox.NewEmailNotificationOutbox{
+		createErr = s.emailNotificationOutboxSvc.Create(txCtx, email_notification_outbox.NewEmailNotificationOutbox{
 			EventType: event.PasswordResetRequested,
 			ToEmail:   addr.Address,
 			Payload:   payload,

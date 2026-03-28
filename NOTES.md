@@ -1,8 +1,3 @@
-Rate Limiting:                                                                                                                                             
-The middleware stack has no rate limiting. Add per-IP and per-user rate limiting using 
-a token bucket pattern (e.g., golang.org/x/time/rate or Redis-backed sliding window). 
-Auth endpoints like POST /auth/login are particularly exposed to brute-force.
-
 Access Token Blacklisting / Revocation:
 Logout currently only removes the refresh token. If an access token leaks, it remains valid for up to 20 minutes. 
 A Redis-backed JWT blocklist keyed by jti (JWT ID) with TTL matching the token expiry would close this gap.
@@ -11,7 +6,6 @@ Outbox Relay — Push-Based Instead of Poll-Based;
 internal/app/relay/relay.go polls the outbox table at a fixed interval. 
 A PostgreSQL LISTEN/NOTIFY trigger on the outbox table 
 would reduce latency, and DB load the relay wakes up only on new rows.
-
 
 ## Idiomatic Go Restructuring Plan: Package-Centric Architecture
 
@@ -187,105 +181,43 @@ make mockery
 make lint
 make test
 
---- 
-Problems with current design:
-1. Beginner.Begin() returns CommitRollbacker interface — violates "accept interfaces, return structs"
-2. GetExtContext does a runtime type assertion to extract sqlx.ExtContext from CommitRollbacker — fragile, should be compile-time safe
-3. CommitRollbacker is an unnecessary abstraction — it hides *sqlx.Tx behind an interface when a concrete wrapper would be better
-
-Proposed fix: Replace CommitRollbacker with a concrete *Tx struct:
-
 ---
-Refactor: Replace CommitRollbacker interface with concrete *Tx struct
+Both are connection pools, but from different driver ecosystems:
 
-Context
+*sqlx.DB (jmoiron/sqlx)
 
-The current transaction abstraction in pkg/pgsql/transaction.go violates the Go idiom "accept interfaces, return structs":
-- Beginner.Begin() returns CommitRollbacker (an interface)
-- GetExtContext() does a runtime type assertion to extract sqlx.ExtContext — fragile and unnecessary
-- CommitRollbacker hides *sqlx.Tx behind an interface when a concrete wrapper is cleaner
+- Wraps the standard database/sql *sql.DB
+- Uses database/sql driver interface (e.g., lib/pq or pgx/stdlib)
+- Generic — works with any SQL database (Postgres, MySQL, SQLite)
+- Connection pool managed by database/sql internals
+- Struct scanning via sqlx.StructScan, named queries via sqlx.NamedExec
+- All queries go through the database/sql abstraction layer (extra allocations, interface conversions)
 
-Approach
+*pgxpool.Pool (jackc/pgx)
 
-Step 1: Rewrite pkg/pgsql/transaction.go
+- Postgres-only, native protocol implementation
+- No database/sql layer — talks the Postgres wire protocol directly
+- Access to Postgres-specific features: COPY, LISTEN/NOTIFY, custom types, c
+- omposite types, arrays, pgx.Batch for pipelining
+- Built-in connection pool with health checks, AfterConnect hooks
+- Better performance — fewer allocations, no driver.Value boxing
+- Native support for pgtype (proper uuid, inet, jsonb, hstore, etc.)
 
-- Replace CommitRollbacker interface with concrete Tx struct wrapping *sqlx.Tx
-- Tx exposes Commit(), Rollback(), and ExtContext() sqlx.ExtContext
-- Beginner interface becomes Begin() (*Tx, error)
-- DBBeginner.Begin() returns *Tx (concrete)
-- RunInTx callback becomes func(*Tx) error
-- Remove GetExtContext() function entirely
+Key tradeoffs
 
-New Tx struct:
-type Tx struct {
-tx *sqlx.Tx
-}
+┌─────────────────┬─────────────────────┬───────────────────────────────┐                                                                                                                                                         
+│                 │ sqlx + database/sql │            pgxpool            │
+├─────────────────┼─────────────────────┼───────────────────────────────┤                                                                                                                                                         
+│ Portability     │ Any SQL DB          │ Postgres only                 │
+├─────────────────┼─────────────────────┼───────────────────────────────┤
+│ Performance     │ Good                │ Better (no abstraction layer) │
+├─────────────────┼─────────────────────┼───────────────────────────────┤                                                                                                                                                         
+│ PG features     │ Limited             │ Full (COPY, LISTEN, batching) │
+├─────────────────┼─────────────────────┼───────────────────────────────┤                                                                                                                                                         
+│ Ecosystem       │ Broad (any driver)  │ pgx-specific                  │
+├─────────────────┼─────────────────────┼───────────────────────────────┤                                                                                                                                                         
+│ Struct scanning │ Built-in (sqlx)     │ Need pgx + scany or manual    │
+└─────────────────┴─────────────────────┴───────────────────────────────┘
 
-func (t *Tx) Commit() error              { return t.tx.Commit() }
-func (t *Tx) Rollback() error            { return t.tx.Rollback() }
-func (t *Tx) ExtContext() sqlx.ExtContext { return t.tx }
-
-Step 2: Remove ErrInvalidTransactorType from pkg/pgsql/error.go
-
-No longer needed since GetExtContext is removed.
-
-Step 3: Update all port/interface files (14 files)
-
-Change NewWithTx(tx pgsql.CommitRollbacker) → NewWithTx(tx *pgsql.Tx) in:
-- internal/core/{account,audit,billing_address,email_notification_outbox,invoice,outbox,payment,permission,refund,role,role_permissions,subscription,user,user_roles}/ports.go
-
-Step 4: Update all repo files (14 files)
-
-Change NewWithTx signature and replace pgsql.GetExtContext(tx) → tx.ExtContext() in:
-- internal/core/*/[module]_repo/repo.go
-
-Step 5: Update all service files (13 files)
-
-Change NewWithTx(tx pgsql.CommitRollbacker) → NewWithTx(tx *pgsql.Tx) in service methods, and update RunInTx callbacks from func(tran pgsql.CommitRollbacker) → func(tran *pgsql.Tx).
-
-Step 6: Update all cache files (3 files)
-
-- internal/core/{permission,role,user}/[module]_cache/[module]_cache.go
-- Update both the inner storer interface and the NewWithTx implementation
-
-Step 7: Update eventbus files (2 files)
-
-- internal/eventbus/eventbus.go — Dispatch(ctx, tran pgsql.CommitRollbacker, ...) → Dispatch(ctx, tran *pgsql.Tx, ...)
-- internal/eventbus/nop.go — same change
-
-Step 8: Update dispatcher interfaces in services
-
-Services like user/service.go define local dispatcher interface with pgsql.CommitRollbacker — update to *pgsql.Tx.
-
-Also remove the dead beginner interface in internal/core/user/service.go:48-50.
-
-Step 9: Regenerate mocks
-
-Run make mockery to regenerate all mock files (never edit mock files manually).
-
-Step 10: Verification
-
-- make lint
-- make test
-
-Files to modify
-
-Core (2 files):
-- pkg/pgsql/transaction.go
-- pkg/pgsql/error.go
-
-Ports (14 files):
-- internal/core/{account,audit,billing_address,email_notification_outbox,invoice,outbox,payment,permission,refund,role,role_permissions,subscription,user,user_roles}/ports.go
-
-Repos (14 files):
-- internal/core/*/[module]_repo/repo.go
-
-Services (13 files):
-- internal/core/{account,audit,billing_address,email_notification_outbox,invoice,outbox,payment,permission,refund,role,role_permissions,subscription,user}/service.go
-
-Additional (6 files):
-- internal/core/user_roles/service.go
-- internal/core/{permission,role,user}/[module]_cache/[module]_cache.go
-- internal/eventbus/eventbus.go
-- internal/eventbus/nop.go
-- internal/core/auth/forgot_password.go
+Your project uses sqlx with pgx as the underlying driver (via pgx/stdlib), 
+which is a common middle-ground: you get sqlx ergonomics with pgx as the driver, but miss out on pgx-native features like batching and COPY.      

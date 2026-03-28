@@ -33,37 +33,21 @@ var (
 
 // Store manages the set of APIs for userDB database access.
 type Store struct {
-	log    *logger.Service
-	dbPool sqlx.ExtContext
+	log *logger.Service
+	db  *sqlx.DB
 }
 
 // NewStore constructs the api for data access.
-func NewStore(log *logger.Service, dbPool *sqlx.DB) *Store {
+func NewStore(log *logger.Service, db *sqlx.DB) *Store {
 	return &Store{
-		log:    log,
-		dbPool: dbPool,
+		log: log,
+		db:  db,
 	}
-}
-
-// NewWithTx constructs a new Store value replacing the sqlx DB
-// value with a sqlx DB value that is currently inside a transaction.
-func (s *Store) NewWithTx(tx pgsql.CommitRollbacker) (permission2.Storer, error) {
-	ec, err := pgsql.GetExtContext(tx)
-	if err != nil {
-		return nil, fmt.Errorf("permission init transaction error: %w", err)
-	}
-
-	store := Store{
-		log:    s.log,
-		dbPool: ec,
-	}
-
-	return &store, nil
 }
 
 // Create inserts a new permissionDB into the database.
 func (s *Store) Create(ctx context.Context, perm permission2.Permission) error {
-	err := pgsql.NamedExecContext(ctx, s.log, s.dbPool, permissionCreateSQL, toPermissionDB(perm))
+	err := pgsql.NamedExecContext(ctx, s.log, pgsql.Conn(ctx, s.db), permissionCreateSQL, toPermissionDB(perm))
 	if err != nil {
 		return fmt.Errorf("error permission create in db: %w", err)
 	}
@@ -73,7 +57,7 @@ func (s *Store) Create(ctx context.Context, perm permission2.Permission) error {
 
 // Update replaces a permissionDB document in the database.
 func (s *Store) Update(ctx context.Context, rl permission2.Permission) error {
-	err := pgsql.NamedExecContext(ctx, s.log, s.dbPool, permissionUpdateSQL, toPermissionDB(rl))
+	err := pgsql.NamedExecContext(ctx, s.log, pgsql.Conn(ctx, s.db), permissionUpdateSQL, toPermissionDB(rl))
 	if err != nil {
 		return fmt.Errorf("error permission update in db: %w", err)
 	}
@@ -83,7 +67,7 @@ func (s *Store) Update(ctx context.Context, rl permission2.Permission) error {
 
 // Delete removes a permissionDB from the database.
 func (s *Store) Delete(ctx context.Context, rl permission2.Permission) error {
-	err := pgsql.NamedExecContext(ctx, s.log, s.dbPool, permissionDeleteSQL, toPermissionDB(rl))
+	err := pgsql.NamedExecContext(ctx, s.log, pgsql.Conn(ctx, s.db), permissionDeleteSQL, toPermissionDB(rl))
 	if err != nil {
 		return fmt.Errorf("error delete permission in db: %w", err)
 	}
@@ -104,7 +88,7 @@ func (s *Store) QueryByID(
 
 	var dbPermission permissionDB
 
-	err := pgsql.NamedQueryStruct(ctx, s.log, s.dbPool, permissionQueryByIDSQL, data, &dbPermission)
+	err := pgsql.NamedQueryStruct(ctx, s.log, pgsql.Conn(ctx, s.db), permissionQueryByIDSQL, data, &dbPermission)
 	if err != nil {
 		if errors.Is(err, pgsql.ErrDBNotFound) {
 			return permission2.Permission{}, fmt.Errorf("db: %w", permission2.ErrNotFound)
@@ -141,7 +125,7 @@ func (s *Store) Query(
 
 	var dbPermissions []permissionDB
 
-	err = pgsql.NamedQuerySlice(ctx, s.log, s.dbPool, buf.String(), data, &dbPermissions)
+	err = pgsql.NamedQuerySlice(ctx, s.log, pgsql.Conn(ctx, s.db), buf.String(), data, &dbPermissions)
 	if err != nil {
 		return nil, fmt.Errorf("error query permission in db: %w", err)
 	}

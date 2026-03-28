@@ -34,7 +34,7 @@ var (
 // Store manages the set of APIs for userDB database access.
 type Store struct {
 	log *logger.Service
-	db  sqlx.ExtContext
+	db  *sqlx.DB
 }
 
 // NewStore constructs the api for data access.
@@ -45,25 +45,9 @@ func NewStore(log *logger.Service, db *sqlx.DB) *Store {
 	}
 }
 
-// NewWithTx constructs a new Store value replacing the sqlx DB
-// value with a sqlx DB value that is currently inside a transaction.
-func (s *Store) NewWithTx(tx pgsql.CommitRollbacker) (role.Storer, error) {
-	ec, err := pgsql.GetExtContext(tx)
-	if err != nil {
-		return nil, fmt.Errorf("role transaction init error: %w", err)
-	}
-
-	store := Store{
-		log: s.log,
-		db:  ec,
-	}
-
-	return &store, nil
-}
-
 // Create inserts a new roleDB into the database.
 func (s *Store) Create(ctx context.Context, rl role.Role) error {
-	err := pgsql.NamedExecContext(ctx, s.log, s.db, roleCreateSQL, toRoleDB(rl))
+	err := pgsql.NamedExecContext(ctx, s.log, pgsql.Conn(ctx, s.db), roleCreateSQL, toRoleDB(rl))
 	if err != nil {
 		return fmt.Errorf("error role create in db: %w", err)
 	}
@@ -73,7 +57,7 @@ func (s *Store) Create(ctx context.Context, rl role.Role) error {
 
 // Update replaces a roleDB document in the database.
 func (s *Store) Update(ctx context.Context, rl role.Role) error {
-	err := pgsql.NamedExecContext(ctx, s.log, s.db, roleUpdateSQL, toRoleDB(rl))
+	err := pgsql.NamedExecContext(ctx, s.log, pgsql.Conn(ctx, s.db), roleUpdateSQL, toRoleDB(rl))
 	if err != nil {
 		return fmt.Errorf("error role update in db: %w", err)
 	}
@@ -83,7 +67,7 @@ func (s *Store) Update(ctx context.Context, rl role.Role) error {
 
 // Delete removes a roleDB from the database.
 func (s *Store) Delete(ctx context.Context, rl role.Role) error {
-	err := pgsql.NamedExecContext(ctx, s.log, s.db, roleDeleteSQL, toRoleDB(rl))
+	err := pgsql.NamedExecContext(ctx, s.log, pgsql.Conn(ctx, s.db), roleDeleteSQL, toRoleDB(rl))
 	if err != nil {
 		return fmt.Errorf("error delete role in db: %w", err)
 	}
@@ -101,7 +85,7 @@ func (s *Store) QueryByID(ctx context.Context, roleID uuid.UUID) (role.Role, err
 
 	var dbRole roleDB
 
-	err := pgsql.NamedQueryStruct(ctx, s.log, s.db, roleQueryByIDSQL, data, &dbRole)
+	err := pgsql.NamedQueryStruct(ctx, s.log, pgsql.Conn(ctx, s.db), roleQueryByIDSQL, data, &dbRole)
 	if err != nil {
 		if errors.Is(err, pgsql.ErrDBNotFound) {
 			return role.Role{}, fmt.Errorf("db: %w", role.ErrNotFound)
@@ -138,7 +122,7 @@ func (s *Store) Query(
 
 	var dbRoles []roleDB
 
-	err = pgsql.NamedQuerySlice(ctx, s.log, s.db, buf.String(), data, &dbRoles)
+	err = pgsql.NamedQuerySlice(ctx, s.log, pgsql.Conn(ctx, s.db), buf.String(), data, &dbRoles)
 	if err != nil {
 		return nil, fmt.Errorf("error query role in db: %w", err)
 	}

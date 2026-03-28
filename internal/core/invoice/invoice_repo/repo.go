@@ -37,37 +37,21 @@ type logger interface {
 
 // Store manages the set of APIs for invoice database access.
 type Store struct {
-	log    logger
-	dbPool sqlx.ExtContext
+	log logger
+	db  *sqlx.DB
 }
 
 // NewStore constructs the api for data access.
-func NewStore(log logger, dbPool *sqlx.DB) *Store {
+func NewStore(log logger, db *sqlx.DB) *Store {
 	return &Store{
-		log:    log,
-		dbPool: dbPool,
+		log: log,
+		db:  db,
 	}
-}
-
-// NewWithTx constructs a new Store value replacing the sqlx DB
-// value with a sqlx DB value that is currently inside a transaction.
-func (s *Store) NewWithTx(tx pgsql.CommitRollbacker) (invoice.Storer, error) {
-	ec, err := pgsql.GetExtContext(tx)
-	if err != nil {
-		return nil, fmt.Errorf("invoice transaction init error: %w", err)
-	}
-
-	store := Store{
-		log:    s.log,
-		dbPool: ec,
-	}
-
-	return &store, nil
 }
 
 // Create inserts a new invoice into the database.
 func (s *Store) Create(ctx context.Context, inv invoice.Invoice) error {
-	err := pgsql.NamedExecContext(ctx, s.log, s.dbPool, invoiceCreateSQL, toInvoiceDB(inv))
+	err := pgsql.NamedExecContext(ctx, s.log, pgsql.Conn(ctx, s.db), invoiceCreateSQL, toInvoiceDB(inv))
 	if err != nil {
 		return fmt.Errorf("named_exec_context: %w", err)
 	}
@@ -77,7 +61,7 @@ func (s *Store) Create(ctx context.Context, inv invoice.Invoice) error {
 
 // Update replaces an invoice in the database.
 func (s *Store) Update(ctx context.Context, inv invoice.Invoice) error {
-	err := pgsql.NamedExecContext(ctx, s.log, s.dbPool, invoiceUpdateSQL, toInvoiceDB(inv))
+	err := pgsql.NamedExecContext(ctx, s.log, pgsql.Conn(ctx, s.db), invoiceUpdateSQL, toInvoiceDB(inv))
 	if err != nil {
 		return fmt.Errorf("named_exec_context: %w", err)
 	}
@@ -98,7 +82,7 @@ func (s *Store) QueryByAccountID(
 
 	var dbInvs []invoiceDB
 
-	err := pgsql.NamedQuerySlice(ctx, s.log, s.dbPool, invoiceQueryByAccountIDSQL, data, &dbInvs)
+	err := pgsql.NamedQuerySlice(ctx, s.log, pgsql.Conn(ctx, s.db), invoiceQueryByAccountIDSQL, data, &dbInvs)
 	if err != nil {
 		return nil, fmt.Errorf("named_query_slice: %w", err)
 	}
@@ -116,7 +100,7 @@ func (s *Store) QueryByStripeID(ctx context.Context, stripeInvID string) (invoic
 
 	var dbInv invoiceDB
 
-	err := pgsql.NamedQueryStruct(ctx, s.log, s.dbPool, invoiceQueryByStripeIDSQL, data, &dbInv)
+	err := pgsql.NamedQueryStruct(ctx, s.log, pgsql.Conn(ctx, s.db), invoiceQueryByStripeIDSQL, data, &dbInv)
 	if err != nil {
 		if errors.Is(err, pgsql.ErrDBNotFound) {
 			return invoice.Invoice{}, fmt.Errorf("db: %w", invoice.ErrNotFound)

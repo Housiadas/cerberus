@@ -25,42 +25,26 @@ var (
 
 // Store manages the set of APIs for auditDB database access.
 type Store struct {
-	log    *logger.Service
-	dbPool sqlx.ExtContext
+	log *logger.Service
+	db  *sqlx.DB
 }
 
 // NewStore constructs the API for data access.
 func NewStore(
 	log *logger.Service,
-	dbPool *sqlx.DB,
+	db *sqlx.DB,
 ) *Store {
 	return &Store{
-		log:    log,
-		dbPool: dbPool,
+		log: log,
+		db:  db,
 	}
-}
-
-// NewWithTx constructs a new Store value replacing the sqlx DB with a sqlx DB that is
-// running within a transaction.
-func (s *Store) NewWithTx(tx pgsql.CommitRollbacker) (audit.Storer, error) {
-	ec, err := pgsql.GetExtContext(tx)
-	if err != nil {
-		return nil, fmt.Errorf("audit transaction init error: %w", err)
-	}
-
-	store := Store{
-		log:    s.log,
-		dbPool: ec,
-	}
-
-	return &store, nil
 }
 
 // Create inserts a new auditDB record into the database.
 func (s *Store) Create(ctx context.Context, a audit.Audit) error {
 	dbAudit := toDBAudit(a)
 
-	err := pgsql.NamedExecContext(ctx, s.log, s.dbPool, auditCreateSQL, dbAudit)
+	err := pgsql.NamedExecContext(ctx, s.log, pgsql.Conn(ctx, s.db), auditCreateSQL, dbAudit)
 	if err != nil {
 		return fmt.Errorf("namedexeccontext: %w", err)
 	}
@@ -93,7 +77,7 @@ func (s *Store) Query(
 
 	var dbAudits []auditDB
 
-	err = pgsql.NamedQuerySlice(ctx, s.log, s.dbPool, buf.String(), data, &dbAudits)
+	err = pgsql.NamedQuerySlice(ctx, s.log, pgsql.Conn(ctx, s.db), buf.String(), data, &dbAudits)
 	if err != nil {
 		return nil, fmt.Errorf("namedqueryslice: %w", err)
 	}

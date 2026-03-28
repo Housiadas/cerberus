@@ -12,7 +12,6 @@ import (
 	"github.com/Housiadas/cerberus/internal/core/user"
 	"github.com/Housiadas/cerberus/pkg/cursor"
 	"github.com/Housiadas/cerberus/pkg/order"
-	"github.com/Housiadas/cerberus/pkg/pgsql"
 	"github.com/google/uuid"
 	"github.com/redis/go-redis/v9"
 	mock "github.com/stretchr/testify/mock"
@@ -957,68 +956,6 @@ func (_c *mockstorer_Delete_Call) Return(err error) *mockstorer_Delete_Call {
 }
 
 func (_c *mockstorer_Delete_Call) RunAndReturn(run func(ctx context.Context, usr user.User) error) *mockstorer_Delete_Call {
-	_c.Call.Return(run)
-	return _c
-}
-
-// NewWithTx provides a mock function for the type mockstorer
-func (_mock *mockstorer) NewWithTx(tx pgsql.CommitRollbacker) (user.Storer, error) {
-	ret := _mock.Called(tx)
-
-	if len(ret) == 0 {
-		panic("no return value specified for NewWithTx")
-	}
-
-	var r0 user.Storer
-	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(pgsql.CommitRollbacker) (user.Storer, error)); ok {
-		return returnFunc(tx)
-	}
-	if returnFunc, ok := ret.Get(0).(func(pgsql.CommitRollbacker) user.Storer); ok {
-		r0 = returnFunc(tx)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(user.Storer)
-		}
-	}
-	if returnFunc, ok := ret.Get(1).(func(pgsql.CommitRollbacker) error); ok {
-		r1 = returnFunc(tx)
-	} else {
-		r1 = ret.Error(1)
-	}
-	return r0, r1
-}
-
-// mockstorer_NewWithTx_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'NewWithTx'
-type mockstorer_NewWithTx_Call struct {
-	*mock.Call
-}
-
-// NewWithTx is a helper method to define mock.On call
-//   - tx pgsql.CommitRollbacker
-func (_e *mockstorer_Expecter) NewWithTx(tx interface{}) *mockstorer_NewWithTx_Call {
-	return &mockstorer_NewWithTx_Call{Call: _e.mock.On("NewWithTx", tx)}
-}
-
-func (_c *mockstorer_NewWithTx_Call) Run(run func(tx pgsql.CommitRollbacker)) *mockstorer_NewWithTx_Call {
-	_c.Call.Run(func(args mock.Arguments) {
-		var arg0 pgsql.CommitRollbacker
-		if args[0] != nil {
-			arg0 = args[0].(pgsql.CommitRollbacker)
-		}
-		run(
-			arg0,
-		)
-	})
-	return _c
-}
-
-func (_c *mockstorer_NewWithTx_Call) Return(storer user.Storer, err error) *mockstorer_NewWithTx_Call {
-	_c.Call.Return(storer, err)
-	return _c
-}
-
-func (_c *mockstorer_NewWithTx_Call) RunAndReturn(run func(tx pgsql.CommitRollbacker) (user.Storer, error)) *mockstorer_NewWithTx_Call {
 	_c.Call.Return(run)
 	return _c
 }

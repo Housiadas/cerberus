@@ -12,7 +12,6 @@ import (
 	"github.com/Housiadas/cerberus/pkg/cachemetrics"
 	"github.com/Housiadas/cerberus/pkg/cursor"
 	"github.com/Housiadas/cerberus/pkg/order"
-	"github.com/Housiadas/cerberus/pkg/pgsql"
 	"github.com/google/uuid"
 	"github.com/redis/go-redis/v9"
 	"github.com/viccon/sturdyc"
@@ -48,18 +47,7 @@ type redisClient interface {
 
 // Storer interface declares the behavior this package needs to persist and retrieve data.
 type storer interface {
-	NewWithTx(tx pgsql.CommitRollbacker) (user.Storer, error)
-	Create(ctx context.Context, usr user.User) error
-	Update(ctx context.Context, usr user.User) error
-	Delete(ctx context.Context, usr user.User) error
-	Query(
-		ctx context.Context,
-		filter user.QueryFilter,
-		orderBy order.By,
-		cur cursor.Cursor,
-	) ([]user.User, error)
-	QueryByID(ctx context.Context, userID uuid.UUID) (user.User, error)
-	QueryByEmail(ctx context.Context, email mail.Address) (user.User, error)
+	user.Storer
 }
 
 // Store manages the set of APIs for user data and caching.
@@ -94,17 +82,6 @@ func NewStore(
 		storer: storer,
 		cache:  sturdyc.New[user.User](capacity, numShards, ttl, evictionPercentage, opts...),
 	}
-}
-
-// NewWithTx creates a new Store that uses the specified transaction.
-// Transaction operations bypass the cache.
-func (s *Store) NewWithTx(tx pgsql.CommitRollbacker) (user.Storer, error) {
-	storer, err := s.storer.NewWithTx(tx)
-	if err != nil {
-		return nil, fmt.Errorf("user cache new with tx: %w", err)
-	}
-
-	return storer, nil
 }
 
 // Create inserts a new user into the database.

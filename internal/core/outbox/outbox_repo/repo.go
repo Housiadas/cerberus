@@ -37,40 +37,24 @@ type logger interface {
 
 // Store manages the set of APIs for outbox database access.
 type Store struct {
-	log    logger
-	dbPool sqlx.ExtContext
+	log logger
+	db  *sqlx.DB
 }
 
 // NewStore constructs the api for data access.
 func NewStore(
 	log logger,
-	dbPool *sqlx.DB,
+	db *sqlx.DB,
 ) *Store {
 	return &Store{
-		log:    log,
-		dbPool: dbPool,
+		log: log,
+		db:  db,
 	}
-}
-
-// NewWithTx constructs a new Store value replacing the sqlx DB
-// value with a sqlx DB value that is currently inside a transaction.
-func (s *Store) NewWithTx(tx pgsql.CommitRollbacker) (outbox.Storer, error) {
-	ec, err := pgsql.GetExtContext(tx)
-	if err != nil {
-		return nil, fmt.Errorf("outbox transaction init error: %w", err)
-	}
-
-	store := Store{
-		log:    s.log,
-		dbPool: ec,
-	}
-
-	return &store, nil
 }
 
 // Create inserts a new outbox entry into the database.
 func (s *Store) Create(ctx context.Context, o outbox.Outbox) error {
-	err := pgsql.NamedExecContext(ctx, s.log, s.dbPool, outboxCreateSQL, toOutboxDB(o))
+	err := pgsql.NamedExecContext(ctx, s.log, pgsql.Conn(ctx, s.db), outboxCreateSQL, toOutboxDB(o))
 	if err != nil {
 		return fmt.Errorf("named_exec_context: %w", err)
 	}
@@ -94,7 +78,7 @@ func (s *Store) QueryUnprocessed(
 
 	var dbRows []outboxDB
 
-	err := pgsql.NamedQuerySlice(ctx, s.log, s.dbPool, outboxQueryUnprocessedSQL, data, &dbRows)
+	err := pgsql.NamedQuerySlice(ctx, s.log, pgsql.Conn(ctx, s.db), outboxQueryUnprocessedSQL, data, &dbRows)
 	if err != nil {
 		return nil, fmt.Errorf("named_query_slice: %w", err)
 	}
@@ -127,9 +111,9 @@ func (s *Store) MarkProcessed(ctx context.Context, ids []uuid.UUID, processedAt 
 		return fmt.Errorf("sqlx in error: %w", err)
 	}
 
-	query = s.dbPool.Rebind(query)
+	query = pgsql.Conn(ctx, s.db).Rebind(query)
 
-	_, err = s.dbPool.ExecContext(ctx, query, args...)
+	_, err = pgsql.Conn(ctx, s.db).ExecContext(ctx, query, args...)
 	if err != nil {
 		return fmt.Errorf("exec_context: %w", err)
 	}
@@ -155,9 +139,9 @@ func (s *Store) IncrementRetryCount(ctx context.Context, ids []uuid.UUID) error 
 		return fmt.Errorf("sqlx in error: %w", err)
 	}
 
-	query = s.dbPool.Rebind(query)
+	query = pgsql.Conn(ctx, s.db).Rebind(query)
 
-	_, err = s.dbPool.ExecContext(ctx, query, args...)
+	_, err = pgsql.Conn(ctx, s.db).ExecContext(ctx, query, args...)
 	if err != nil {
 		return fmt.Errorf("exec_context: %w", err)
 	}

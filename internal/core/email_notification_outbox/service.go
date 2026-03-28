@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/Housiadas/cerberus/pkg/pgsql"
 	"github.com/google/uuid"
 )
 
@@ -45,24 +44,6 @@ func NewService(
 		uuidGen: uuidGen,
 		clock:   clock,
 	}
-}
-
-// NewWithTx constructs a new Service value that will use the
-// specified transaction in any store-related calls.
-func (s *Service) NewWithTx(tx pgsql.CommitRollbacker) (*Service, error) {
-	storer, err := s.storer.NewWithTx(tx)
-	if err != nil {
-		return nil, fmt.Errorf("email_notification_outbox transaction issue: %w", err)
-	}
-
-	svc := Service{
-		log:     s.log,
-		storer:  storer,
-		uuidGen: s.uuidGen,
-		clock:   s.clock,
-	}
-
-	return &svc, nil
 }
 
 // Create adds a new email notification outbox entry.

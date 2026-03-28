@@ -11,6 +11,7 @@ import (
 	"github.com/Housiadas/cerberus/internal/types/name"
 	"github.com/Housiadas/cerberus/pkg/pgsql"
 	"github.com/google/uuid"
+	"github.com/jmoiron/sqlx"
 )
 
 type logger interface {
@@ -24,14 +25,14 @@ type logger interface {
 
 // dispatcher defines the interface for domain event dispatching.
 type dispatcher interface {
-	Dispatch(ctx context.Context, tran pgsql.CommitRollbacker, ev event.DomainEvent) error
+	Dispatch(ctx context.Context, ev event.DomainEvent) error
 }
 
 // Service manages user role assignments.
 type Service struct {
 	log        logger
 	storer     Storer
-	tx         pgsql.Beginner
+	db         *sqlx.DB
 	dispatcher dispatcher
 }
 
@@ -39,31 +40,15 @@ type Service struct {
 func NewService(
 	log logger,
 	storer Storer,
-	tx pgsql.Beginner,
+	db *sqlx.DB,
 	dispatcher dispatcher,
 ) *Service {
 	return &Service{
 		log:        log,
 		storer:     storer,
-		tx:         tx,
+		db:         db,
 		dispatcher: dispatcher,
 	}
-}
-
-// NewWithTx constructs a new Service value replacing the sqlx DB
-// value with a sqlx DB value that is currently inside a transaction.
-func (s *Service) NewWithTx(tx pgsql.CommitRollbacker) (*Service, error) {
-	storer, err := s.storer.NewWithTx(tx)
-	if err != nil {
-		return nil, fmt.Errorf("user_roles transaction issue: %w", err)
-	}
-
-	return &Service{
-		log:        s.log,
-		storer:     storer,
-		tx:         s.tx,
-		dispatcher: s.dispatcher,
-	}, nil
 }
 
 // Add assigns a role to a user within a transaction and dispatches a domain event.
@@ -77,24 +62,19 @@ func (s *Service) Remove(ctx context.Context, userID uuid.UUID, roleID uuid.UUID
 }
 
 func (s *Service) modify(ctx context.Context, userID, roleID uuid.UUID, action string) error {
-	txErr := pgsql.RunInTx(ctx, s.log, s.tx, func(tran pgsql.CommitRollbacker) error {
-		storerTx, err := s.storer.NewWithTx(tran)
-		if err != nil {
-			return fmt.Errorf("user_roles tx: %w", err)
-		}
-
+	txErr := pgsql.RunInTx(ctx, s.log, s.db, func(txCtx context.Context) error {
 		var opErr error
 		if action == audit.ActionAssign {
-			opErr = storerTx.Add(ctx, userID, roleID)
+			opErr = s.storer.Add(txCtx, userID, roleID)
 		} else {
-			opErr = storerTx.Remove(ctx, userID, roleID)
+			opErr = s.storer.Remove(txCtx, userID, roleID)
 		}
 
 		if opErr != nil {
 			return fmt.Errorf("user_role %s: %w", action, opErr)
 		}
 
-		return s.dispatcher.Dispatch(ctx, tran, event.DomainEvent{
+		return s.dispatcher.Dispatch(txCtx, event.DomainEvent{
 			AggregateID: userID,
 			Payload:     map[string]string{"user_id": userID.String(), "role_id": roleID.String()},
 			ObjEntity:   entity.New(entity.RoleEntity),

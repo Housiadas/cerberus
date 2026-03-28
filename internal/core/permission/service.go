@@ -13,6 +13,7 @@ import (
 	"github.com/Housiadas/cerberus/pkg/order"
 	"github.com/Housiadas/cerberus/pkg/pgsql"
 	"github.com/google/uuid"
+	"github.com/jmoiron/sqlx"
 )
 
 type logger interface {
@@ -30,7 +31,7 @@ type generator interface {
 
 // dispatcher defines the interface for domain event dispatching.
 type dispatcher interface {
-	Dispatch(ctx context.Context, tran pgsql.CommitRollbacker, ev event.DomainEvent) error
+	Dispatch(ctx context.Context, ev event.DomainEvent) error
 }
 
 // Service manages permission domain operations including persistence,
@@ -39,7 +40,7 @@ type Service struct {
 	log        logger
 	storer     Storer
 	uuidGen    generator
-	tx         pgsql.Beginner
+	db         *sqlx.DB
 	dispatcher dispatcher
 }
 
@@ -48,35 +49,16 @@ func NewService(
 	log logger,
 	storer Storer,
 	uuidGen generator,
-	tx pgsql.Beginner,
+	db *sqlx.DB,
 	dispatcher dispatcher,
 ) *Service {
 	return &Service{
 		log:        log,
 		storer:     storer,
 		uuidGen:    uuidGen,
-		tx:         tx,
+		db:         db,
 		dispatcher: dispatcher,
 	}
-}
-
-// NewWithTx constructs a new Service that will use the
-// specified transaction in any store-related calls.
-func (s *Service) NewWithTx(tx pgsql.CommitRollbacker) (*Service, error) {
-	storer, err := s.storer.NewWithTx(tx)
-	if err != nil {
-		return nil, fmt.Errorf("permission transaction issue: %w", err)
-	}
-
-	svc := Service{
-		log:        s.log,
-		storer:     storer,
-		uuidGen:    s.uuidGen,
-		tx:         s.tx,
-		dispatcher: s.dispatcher,
-	}
-
-	return &svc, nil
 }
 
 // Create adds a new Permission to the system within a transaction
@@ -93,17 +75,12 @@ func (s *Service) Create(
 	now := time.Now()
 	p := New(id, np.Name, now, now, nil)
 
-	txErr := pgsql.RunInTx(ctx, s.log, s.tx, func(tran pgsql.CommitRollbacker) error {
-		storerTx, err := s.storer.NewWithTx(tran)
-		if err != nil {
-			return fmt.Errorf("permission tx: %w", err)
-		}
-
-		if err = storerTx.Create(ctx, p); err != nil {
+	txErr := pgsql.RunInTx(ctx, s.log, s.db, func(txCtx context.Context) error {
+		if err = s.storer.Create(txCtx, p); err != nil {
 			return fmt.Errorf("create: %w", err)
 		}
 
-		return s.dispatcher.Dispatch(ctx, tran, newPermissionEvent(p, audit.ActionCreate))
+		return s.dispatcher.Dispatch(txCtx, newPermissionEvent(p, audit.ActionCreate))
 	})
 	if txErr != nil {
 		return Permission{}, fmt.Errorf("create permission: %w", txErr)
@@ -125,17 +102,12 @@ func (s *Service) Update(
 
 	p = p.WithUpdatedAt(time.Now())
 
-	txErr := pgsql.RunInTx(ctx, s.log, s.tx, func(tran pgsql.CommitRollbacker) error {
-		storerTx, err := s.storer.NewWithTx(tran)
-		if err != nil {
-			return fmt.Errorf("permission tx: %w", err)
-		}
-
-		if err = storerTx.Update(ctx, p); err != nil {
+	txErr := pgsql.RunInTx(ctx, s.log, s.db, func(txCtx context.Context) error {
+		if err := s.storer.Update(txCtx, p); err != nil {
 			return fmt.Errorf("update: %w", err)
 		}
 
-		return s.dispatcher.Dispatch(ctx, tran, newPermissionEvent(p, audit.ActionUpdate))
+		return s.dispatcher.Dispatch(txCtx, newPermissionEvent(p, audit.ActionUpdate))
 	})
 	if txErr != nil {
 		return Permission{}, fmt.Errorf("update permission: %w", txErr)
@@ -147,17 +119,12 @@ func (s *Service) Update(
 // Delete removes the specified Permission within a transaction
 // and dispatches a domain event.
 func (s *Service) Delete(ctx context.Context, p Permission) error {
-	txErr := pgsql.RunInTx(ctx, s.log, s.tx, func(tran pgsql.CommitRollbacker) error {
-		storerTx, err := s.storer.NewWithTx(tran)
-		if err != nil {
-			return fmt.Errorf("permission tx: %w", err)
-		}
-
-		if err = storerTx.Delete(ctx, p); err != nil {
+	txErr := pgsql.RunInTx(ctx, s.log, s.db, func(txCtx context.Context) error {
+		if err := s.storer.Delete(txCtx, p); err != nil {
 			return fmt.Errorf("delete: %w", err)
 		}
 
-		return s.dispatcher.Dispatch(ctx, tran, newPermissionEvent(p, audit.ActionDelete))
+		return s.dispatcher.Dispatch(txCtx, newPermissionEvent(p, audit.ActionDelete))
 	})
 	if txErr != nil {
 		return fmt.Errorf("delete permission: %w", txErr)

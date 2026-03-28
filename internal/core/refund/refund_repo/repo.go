@@ -32,37 +32,21 @@ type logger interface {
 
 // Store manages the set of APIs for refund database access.
 type Store struct {
-	log    logger
-	dbPool sqlx.ExtContext
+	log logger
+	db  *sqlx.DB
 }
 
 // NewStore constructs the api for data access.
-func NewStore(log logger, dbPool *sqlx.DB) *Store {
+func NewStore(log logger, db *sqlx.DB) *Store {
 	return &Store{
-		log:    log,
-		dbPool: dbPool,
+		log: log,
+		db:  db,
 	}
-}
-
-// NewWithTx constructs a new Store value replacing the sqlx DB
-// value with a sqlx DB value that is currently inside a transaction.
-func (s *Store) NewWithTx(tx pgsql.CommitRollbacker) (refund.Storer, error) {
-	ec, err := pgsql.GetExtContext(tx)
-	if err != nil {
-		return nil, fmt.Errorf("refund transaction init error: %w", err)
-	}
-
-	store := Store{
-		log:    s.log,
-		dbPool: ec,
-	}
-
-	return &store, nil
 }
 
 // Create inserts a new refund into the database.
 func (s *Store) Create(ctx context.Context, ref refund.Refund) error {
-	err := pgsql.NamedExecContext(ctx, s.log, s.dbPool, refundCreateSQL, toRefundDB(ref))
+	err := pgsql.NamedExecContext(ctx, s.log, pgsql.Conn(ctx, s.db), refundCreateSQL, toRefundDB(ref))
 	if err != nil {
 		return fmt.Errorf("named_exec_context: %w", err)
 	}
@@ -83,7 +67,7 @@ func (s *Store) QueryByAccountID(
 
 	var dbRefs []refundDB
 
-	err := pgsql.NamedQuerySlice(ctx, s.log, s.dbPool, refundQueryByAccountIDSQL, data, &dbRefs)
+	err := pgsql.NamedQuerySlice(ctx, s.log, pgsql.Conn(ctx, s.db), refundQueryByAccountIDSQL, data, &dbRefs)
 	if err != nil {
 		return nil, fmt.Errorf("named_query_slice: %w", err)
 	}

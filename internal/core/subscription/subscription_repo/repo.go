@@ -27,32 +27,16 @@ var (
 
 // Store manages the set of APIs for subscription database access.
 type Store struct {
-	log    *logger.Service
-	dbPool sqlx.ExtContext
+	log *logger.Service
+	db  *sqlx.DB
 }
 
 // NewStore constructs the api for data access.
-func NewStore(log *logger.Service, dbPool *sqlx.DB) *Store {
+func NewStore(log *logger.Service, db *sqlx.DB) *Store {
 	return &Store{
-		log:    log,
-		dbPool: dbPool,
+		log: log,
+		db:  db,
 	}
-}
-
-// NewWithTx constructs a new Store value replacing the sqlx DB
-// value with a sqlx DB value that is currently inside a transaction.
-func (s *Store) NewWithTx(tx pgsql.CommitRollbacker) (subscription2.Storer, error) {
-	ec, err := pgsql.GetExtContext(tx)
-	if err != nil {
-		return nil, fmt.Errorf("subscription transaction init error: %w", err)
-	}
-
-	store := Store{
-		log:    s.log,
-		dbPool: ec,
-	}
-
-	return &store, nil
 }
 
 // Create inserts a new subscription into the database.
@@ -60,7 +44,7 @@ func (s *Store) Create(ctx context.Context, sub subscription2.Subscription) erro
 	err := pgsql.NamedExecContext(
 		ctx,
 		s.log,
-		s.dbPool,
+		pgsql.Conn(ctx, s.db),
 		subscriptionCreateSQL,
 		toSubscriptionDB(sub),
 	)
@@ -76,7 +60,7 @@ func (s *Store) Update(ctx context.Context, sub subscription2.Subscription) erro
 	err := pgsql.NamedExecContext(
 		ctx,
 		s.log,
-		s.dbPool,
+		pgsql.Conn(ctx, s.db),
 		subscriptionUpdateSQL,
 		toSubscriptionDB(sub),
 	)
@@ -103,7 +87,7 @@ func (s *Store) QueryByAccountID(
 	err := pgsql.NamedQuerySlice(
 		ctx,
 		s.log,
-		s.dbPool,
+		pgsql.Conn(ctx, s.db),
 		subscriptionQueryByAccountIDSQL,
 		data,
 		&dbSubs,
@@ -131,7 +115,7 @@ func (s *Store) QueryByStripeID(
 	err := pgsql.NamedQueryStruct(
 		ctx,
 		s.log,
-		s.dbPool,
+		pgsql.Conn(ctx, s.db),
 		subscriptionQueryByStripeIDSQL,
 		data,
 		&dbSub,

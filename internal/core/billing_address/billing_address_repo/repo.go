@@ -29,32 +29,16 @@ var (
 
 // Store manages the set of APIs for billing address database access.
 type Store struct {
-	log    *logger.Service
-	dbPool sqlx.ExtContext
+	log *logger.Service
+	db  *sqlx.DB
 }
 
 // NewStore constructs the api for data access.
-func NewStore(log *logger.Service, dbPool *sqlx.DB) *Store {
+func NewStore(log *logger.Service, db *sqlx.DB) *Store {
 	return &Store{
-		log:    log,
-		dbPool: dbPool,
+		log: log,
+		db:  db,
 	}
-}
-
-// NewWithTx constructs a new Store value replacing the sqlx DB
-// value with a sqlx DB value that is currently inside a transaction.
-func (s *Store) NewWithTx(tx pgsql.CommitRollbacker) (billing_address.Storer, error) {
-	ec, err := pgsql.GetExtContext(tx)
-	if err != nil {
-		return nil, fmt.Errorf("billing address transaction init error: %w", err)
-	}
-
-	store := Store{
-		log:    s.log,
-		dbPool: ec,
-	}
-
-	return &store, nil
 }
 
 // Create inserts a new billing address into the database.
@@ -62,7 +46,7 @@ func (s *Store) Create(ctx context.Context, addr billing_address.BillingAddress)
 	err := pgsql.NamedExecContext(
 		ctx,
 		s.log,
-		s.dbPool,
+		pgsql.Conn(ctx, s.db),
 		billingAddressCreateSQL,
 		toBillingAddressDB(addr),
 	)
@@ -78,7 +62,7 @@ func (s *Store) Update(ctx context.Context, addr billing_address.BillingAddress)
 	err := pgsql.NamedExecContext(
 		ctx,
 		s.log,
-		s.dbPool,
+		pgsql.Conn(ctx, s.db),
 		billingAddressUpdateSQL,
 		toBillingAddressDB(addr),
 	)
@@ -94,7 +78,7 @@ func (s *Store) Delete(ctx context.Context, addr billing_address.BillingAddress)
 	err := pgsql.NamedExecContext(
 		ctx,
 		s.log,
-		s.dbPool,
+		pgsql.Conn(ctx, s.db),
 		billingAddressDeleteSQL,
 		toBillingAddressDB(addr),
 	)
@@ -121,7 +105,7 @@ func (s *Store) QueryByAccountID(
 	err := pgsql.NamedQuerySlice(
 		ctx,
 		s.log,
-		s.dbPool,
+		pgsql.Conn(ctx, s.db),
 		billingAddressQueryByAccountIDSQL,
 		data,
 		&dbAddrs,
@@ -146,7 +130,7 @@ func (s *Store) QueryByID(
 
 	var dbAddr billingAddressDB
 
-	err := pgsql.NamedQueryStruct(ctx, s.log, s.dbPool, billingAddressQueryByIDSQL, data, &dbAddr)
+	err := pgsql.NamedQueryStruct(ctx, s.log, pgsql.Conn(ctx, s.db), billingAddressQueryByIDSQL, data, &dbAddr)
 	if err != nil {
 		if errors.Is(err, pgsql.ErrDBNotFound) {
 			return billing_address.BillingAddress{}, fmt.Errorf(

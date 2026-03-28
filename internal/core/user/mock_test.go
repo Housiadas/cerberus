@@ -13,7 +13,6 @@ import (
 	"github.com/Housiadas/cerberus/internal/types/event"
 	"github.com/Housiadas/cerberus/pkg/cursor"
 	"github.com/Housiadas/cerberus/pkg/order"
-	"github.com/Housiadas/cerberus/pkg/pgsql"
 	"github.com/google/uuid"
 	mock "github.com/stretchr/testify/mock"
 )
@@ -155,68 +154,6 @@ func (_c *MockStorer_Delete_Call) Return(err error) *MockStorer_Delete_Call {
 }
 
 func (_c *MockStorer_Delete_Call) RunAndReturn(run func(ctx context.Context, usr user.User) error) *MockStorer_Delete_Call {
-	_c.Call.Return(run)
-	return _c
-}
-
-// NewWithTx provides a mock function for the type MockStorer
-func (_mock *MockStorer) NewWithTx(tx pgsql.CommitRollbacker) (user.Storer, error) {
-	ret := _mock.Called(tx)
-
-	if len(ret) == 0 {
-		panic("no return value specified for NewWithTx")
-	}
-
-	var r0 user.Storer
-	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(pgsql.CommitRollbacker) (user.Storer, error)); ok {
-		return returnFunc(tx)
-	}
-	if returnFunc, ok := ret.Get(0).(func(pgsql.CommitRollbacker) user.Storer); ok {
-		r0 = returnFunc(tx)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(user.Storer)
-		}
-	}
-	if returnFunc, ok := ret.Get(1).(func(pgsql.CommitRollbacker) error); ok {
-		r1 = returnFunc(tx)
-	} else {
-		r1 = ret.Error(1)
-	}
-	return r0, r1
-}
-
-// MockStorer_NewWithTx_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'NewWithTx'
-type MockStorer_NewWithTx_Call struct {
-	*mock.Call
-}
-
-// NewWithTx is a helper method to define mock.On call
-//   - tx pgsql.CommitRollbacker
-func (_e *MockStorer_Expecter) NewWithTx(tx interface{}) *MockStorer_NewWithTx_Call {
-	return &MockStorer_NewWithTx_Call{Call: _e.mock.On("NewWithTx", tx)}
-}
-
-func (_c *MockStorer_NewWithTx_Call) Run(run func(tx pgsql.CommitRollbacker)) *MockStorer_NewWithTx_Call {
-	_c.Call.Run(func(args mock.Arguments) {
-		var arg0 pgsql.CommitRollbacker
-		if args[0] != nil {
-			arg0 = args[0].(pgsql.CommitRollbacker)
-		}
-		run(
-			arg0,
-		)
-	})
-	return _c
-}
-
-func (_c *MockStorer_NewWithTx_Call) Return(storer user.Storer, err error) *MockStorer_NewWithTx_Call {
-	_c.Call.Return(storer, err)
-	return _c
-}
-
-func (_c *MockStorer_NewWithTx_Call) RunAndReturn(run func(tx pgsql.CommitRollbacker) (user.Storer, error)) *MockStorer_NewWithTx_Call {
 	_c.Call.Return(run)
 	return _c
 }
@@ -1222,16 +1159,16 @@ func (_m *mockdispatcher) EXPECT() *mockdispatcher_Expecter {
 }
 
 // Dispatch provides a mock function for the type mockdispatcher
-func (_mock *mockdispatcher) Dispatch(ctx context.Context, tran pgsql.CommitRollbacker, ev event.DomainEvent) error {
-	ret := _mock.Called(ctx, tran, ev)
+func (_mock *mockdispatcher) Dispatch(ctx context.Context, ev event.DomainEvent) error {
+	ret := _mock.Called(ctx, ev)
 
 	if len(ret) == 0 {
 		panic("no return value specified for Dispatch")
 	}
 
 	var r0 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, pgsql.CommitRollbacker, event.DomainEvent) error); ok {
-		r0 = returnFunc(ctx, tran, ev)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, event.DomainEvent) error); ok {
+		r0 = returnFunc(ctx, ev)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -1245,30 +1182,24 @@ type mockdispatcher_Dispatch_Call struct {
 
 // Dispatch is a helper method to define mock.On call
 //   - ctx context.Context
-//   - tran pgsql.CommitRollbacker
 //   - ev event.DomainEvent
-func (_e *mockdispatcher_Expecter) Dispatch(ctx interface{}, tran interface{}, ev interface{}) *mockdispatcher_Dispatch_Call {
-	return &mockdispatcher_Dispatch_Call{Call: _e.mock.On("Dispatch", ctx, tran, ev)}
+func (_e *mockdispatcher_Expecter) Dispatch(ctx interface{}, ev interface{}) *mockdispatcher_Dispatch_Call {
+	return &mockdispatcher_Dispatch_Call{Call: _e.mock.On("Dispatch", ctx, ev)}
 }
 
-func (_c *mockdispatcher_Dispatch_Call) Run(run func(ctx context.Context, tran pgsql.CommitRollbacker, ev event.DomainEvent)) *mockdispatcher_Dispatch_Call {
+func (_c *mockdispatcher_Dispatch_Call) Run(run func(ctx context.Context, ev event.DomainEvent)) *mockdispatcher_Dispatch_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
 			arg0 = args[0].(context.Context)
 		}
-		var arg1 pgsql.CommitRollbacker
+		var arg1 event.DomainEvent
 		if args[1] != nil {
-			arg1 = args[1].(pgsql.CommitRollbacker)
-		}
-		var arg2 event.DomainEvent
-		if args[2] != nil {
-			arg2 = args[2].(event.DomainEvent)
+			arg1 = args[1].(event.DomainEvent)
 		}
 		run(
 			arg0,
 			arg1,
-			arg2,
 		)
 	})
 	return _c
@@ -1279,7 +1210,7 @@ func (_c *mockdispatcher_Dispatch_Call) Return(err error) *mockdispatcher_Dispat
 	return _c
 }
 
-func (_c *mockdispatcher_Dispatch_Call) RunAndReturn(run func(ctx context.Context, tran pgsql.CommitRollbacker, ev event.DomainEvent) error) *mockdispatcher_Dispatch_Call {
+func (_c *mockdispatcher_Dispatch_Call) RunAndReturn(run func(ctx context.Context, ev event.DomainEvent) error) *mockdispatcher_Dispatch_Call {
 	_c.Call.Return(run)
 	return _c
 }

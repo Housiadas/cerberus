@@ -25,7 +25,6 @@ import (
 	"github.com/Housiadas/cerberus/pkg/cursor"
 	"github.com/Housiadas/cerberus/pkg/hasher"
 	"github.com/Housiadas/cerberus/pkg/logger"
-	"github.com/Housiadas/cerberus/pkg/pgsql"
 	"github.com/Housiadas/cerberus/pkg/uuidgen"
 )
 
@@ -55,7 +54,7 @@ func Test_User(t *testing.T) {
 		uuidGen,
 		clk,
 		hash,
-		pgsql.NewBeginner(db),
+		db,
 		eventbus.NewNop(),
 	)
 
