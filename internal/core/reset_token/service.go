@@ -19,17 +19,6 @@ type clock interface {
 	Now() time.Time
 }
 
-type logger interface {
-	Debug(ctx context.Context, msg string, args ...any)
-	Debugc(ctx context.Context, caller int, msg string, args ...any)
-	Info(ctx context.Context, msg string, args ...any)
-	Infoc(ctx context.Context, caller int, msg string, args ...any)
-	Warn(ctx context.Context, msg string, args ...any)
-	Warnc(ctx context.Context, caller int, msg string, args ...any)
-	Error(ctx context.Context, msg string, args ...any)
-	Errorc(ctx context.Context, caller int, msg string, args ...any)
-}
-
 // Service manages the set of APIs for reset token access.
 type Service struct {
 	storer  Storer

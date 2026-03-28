@@ -10,6 +10,7 @@ import (
 	"github.com/Housiadas/cerberus/internal/distributed_storage"
 	"github.com/Housiadas/cerberus/pkg/cachemetrics"
 	"github.com/Housiadas/cerberus/pkg/cursor"
+	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/Housiadas/cerberus/pkg/order"
 	"github.com/google/uuid"
 	"github.com/redis/go-redis/v9"
@@ -25,17 +26,6 @@ const (
 
 var ttl = 5 * time.Minute
 
-type logger interface {
-	Debug(ctx context.Context, msg string, args ...any)
-	Debugc(ctx context.Context, caller int, msg string, args ...any)
-	Info(ctx context.Context, msg string, args ...any)
-	Infoc(ctx context.Context, caller int, msg string, args ...any)
-	Warn(ctx context.Context, msg string, args ...any)
-	Warnc(ctx context.Context, caller int, msg string, args ...any)
-	Error(ctx context.Context, msg string, args ...any)
-	Errorc(ctx context.Context, caller int, msg string, args ...any)
-}
-
 // Client defines the interface for Redis operations used by distributed storage.
 type redisClient interface {
 	Get(ctx context.Context, key string) *redis.StringCmd
@@ -44,30 +34,17 @@ type redisClient interface {
 	Pipeline() redis.Pipeliner
 }
 
-type storer interface {
-	Create(ctx context.Context, role role.Role) error
-	Update(ctx context.Context, role role.Role) error
-	Delete(ctx context.Context, role role.Role) error
-	Query(
-		ctx context.Context,
-		filter role.QueryFilter,
-		orderBy order.By,
-		cur cursor.Cursor,
-	) ([]role.Role, error)
-	QueryByID(ctx context.Context, userID uuid.UUID) (role.Role, error)
-}
-
 // Store manages the set of APIs for role data and caching.
 type Store struct {
-	storer storer
-	log    logger
+	storer role.Storer
+	log    logger.Logger
 	cache  *sturdyc.Client[role.Role]
 }
 
 // NewStore constructs the api for data and caching access.
 func NewStore(
 	ctx context.Context,
-	log logger,
+	log logger.Logger,
 	storer role.Storer,
 	red redisClient,
 ) *Store {

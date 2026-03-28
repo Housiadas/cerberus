@@ -6,28 +6,29 @@ import (
 	"time"
 
 	"github.com/Housiadas/cerberus/internal/core/permission"
+	permissionmocks "github.com/Housiadas/cerberus/internal/core/permission/mocks"
 	"github.com/Housiadas/cerberus/internal/core/permission/permission_cache"
 	"github.com/Housiadas/cerberus/internal/types/name"
-	goredis "github.com/redis/go-redis/v9"
-
+	loggermocks "github.com/Housiadas/cerberus/pkg/logger/mocks"
 	"github.com/google/uuid"
+	goredis "github.com/redis/go-redis/v9"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
 
-func newTestStore(t *testing.T) (*permission_cache.Store, *mockstorer, *mockredisService) {
+func newTestStore(t *testing.T) (*permission_cache.Store, *permissionmocks.MockStorer, *mockredisClient) {
 	t.Helper()
 
-	mockStorer := newMockstorer(t)
-	mLogger := newMocklogger(t)
-	mRed := newMockredisService(t)
+	mockStorer := permissionmocks.NewMockStorer(t)
+	mLogger := loggermocks.NewMockLogger(t)
+	mRed := newMockredisClient(t)
 	store := permission_cache.NewStore(t.Context(), mLogger, mockStorer, mRed)
 
 	return store, mockStorer, mRed
 }
 
-func redisCacheMiss(red *redis.MockClient) {
+func redisCacheMiss(red *mockredisClient) {
 	red.On("Get", mock.Anything, mock.Anything).
 		Return(goredis.NewStringResult("", goredis.Nil)).Once()
 	red.On("Set", mock.Anything, mock.Anything, mock.Anything, mock.Anything).

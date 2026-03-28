@@ -7,31 +7,21 @@ import (
 	"time"
 
 	"github.com/Housiadas/cerberus/pkg/cursor"
+	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/Housiadas/cerberus/pkg/order"
 	"github.com/Housiadas/cerberus/pkg/telemetry"
 	"github.com/google/uuid"
 )
 
-type logger interface {
-	Debug(ctx context.Context, msg string, args ...any)
-	Debugc(ctx context.Context, caller int, msg string, args ...any)
-	Info(ctx context.Context, msg string, args ...any)
-	Infoc(ctx context.Context, caller int, msg string, args ...any)
-	Warn(ctx context.Context, msg string, args ...any)
-	Warnc(ctx context.Context, caller int, msg string, args ...any)
-	Error(ctx context.Context, msg string, args ...any)
-	Errorc(ctx context.Context, caller int, msg string, args ...any)
-}
-
 // Service manages the set of APIs for audit access.
 type Service struct {
-	log    logger
+	log    logger.Logger
 	storer Storer
 }
 
 // NewService constructs an audit business API for use.
 func NewService(
-	log logger,
+	log logger.Logger,
 	storer Storer,
 ) *Service {
 	return &Service{

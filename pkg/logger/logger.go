@@ -12,6 +12,17 @@ import (
 	"time"
 )
 
+type Logger interface {
+	Debug(ctx context.Context, msg string, args ...any)
+	Debugc(ctx context.Context, caller int, msg string, args ...any)
+	Info(ctx context.Context, msg string, args ...any)
+	Infoc(ctx context.Context, caller int, msg string, args ...any)
+	Warn(ctx context.Context, msg string, args ...any)
+	Warnc(ctx context.Context, caller int, msg string, args ...any)
+	Error(ctx context.Context, msg string, args ...any)
+	Errorc(ctx context.Context, caller int, msg string, args ...any)
+}
+
 // TraceIDFn represents a function that can return the trace id from the specified context.
 type TraceIDFn func(ctx context.Context) string
 
@@ -132,38 +143,6 @@ func (log *Service) Errorc(ctx context.Context, caller int, msg string, args ...
 	log.write(ctx, LevelError, caller, msg, args...)
 }
 
-func (log *Service) write(
-	ctx context.Context,
-	level Level,
-	caller int,
-	msg string,
-	args ...any,
-) {
-	slogLevel := slog.Level(level)
-
-	if !log.handler.Enabled(ctx, slogLevel) {
-		return
-	}
-
-	var pcs [1]uintptr
-
-	runtime.Callers(caller, pcs[:])
-
-	slogRec := slog.NewRecord(time.Now(), slogLevel, msg, pcs[0])
-
-	if log.traceIDFn != nil {
-		args = append(args, "trace_id", log.traceIDFn(ctx))
-	}
-
-	if log.requestIDFn != nil {
-		args = append(args, "request_id", log.requestIDFn(ctx))
-	}
-
-	slogRec.Add(args...)
-
-	log.handler.Handle(ctx, slogRec) //nolint:errcheck
-}
-
 func newLogger(
 	w io.Writer,
 	minLevel Level,
@@ -213,4 +192,36 @@ func newLogger(
 		traceIDFn:   traceID,
 		requestIDFn: requestID,
 	}
+}
+
+func (log *Service) write(
+	ctx context.Context,
+	level Level,
+	caller int,
+	msg string,
+	args ...any,
+) {
+	slogLevel := slog.Level(level)
+
+	if !log.handler.Enabled(ctx, slogLevel) {
+		return
+	}
+
+	var pcs [1]uintptr
+
+	runtime.Callers(caller, pcs[:])
+
+	slogRec := slog.NewRecord(time.Now(), slogLevel, msg, pcs[0])
+
+	if log.traceIDFn != nil {
+		args = append(args, "trace_id", log.traceIDFn(ctx))
+	}
+
+	if log.requestIDFn != nil {
+		args = append(args, "request_id", log.requestIDFn(ctx))
+	}
+
+	slogRec.Add(args...)
+
+	log.handler.Handle(ctx, slogRec) //nolint:errcheck
 }

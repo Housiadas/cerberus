@@ -6,10 +6,9 @@ import (
 	"testing"
 
 	"github.com/Housiadas/cerberus/internal/core/user_roles"
+	loggermocks "github.com/Housiadas/cerberus/pkg/logger/mocks"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
-
-	"github.com/Housiadas/cerberus/pkg/logger"
 )
 
 func TestService_Add_Successful(t *testing.T) {
@@ -17,7 +16,7 @@ func TestService_Add_Successful(t *testing.T) {
 	userID := uuid.MustParse("01234567-89ab-7def-0123-456789abcdef")
 	roleID := uuid.MustParse("11234567-89ab-7def-0123-456789abcdef")
 
-	mLogger := logger.NewMockLogger(t)
+	mLogger := loggermocks.NewMockLogger(t)
 	mStorer := NewMockStorer(t)
 	mStorer.EXPECT().Add(ctx, userID, roleID).Return(nil)
 
@@ -32,7 +31,7 @@ func TestService_Add_Error(t *testing.T) {
 	userID := uuid.MustParse("01234567-89ab-7def-0123-456789abcdef")
 	roleID := uuid.MustParse("11234567-89ab-7def-0123-456789abcdef")
 
-	mLogger := logger.NewMockLogger(t)
+	mLogger := loggermocks.NewMockLogger(t)
 	mStorer := NewMockStorer(t)
 	mStorer.EXPECT().Add(ctx, userID, roleID).Return(errors.New("db error"))
 
@@ -48,7 +47,7 @@ func TestService_Remove_Successful(t *testing.T) {
 	userID := uuid.MustParse("01234567-89ab-7def-0123-456789abcdef")
 	roleID := uuid.MustParse("11234567-89ab-7def-0123-456789abcdef")
 
-	mLogger := logger.NewMockLogger(t)
+	mLogger := loggermocks.NewMockLogger(t)
 	mStorer := NewMockStorer(t)
 	mStorer.EXPECT().Remove(ctx, userID, roleID).Return(nil)
 
@@ -63,7 +62,7 @@ func TestService_Remove_Error(t *testing.T) {
 	userID := uuid.MustParse("01234567-89ab-7def-0123-456789abcdef")
 	roleID := uuid.MustParse("11234567-89ab-7def-0123-456789abcdef")
 
-	mLogger := logger.NewMockLogger(t)
+	mLogger := loggermocks.NewMockLogger(t)
 	mStorer := NewMockStorer(t)
 	mStorer.EXPECT().Remove(ctx, userID, roleID).Return(errors.New("db error"))
 

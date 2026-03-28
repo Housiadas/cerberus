@@ -84,9 +84,7 @@ func fromNullTime(nt sql.NullTime) *time.Time {
 		return nil
 	}
 
-	t := nt.Time.In(time.UTC)
-
-	return &t
+	return new(nt.Time.In(time.UTC))
 }
 
 func toUsersDomain(dbs []userDB) ([]user.User, error) {

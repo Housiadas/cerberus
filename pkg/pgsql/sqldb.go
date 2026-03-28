@@ -31,11 +31,6 @@ var (
 )
 
 type logger interface {
-	Info(ctx context.Context, msg string, args ...any)
-	Infoc(ctx context.Context, caller int, msg string, args ...any)
-	Warn(ctx context.Context, msg string, args ...any)
-	Warnc(ctx context.Context, caller int, msg string, args ...any)
-	Error(ctx context.Context, msg string, args ...any)
 	Errorc(ctx context.Context, caller int, msg string, args ...any)
 }
 
@@ -142,9 +137,9 @@ func NamedExecContext(
 		if err != nil {
 			switch data.(type) {
 			case struct{}:
-				log.Infoc(ctx, 6, "database.NamedExecContext", "query", q, "ERROR", err)
+				log.Errorc(ctx, 6, "database.NamedExecContext", "query", q, "ERROR", err)
 			default:
-				log.Infoc(ctx, 5, "database.NamedExecContext", "query", q, "ERROR", err)
+				log.Errorc(ctx, 5, "database.NamedExecContext", "query", q, "ERROR", err)
 			}
 		}
 	}()
@@ -154,8 +149,8 @@ func NamedExecContext(
 
 	_, err = sqlx.NamedExecContext(ctx, db, query, data)
 	if err != nil {
-		var pqerr *pgconn.PgError
-		if errors.As(err, &pqerr) {
+		pqerr, ok := errors.AsType[*pgconn.PgError](err)
+		if ok {
 			switch pqerr.Code {
 			case undefinedTable:
 				return ErrUndefinedTable
@@ -226,7 +221,7 @@ func namedQuerySlice[T any](
 
 	defer func() {
 		if err != nil {
-			log.Infoc(ctx, 6, "database.NamedQuerySlice", "query", q, "ERROR", err)
+			log.Errorc(ctx, 6, "database.NamedQuerySlice", "query", q, "ERROR", err)
 		}
 	}()
 
@@ -262,8 +257,8 @@ func namedQuerySlice[T any](
 	}
 
 	if err != nil {
-		var pqerr *pgconn.PgError
-		if errors.As(err, &pqerr) && pqerr.Code == undefinedTable {
+		pqerr, ok := errors.AsType[*pgconn.PgError](err)
+		if ok && pqerr.Code == undefinedTable {
 			return ErrUndefinedTable
 		}
 
@@ -345,7 +340,7 @@ func namedQueryStruct(
 
 	defer func() {
 		if err != nil {
-			log.Infoc(ctx, 6, "database.NamedQuerySlice", "query", q, "ERROR", err)
+			log.Errorc(ctx, 6, "database.NamedQuerySlice", "query", q, "ERROR", err)
 		}
 	}()
 
@@ -377,8 +372,8 @@ func namedQueryStruct(
 	}
 
 	if err != nil {
-		var pqerr *pgconn.PgError
-		if errors.As(err, &pqerr) && pqerr.Code == undefinedTable {
+		pqerr, ok := errors.AsType[*pgconn.PgError](err)
+		if ok && pqerr.Code == undefinedTable {
 			return ErrUndefinedTable
 		}
 

@@ -8,20 +8,12 @@ import (
 	"time"
 
 	"github.com/Housiadas/cerberus/pkg/cursor"
+	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/Housiadas/cerberus/pkg/order"
 	"github.com/Housiadas/cerberus/pkg/pgsql"
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 )
-
-type logger interface {
-	Info(ctx context.Context, msg string, args ...any)
-	Infoc(ctx context.Context, caller int, msg string, args ...any)
-	Warn(ctx context.Context, msg string, args ...any)
-	Warnc(ctx context.Context, caller int, msg string, args ...any)
-	Error(ctx context.Context, msg string, args ...any)
-	Errorc(ctx context.Context, caller int, msg string, args ...any)
-}
 
 type generator interface {
 	Generate() (uuid.UUID, error)
@@ -32,7 +24,7 @@ type clock interface {
 }
 
 type Service struct {
-	log     logger
+	log     logger.Logger
 	storer  Storer
 	uuidGen generator
 	clock   clock
@@ -41,7 +33,7 @@ type Service struct {
 
 // NewService constructs the service.
 func NewService(
-	log logger,
+	log logger.Logger,
 	storer Storer,
 	uuidGen generator,
 	clock clock,

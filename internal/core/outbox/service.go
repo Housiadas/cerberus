@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/google/uuid"
 )
 
@@ -18,14 +19,9 @@ type clock interface {
 	Now() time.Time
 }
 
-type logger interface {
-	Info(ctx context.Context, msg string, args ...any)
-	Error(ctx context.Context, msg string, args ...any)
-}
-
 // Service manages the set of APIs for outbox access.
 type Service struct {
-	log     logger
+	log     logger.Logger
 	storer  Storer
 	uuidGen generator
 	clock   clock
@@ -33,7 +29,7 @@ type Service struct {
 
 // NewService constructs the service.
 func NewService(
-	log logger,
+	log logger.Logger,
 	storer Storer,
 	uuidGen generator,
 	clock clock,

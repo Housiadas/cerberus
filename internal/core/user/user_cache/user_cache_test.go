@@ -7,22 +7,23 @@ import (
 	"time"
 
 	"github.com/Housiadas/cerberus/internal/core/user"
+	usermocks "github.com/Housiadas/cerberus/internal/core/user/mocks"
 	"github.com/Housiadas/cerberus/internal/core/user/user_cache"
 	"github.com/Housiadas/cerberus/internal/types/name"
-	goredis "github.com/redis/go-redis/v9"
-
+	loggermocks "github.com/Housiadas/cerberus/pkg/logger/mocks"
 	"github.com/google/uuid"
+	goredis "github.com/redis/go-redis/v9"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
 
-func newTestStore(t *testing.T) (*user_cache.Store, *mockstorer, *mockredisClient) {
+func newTestStore(t *testing.T) (*user_cache.Store, *usermocks.MockStorer, *mockredisClient) {
 	t.Helper()
 
-	mLogger := newMocklogger(t)
+	mLogger := loggermocks.NewMockLogger(t)
 	mRed := newMockredisClient(t)
-	mockStorer := newMockstorer(t)
+	mockStorer := usermocks.NewMockStorer(t)
 	store := user_cache.NewStore(t.Context(), mLogger, mockStorer, mRed)
 
 	return store, mockStorer, mRed

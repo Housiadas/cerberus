@@ -10,6 +10,7 @@ import (
 	"github.com/Housiadas/cerberus/internal/distributed_storage"
 	"github.com/Housiadas/cerberus/pkg/cachemetrics"
 	"github.com/Housiadas/cerberus/pkg/cursor"
+	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/Housiadas/cerberus/pkg/order"
 	"github.com/google/uuid"
 	redisPck "github.com/redis/go-redis/v9"
@@ -26,50 +27,26 @@ const (
 var ttl = 5 * time.Minute
 
 // Client defines the interface for Redis operations used by distributed storage.
-type redisService interface {
+type redisClient interface {
 	Get(ctx context.Context, key string) *redisPck.StringCmd
 	Set(ctx context.Context, key string, value any, expiration time.Duration) *redisPck.StatusCmd
 	MGet(ctx context.Context, keys ...string) *redisPck.SliceCmd
 	Pipeline() redisPck.Pipeliner
 }
 
-type logger interface {
-	Debug(ctx context.Context, msg string, args ...any)
-	Debugc(ctx context.Context, caller int, msg string, args ...any)
-	Info(ctx context.Context, msg string, args ...any)
-	Infoc(ctx context.Context, caller int, msg string, args ...any)
-	Warn(ctx context.Context, msg string, args ...any)
-	Warnc(ctx context.Context, caller int, msg string, args ...any)
-	Error(ctx context.Context, msg string, args ...any)
-	Errorc(ctx context.Context, caller int, msg string, args ...any)
-}
-
-type storer interface {
-	Create(ctx context.Context, p permission.Permission) error
-	Update(ctx context.Context, p permission.Permission) error
-	Delete(ctx context.Context, p permission.Permission) error
-	Query(
-		ctx context.Context,
-		filter permission.QueryFilter,
-		orderBy order.By,
-		cur cursor.Cursor,
-	) ([]permission.Permission, error)
-	QueryByID(ctx context.Context, permissionID uuid.UUID) (permission.Permission, error)
-}
-
 // Store manages the set of APIs for permission data and caching.
 type Store struct {
-	storer storer
-	log    logger
+	storer permission.Storer
+	log    logger.Logger
 	cache  *sturdyc.Client[permission.Permission]
 }
 
 // NewStore constructs the api for data and caching access.
 func NewStore(
 	ctx context.Context,
-	log logger,
+	log logger.Logger,
 	storer permission.Storer,
-	red redisService,
+	red redisClient,
 ) *Store {
 	recorder, err := cachemetrics.NewMeterRecorder(cacheName)
 	if err != nil {

@@ -5,22 +5,21 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/google/uuid"
 )
 
-type logger interface {
-	Info(ctx context.Context, msg string, args ...any)
-	Error(ctx context.Context, msg string, args ...any)
-}
-
 // Service manages invoice operations.
 type Service struct {
-	log    logger
+	log    logger.Logger
 	storer Storer
 }
 
 // NewService constructs the service.
-func NewService(log logger, storer Storer) *Service {
+func NewService(
+	log logger.Logger,
+	storer Storer,
+) *Service {
 	return &Service{
 		log:    log,
 		storer: storer,

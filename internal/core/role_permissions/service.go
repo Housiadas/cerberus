@@ -9,19 +9,11 @@ import (
 	"github.com/Housiadas/cerberus/internal/types/entity"
 	"github.com/Housiadas/cerberus/internal/types/event"
 	"github.com/Housiadas/cerberus/internal/types/name"
+	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/Housiadas/cerberus/pkg/pgsql"
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 )
-
-type logger interface {
-	Info(ctx context.Context, msg string, args ...any)
-	Infoc(ctx context.Context, caller int, msg string, args ...any)
-	Warn(ctx context.Context, msg string, args ...any)
-	Warnc(ctx context.Context, caller int, msg string, args ...any)
-	Error(ctx context.Context, msg string, args ...any)
-	Errorc(ctx context.Context, caller int, msg string, args ...any)
-}
 
 // dispatcher defines the interface for domain event dispatching.
 type dispatcher interface {
@@ -30,7 +22,7 @@ type dispatcher interface {
 
 // Service manages role permission assignments.
 type Service struct {
-	log        logger
+	log        logger.Logger
 	storer     Storer
 	db         *sqlx.DB
 	dispatcher dispatcher
@@ -38,7 +30,7 @@ type Service struct {
 
 // NewService constructs a business API for use.
 func NewService(
-	log logger,
+	log logger.Logger,
 	storer Storer,
 	db *sqlx.DB,
 	dispatcher dispatcher,
