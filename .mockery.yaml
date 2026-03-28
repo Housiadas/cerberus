@@ -74,3 +74,7 @@ packages:
   github.com/Housiadas/cerberus/internal/core/billing_address:
     config:
       all: true
+  # eventbus
+  github.com/Housiadas/cerberus/internal/eventbus:
+    config:
+      all: true

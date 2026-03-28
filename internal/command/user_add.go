@@ -43,7 +43,7 @@ func (cmd *Command) UserAdd(name, email, pass string) error {
 		uuidGen,
 		clk,
 		hash,
-		pgsql.NewBeginner(db),
+		db,
 		eventbus.NewNop(),
 	)
 

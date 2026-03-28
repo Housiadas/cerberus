@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"github.com/Housiadas/cerberus/internal/types/event"
-	"github.com/Housiadas/cerberus/pkg/pgsql"
 )
 
 // NopDispatcher is a no-op event dispatcher for use in tests
@@ -19,7 +18,6 @@ func NewNop() *NopDispatcher {
 // Dispatch is a no-op that always returns nil.
 func (d *NopDispatcher) Dispatch(
 	_ context.Context,
-	_ pgsql.CommitRollbacker,
 	_ event.DomainEvent,
 ) error {
 	return nil

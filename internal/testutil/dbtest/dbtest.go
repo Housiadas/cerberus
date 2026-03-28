@@ -82,9 +82,9 @@ func NewSharedContainer(ctx context.Context, t tHelper) *SharedContainer {
 	}
 
 	t.Cleanup(func() {
-		err2 := testcontainers.TerminateContainer(ctr)
-		if err2 != nil {
-			t.Logf("terminate shared postgres container: %s", err2)
+		err := testcontainers.TerminateContainer(ctr)
+		if err != nil {
+			t.Logf("terminate shared postgres container: %s", err)
 		}
 	})
 

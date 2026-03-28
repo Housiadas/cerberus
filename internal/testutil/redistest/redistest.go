@@ -34,9 +34,9 @@ func NewSharedContainer(ctx context.Context, t interface {
 	}
 
 	t.Cleanup(func() {
-		err2 := testcontainers.TerminateContainer(ctr)
-		if err2 != nil {
-			t.Logf("terminate shared redis container: %s", err2)
+		err := testcontainers.TerminateContainer(ctr)
+		if err != nil {
+			t.Logf("terminate shared redis container: %s", err)
 		}
 	})
 
