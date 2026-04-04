@@ -16,7 +16,7 @@ func (h *Handler) StripeWebhook(
 	// Note: In production, Stripe webhooks require raw body + Stripe-Signature header
 	// for verification via ConstructWebhookEvent. The strict server interface
 	// parses the body as JSON, so a custom chi route should be used instead
-	// for proper signature verification. This is a placeholder implementation.
+	//  of proper signature verification. This is a placeholder implementation.
 	if h.svc.billing == nil {
 		return nil, errBillingNotConfigured
 	}

@@ -20,13 +20,17 @@ func (h *Handler) Readiness(
 
 	err := pgsql.StatusCheck(ctx, h.db)
 	if err != nil {
-		h.log.Info(ctx, "readiness failure", "ERROR", err)
+		h.log.Error(ctx, "readiness failure", "ERROR", err)
 
-		return nil, errs.Errorf(errs.Internal, errs.CodeInternal, "database not ready")
+		return nil, errs.Errorf(
+			errs.Internal,
+			errs.CodeInternal,
+			"database not ready",
+		)
 	}
 
 	return openapi.Readiness200JSONResponse{
-		Status: new("None"),
+		Status: "Ready",
 	}, nil
 }
 
@@ -40,13 +44,13 @@ func (h *Handler) Liveness(
 	}
 
 	return openapi.Liveness200JSONResponse{
-		Status:     new("up"),
-		Build:      new(h.build),
-		Host:       new(host),
-		Name:       new(os.Getenv("KUBERNETES_NAME")),
-		PodIp:      new(os.Getenv("KUBERNETES_POD_IP")),
-		Node:       new(os.Getenv("KUBERNETES_NODE_NAME")),
-		Namespace:  new(os.Getenv("KUBERNETES_NAMESPACE")),
-		Gomaxprocs: new(runtime.GOMAXPROCS(0)),
+		Status:     "up",
+		Build:      h.build,
+		Host:       host,
+		Name:       os.Getenv("KUBERNETES_NAME"),
+		PodIp:      os.Getenv("KUBERNETES_POD_IP"),
+		Node:       os.Getenv("KUBERNETES_NODE_NAME"),
+		Namespace:  os.Getenv("KUBERNETES_NAMESPACE"),
+		Gomaxprocs: runtime.GOMAXPROCS(0),
 	}, nil
 }

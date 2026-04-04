@@ -977,12 +977,14 @@ components:
     # ---- System ----
     Status:
       type: object
+      required: [status]
       properties:
         status:
           type: string
 
     Info:
       type: object
+      required: [status, build, host, name, podIp, node, namespace, gomaxprocs]
       properties:
         status:
           type: string

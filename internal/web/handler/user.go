@@ -27,16 +27,26 @@ func (h *Handler) GetMe(
 
 	userUUID, err := uuid.Parse(actorID)
 	if err != nil {
-		return nil, errs.Errorf(errs.InvalidArgument, errs.CodeValidation, "could not parse uuid: %s", err)
+		return nil, errs.Errorf(
+			errs.InvalidArgument,
+			errs.CodeValidation,
+			"could not parse uuid: %s", err,
+		)
 	}
 
 	usr, err := h.svc.user.QueryByID(ctx, userUUID)
 	if err != nil {
 		if errors.Is(err, user.ErrNotFound) {
-			return nil, errs.New(errs.NotFound, errs.CodeUserNotFound, err)
+			return nil, errs.New(
+				errs.NotFound,
+				errs.CodeUserNotFound, err,
+			)
 		}
 
-		return nil, fmt.Errorf("get me: %w", err)
+		return nil, errs.New(
+			errs.Internal,
+			errs.CodeInternal, err,
+		)
 	}
 
 	return openapi.GetMe200JSONResponse(toOpenAPIUser(usr)), nil
@@ -50,18 +60,41 @@ func (h *Handler) UpdateMe(
 
 	userUUID, err := uuid.Parse(actorID)
 	if err != nil {
-		return nil, errs.Errorf(errs.InvalidArgument, errs.CodeValidation, "could not parse uuid: %s", err)
+		return nil, errs.Errorf(
+			errs.InvalidArgument,
+			errs.CodeValidation,
+			"could not parse uuid: %s", err,
+		)
 	}
 
-	uu, err := parseUpdateUser(request.Body.Name, request.Body.Email, request.Body.Department,
-		request.Body.Password, request.Body.PasswordConfirm, nil)
+	uu, err := parseUpdateUser(
+		request.Body.Name,
+		request.Body.Email,
+		request.Body.Department,
+		request.Body.Password,
+		request.Body.PasswordConfirm,
+		nil,
+	)
 	if err != nil {
-		return nil, errs.New(errs.InvalidArgument, errs.CodeValidation, err)
+		return nil, errs.New(
+			errs.InvalidArgument,
+			errs.CodeValidation, err,
+		)
 	}
 
 	currentUsr, err := h.svc.user.QueryByID(ctx, userUUID)
 	if err != nil {
-		return nil, fmt.Errorf("update me: query: %w", err)
+		if errors.Is(err, user.ErrNotFound) {
+			return nil, errs.New(
+				errs.NotFound,
+				errs.CodeUserNotFound, err,
+			)
+		}
+
+		return nil, errs.New(
+			errs.Internal,
+			errs.CodeInternal, err,
+		)
 	}
 
 	updUsr, err := h.svc.user.Update(ctx, currentUsr, uu)
@@ -102,7 +135,11 @@ func (h *Handler) ListUsers(
 
 	usrs, err := h.svc.user.Query(ctx, filter, orderBy, cur)
 	if err != nil {
-		return nil, errs.Errorf(errs.Internal, errs.CodeInternal, "query: %s", err)
+		return nil, errs.New(
+			errs.NotFound,
+			errs.CodeUserNotFound,
+			err,
+		)
 	}
 
 	result := cursor.NewResult(usrs, cur.Limit(), cur, orderBy, userIDExtractor, userFieldExtractor(orderBy))
@@ -112,11 +149,9 @@ func (h *Handler) ListUsers(
 		data[i] = toOpenAPIUser(u)
 	}
 
-	md := toOpenAPIMetadata(result.Metadata)
-
 	return openapi.ListUsers200JSONResponse{
 		Data:     &data,
-		Metadata: &md,
+		Metadata: new(toOpenAPIMetadata(result.Metadata)),
 	}, nil
 }
 
@@ -132,10 +167,17 @@ func (h *Handler) CreateUser(
 	usr, err := h.svc.user.Create(ctx, nu)
 	if err != nil {
 		if errors.Is(err, user.ErrUniqueEmail) {
-			return nil, errs.New(errs.Aborted, errs.CodeUniqueEmail, user.ErrUniqueEmail)
+			return nil, errs.New(
+				errs.Aborted,
+				errs.CodeUniqueEmail,
+				user.ErrUniqueEmail,
+			)
 		}
 
-		return nil, fmt.Errorf("create user: %w", err)
+		return nil, errs.New(
+			errs.Internal,
+			errs.CodeInternal, err,
+		)
 	}
 
 	return openapi.CreateUser200JSONResponse(toOpenAPIUser(usr)), nil
@@ -147,16 +189,26 @@ func (h *Handler) GetUser(
 ) (openapi.GetUserResponseObject, error) {
 	userUUID, err := uuid.Parse(request.UserId)
 	if err != nil {
-		return nil, errs.Errorf(errs.InvalidArgument, errs.CodeValidation, "could not parse uuid: %s", err)
+		return nil, errs.Errorf(
+			errs.InvalidArgument,
+			errs.CodeValidation,
+			"could not parse uuid: %s", err,
+		)
 	}
 
 	usr, err := h.svc.user.QueryByID(ctx, userUUID)
 	if err != nil {
 		if errors.Is(err, user.ErrNotFound) {
-			return nil, errs.New(errs.NotFound, errs.CodeUserNotFound, err)
+			return nil, errs.New(
+				errs.NotFound,
+				errs.CodeUserNotFound, err,
+			)
 		}
 
-		return nil, fmt.Errorf("get user: %w", err)
+		return nil, errs.New(
+			errs.Internal,
+			errs.CodeInternal, err,
+		)
 	}
 
 	return openapi.GetUser200JSONResponse(toOpenAPIUser(usr)), nil
@@ -168,13 +220,26 @@ func (h *Handler) UpdateUser(
 ) (openapi.UpdateUserResponseObject, error) {
 	userUUID, err := uuid.Parse(request.UserId)
 	if err != nil {
-		return nil, errs.Errorf(errs.InvalidArgument, errs.CodeValidation, "could not parse uuid: %s", err)
+		return nil, errs.Errorf(
+			errs.InvalidArgument,
+			errs.CodeValidation,
+			"could not parse uuid: %s", err,
+		)
 	}
 
-	uu, err := parseUpdateUser(request.Body.Name, request.Body.Email, request.Body.Department,
-		request.Body.Password, request.Body.PasswordConfirm, request.Body.Enabled)
+	uu, err := parseUpdateUser(
+		request.Body.Name,
+		request.Body.Email,
+		request.Body.Department,
+		request.Body.Password,
+		request.Body.PasswordConfirm,
+		request.Body.Enabled,
+	)
 	if err != nil {
-		return nil, errs.New(errs.InvalidArgument, errs.CodeValidation, err)
+		return nil, errs.New(
+			errs.InvalidArgument,
+			errs.CodeValidation, err,
+		)
 	}
 
 	currentUsr, err := h.svc.user.QueryByID(ctx, userUUID)
@@ -196,7 +261,11 @@ func (h *Handler) DeleteUser(
 ) (openapi.DeleteUserResponseObject, error) {
 	userUUID, err := uuid.Parse(request.UserId)
 	if err != nil {
-		return nil, errs.Errorf(errs.InvalidArgument, errs.CodeValidation, "could not parse uuid: %s", err)
+		return nil, errs.Errorf(
+			errs.InvalidArgument,
+			errs.CodeValidation,
+			"could not parse uuid: %s", err,
+		)
 	}
 
 	currentUsr, err := h.svc.user.QueryByID(ctx, userUUID)
@@ -218,17 +287,29 @@ func (h *Handler) CreateUserRole(
 ) (openapi.CreateUserRoleResponseObject, error) {
 	userUUID, err := uuid.Parse(request.UserId)
 	if err != nil {
-		return nil, errs.Errorf(errs.InvalidArgument, errs.CodeValidation, "could not parse user uuid: %s", err)
+		return nil, errs.Errorf(
+			errs.InvalidArgument,
+			errs.CodeValidation,
+			"could not parse user uuid: %s", err,
+		)
 	}
 
 	roleUUID, err := uuid.Parse(request.Body.RoleId)
 	if err != nil {
-		return nil, errs.Errorf(errs.InvalidArgument, errs.CodeValidation, "could not parse role uuid: %s", err)
+		return nil, errs.Errorf(
+			errs.InvalidArgument,
+			errs.CodeValidation,
+			"could not parse role uuid: %s", err,
+		)
 	}
 
 	err = h.svc.userRoles.Add(ctx, userUUID, roleUUID)
 	if err != nil {
-		return nil, fmt.Errorf("create user role: %w", err)
+		return nil, errs.Errorf(
+			errs.Internal,
+			errs.CodeInternal,
+			"create user role: %s", err,
+		)
 	}
 
 	return openapi.CreateUserRole204Response{}, nil
@@ -240,17 +321,29 @@ func (h *Handler) DeleteUserRole(
 ) (openapi.DeleteUserRoleResponseObject, error) {
 	userUUID, err := uuid.Parse(request.UserId)
 	if err != nil {
-		return nil, errs.Errorf(errs.InvalidArgument, errs.CodeValidation, "could not parse user uuid: %s", err)
+		return nil, errs.Errorf(
+			errs.InvalidArgument,
+			errs.CodeValidation,
+			"could not parse user uuid: %s", err,
+		)
 	}
 
 	roleUUID, err := uuid.Parse(request.Params.RoleId)
 	if err != nil {
-		return nil, errs.Errorf(errs.InvalidArgument, errs.CodeValidation, "could not parse role uuid: %s", err)
+		return nil, errs.Errorf(
+			errs.InvalidArgument,
+			errs.CodeValidation,
+			"could not parse role uuid: %s", err,
+		)
 	}
 
 	err = h.svc.userRoles.Remove(ctx, userUUID, roleUUID)
 	if err != nil {
-		return nil, fmt.Errorf("delete user role: %w", err)
+		return nil, errs.Errorf(
+			errs.Internal,
+			errs.CodeInternal,
+			"delete user role: %s", err,
+		)
 	}
 
 	return openapi.DeleteUserRole204Response{}, nil

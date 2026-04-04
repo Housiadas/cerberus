@@ -49,12 +49,9 @@ func (h *Handler) ListRoles(
 		func(r role.Role) any { return r.ID().String() },
 	)
 
-	data := toOpenAPIRoles(result.Data)
-	md := toOpenAPIMetadata(result.Metadata)
-
 	return openapi.ListRoles200JSONResponse{
-		Data:     &data,
-		Metadata: &md,
+		Data:     new(toOpenAPIRoles(result.Data)),
+		Metadata: new(toOpenAPIMetadata(result.Metadata)),
 	}, nil
 }
 

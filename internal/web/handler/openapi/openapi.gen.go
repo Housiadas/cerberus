@@ -96,14 +96,14 @@ type ForgotPasswordReq struct {
 
 // Info defines model for Info.
 type Info struct {
-	Build      *string `json:"build,omitempty"`
-	Gomaxprocs *int    `json:"gomaxprocs,omitempty"`
-	Host       *string `json:"host,omitempty"`
-	Name       *string `json:"name,omitempty"`
-	Namespace  *string `json:"namespace,omitempty"`
-	Node       *string `json:"node,omitempty"`
-	PodIp      *string `json:"podIp,omitempty"`
-	Status     *string `json:"status,omitempty"`
+	Build      string `json:"build"`
+	Gomaxprocs int    `json:"gomaxprocs"`
+	Host       string `json:"host"`
+	Name       string `json:"name"`
+	Namespace  string `json:"namespace"`
+	Node       string `json:"node"`
+	PodIp      string `json:"podIp"`
+	Status     string `json:"status"`
 }
 
 // InvoiceResponse defines model for InvoiceResponse.
@@ -215,7 +215,7 @@ type RolePageResult struct {
 
 // Status defines model for Status.
 type Status struct {
-	Status *string `json:"status,omitempty"`
+	Status string `json:"status"`
 }
 
 // SubscriptionResponse defines model for SubscriptionResponse.

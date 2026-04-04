@@ -8,7 +8,7 @@ import (
 	"github.com/riandyrn/otelchi"
 )
 
-// Routes returns applications router.
+// Routes returns application router.
 func (h *Handler) Routes() *chi.Mux {
 	m := h.middleware
 
