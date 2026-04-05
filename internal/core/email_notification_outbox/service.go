@@ -1,4 +1,3 @@
-// Package email_notification_outbox_service provides access to the email notification outbox domain.
 package email_notification_outbox
 
 import (

@@ -44,7 +44,13 @@ func NewStore(
 
 // Create inserts a new invoice into the database.
 func (s *Store) Create(ctx context.Context, inv invoice.Invoice) error {
-	err := pgsql.NamedExecContext(ctx, s.log, pgsql.Conn(ctx, s.db), invoiceCreateSQL, toInvoiceDB(inv))
+	err := pgsql.NamedExecContext(
+		ctx,
+		s.log,
+		pgsql.Conn(ctx, s.db),
+		invoiceCreateSQL,
+		toInvoiceDB(inv),
+	)
 	if err != nil {
 		return fmt.Errorf("named_exec_context: %w", err)
 	}
@@ -54,7 +60,13 @@ func (s *Store) Create(ctx context.Context, inv invoice.Invoice) error {
 
 // Update replaces an invoice in the database.
 func (s *Store) Update(ctx context.Context, inv invoice.Invoice) error {
-	err := pgsql.NamedExecContext(ctx, s.log, pgsql.Conn(ctx, s.db), invoiceUpdateSQL, toInvoiceDB(inv))
+	err := pgsql.NamedExecContext(
+		ctx,
+		s.log,
+		pgsql.Conn(ctx, s.db),
+		invoiceUpdateSQL,
+		toInvoiceDB(inv),
+	)
 	if err != nil {
 		return fmt.Errorf("named_exec_context: %w", err)
 	}
@@ -75,7 +87,14 @@ func (s *Store) QueryByAccountID(
 
 	var dbInvs []invoiceDB
 
-	err := pgsql.NamedQuerySlice(ctx, s.log, pgsql.Conn(ctx, s.db), invoiceQueryByAccountIDSQL, data, &dbInvs)
+	err := pgsql.NamedQuerySlice(
+		ctx,
+		s.log,
+		pgsql.Conn(ctx, s.db),
+		invoiceQueryByAccountIDSQL,
+		data,
+		&dbInvs,
+	)
 	if err != nil {
 		return nil, fmt.Errorf("named_query_slice: %w", err)
 	}
@@ -93,7 +112,14 @@ func (s *Store) QueryByStripeID(ctx context.Context, stripeInvID string) (invoic
 
 	var dbInv invoiceDB
 
-	err := pgsql.NamedQueryStruct(ctx, s.log, pgsql.Conn(ctx, s.db), invoiceQueryByStripeIDSQL, data, &dbInv)
+	err := pgsql.NamedQueryStruct(
+		ctx,
+		s.log,
+		pgsql.Conn(ctx, s.db),
+		invoiceQueryByStripeIDSQL,
+		data,
+		&dbInv,
+	)
 	if err != nil {
 		if errors.Is(err, pgsql.ErrDBNotFound) {
 			return invoice.Invoice{}, fmt.Errorf("db: %w", invoice.ErrNotFound)

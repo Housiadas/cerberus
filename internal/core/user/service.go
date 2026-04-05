@@ -13,9 +13,7 @@ import (
 	"github.com/Housiadas/cerberus/pkg/cursor"
 	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/Housiadas/cerberus/pkg/order"
-	"github.com/Housiadas/cerberus/pkg/pgsql"
 	"github.com/google/uuid"
-	"github.com/jmoiron/sqlx"
 )
 
 type generator interface {
@@ -37,6 +35,11 @@ type dispatcher interface {
 	Dispatch(ctx context.Context, ev event.DomainEvent) error
 }
 
+// transactor defines the interface for transaction management.
+type transactor interface {
+	RunInTx(ctx context.Context, fn func(ctx context.Context) error) error
+}
+
 // Service manages user domain operations including persistence,
 // transaction management, and event dispatching.
 type Service struct {
@@ -45,7 +48,7 @@ type Service struct {
 	uuidGen    generator
 	clock      clock
 	hasher     hasher
-	db         *sqlx.DB
+	tx         transactor
 	dispatcher dispatcher
 }
 
@@ -56,7 +59,7 @@ func NewService(
 	uuidGen generator,
 	clock clock,
 	hasher hasher,
-	db *sqlx.DB,
+	tx transactor,
 	dispatcher dispatcher,
 ) *Service {
 	return &Service{
@@ -65,7 +68,7 @@ func NewService(
 		uuidGen:    uuidGen,
 		clock:      clock,
 		hasher:     hasher,
-		db:         db,
+		tx:         tx,
 		dispatcher: dispatcher,
 	}
 }
@@ -110,12 +113,16 @@ func (c *Service) Create(ctx context.Context, nu NewUser) (User, error) {
 	now := c.clock.Now()
 	usr := New(id, nu.Name, nu.Email, hash, nu.Department, true, nil, now, now, nil)
 
-	txErr := pgsql.RunInTx(ctx, c.log, c.db, func(txCtx context.Context) error {
-		if err = c.storer.Create(txCtx, usr); err != nil {
+	txErr := c.tx.RunInTx(ctx, func(txCtx context.Context) error {
+		err = c.storer.Create(txCtx, usr)
+		if err != nil {
 			return fmt.Errorf("create: %w", err)
 		}
 
-		return c.dispatcher.Dispatch(txCtx, newUserEvent(usr, event.UserCreated, audit.ActionCreate))
+		return c.dispatcher.Dispatch(
+			txCtx,
+			newUserEvent(usr, event.UserCreated, audit.ActionCreate),
+		)
 	})
 	if txErr != nil {
 		return User{}, fmt.Errorf("create user: %w", txErr)
@@ -193,12 +200,16 @@ func (c *Service) Update(
 
 	usr = usr.WithUpdatedAt(c.clock.Now())
 
-	txErr := pgsql.RunInTx(ctx, c.log, c.db, func(txCtx context.Context) error {
-		if err := c.storer.Update(txCtx, usr); err != nil {
+	txErr := c.tx.RunInTx(ctx, func(txCtx context.Context) error {
+		err := c.storer.Update(txCtx, usr)
+		if err != nil {
 			return fmt.Errorf("update: %w", err)
 		}
 
-		return c.dispatcher.Dispatch(txCtx, newUserEvent(usr, event.UserUpdated, audit.ActionUpdate))
+		return c.dispatcher.Dispatch(
+			txCtx,
+			newUserEvent(usr, event.UserUpdated, audit.ActionUpdate),
+		)
 	})
 	if txErr != nil {
 		return User{}, fmt.Errorf("update user: %w", txErr)
@@ -210,12 +221,16 @@ func (c *Service) Update(
 // Delete removes the specified user within a transaction
 // and dispatches a UserDeleted domain event.
 func (c *Service) Delete(ctx context.Context, usr User) error {
-	txErr := pgsql.RunInTx(ctx, c.log, c.db, func(txCtx context.Context) error {
-		if err := c.storer.Delete(txCtx, usr); err != nil {
+	txErr := c.tx.RunInTx(ctx, func(txCtx context.Context) error {
+		err := c.storer.Delete(txCtx, usr)
+		if err != nil {
 			return fmt.Errorf("delete: %w", err)
 		}
 
-		return c.dispatcher.Dispatch(txCtx, newUserEvent(usr, event.UserDeleted, audit.ActionDelete))
+		return c.dispatcher.Dispatch(
+			txCtx,
+			newUserEvent(usr, event.UserDeleted, audit.ActionDelete),
+		)
 	})
 	if txErr != nil {
 		return fmt.Errorf("delete user: %w", txErr)

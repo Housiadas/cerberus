@@ -1049,6 +1049,7 @@ components:
 
     Token:
       type: object
+      required: [accessToken, refreshToken, expiresIn]
       properties:
         accessToken:
           type: string
@@ -1125,6 +1126,7 @@ components:
 
     UserPageResult:
       type: object
+      required: [data, metadata]
       properties:
         data:
           type: array
@@ -1164,6 +1166,7 @@ components:
 
     Role:
       type: object
+      required: [id, name, createdAt, updatedAt]
       properties:
         id:
           type: string
@@ -1200,6 +1203,7 @@ components:
 
     Permission:
       type: object
+      required: [id, name, createdAt, updatedAt]
       properties:
         id:
           type: string
@@ -1223,6 +1227,7 @@ components:
     # ---- Audits ----
     Audit:
       type: object
+      required: [id, objId, objEntity, objName, actorId, action, data, message, timestamp]
       properties:
         id:
           type: string
@@ -1269,6 +1274,7 @@ components:
 
     Account:
       type: object
+      required: [id, name, stripeCustomerId, createdAt, updatedAt]
       properties:
         id:
           type: string
@@ -1307,6 +1313,7 @@ components:
 
     CheckoutResponse:
       type: object
+      required: [url]
       properties:
         url:
           type: string
@@ -1322,12 +1329,14 @@ components:
 
     PortalResponse:
       type: object
+      required: [url]
       properties:
         url:
           type: string
 
     SubscriptionResponse:
       type: object
+      required: [id, stripeSubscriptionId, stripePriceId, status, cancelAtPeriodEnd, createdAt]
       properties:
         id:
           type: string
@@ -1348,6 +1357,7 @@ components:
 
     InvoiceResponse:
       type: object
+      required: [id, stripeInvoiceId, status, amountDue, amountPaid, currency, invoiceUrl, createdAt]
       properties:
         id:
           type: string
@@ -1371,6 +1381,7 @@ components:
     # ---- Common ----
     Metadata:
       type: object
+      required: [nextCursor, prevCursor, hasMore, limit]
       properties:
         nextCursor:
           type: string
@@ -1383,6 +1394,7 @@ components:
 
     Error:
       type: object
+      required: [status, code, message]
       properties:
         status:
           type: string
@@ -1397,6 +1409,7 @@ components:
 
     FieldError:
       type: object
+      required: [field, type]
       properties:
         field:
           type: string

@@ -30,17 +30,27 @@ func Conn(ctx context.Context, db *sqlx.DB) sqlx.ExtContext {
 	return db
 }
 
+// Transactor provides transaction management by wrapping a database connection
+// and delegating to RunInTx.
+type Transactor struct {
+	log logger
+	db  *sqlx.DB
+}
+
+// NewTransactor constructs a Transactor.
+func NewTransactor(log logger, db *sqlx.DB) *Transactor {
+	return &Transactor{
+		log: log,
+		db:  db,
+	}
+}
+
 // RunInTx begins a transaction, injects it into the context, and passes
 // the enriched context to fn. If fn returns an error or the commit fails,
 // the transaction is rolled back.
-func RunInTx(
-	ctx context.Context,
-	log logger,
-	db *sqlx.DB,
-	fn func(ctx context.Context) error,
-) error {
+func (t *Transactor) RunInTx(ctx context.Context, fn func(ctx context.Context) error) error {
 	// begin a transaction
-	sqlxTx, err := db.Beginx()
+	sqlxTx, err := t.db.Beginx()
 	if err != nil {
 		return fmt.Errorf("begin transaction: %w", err)
 	}
@@ -55,7 +65,7 @@ func RunInTx(
 
 		rollbackErr := sqlxTx.Rollback()
 		if rollbackErr != nil && !errors.Is(rollbackErr, sql.ErrTxDone) {
-			log.Errorc(ctx, 5, "pgsql.RunInTx", "rollback error", rollbackErr)
+			t.log.Errorc(ctx, 5, "pgsql.RunInTx", "rollback error", rollbackErr)
 		}
 	}()
 

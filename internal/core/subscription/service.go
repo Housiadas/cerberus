@@ -1,4 +1,4 @@
-// Package subscription_service is the service of the subscription domain
+// Package subscription is the service of the subscription domain.
 package subscription
 
 import (

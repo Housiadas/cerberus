@@ -68,7 +68,14 @@ func (s *Store) QueryUnprocessed(
 
 	var dbRows []outboxDB
 
-	err := pgsql.NamedQuerySlice(ctx, s.log, pgsql.Conn(ctx, s.db), outboxQueryUnprocessedSQL, data, &dbRows)
+	err := pgsql.NamedQuerySlice(
+		ctx,
+		s.log,
+		pgsql.Conn(ctx, s.db),
+		outboxQueryUnprocessedSQL,
+		data,
+		&dbRows,
+	)
 	if err != nil {
 		return nil, fmt.Errorf("named_query_slice: %w", err)
 	}

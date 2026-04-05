@@ -1,4 +1,4 @@
-// Package refund_service is the service of the refund domain
+// Package refund is the service of the refund domain.
 package refund
 
 import (

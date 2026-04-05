@@ -41,7 +41,13 @@ func NewStore(log *logger.Service, db *sqlx.DB) *Store {
 
 // Create inserts a new payment into the database.
 func (s *Store) Create(ctx context.Context, pmt payment2.Payment) error {
-	err := pgsql.NamedExecContext(ctx, s.log, pgsql.Conn(ctx, s.db), paymentCreateSQL, toPaymentDB(pmt))
+	err := pgsql.NamedExecContext(
+		ctx,
+		s.log,
+		pgsql.Conn(ctx, s.db),
+		paymentCreateSQL,
+		toPaymentDB(pmt),
+	)
 	if err != nil {
 		return fmt.Errorf("named_exec_context: %w", err)
 	}
@@ -51,7 +57,13 @@ func (s *Store) Create(ctx context.Context, pmt payment2.Payment) error {
 
 // Update replaces a payment in the database.
 func (s *Store) Update(ctx context.Context, pmt payment2.Payment) error {
-	err := pgsql.NamedExecContext(ctx, s.log, pgsql.Conn(ctx, s.db), paymentUpdateSQL, toPaymentDB(pmt))
+	err := pgsql.NamedExecContext(
+		ctx,
+		s.log,
+		pgsql.Conn(ctx, s.db),
+		paymentUpdateSQL,
+		toPaymentDB(pmt),
+	)
 	if err != nil {
 		return fmt.Errorf("named_exec_context: %w", err)
 	}
@@ -72,7 +84,14 @@ func (s *Store) QueryByAccountID(
 
 	var dbPmts []paymentDB
 
-	err := pgsql.NamedQuerySlice(ctx, s.log, pgsql.Conn(ctx, s.db), paymentQueryByAccountIDSQL, data, &dbPmts)
+	err := pgsql.NamedQuerySlice(
+		ctx,
+		s.log,
+		pgsql.Conn(ctx, s.db),
+		paymentQueryByAccountIDSQL,
+		data,
+		&dbPmts,
+	)
 	if err != nil {
 		return nil, fmt.Errorf("named_query_slice: %w", err)
 	}
@@ -93,7 +112,14 @@ func (s *Store) QueryByStripeID(
 
 	var dbPmt paymentDB
 
-	err := pgsql.NamedQueryStruct(ctx, s.log, pgsql.Conn(ctx, s.db), paymentQueryByStripeIDSQL, data, &dbPmt)
+	err := pgsql.NamedQueryStruct(
+		ctx,
+		s.log,
+		pgsql.Conn(ctx, s.db),
+		paymentQueryByStripeIDSQL,
+		data,
+		&dbPmt,
+	)
 	if err != nil {
 		if errors.Is(err, pgsql.ErrDBNotFound) {
 			return payment2.Payment{}, fmt.Errorf("db: %w", payment2.ErrNotFound)

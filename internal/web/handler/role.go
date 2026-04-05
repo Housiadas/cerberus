@@ -34,7 +34,11 @@ func (h *Handler) ListRoles(
 		return nil, err
 	}
 
-	orderBy, err := order.Parse(roleOrderByFields(), pntr.DerefStr(request.Params.OrderBy), roleDefaultOrderBy())
+	orderBy, err := order.Parse(
+		roleOrderByFields(),
+		pntr.DerefStr(request.Params.OrderBy),
+		roleDefaultOrderBy(),
+	)
 	if err != nil {
 		return nil, errs.NewFieldErrors("order", err)
 	}
@@ -72,13 +76,19 @@ func (h *Handler) CreateRole(
 	return openapi.CreateRole200JSONResponse(toOpenAPIRole(rol)), nil
 }
 
+//nolint:dupl // update handler pattern shared across domains
 func (h *Handler) UpdateRole(
 	ctx context.Context,
 	request openapi.UpdateRoleRequestObject,
 ) (openapi.UpdateRoleResponseObject, error) {
 	roleUUID, err := uuid.Parse(request.RoleId)
 	if err != nil {
-		return nil, errs.Errorf(errs.InvalidArgument, errs.CodeValidation, "could not parse uuid: %s", err)
+		return nil, errs.Errorf(
+			errs.InvalidArgument,
+			errs.CodeValidation,
+			"could not parse uuid: %s",
+			err,
+		)
 	}
 
 	ur, err := parseUpdateRole(request.Body)
@@ -105,7 +115,12 @@ func (h *Handler) DeleteRole(
 ) (openapi.DeleteRoleResponseObject, error) {
 	roleUUID, err := uuid.Parse(request.RoleId)
 	if err != nil {
-		return nil, errs.Errorf(errs.InvalidArgument, errs.CodeValidation, "could not parse uuid: %s", err)
+		return nil, errs.Errorf(
+			errs.InvalidArgument,
+			errs.CodeValidation,
+			"could not parse uuid: %s",
+			err,
+		)
 	}
 
 	currentRole, err := h.svc.role.QueryByID(ctx, roleUUID)
@@ -127,12 +142,22 @@ func (h *Handler) CreateRolePermission(
 ) (openapi.CreateRolePermissionResponseObject, error) {
 	roleUUID, err := uuid.Parse(request.RoleId)
 	if err != nil {
-		return nil, errs.Errorf(errs.InvalidArgument, errs.CodeValidation, "could not parse role uuid: %s", err)
+		return nil, errs.Errorf(
+			errs.InvalidArgument,
+			errs.CodeValidation,
+			"could not parse role uuid: %s",
+			err,
+		)
 	}
 
 	permUUID, err := uuid.Parse(request.Body.PermissionId)
 	if err != nil {
-		return nil, errs.Errorf(errs.InvalidArgument, errs.CodeValidation, "could not parse permission uuid: %s", err)
+		return nil, errs.Errorf(
+			errs.InvalidArgument,
+			errs.CodeValidation,
+			"could not parse permission uuid: %s",
+			err,
+		)
 	}
 
 	err = h.svc.rolePermissions.Add(ctx, roleUUID, permUUID)
@@ -149,12 +174,22 @@ func (h *Handler) DeleteRolePermission(
 ) (openapi.DeleteRolePermissionResponseObject, error) {
 	roleUUID, err := uuid.Parse(request.RoleId)
 	if err != nil {
-		return nil, errs.Errorf(errs.InvalidArgument, errs.CodeValidation, "could not parse role uuid: %s", err)
+		return nil, errs.Errorf(
+			errs.InvalidArgument,
+			errs.CodeValidation,
+			"could not parse role uuid: %s",
+			err,
+		)
 	}
 
 	permUUID, err := uuid.Parse(request.Params.PermissionId)
 	if err != nil {
-		return nil, errs.Errorf(errs.InvalidArgument, errs.CodeValidation, "could not parse permission uuid: %s", err)
+		return nil, errs.Errorf(
+			errs.InvalidArgument,
+			errs.CodeValidation,
+			"could not parse permission uuid: %s",
+			err,
+		)
 	}
 
 	err = h.svc.rolePermissions.Remove(ctx, roleUUID, permUUID)
@@ -208,7 +243,7 @@ func parseRoleFilter(id, nameStr string) (role.QueryFilter, error) {
 		}
 	}
 
-	if fieldErrors != nil {
+	if len(fieldErrors) > 0 {
 		return role.QueryFilter{}, fieldErrors.ToError()
 	}
 

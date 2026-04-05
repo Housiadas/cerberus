@@ -50,7 +50,13 @@ func NewStore(
 
 // Create inserts a new account into the database.
 func (s *Store) Create(ctx context.Context, acc account.Account) error {
-	err := pgsql.NamedExecContext(ctx, s.log, pgsql.Conn(ctx, s.db), accountCreateSQL, toAccountDB(acc))
+	err := pgsql.NamedExecContext(
+		ctx,
+		s.log,
+		pgsql.Conn(ctx, s.db),
+		accountCreateSQL,
+		toAccountDB(acc),
+	)
 	if err != nil {
 		return fmt.Errorf("named_exec_context: %w", err)
 	}
@@ -60,7 +66,13 @@ func (s *Store) Create(ctx context.Context, acc account.Account) error {
 
 // Update replaces an account document in the database.
 func (s *Store) Update(ctx context.Context, acc account.Account) error {
-	err := pgsql.NamedExecContext(ctx, s.log, pgsql.Conn(ctx, s.db), accountUpdateSQL, toAccountDB(acc))
+	err := pgsql.NamedExecContext(
+		ctx,
+		s.log,
+		pgsql.Conn(ctx, s.db),
+		accountUpdateSQL,
+		toAccountDB(acc),
+	)
 	if err != nil {
 		return fmt.Errorf("named_exec_context: %w", err)
 	}
@@ -70,7 +82,13 @@ func (s *Store) Update(ctx context.Context, acc account.Account) error {
 
 // Delete removes an account from the database.
 func (s *Store) Delete(ctx context.Context, acc account.Account) error {
-	err := pgsql.NamedExecContext(ctx, s.log, pgsql.Conn(ctx, s.db), accountDeleteSQL, toAccountDB(acc))
+	err := pgsql.NamedExecContext(
+		ctx,
+		s.log,
+		pgsql.Conn(ctx, s.db),
+		accountDeleteSQL,
+		toAccountDB(acc),
+	)
 	if err != nil {
 		return fmt.Errorf("named_exec_context: %w", err)
 	}
@@ -121,7 +139,14 @@ func (s *Store) QueryByID(ctx context.Context, accountID uuid.UUID) (account.Acc
 
 	var dbAcc accountDB
 
-	err := pgsql.NamedQueryStruct(ctx, s.log, pgsql.Conn(ctx, s.db), accountQueryByIDSQL, data, &dbAcc)
+	err := pgsql.NamedQueryStruct(
+		ctx,
+		s.log,
+		pgsql.Conn(ctx, s.db),
+		accountQueryByIDSQL,
+		data,
+		&dbAcc,
+	)
 	if err != nil {
 		if errors.Is(err, pgsql.ErrDBNotFound) {
 			return account.Account{}, fmt.Errorf("db: %w", account.ErrNotFound)

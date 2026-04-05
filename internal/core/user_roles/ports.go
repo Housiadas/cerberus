@@ -1,4 +1,3 @@
-// Package user_roles defines the write interface for the user_roles join table.
 package user_roles
 
 import (

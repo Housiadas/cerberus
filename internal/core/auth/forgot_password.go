@@ -8,7 +8,6 @@ import (
 	"github.com/Housiadas/cerberus/internal/core/email_notification_outbox"
 	errs2 "github.com/Housiadas/cerberus/internal/errs"
 	"github.com/Housiadas/cerberus/internal/types/event"
-	"github.com/Housiadas/cerberus/pkg/pgsql"
 )
 
 // emailPayload is the JSON payload stored in email_notification_outbox.
@@ -34,7 +33,7 @@ func (s *Service) ForgotPassword(ctx context.Context, req ForgotPasswordReq) err
 		return nil //nolint:nilerr
 	}
 
-	txErr := pgsql.RunInTx(ctx, s.log, s.db, func(txCtx context.Context) error {
+	txErr := s.tx.RunInTx(ctx, func(txCtx context.Context) error {
 		tkn, createErr := s.resetTokenSvc.Create(txCtx, usr.ID())
 		if createErr != nil {
 			return errs2.Errorf(
@@ -53,11 +52,14 @@ func (s *Service) ForgotPassword(ctx context.Context, req ForgotPasswordReq) err
 			ResetURL: resetURL,
 		}
 
-		createErr = s.emailNotificationOutboxSvc.Create(txCtx, email_notification_outbox.NewEmailNotificationOutbox{
-			EventType: event.PasswordResetRequested,
-			ToEmail:   addr.Address,
-			Payload:   payload,
-		})
+		createErr = s.emailNotificationOutboxSvc.Create(
+			txCtx,
+			email_notification_outbox.NewEmailNotificationOutbox{
+				EventType: event.PasswordResetRequested,
+				ToEmail:   addr.Address,
+				Payload:   payload,
+			},
+		)
 		if createErr != nil {
 			return errs2.Errorf(
 				errs2.Internal,

@@ -10,9 +10,7 @@ import (
 	"github.com/Housiadas/cerberus/pkg/cursor"
 	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/Housiadas/cerberus/pkg/order"
-	"github.com/Housiadas/cerberus/pkg/pgsql"
 	"github.com/google/uuid"
-	"github.com/jmoiron/sqlx"
 )
 
 type generator interface {
@@ -23,12 +21,17 @@ type clock interface {
 	Now() time.Time
 }
 
+// transactor defines the interface for transaction management.
+type transactor interface {
+	RunInTx(ctx context.Context, fn func(ctx context.Context) error) error
+}
+
 type Service struct {
 	log     logger.Logger
 	storer  Storer
 	uuidGen generator
 	clock   clock
-	db      *sqlx.DB
+	tx      transactor
 }
 
 // NewService constructs the service.
@@ -37,14 +40,14 @@ func NewService(
 	storer Storer,
 	uuidGen generator,
 	clock clock,
-	db *sqlx.DB,
+	tx transactor,
 ) *Service {
 	return &Service{
 		log:     log,
 		storer:  storer,
 		uuidGen: uuidGen,
 		clock:   clock,
-		db:      db,
+		tx:      tx,
 	}
 }
 
@@ -58,7 +61,7 @@ func (s *Service) Create(ctx context.Context, na NewAccount) (Account, error) {
 	now := s.clock.Now()
 	acc := New(id, na.Name, sql.NullString{}, now, now, nil)
 
-	txErr := pgsql.RunInTx(ctx, s.log, s.db, func(txCtx context.Context) error {
+	txErr := s.tx.RunInTx(ctx, func(txCtx context.Context) error {
 		return s.storer.Create(txCtx, acc)
 	})
 	if txErr != nil {
@@ -84,7 +87,7 @@ func (s *Service) Update(
 
 	acc = acc.WithUpdatedAt(s.clock.Now())
 
-	txErr := pgsql.RunInTx(ctx, s.log, s.db, func(txCtx context.Context) error {
+	txErr := s.tx.RunInTx(ctx, func(txCtx context.Context) error {
 		return s.storer.Update(txCtx, acc)
 	})
 	if txErr != nil {
@@ -121,7 +124,7 @@ func (s *Service) QueryByID(ctx context.Context, accountID uuid.UUID) (Account, 
 
 // Delete removes the specified account within a transaction.
 func (s *Service) Delete(ctx context.Context, acc Account) error {
-	txErr := pgsql.RunInTx(ctx, s.log, s.db, func(txCtx context.Context) error {
+	txErr := s.tx.RunInTx(ctx, func(txCtx context.Context) error {
 		return s.storer.Delete(txCtx, acc)
 	})
 	if txErr != nil {

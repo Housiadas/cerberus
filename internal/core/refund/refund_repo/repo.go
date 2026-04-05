@@ -22,7 +22,7 @@ var (
 
 // Store manages the set of APIs for refund database access.
 type Store struct {
-	log logger
+	log logger.Logger
 	db  *sqlx.DB
 }
 
@@ -39,7 +39,13 @@ func NewStore(
 
 // Create inserts a new refund into the database.
 func (s *Store) Create(ctx context.Context, ref refund.Refund) error {
-	err := pgsql.NamedExecContext(ctx, s.log, pgsql.Conn(ctx, s.db), refundCreateSQL, toRefundDB(ref))
+	err := pgsql.NamedExecContext(
+		ctx,
+		s.log,
+		pgsql.Conn(ctx, s.db),
+		refundCreateSQL,
+		toRefundDB(ref),
+	)
 	if err != nil {
 		return fmt.Errorf("named_exec_context: %w", err)
 	}
@@ -60,7 +66,14 @@ func (s *Store) QueryByAccountID(
 
 	var dbRefs []refundDB
 
-	err := pgsql.NamedQuerySlice(ctx, s.log, pgsql.Conn(ctx, s.db), refundQueryByAccountIDSQL, data, &dbRefs)
+	err := pgsql.NamedQuerySlice(
+		ctx,
+		s.log,
+		pgsql.Conn(ctx, s.db),
+		refundQueryByAccountIDSQL,
+		data,
+		&dbRefs,
+	)
 	if err != nil {
 		return nil, fmt.Errorf("named_query_slice: %w", err)
 	}

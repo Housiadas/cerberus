@@ -24,6 +24,7 @@ import (
 	"github.com/Housiadas/cerberus/pkg/clock"
 	"github.com/Housiadas/cerberus/pkg/hasher"
 	"github.com/Housiadas/cerberus/pkg/logger"
+	"github.com/Housiadas/cerberus/pkg/pgsql"
 	"github.com/Housiadas/cerberus/pkg/uuidgen"
 	"github.com/jmoiron/sqlx"
 )
@@ -60,11 +61,26 @@ func newDependency(
 	auditService := audit.NewService(log, audit_repo.NewStore(log, db))
 	outboxSvc := outbox.NewService(log, outbox_repo.NewStore(log, db), uuidGen, clk)
 
-	// event dispatcher (used by services)
+	// event dispatcher and transactor (used by services for CUD operations)
 	dispatcher := eventbus.New(outboxSvc, auditService)
-	userService := user.NewService(log, user_repo.NewStore(log, db), uuidGen, clk, hash, db, dispatcher)
-	roleService := role.NewService(log, role_repo.NewStore(log, db), uuidGen, db, dispatcher)
-	permissionService := permission.NewService(log, permission_repo.NewStore(log, db), uuidGen, db, dispatcher)
+	tx := pgsql.NewTransactor(log, db)
+	userService := user.NewService(
+		log,
+		user_repo.NewStore(log, db),
+		uuidGen,
+		clk,
+		hash,
+		tx,
+		dispatcher,
+	)
+	roleService := role.NewService(log, role_repo.NewStore(log, db), uuidGen, tx, dispatcher)
+	permissionService := permission.NewService(
+		log,
+		permission_repo.NewStore(log, db),
+		uuidGen,
+		tx,
+		dispatcher,
+	)
 	refreshTokenService := refresh_token.NewService(
 		log,
 		refresh_token_repo.NewStore(log, db),
@@ -92,7 +108,7 @@ func newDependency(
 		RefreshTokenService:        refreshTokenService,
 		ResetTokenService:          resetTokenSvc,
 		EmailNotificationOutboxSvc: emailNotificationOutboxSvc,
-		DB:                         db,
+		TX:                         tx,
 		FrontendURL:                "http://localhost:3000",
 		UserRolesPermissions:       userRolesPermissionsSvc,
 	})

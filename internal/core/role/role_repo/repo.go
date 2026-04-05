@@ -85,7 +85,14 @@ func (s *Store) QueryByID(ctx context.Context, roleID uuid.UUID) (role.Role, err
 
 	var dbRole roleDB
 
-	err := pgsql.NamedQueryStruct(ctx, s.log, pgsql.Conn(ctx, s.db), roleQueryByIDSQL, data, &dbRole)
+	err := pgsql.NamedQueryStruct(
+		ctx,
+		s.log,
+		pgsql.Conn(ctx, s.db),
+		roleQueryByIDSQL,
+		data,
+		&dbRole,
+	)
 	if err != nil {
 		if errors.Is(err, pgsql.ErrDBNotFound) {
 			return role.Role{}, fmt.Errorf("db: %w", role.ErrNotFound)

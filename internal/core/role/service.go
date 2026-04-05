@@ -1,4 +1,3 @@
-// Package role is the service of the role domain
 package role
 
 import (
@@ -12,9 +11,7 @@ import (
 	"github.com/Housiadas/cerberus/pkg/cursor"
 	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/Housiadas/cerberus/pkg/order"
-	"github.com/Housiadas/cerberus/pkg/pgsql"
 	"github.com/google/uuid"
-	"github.com/jmoiron/sqlx"
 )
 
 type generator interface {
@@ -26,13 +23,18 @@ type dispatcher interface {
 	Dispatch(ctx context.Context, ev event.DomainEvent) error
 }
 
+// transactor defines the interface for transaction management.
+type transactor interface {
+	RunInTx(ctx context.Context, fn func(ctx context.Context) error) error
+}
+
 // Service manages role domain operations including persistence,
 // transaction management, and event dispatching.
 type Service struct {
 	log        logger.Logger
 	storer     Storer
 	uuidGen    generator
-	db         *sqlx.DB
+	tx         transactor
 	dispatcher dispatcher
 }
 
@@ -41,14 +43,14 @@ func NewService(
 	log logger.Logger,
 	storer Storer,
 	uuidGen generator,
-	db *sqlx.DB,
+	tx transactor,
 	dispatcher dispatcher,
 ) *Service {
 	return &Service{
 		log:        log,
 		storer:     storer,
 		uuidGen:    uuidGen,
-		db:         db,
+		tx:         tx,
 		dispatcher: dispatcher,
 	}
 }
@@ -64,8 +66,9 @@ func (c *Service) Create(ctx context.Context, nr NewRole) (Role, error) {
 	now := time.Now()
 	rol := New(id, nr.Name, now, now, nil)
 
-	txErr := pgsql.RunInTx(ctx, c.log, c.db, func(txCtx context.Context) error {
-		if err = c.storer.Create(txCtx, rol); err != nil {
+	txErr := c.tx.RunInTx(ctx, func(txCtx context.Context) error {
+		err = c.storer.Create(txCtx, rol)
+		if err != nil {
 			return fmt.Errorf("create: %w", err)
 		}
 
@@ -91,8 +94,9 @@ func (c *Service) Update(
 
 	rl = rl.WithUpdatedAt(time.Now())
 
-	txErr := pgsql.RunInTx(ctx, c.log, c.db, func(txCtx context.Context) error {
-		if err := c.storer.Update(txCtx, rl); err != nil {
+	txErr := c.tx.RunInTx(ctx, func(txCtx context.Context) error {
+		err := c.storer.Update(txCtx, rl)
+		if err != nil {
 			return fmt.Errorf("update: %w", err)
 		}
 
@@ -108,8 +112,9 @@ func (c *Service) Update(
 // Delete removes the specified Role within a transaction
 // and dispatches a domain event.
 func (c *Service) Delete(ctx context.Context, rl Role) error {
-	txErr := pgsql.RunInTx(ctx, c.log, c.db, func(txCtx context.Context) error {
-		if err := c.storer.Delete(txCtx, rl); err != nil {
+	txErr := c.tx.RunInTx(ctx, func(txCtx context.Context) error {
+		err := c.storer.Delete(txCtx, rl)
+		if err != nil {
 			return fmt.Errorf("delete: %w", err)
 		}
 

@@ -1,4 +1,3 @@
-// Package outbox_service is the service of the outbox domain.
 package outbox
 
 import (

@@ -1,4 +1,3 @@
-// Package reset_token_service provides access to the reset token domain.
 package reset_token
 
 import (

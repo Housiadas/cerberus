@@ -1,4 +1,4 @@
-// Package payment_service is the service of the payment domain
+// Package payment is the service of the payment domain.
 package payment
 
 import (

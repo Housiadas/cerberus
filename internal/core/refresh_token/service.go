@@ -1,4 +1,4 @@
-// Package refresh_token_service provides internal access to the domain.
+// Package refresh_token provides internal access to the domain.
 package refresh_token
 
 import (

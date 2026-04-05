@@ -3,7 +3,6 @@ package handlers_test
 import (
 	"net/http"
 	"sort"
-	"strings"
 	"testing"
 
 	errs2 "github.com/Housiadas/cerberus/internal/errs"
@@ -26,10 +25,9 @@ func Test_API_Audit_Query_200(t *testing.T) {
 		return sd.Admins[0].Audits[i].ObjName().String() <= sd.Admins[0].Audits[j].ObjName().String()
 	})
 
-	expData := toTestAudits(sd.Admins[0].Audits)
 	expMd := openapi.Metadata{
-		HasMore: new(false),
-		Limit:   new(10),
+		HasMore: false,
+		Limit:   10,
 	}
 
 	table := []apitest.Table{
@@ -42,37 +40,14 @@ func Test_API_Audit_Query_200(t *testing.T) {
 			GotResp:     &openapi.AuditPageResult{},
 			ExpResp: &openapi.AuditPageResult{
 				Metadata: &expMd,
-				Data:     &expData,
+				Data:     new(toTestAudits(sd.Admins[0].Audits)),
 			},
 			AssertFunc: func(got any, exp any) string {
 				gotResp, exists := got.(*openapi.AuditPageResult)
 				if !exists {
 					return "error occurred"
 				}
-
 				expResp := exp.(*openapi.AuditPageResult)
-
-				if gotResp.Data != nil && expResp.Data != nil {
-					for i := range *gotResp.Data {
-						gotA := &(*gotResp.Data)[i]
-						expA := &(*expResp.Data)[i]
-
-						if gotA.Timestamp != nil && expA.Timestamp != nil && *gotA.Timestamp == *expA.Timestamp {
-							expA.Timestamp = gotA.Timestamp
-						}
-
-						if gotA.Data != nil {
-							cleaned := strings.ReplaceAll(*gotA.Data, " ", "")
-							gotA.Data = &cleaned
-						}
-
-						if expA.Data != nil {
-							cleaned := strings.ReplaceAll(*expA.Data, " ", "")
-							expA.Data = &cleaned
-						}
-					}
-				}
-
 				return cmp.Diff(gotResp, expResp)
 			},
 		},

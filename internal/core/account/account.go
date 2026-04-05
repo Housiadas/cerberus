@@ -10,9 +10,7 @@ import (
 	"github.com/google/uuid"
 )
 
-var (
-	ErrNotFound = errors.New("account not found")
-)
+var ErrNotFound = errors.New("account not found")
 
 // Account represents a billing account (tenant).
 type Account struct {

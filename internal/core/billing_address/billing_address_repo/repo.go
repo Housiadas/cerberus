@@ -130,7 +130,14 @@ func (s *Store) QueryByID(
 
 	var dbAddr billingAddressDB
 
-	err := pgsql.NamedQueryStruct(ctx, s.log, pgsql.Conn(ctx, s.db), billingAddressQueryByIDSQL, data, &dbAddr)
+	err := pgsql.NamedQueryStruct(
+		ctx,
+		s.log,
+		pgsql.Conn(ctx, s.db),
+		billingAddressQueryByIDSQL,
+		data,
+		&dbAddr,
+	)
 	if err != nil {
 		if errors.Is(err, pgsql.ErrDBNotFound) {
 			return billing_address.BillingAddress{}, fmt.Errorf(

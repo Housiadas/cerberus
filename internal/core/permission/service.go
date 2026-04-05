@@ -1,4 +1,3 @@
-// Package permission is the service of the permission domain
 package permission
 
 import (
@@ -12,9 +11,7 @@ import (
 	"github.com/Housiadas/cerberus/pkg/cursor"
 	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/Housiadas/cerberus/pkg/order"
-	"github.com/Housiadas/cerberus/pkg/pgsql"
 	"github.com/google/uuid"
-	"github.com/jmoiron/sqlx"
 )
 
 type generator interface {
@@ -26,13 +23,18 @@ type dispatcher interface {
 	Dispatch(ctx context.Context, ev event.DomainEvent) error
 }
 
+// transactor defines the interface for transaction management.
+type transactor interface {
+	RunInTx(ctx context.Context, fn func(ctx context.Context) error) error
+}
+
 // Service manages permission domain operations including persistence,
 // transaction management, and event dispatching.
 type Service struct {
 	log        logger.Logger
 	storer     Storer
 	uuidGen    generator
-	db         *sqlx.DB
+	tx         transactor
 	dispatcher dispatcher
 }
 
@@ -41,14 +43,14 @@ func NewService(
 	log logger.Logger,
 	storer Storer,
 	uuidGen generator,
-	db *sqlx.DB,
+	tx transactor,
 	dispatcher dispatcher,
 ) *Service {
 	return &Service{
 		log:        log,
 		storer:     storer,
 		uuidGen:    uuidGen,
-		db:         db,
+		tx:         tx,
 		dispatcher: dispatcher,
 	}
 }
@@ -67,8 +69,9 @@ func (s *Service) Create(
 	now := time.Now()
 	p := New(id, np.Name, now, now, nil)
 
-	txErr := pgsql.RunInTx(ctx, s.log, s.db, func(txCtx context.Context) error {
-		if err = s.storer.Create(txCtx, p); err != nil {
+	txErr := s.tx.RunInTx(ctx, func(txCtx context.Context) error {
+		err = s.storer.Create(txCtx, p)
+		if err != nil {
 			return fmt.Errorf("create: %w", err)
 		}
 
@@ -94,8 +97,9 @@ func (s *Service) Update(
 
 	p = p.WithUpdatedAt(time.Now())
 
-	txErr := pgsql.RunInTx(ctx, s.log, s.db, func(txCtx context.Context) error {
-		if err := s.storer.Update(txCtx, p); err != nil {
+	txErr := s.tx.RunInTx(ctx, func(txCtx context.Context) error {
+		err := s.storer.Update(txCtx, p)
+		if err != nil {
 			return fmt.Errorf("update: %w", err)
 		}
 
@@ -111,8 +115,9 @@ func (s *Service) Update(
 // Delete removes the specified Permission within a transaction
 // and dispatches a domain event.
 func (s *Service) Delete(ctx context.Context, p Permission) error {
-	txErr := pgsql.RunInTx(ctx, s.log, s.db, func(txCtx context.Context) error {
-		if err := s.storer.Delete(txCtx, p); err != nil {
+	txErr := s.tx.RunInTx(ctx, func(txCtx context.Context) error {
+		err := s.storer.Delete(txCtx, p)
+		if err != nil {
 			return fmt.Errorf("delete: %w", err)
 		}
 

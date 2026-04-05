@@ -1,4 +1,4 @@
-// Package invoice_service is the service of the invoice domain
+// Package invoice is the service of the invoice domain.
 package invoice
 
 import (

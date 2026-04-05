@@ -6,7 +6,6 @@ import (
 	"fmt"
 
 	"github.com/Housiadas/cerberus/pkg/kafka"
-	ckafka "github.com/confluentinc/confluent-kafka-go/v2/kafka"
 	"github.com/testcontainers/testcontainers-go"
 	tcKafka "github.com/testcontainers/testcontainers-go/modules/kafka"
 )
@@ -15,12 +14,6 @@ const (
 	KafkaImage     = "confluentinc/confluent-local:7.5.0"
 	KafkaClusterID = "test-cluster"
 )
-
-type producer interface {
-	Produce(ctx context.Context, msg *ckafka.Message) error
-	Flush(timeoutMs int) int
-	Close()
-}
 
 // SetupSharedContainer starts a Kafka container for use in TestMain.
 // Returns the Producer and a teardown function to call via defer.

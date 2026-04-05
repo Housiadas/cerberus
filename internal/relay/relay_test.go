@@ -7,17 +7,13 @@ import (
 	"testing"
 	"time"
 
-	outbox2 "github.com/Housiadas/cerberus/internal/core/outbox"
+	"github.com/Housiadas/cerberus/internal/core/outbox"
 	"github.com/Housiadas/cerberus/internal/relay"
+	loggermocks "github.com/Housiadas/cerberus/pkg/logger/mocks"
+	ckafka "github.com/confluentinc/confluent-kafka-go/v2/kafka"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
-
-	"github.com/Housiadas/cerberus/pkg/clock"
-	"github.com/Housiadas/cerberus/pkg/kafka"
-	"github.com/Housiadas/cerberus/pkg/logger"
-	"github.com/Housiadas/cerberus/pkg/uuidgen"
-	ckafka "github.com/confluentinc/confluent-kafka-go/v2/kafka"
 )
 
 func TestRelay_ProcessBatch_Successful(t *testing.T) {
@@ -25,31 +21,28 @@ func TestRelay_ProcessBatch_Successful(t *testing.T) {
 	id1 := uuid.MustParse("11111111-1111-7111-1111-111111111111")
 	id2 := uuid.MustParse("22222222-2222-7222-2222-222222222222")
 
-	entries := []outbox2.Outbox{
-		outbox2.New(id1, "user.created", uuid.MustParse("aaaaaaaa-aaaa-7aaa-aaaa-aaaaaaaaaaaa"), "user-events", json.RawMessage(`{"name":"John"}`), 0, mTime, nil),
-		outbox2.New(id2, "user.updated", uuid.MustParse("bbbbbbbb-bbbb-7bbb-bbbb-bbbbbbbbbbbb"), "user-events", json.RawMessage(`{"name":"Jane"}`), 0, mTime, nil),
+	entries := []outbox.Outbox{
+		outbox.New(id1, "user.created", uuid.MustParse("aaaaaaaa-aaaa-7aaa-aaaa-aaaaaaaaaaaa"), "user-events", json.RawMessage(`{"name":"John"}`), 0, mTime, nil),
+		outbox.New(id2, "user.updated", uuid.MustParse("bbbbbbbb-bbbb-7bbb-bbbb-bbbbbbbbbbbb"), "user-events", json.RawMessage(`{"name":"Jane"}`), 0, mTime, nil),
 	}
 
-	mLogger := logger.NewMockLogger(t)
-	mLogger.EXPECT().Info(mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Maybe()
+	mLogger := loggermocks.NewMockLogger(t)
+	mLogger.EXPECT().Info(mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+		Maybe()
 	mLogger.EXPECT().Info(mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Maybe()
 
-	mStorer := outbox2.NewMockStorer(t)
-	mStorer.EXPECT().QueryUnprocessed(mock.Anything, 100, 5).Return(entries, nil).Once()
-	mStorer.EXPECT().QueryUnprocessed(mock.Anything, 100, 5).Return(nil, nil).Maybe()
-	mStorer.EXPECT().MarkProcessed(mock.Anything, []uuid.UUID{id1, id2}, mTime).Return(nil).Once()
+	mStorer := newMockoutboxer(t)
+	mStorer.EXPECT().QueryUnprocessed(mock.Anything, 100, 5).
+		Return(entries, nil).Once()
+	mStorer.EXPECT().QueryUnprocessed(mock.Anything, 100, 5).
+		Return(nil, nil).Maybe()
+	mStorer.EXPECT().MarkProcessed(mock.Anything, []uuid.UUID{id1, id2}).Return(nil).Once()
 
-	mUuidGen := uuidgen.NewMockGenerator(t)
-	mClock := clock.NewMockClock(t)
-	mClock.EXPECT().Now().Return(mTime).Maybe()
-
-	outboxSvc := outbox2.NewService(mLogger, mStorer, mUuidGen, mClock)
-
-	mProducer := kafka.NewMockProducer(t)
+	mProducer := newMockproducer(t)
 	mProducer.EXPECT().Produce(mock.Anything, mock.AnythingOfType("*kafka.Message")).Return(nil).Times(2)
 	mProducer.EXPECT().Flush(mock.AnythingOfType("int")).Return(0).Maybe()
 
-	r := relay.New(mLogger, outboxSvc, mProducer, 50*time.Millisecond, 100, 5)
+	r := relay.New(mLogger, mStorer, mProducer, 50*time.Millisecond, 100, 5)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 150*time.Millisecond)
 	defer cancel()
@@ -64,30 +57,24 @@ func TestRelay_ProcessBatch_PartialFailure(t *testing.T) {
 	id1 := uuid.MustParse("11111111-1111-7111-1111-111111111111")
 	id2 := uuid.MustParse("22222222-2222-7222-2222-222222222222")
 
-	entries := []outbox2.Outbox{
-		outbox2.New(id1, "user.created", uuid.MustParse("aaaaaaaa-aaaa-7aaa-aaaa-aaaaaaaaaaaa"), "user-events", json.RawMessage(`{"name":"John"}`), 0, mTime, nil),
-		outbox2.New(id2, "user.updated", uuid.MustParse("bbbbbbbb-bbbb-7bbb-bbbb-bbbbbbbbbbbb"), "user-events", json.RawMessage(`{"name":"Jane"}`), 0, mTime, nil),
+	entries := []outbox.Outbox{
+		outbox.New(id1, "user.created", uuid.MustParse("aaaaaaaa-aaaa-7aaa-aaaa-aaaaaaaaaaaa"), "user-events", json.RawMessage(`{"name":"John"}`), 0, mTime, nil),
+		outbox.New(id2, "user.updated", uuid.MustParse("bbbbbbbb-bbbb-7bbb-bbbb-bbbbbbbbbbbb"), "user-events", json.RawMessage(`{"name":"Jane"}`), 0, mTime, nil),
 	}
 
-	mLogger := logger.NewMockLogger(t)
+	mLogger := loggermocks.NewMockLogger(t)
 	mLogger.EXPECT().Info(mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Maybe()
 	mLogger.EXPECT().Info(mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Maybe()
 	mLogger.EXPECT().Error(mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Maybe()
 
-	mStorer := outbox2.NewMockStorer(t)
+	mStorer := newMockoutboxer(t)
 	mStorer.EXPECT().QueryUnprocessed(mock.Anything, 100, 5).Return(entries, nil).Once()
 	mStorer.EXPECT().QueryUnprocessed(mock.Anything, 100, 5).Return(nil, nil).Maybe()
 	// Only id2 should be marked processed since id1 fails
-	mStorer.EXPECT().MarkProcessed(mock.Anything, []uuid.UUID{id2}, mTime).Return(nil).Once()
+	mStorer.EXPECT().MarkProcessed(mock.Anything, []uuid.UUID{id2}).Return(nil).Once()
 	mStorer.EXPECT().IncrementRetryCount(mock.Anything, []uuid.UUID{id1}).Return(nil).Once()
 
-	mUuidGen := uuidgen.NewMockGenerator(t)
-	mClock := clock.NewMockClock(t)
-	mClock.EXPECT().Now().Return(mTime).Maybe()
-
-	outboxSvc := outbox2.NewService(mLogger, mStorer, mUuidGen, mClock)
-
-	mProducer := kafka.NewMockProducer(t)
+	mProducer := newMockproducer(t)
 	// The first call fails, the second succeeds
 	mProducer.EXPECT().Produce(mock.Anything, mock.MatchedBy(func(msg *ckafka.Message) bool {
 		return string(msg.Key) == uuid.MustParse("aaaaaaaa-aaaa-7aaa-aaaa-aaaaaaaaaaaa").String()
@@ -97,7 +84,7 @@ func TestRelay_ProcessBatch_PartialFailure(t *testing.T) {
 	})).Return(nil).Once()
 	mProducer.EXPECT().Flush(mock.AnythingOfType("int")).Return(0).Maybe()
 
-	r := relay.New(mLogger, outboxSvc, mProducer, 50*time.Millisecond, 100, 5)
+	r := relay.New(mLogger, mStorer, mProducer, 50*time.Millisecond, 100, 5)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 150*time.Millisecond)
 	defer cancel()
@@ -106,22 +93,17 @@ func TestRelay_ProcessBatch_PartialFailure(t *testing.T) {
 }
 
 func TestRelay_ProcessBatch_Empty(t *testing.T) {
-	mLogger := logger.NewMockLogger(t)
+	mLogger := loggermocks.NewMockLogger(t)
 	mLogger.EXPECT().Info(mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Maybe()
 	mLogger.EXPECT().Info(mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Maybe()
 
-	mStorer := outbox2.NewMockStorer(t)
+	mStorer := newMockoutboxer(t)
 	mStorer.EXPECT().QueryUnprocessed(mock.Anything, 100, 5).Return(nil, nil).Maybe()
 
-	mUuidGen := uuidgen.NewMockGenerator(t)
-	mClock := clock.NewMockClock(t)
-
-	outboxSvc := outbox2.NewService(mLogger, mStorer, mUuidGen, mClock)
-
-	mProducer := kafka.NewMockProducer(t)
+	mProducer := newMockproducer(t)
 	mProducer.EXPECT().Flush(mock.AnythingOfType("int")).Return(0).Maybe()
 
-	r := relay.New(mLogger, outboxSvc, mProducer, 50*time.Millisecond, 100, 5)
+	r := relay.New(mLogger, mStorer, mProducer, 50*time.Millisecond, 100, 5)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 150*time.Millisecond)
 	defer cancel()
@@ -136,31 +118,25 @@ func TestRelay_ProcessBatch_AllFailed_DeadLetter(t *testing.T) {
 	mTime := time.Date(2026, 1, 1, 10, 30, 0, 0, time.UTC)
 	id1 := uuid.MustParse("11111111-1111-7111-1111-111111111111")
 
-	entries := []outbox2.Outbox{
-		outbox2.New(id1, "user.created", uuid.MustParse("aaaaaaaa-aaaa-7aaa-aaaa-aaaaaaaaaaaa"), "user-events", json.RawMessage(`{"name":"John"}`), 0, mTime, nil),
+	entries := []outbox.Outbox{
+		outbox.New(id1, "user.created", uuid.MustParse("aaaaaaaa-aaaa-7aaa-aaaa-aaaaaaaaaaaa"), "user-events", json.RawMessage(`{"name":"John"}`), 0, mTime, nil),
 	}
 
-	mLogger := logger.NewMockLogger(t)
+	mLogger := loggermocks.NewMockLogger(t)
 	mLogger.EXPECT().Info(mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Maybe()
 	mLogger.EXPECT().Info(mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Maybe()
 	mLogger.EXPECT().Error(mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Maybe()
 
-	mStorer := outbox2.NewMockStorer(t)
+	mStorer := newMockoutboxer(t)
 	mStorer.EXPECT().QueryUnprocessed(mock.Anything, 100, 5).Return(entries, nil).Once()
 	mStorer.EXPECT().QueryUnprocessed(mock.Anything, 100, 5).Return(nil, nil).Maybe()
 	mStorer.EXPECT().IncrementRetryCount(mock.Anything, []uuid.UUID{id1}).Return(nil).Once()
 
-	mUuidGen := uuidgen.NewMockGenerator(t)
-	mClock := clock.NewMockClock(t)
-	mClock.EXPECT().Now().Return(mTime).Maybe()
-
-	outboxSvc := outbox2.NewService(mLogger, mStorer, mUuidGen, mClock)
-
-	mProducer := kafka.NewMockProducer(t)
+	mProducer := newMockproducer(t)
 	mProducer.EXPECT().Produce(mock.Anything, mock.AnythingOfType("*kafka.Message")).Return(errors.New("produce error")).Once()
 	mProducer.EXPECT().Flush(mock.AnythingOfType("int")).Return(0).Maybe()
 
-	r := relay.New(mLogger, outboxSvc, mProducer, 50*time.Millisecond, 100, 5)
+	r := relay.New(mLogger, mStorer, mProducer, 50*time.Millisecond, 100, 5)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 150*time.Millisecond)
 	defer cancel()

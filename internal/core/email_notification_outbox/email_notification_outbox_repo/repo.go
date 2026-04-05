@@ -47,7 +47,13 @@ func (s *Store) Create(
 	ctx context.Context,
 	e email_notification_outbox.EmailNotificationOutbox,
 ) error {
-	err := pgsql.NamedExecContext(ctx, s.log, pgsql.Conn(ctx, s.db), emailOutboxCreateSQL, toEmailOutboxDB(e))
+	err := pgsql.NamedExecContext(
+		ctx,
+		s.log,
+		pgsql.Conn(ctx, s.db),
+		emailOutboxCreateSQL,
+		toEmailOutboxDB(e),
+	)
 	if err != nil {
 		return fmt.Errorf("named_exec_context: %w", err)
 	}

@@ -15,10 +15,12 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/Housiadas/cerberus/internal/core/role"
+	"github.com/Housiadas/cerberus/internal/eventbus"
 	"github.com/Housiadas/cerberus/internal/testutil/dbtest"
 	"github.com/Housiadas/cerberus/internal/testutil/unitest"
 	"github.com/Housiadas/cerberus/pkg/cursor"
 	"github.com/Housiadas/cerberus/pkg/logger"
+	"github.com/Housiadas/cerberus/pkg/pgsql"
 	"github.com/Housiadas/cerberus/pkg/uuidgen"
 )
 
@@ -33,7 +35,8 @@ func Test_Role(t *testing.T) {
 	log := logger.New(&buf, logger.LevelInfo, "TEST", traceIDFn, requestIDFn)
 
 	uuidGen := uuidgen.NewV7()
-	roleService := role.NewService(log, role_repo.NewStore(log, db), uuidGen)
+	tx := pgsql.NewTransactor(log, db)
+	roleService := role.NewService(log, role_repo.NewStore(log, db), uuidGen, tx, eventbus.NewNop())
 
 	sd, err := insertSeedData(roleService)
 	if err != nil {

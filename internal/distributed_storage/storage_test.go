@@ -1,17 +1,18 @@
-package distributed_storage
+package distributed_storage_test
 
 import (
 	"context"
 	"testing"
 	"time"
 
+	"github.com/Housiadas/cerberus/internal/distributed_storage"
 	goRedis "github.com/redis/go-redis/v9"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestDistributedStorage_Get_Hit(t *testing.T) {
-	client := NewMockClient(t)
-	ds := New(client, 5*time.Minute)
+	client := newMockclient(t)
+	ds := distributed_storage.New(client, 5*time.Minute)
 
 	ctx := context.Background()
 
@@ -24,8 +25,8 @@ func TestDistributedStorage_Get_Hit(t *testing.T) {
 }
 
 func TestDistributedStorage_Get_Miss(t *testing.T) {
-	client := NewMockClient(t)
-	ds := New(client, 5*time.Minute)
+	client := newMockclient(t)
+	ds := distributed_storage.New(client, 5*time.Minute)
 
 	ctx := context.Background()
 
@@ -38,8 +39,8 @@ func TestDistributedStorage_Get_Miss(t *testing.T) {
 }
 
 func TestDistributedStorage_Set(t *testing.T) {
-	client := NewMockClient(t)
-	ds := New(client, 5*time.Minute)
+	client := newMockclient(t)
+	ds := distributed_storage.New(client, 5*time.Minute)
 
 	ctx := context.Background()
 
@@ -50,8 +51,8 @@ func TestDistributedStorage_Set(t *testing.T) {
 }
 
 func TestDistributedStorage_GetBatch_Partial(t *testing.T) {
-	client := NewMockClient(t)
-	ds := New(client, 5*time.Minute)
+	client := newMockclient(t)
+	ds := distributed_storage.New(client, 5*time.Minute)
 
 	ctx := context.Background()
 
@@ -65,8 +66,8 @@ func TestDistributedStorage_GetBatch_Partial(t *testing.T) {
 }
 
 func TestDistributedStorage_GetBatch_Empty(t *testing.T) {
-	client := NewMockClient(t)
-	ds := New(client, 5*time.Minute)
+	client := newMockclient(t)
+	ds := distributed_storage.New(client, 5*time.Minute)
 
 	ctx := context.Background()
 
@@ -75,8 +76,8 @@ func TestDistributedStorage_GetBatch_Empty(t *testing.T) {
 }
 
 func TestDistributedStorage_SetBatch_Empty(t *testing.T) {
-	client := NewMockClient(t)
-	ds := New(client, 5*time.Minute)
+	client := newMockclient(t)
+	ds := distributed_storage.New(client, 5*time.Minute)
 
 	ctx := context.Background()
 

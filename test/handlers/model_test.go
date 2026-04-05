@@ -9,20 +9,17 @@ import (
 	"github.com/Housiadas/cerberus/pkg/clock"
 )
 
-// ptr returns a pointer to the given value.
-func ptr[T any](v T) *T { return &v }
-
 func toTestAudit(a audit.Audit) openapi.Audit {
 	return openapi.Audit{
-		Id:        new(a.ID().String()),
-		ObjId:     new(a.ObjID().String()),
-		ObjEntity: new(a.ObjEntity().String()),
-		ObjName:   new(a.ObjName().String()),
-		ActorId:   new(a.ActorID().String()),
-		Action:    new(a.Action()),
-		Data:      new(string(a.Data())),
-		Message:   new(a.Message()),
-		Timestamp: new(clock.Format(ptr(a.Timestamp()))),
+		Id:        a.ID().String(),
+		ObjId:     a.ObjID().String(),
+		ObjEntity: a.ObjEntity().String(),
+		ObjName:   a.ObjName().String(),
+		ActorId:   a.ActorID().String(),
+		Action:    a.Action(),
+		Data:      string(a.Data()),
+		Message:   a.Message(),
+		Timestamp: clock.Format(new(a.Timestamp())),
 	}
 }
 
@@ -37,10 +34,10 @@ func toTestAudits(audits []audit.Audit) []openapi.Audit {
 
 func toTestPermission(p permission.Permission) openapi.Permission {
 	return openapi.Permission{
-		Id:        new(p.ID().String()),
-		Name:      new(p.Name().String()),
-		CreatedAt: new(clock.Format(ptr(p.CreatedAt()))),
-		UpdatedAt: new(clock.Format(ptr(p.UpdatedAt()))),
+		Id:        p.ID().String(),
+		Name:      p.Name().String(),
+		CreatedAt: clock.Format(new(p.CreatedAt())),
+		UpdatedAt: clock.Format(new(p.UpdatedAt())),
 	}
 }
 
@@ -55,10 +52,10 @@ func toTestPermissions(perms []permission.Permission) []openapi.Permission {
 
 func toTestRole(r role.Role) openapi.Role {
 	return openapi.Role{
-		Id:        new(r.ID().String()),
-		Name:      new(r.Name().String()),
-		CreatedAt: new(clock.Format(ptr(r.CreatedAt()))),
-		UpdatedAt: new(clock.Format(ptr(r.UpdatedAt()))),
+		Id:        r.ID().String(),
+		Name:      r.Name().String(),
+		CreatedAt: clock.Format(new(r.CreatedAt())),
+		UpdatedAt: clock.Format(new(r.UpdatedAt())),
 	}
 }
 
@@ -78,8 +75,8 @@ func toUserResponse(bus user.User) openapi.User {
 		Email:      bus.Email().Address,
 		Department: bus.Department().String(),
 		Enabled:    bus.Enabled(),
-		CreatedAt:  clock.Format(ptr(bus.CreatedAt())),
-		UpdatedAt:  clock.Format(ptr(bus.UpdatedAt())),
+		CreatedAt:  clock.Format(new(bus.CreatedAt())),
+		UpdatedAt:  clock.Format(new(bus.UpdatedAt())),
 	}
 }
 

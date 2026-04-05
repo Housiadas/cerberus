@@ -46,6 +46,7 @@ import (
 	"github.com/Housiadas/cerberus/pkg/clock"
 	"github.com/Housiadas/cerberus/pkg/hasher"
 	"github.com/Housiadas/cerberus/pkg/logger"
+	"github.com/Housiadas/cerberus/pkg/pgsql"
 	stripepkg "github.com/Housiadas/cerberus/pkg/stripe"
 	"github.com/Housiadas/cerberus/pkg/uuidgen"
 	"github.com/jmoiron/sqlx"
@@ -140,23 +141,35 @@ func New(ctx context.Context, cfg Config) *Handler {
 	// services
 	auditService := audit.NewService(cfg.Log, auditRepo)
 	outboxSvc := outbox.NewService(cfg.Log, outboxRepo, uuidGen, clk)
-	emailNotifOutboxSvc := email_notification_outbox.NewService(cfg.Log, emailNotifOutboxRepo, uuidGen, clk)
+	emailNotifOutboxSvc := email_notification_outbox.NewService(
+		cfg.Log,
+		emailNotifOutboxRepo,
+		uuidGen,
+		clk,
+	)
 
 	// event dispatcher and transaction beginner (used by services for CUD operations)
 	dispatcher := eventbus.New(outboxSvc, auditService)
+	tx := pgsql.NewTransactor(cfg.Log, cfg.DB)
 
-	userService := user.NewService(cfg.Log, userCacheStore, uuidGen, clk, hash, cfg.DB, dispatcher)
-	roleService := role.NewService(cfg.Log, roleCacheStore, uuidGen, cfg.DB, dispatcher)
-	permissionService := permission.NewService(cfg.Log, permissionCacheStore, uuidGen, cfg.DB, dispatcher)
+	userService := user.NewService(cfg.Log, userCacheStore, uuidGen, clk, hash, tx, dispatcher)
+	roleService := role.NewService(cfg.Log, roleCacheStore, uuidGen, tx, dispatcher)
+	permissionService := permission.NewService(
+		cfg.Log,
+		permissionCacheStore,
+		uuidGen,
+		tx,
+		dispatcher,
+	)
 	refreshTokenService := refresh_token.NewService(cfg.Log, refreshTokenRepo, uuidGen, clk)
 	resetTokenService := reset_token.NewService(resetTokenRepo, uuidGen, clk)
-	userRolesSvc := user_roles.NewService(cfg.Log, userRolesRepo, cfg.DB, dispatcher)
-	rolePermsSvc := role_permissions.NewService(cfg.Log, rolePermissionsRepo, cfg.DB, dispatcher)
+	userRolesSvc := user_roles.NewService(cfg.Log, userRolesRepo, tx, dispatcher)
+	rolePermsSvc := role_permissions.NewService(cfg.Log, rolePermissionsRepo, tx, dispatcher)
 	userRolesPermissionsService := user_roles_permissions.NewService(
 		cfg.Log,
 		userRolesPermissionsRepo,
 	)
-	accountSvc := account.NewService(cfg.Log, accountRepo, uuidGen, clk, cfg.DB)
+	accountSvc := account.NewService(cfg.Log, accountRepo, uuidGen, clk, tx)
 	subscriptionSvc := subscription.NewService(cfg.Log, subscriptionRepo)
 	invoiceSvc := invoice.NewService(cfg.Log, invoiceRepo)
 
@@ -168,7 +181,7 @@ func New(ctx context.Context, cfg Config) *Handler {
 		RefreshTokenService:        refreshTokenService,
 		ResetTokenService:          resetTokenService,
 		EmailNotificationOutboxSvc: emailNotifOutboxSvc,
-		DB:                         cfg.DB,
+		TX:                         tx,
 		FrontendURL:                cfg.FrontendURL,
 		UserRolesPermissions:       userRolesPermissionsService,
 	})

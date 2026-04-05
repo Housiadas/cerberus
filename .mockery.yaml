@@ -92,11 +92,18 @@ packages:
   github.com/Housiadas/cerberus/internal/core/billing_address:
     config:
       all: true
-  # eventbus
+  # sdk
   github.com/Housiadas/cerberus/internal/eventbus:
     config:
       all: true
-  # shared logger
+  # relay
+  github.com/Housiadas/cerberus/internal/relay:
+    config:
+      all: true
+  github.com/Housiadas/cerberus/internal/distributed_storage:
+    config:
+      all: true
+  # pkg
   github.com/Housiadas/cerberus/pkg/logger:
     interfaces:
       Logger:

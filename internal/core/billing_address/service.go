@@ -1,4 +1,4 @@
-// Package billing_address_service is the service of the billing address domain
+// Package billing_address is the service of the billing address domain.
 package billing_address
 
 import (

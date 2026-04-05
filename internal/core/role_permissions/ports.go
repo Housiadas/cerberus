@@ -1,4 +1,3 @@
-// Package role_permissions defines the write interface for the role_permissions join table.
 package role_permissions
 
 import (

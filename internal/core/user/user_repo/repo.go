@@ -154,7 +154,14 @@ func (s *Store) QueryByEmail(ctx context.Context, email mail.Address) (user.User
 
 	var dbUsr userDB
 
-	err := pgsql.NamedQueryStruct(ctx, s.log, pgsql.Conn(ctx, s.db), userQueryByEmailSQL, data, &dbUsr)
+	err := pgsql.NamedQueryStruct(
+		ctx,
+		s.log,
+		pgsql.Conn(ctx, s.db),
+		userQueryByEmailSQL,
+		data,
+		&dbUsr,
+	)
 	if err != nil {
 		if errors.Is(err, pgsql.ErrDBNotFound) {
 			return user.User{}, fmt.Errorf("db: %w", user.ErrNotFound)

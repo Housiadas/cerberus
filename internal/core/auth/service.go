@@ -13,7 +13,6 @@ import (
 	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
-	"github.com/jmoiron/sqlx"
 )
 
 const (
@@ -21,12 +20,17 @@ const (
 	refreshTokenTTL = 7 * 24 * time.Hour
 )
 
+// transactor defines the interface for transaction management.
+type transactor interface {
+	RunInTx(ctx context.Context, fn func(ctx context.Context) error) error
+}
+
 // Config represents information required to initialize auth.
 type Config struct {
 	Issuer                     string
 	FrontendURL                string
 	AccessTokenSecret          []byte
-	DB                         *sqlx.DB
+	TX                         transactor
 	Log                        *logger.Service
 	UserService                *user.Service
 	RefreshTokenService        *refresh_token.Service
@@ -43,7 +47,7 @@ type Service struct {
 	frontendURL                string
 	parser                     *jwt.Parser
 	log                        *logger.Service
-	db                         *sqlx.DB
+	tx                         transactor
 	method                     jwt.SigningMethod
 	userService                *user.Service
 	refreshTokenService        *refresh_token.Service
@@ -70,7 +74,7 @@ type Claims struct {
 // NewService creates a Service to support authentication/authorization.
 func NewService(cfg Config) *Service {
 	return &Service{
-		db:          cfg.DB,
+		tx:          cfg.TX,
 		log:         cfg.Log,
 		issuer:      cfg.Issuer,
 		frontendURL: cfg.FrontendURL,

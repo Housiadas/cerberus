@@ -37,8 +37,8 @@ func Test_API_Permission_Query_200(t *testing.T) {
 
 	expData := toTestPermissions(perms)
 	expMd := openapi.Metadata{
-		HasMore: new(false),
-		Limit:   new(10),
+		HasMore: false,
+		Limit:   10,
 	}
 
 	table := []apitest.Table{
@@ -110,7 +110,7 @@ func Test_API_Permission_Create_200(t *testing.T) {
 			},
 			GotResp: &openapi.Permission{},
 			ExpResp: &openapi.Permission{
-				Name: new("document:read"),
+				Name: "document:read",
 			},
 			AssertFunc: func(got any, exp any) string {
 				gotResp, exists := got.(*openapi.Permission)
@@ -229,13 +229,11 @@ func Test_API_Permission_Update_200(t *testing.T) {
 			},
 			GotResp: &openapi.Permission{},
 			ExpResp: func() *openapi.Permission {
-				createdAt := perms[0].CreatedAt()
-				updatedAt := perms[0].UpdatedAt()
 				return &openapi.Permission{
-					Id:        new(perms[0].ID().String()),
-					Name:      new("UpdatedPermission"),
-					CreatedAt: new(clock.Format(&createdAt)),
-					UpdatedAt: new(clock.Format(&updatedAt)),
+					Id:        perms[0].ID().String(),
+					Name:      "UpdatedPermission",
+					CreatedAt: clock.Format(new(perms[0].CreatedAt())),
+					UpdatedAt: clock.Format(new(perms[0].UpdatedAt())),
 				}
 			}(),
 			AssertFunc: func(got any, exp any) string {

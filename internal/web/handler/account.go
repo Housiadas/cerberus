@@ -28,6 +28,7 @@ func (h *Handler) CreateAccount(
 	return openapi.CreateAccount200JSONResponse(toOpenAPIAccount(acc)), nil
 }
 
+//nolint:dupl // list handler pattern shared across domains
 func (h *Handler) ListAccounts(
 	ctx context.Context,
 	request openapi.ListAccountsRequestObject,
@@ -48,7 +49,11 @@ func (h *Handler) ListAccounts(
 		return nil, err
 	}
 
-	orderBy, err := order.Parse(accountOrderByFields(), pntr.DerefStr(request.Params.OrderBy), accountDefaultOrderBy())
+	orderBy, err := order.Parse(
+		accountOrderByFields(),
+		pntr.DerefStr(request.Params.OrderBy),
+		accountDefaultOrderBy(),
+	)
 	if err != nil {
 		return nil, errs.NewFieldErrors("order", err)
 	}
@@ -75,7 +80,12 @@ func (h *Handler) GetAccount(
 ) (openapi.GetAccountResponseObject, error) {
 	accountUUID, err := uuid.Parse(request.AccountId)
 	if err != nil {
-		return nil, errs.Errorf(errs.InvalidArgument, errs.CodeValidation, "could not parse uuid: %s", err)
+		return nil, errs.Errorf(
+			errs.InvalidArgument,
+			errs.CodeValidation,
+			"could not parse uuid: %s",
+			err,
+		)
 	}
 
 	acc, err := h.svc.account.QueryByID(ctx, accountUUID)
@@ -96,7 +106,12 @@ func (h *Handler) UpdateAccount(
 ) (openapi.UpdateAccountResponseObject, error) {
 	accountUUID, err := uuid.Parse(request.AccountId)
 	if err != nil {
-		return nil, errs.Errorf(errs.InvalidArgument, errs.CodeValidation, "could not parse uuid: %s", err)
+		return nil, errs.Errorf(
+			errs.InvalidArgument,
+			errs.CodeValidation,
+			"could not parse uuid: %s",
+			err,
+		)
 	}
 
 	currentAcc, err := h.svc.account.QueryByID(ctx, accountUUID)
@@ -122,7 +137,12 @@ func (h *Handler) DeleteAccount(
 ) (openapi.DeleteAccountResponseObject, error) {
 	accountUUID, err := uuid.Parse(request.AccountId)
 	if err != nil {
-		return nil, errs.Errorf(errs.InvalidArgument, errs.CodeValidation, "could not parse uuid: %s", err)
+		return nil, errs.Errorf(
+			errs.InvalidArgument,
+			errs.CodeValidation,
+			"could not parse uuid: %s",
+			err,
+		)
 	}
 
 	currentAcc, err := h.svc.account.QueryByID(ctx, accountUUID)

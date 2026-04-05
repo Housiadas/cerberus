@@ -40,7 +40,11 @@ func (h *Handler) ListAudits(
 		return nil, err
 	}
 
-	orderBy, err := order.Parse(auditOrderByFields(), pntr.DerefStr(request.Params.OrderBy), auditDefaultOrderBy())
+	orderBy, err := order.Parse(
+		auditOrderByFields(),
+		pntr.DerefStr(request.Params.OrderBy),
+		auditDefaultOrderBy(),
+	)
 	if err != nil {
 		return nil, errs.NewFieldErrors("order", err)
 	}
@@ -55,12 +59,9 @@ func (h *Handler) ListAudits(
 		auditFieldExtractor(orderBy),
 	)
 
-	data := toOpenAPIAudits(result.Data)
-	md := toOpenAPIMetadata(result.Metadata)
-
 	return openapi.ListAudits200JSONResponse{
-		Data:     &data,
-		Metadata: &md,
+		Data:     new(toOpenAPIAudits(result.Data)),
+		Metadata: new(toOpenAPIMetadata(result.Metadata)),
 	}, nil
 }
 
@@ -69,7 +70,9 @@ func (h *Handler) ListAudits(
 // ---------------------------------------------------------------------------
 
 //nolint:cyclop
-func parseAuditFilter(objID, objEntity, objName, actorID, action, since, until string) (audit.QueryFilter, error) {
+func parseAuditFilter(
+	objID, objEntity, objName, actorID, action, since, until string,
+) (audit.QueryFilter, error) {
 	var (
 		fieldErrors errs.FieldErrors
 		filter      audit.QueryFilter
@@ -133,7 +136,7 @@ func parseAuditFilter(objID, objEntity, objName, actorID, action, since, until s
 		}
 	}
 
-	if fieldErrors != nil {
+	if len(fieldErrors) > 0 {
 		return audit.QueryFilter{}, fieldErrors.ToError()
 	}
 

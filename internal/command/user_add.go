@@ -37,13 +37,14 @@ func (cmd *Command) UserAdd(name, email, pass string) error {
 	hash := hasher.NewBcrypt()
 	clk := clock.NewClock()
 	uuidGen := uuidgen.NewV7()
+	tx := pgsql.NewTransactor(cmd.log, db)
 	userBus := user.NewService(
 		cmd.log,
 		user_repo.NewStore(cmd.log, db),
 		uuidGen,
 		clk,
 		hash,
-		db,
+		tx,
 		eventbus.NewNop(),
 	)
 

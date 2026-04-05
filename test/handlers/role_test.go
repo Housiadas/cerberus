@@ -37,8 +37,8 @@ func Test_API_Role_Query_200(t *testing.T) {
 
 	expData := toTestRoles(roles)
 	expMd := openapi.Metadata{
-		HasMore: new(false),
-		Limit:   new(10),
+		HasMore: false,
+		Limit:   10,
 	}
 
 	table := []apitest.Table{
@@ -110,7 +110,7 @@ func Test_API_Role_Create_200(t *testing.T) {
 			},
 			GotResp: &openapi.Role{},
 			ExpResp: &openapi.Role{
-				Name: new("editor"),
+				Name: "editor",
 			},
 			AssertFunc: func(got any, exp any) string {
 				gotResp, exists := got.(*openapi.Role)
@@ -229,13 +229,11 @@ func Test_API_Role_Update_200(t *testing.T) {
 			},
 			GotResp: &openapi.Role{},
 			ExpResp: func() *openapi.Role {
-				createdAt := roles[0].CreatedAt()
-				updatedAt := roles[0].UpdatedAt()
 				return &openapi.Role{
-					Id:        new(roles[0].ID().String()),
-					Name:      new("UpdatedRole"),
-					CreatedAt: new(clock.Format(&createdAt)),
-					UpdatedAt: new(clock.Format(&updatedAt)),
+					Id:        roles[0].ID().String(),
+					Name:      "UpdatedRole",
+					CreatedAt: clock.Format(new(roles[0].CreatedAt())),
+					UpdatedAt: clock.Format(new(roles[0].UpdatedAt())),
 				}
 			}(),
 			AssertFunc: func(got any, exp any) string {

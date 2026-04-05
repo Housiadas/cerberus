@@ -34,19 +34,9 @@ func (h *Handler) GetMe(
 		)
 	}
 
-	usr, err := h.svc.user.QueryByID(ctx, userUUID)
+	usr, err := h.getUserByQueryID(ctx, userUUID)
 	if err != nil {
-		if errors.Is(err, user.ErrNotFound) {
-			return nil, errs.New(
-				errs.NotFound,
-				errs.CodeUserNotFound, err,
-			)
-		}
-
-		return nil, errs.New(
-			errs.Internal,
-			errs.CodeInternal, err,
-		)
+		return nil, err
 	}
 
 	return openapi.GetMe200JSONResponse(toOpenAPIUser(usr)), nil
@@ -82,19 +72,9 @@ func (h *Handler) UpdateMe(
 		)
 	}
 
-	currentUsr, err := h.svc.user.QueryByID(ctx, userUUID)
+	currentUsr, err := h.getUserByQueryID(ctx, userUUID)
 	if err != nil {
-		if errors.Is(err, user.ErrNotFound) {
-			return nil, errs.New(
-				errs.NotFound,
-				errs.CodeUserNotFound, err,
-			)
-		}
-
-		return nil, errs.New(
-			errs.Internal,
-			errs.CodeInternal, err,
-		)
+		return nil, err
 	}
 
 	updUsr, err := h.svc.user.Update(ctx, currentUsr, uu)
@@ -128,7 +108,11 @@ func (h *Handler) ListUsers(
 		return nil, err
 	}
 
-	orderBy, err := order.Parse(userOrderByFields(), pntr.DerefStr(request.Params.OrderBy), userDefaultOrderBy())
+	orderBy, err := order.Parse(
+		userOrderByFields(),
+		pntr.DerefStr(request.Params.OrderBy),
+		userDefaultOrderBy(),
+	)
 	if err != nil {
 		return nil, errs.NewFieldErrors("order", err)
 	}
@@ -142,7 +126,14 @@ func (h *Handler) ListUsers(
 		)
 	}
 
-	result := cursor.NewResult(usrs, cur.Limit(), cur, orderBy, userIDExtractor, userFieldExtractor(orderBy))
+	result := cursor.NewResult(
+		usrs,
+		cur.Limit(),
+		cur,
+		orderBy,
+		userIDExtractor,
+		userFieldExtractor(orderBy),
+	)
 
 	data := make([]openapi.User, len(result.Data))
 	for i, u := range result.Data {
@@ -150,8 +141,8 @@ func (h *Handler) ListUsers(
 	}
 
 	return openapi.ListUsers200JSONResponse{
-		Data:     &data,
-		Metadata: new(toOpenAPIMetadata(result.Metadata)),
+		Data:     data,
+		Metadata: toOpenAPIMetadata(result.Metadata),
 	}, nil
 }
 
@@ -349,6 +340,25 @@ func (h *Handler) DeleteUserRole(
 	return openapi.DeleteUserRole204Response{}, nil
 }
 
+func (h *Handler) getUserByQueryID(ctx context.Context, userUUID uuid.UUID) (user.User, error) {
+	currentUsr, err := h.svc.user.QueryByID(ctx, userUUID)
+	if err != nil {
+		if errors.Is(err, user.ErrNotFound) {
+			return user.User{}, errs.New(
+				errs.NotFound,
+				errs.CodeUserNotFound, err,
+			)
+		}
+
+		return user.User{}, errs.New(
+			errs.Internal,
+			errs.CodeInternal, err,
+		)
+	}
+
+	return currentUsr, nil
+}
+
 // ---------------------------------------------------------------------------
 // Parsing helpers
 // ---------------------------------------------------------------------------
@@ -391,9 +401,9 @@ func parseNewUser(body *openapi.NewUser) (user.NewUser, error) {
 	}, nil
 }
 
+//nolint:cyclop
 func parseUpdateUser(
-	namePtr, emailPtr, departmentPtr, passwordPtr, passwordConfirmPtr *string,
-	enabledPtr *bool,
+	namePtr, emailPtr, departmentPtr, passwordPtr, passwordConfirmPtr *string, enabledPtr *bool,
 ) (user.UpdateUser, error) {
 	var fieldErrors errs.FieldErrors
 
@@ -444,7 +454,10 @@ func parseUpdateUser(
 	return uu, nil
 }
 
-func parseUserFilter(id, nameStr, email, startCreatedDate, endCreatedDate string) (user.QueryFilter, error) {
+//nolint:cyclop
+func parseUserFilter(
+	id, nameStr, email, startCreatedDate, endCreatedDate string,
+) (user.QueryFilter, error) {
 	var (
 		fieldErrors errs.FieldErrors
 		filter      user.QueryFilter
@@ -495,7 +508,7 @@ func parseUserFilter(id, nameStr, email, startCreatedDate, endCreatedDate string
 		}
 	}
 
-	if fieldErrors != nil {
+	if len(fieldErrors) > 0 {
 		return user.QueryFilter{}, fieldErrors.ToError()
 	}
 

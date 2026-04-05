@@ -365,7 +365,7 @@ func Test_API_User_Create_200(t *testing.T) {
 				}
 
 				expResp := exp.(*openapi.User)
-				expResp.ID = gotResp.ID
+				expResp.Id = gotResp.Id
 				expResp.CreatedAt = gotResp.CreatedAt
 				expResp.UpdatedAt = gotResp.UpdatedAt
 

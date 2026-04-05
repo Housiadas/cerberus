@@ -10,9 +10,7 @@ import (
 	"github.com/Housiadas/cerberus/internal/types/event"
 	"github.com/Housiadas/cerberus/internal/types/name"
 	"github.com/Housiadas/cerberus/pkg/logger"
-	"github.com/Housiadas/cerberus/pkg/pgsql"
 	"github.com/google/uuid"
-	"github.com/jmoiron/sqlx"
 )
 
 // dispatcher defines the interface for domain event dispatching.
@@ -20,11 +18,16 @@ type dispatcher interface {
 	Dispatch(ctx context.Context, ev event.DomainEvent) error
 }
 
+// transactor defines the interface for transaction management.
+type transactor interface {
+	RunInTx(ctx context.Context, fn func(ctx context.Context) error) error
+}
+
 // Service manages user role assignments.
 type Service struct {
 	log        logger.Logger
 	storer     Storer
-	db         *sqlx.DB
+	tx         transactor
 	dispatcher dispatcher
 }
 
@@ -32,13 +35,13 @@ type Service struct {
 func NewService(
 	log logger.Logger,
 	storer Storer,
-	db *sqlx.DB,
+	tx transactor,
 	dispatcher dispatcher,
 ) *Service {
 	return &Service{
 		log:        log,
 		storer:     storer,
-		db:         db,
+		tx:         tx,
 		dispatcher: dispatcher,
 	}
 }
@@ -54,7 +57,7 @@ func (s *Service) Remove(ctx context.Context, userID uuid.UUID, roleID uuid.UUID
 }
 
 func (s *Service) modify(ctx context.Context, userID, roleID uuid.UUID, action string) error {
-	txErr := pgsql.RunInTx(ctx, s.log, s.db, func(txCtx context.Context) error {
+	txErr := s.tx.RunInTx(ctx, func(txCtx context.Context) error {
 		var opErr error
 		if action == audit.ActionAssign {
 			opErr = s.storer.Add(txCtx, userID, roleID)

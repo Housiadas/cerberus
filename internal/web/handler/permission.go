@@ -14,6 +14,7 @@ import (
 	"github.com/google/uuid"
 )
 
+//nolint:dupl // list handler pattern shared across domains
 func (h *Handler) ListPermissions(
 	ctx context.Context,
 	request openapi.ListPermissionsRequestObject,
@@ -34,7 +35,11 @@ func (h *Handler) ListPermissions(
 		return nil, err
 	}
 
-	orderBy, err := order.Parse(permissionOrderByFields(), pntr.DerefStr(request.Params.OrderBy), permissionDefaultOrderBy())
+	orderBy, err := order.Parse(
+		permissionOrderByFields(),
+		pntr.DerefStr(request.Params.OrderBy),
+		permissionDefaultOrderBy(),
+	)
 	if err != nil {
 		return nil, errs.NewFieldErrors("order", err)
 	}
@@ -49,12 +54,9 @@ func (h *Handler) ListPermissions(
 		permissionFieldExtractor(orderBy),
 	)
 
-	data := toOpenAPIPermissions(result.Data)
-	md := toOpenAPIMetadata(result.Metadata)
-
 	return openapi.ListPermissions200JSONResponse{
-		Data:     &data,
-		Metadata: &md,
+		Data:     new(toOpenAPIPermissions(result.Data)),
+		Metadata: new(toOpenAPIMetadata(result.Metadata)),
 	}, nil
 }
 
@@ -75,13 +77,19 @@ func (h *Handler) CreatePermission(
 	return openapi.CreatePermission200JSONResponse(toOpenAPIPermission(perm)), nil
 }
 
+//nolint:dupl // update handler pattern shared across domains
 func (h *Handler) UpdatePermission(
 	ctx context.Context,
 	request openapi.UpdatePermissionRequestObject,
 ) (openapi.UpdatePermissionResponseObject, error) {
 	permUUID, err := uuid.Parse(request.PermissionId)
 	if err != nil {
-		return nil, errs.Errorf(errs.InvalidArgument, errs.CodeValidation, "could not parse uuid: %s", err)
+		return nil, errs.Errorf(
+			errs.InvalidArgument,
+			errs.CodeValidation,
+			"could not parse uuid: %s",
+			err,
+		)
 	}
 
 	up, err := parseUpdatePermission(request.Body)
@@ -108,7 +116,12 @@ func (h *Handler) DeletePermission(
 ) (openapi.DeletePermissionResponseObject, error) {
 	permUUID, err := uuid.Parse(request.PermissionId)
 	if err != nil {
-		return nil, errs.Errorf(errs.InvalidArgument, errs.CodeValidation, "could not parse uuid: %s", err)
+		return nil, errs.Errorf(
+			errs.InvalidArgument,
+			errs.CodeValidation,
+			"could not parse uuid: %s",
+			err,
+		)
 	}
 
 	currentPerm, err := h.svc.permission.QueryByID(ctx, permUUID)
@@ -167,7 +180,7 @@ func parsePermissionFilter(id, nameStr string) (permission.QueryFilter, error) {
 		}
 	}
 
-	if fieldErrors != nil {
+	if len(fieldErrors) > 0 {
 		return permission.QueryFilter{}, fieldErrors.ToError()
 	}
 

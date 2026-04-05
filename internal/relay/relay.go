@@ -1,5 +1,4 @@
-// Package relay implements the outbox relay that polls the outbox table
-// and produces messages to Kafka.
+// Package relay implements the outbox relay that polls the outbox table and produces messages to Kafka.
 package relay
 
 import (
@@ -7,6 +6,7 @@ import (
 	"time"
 
 	"github.com/Housiadas/cerberus/internal/core/outbox"
+	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/Housiadas/cerberus/pkg/telemetry"
 	ckafka "github.com/confluentinc/confluent-kafka-go/v2/kafka"
 	"github.com/google/uuid"
@@ -17,27 +17,22 @@ const (
 	flushTimeoutMs = 10_000
 )
 
-type logger interface {
-	Debug(ctx context.Context, msg string, args ...any)
-	Debugc(ctx context.Context, caller int, msg string, args ...any)
-	Info(ctx context.Context, msg string, args ...any)
-	Infoc(ctx context.Context, caller int, msg string, args ...any)
-	Warn(ctx context.Context, msg string, args ...any)
-	Warnc(ctx context.Context, caller int, msg string, args ...any)
-	Error(ctx context.Context, msg string, args ...any)
-	Errorc(ctx context.Context, caller int, msg string, args ...any)
-}
-
 type producer interface {
 	Produce(ctx context.Context, msg *ckafka.Message) error
 	Flush(timeoutMs int) int
 	Close()
 }
 
+type outboxer interface {
+	QueryUnprocessed(ctx context.Context, batchSize, maxRetries int) ([]outbox.Outbox, error)
+	IncrementRetryCount(ctx context.Context, ids []uuid.UUID) error
+	MarkProcessed(ctx context.Context, ids []uuid.UUID) error
+}
+
 // Relay polls the outbox table and produces messages to Kafka.
 type Relay struct {
-	log        logger
-	outboxSvc  *outbox.Service
+	log        logger.Logger
+	outboxSvc  outboxer
 	producer   producer
 	interval   time.Duration
 	batchSize  int
@@ -46,8 +41,8 @@ type Relay struct {
 
 // New constructs a new Relay.
 func New(
-	log logger,
-	outboxSvc *outbox.Service,
+	log logger.Logger,
+	outboxSvc outboxer,
 	producer producer,
 	interval time.Duration,
 	batchSize int,

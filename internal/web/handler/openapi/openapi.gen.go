@@ -20,11 +20,11 @@ const (
 
 // Account defines model for Account.
 type Account struct {
-	CreatedAt        *string `json:"createdAt,omitempty"`
-	Id               *string `json:"id,omitempty"`
-	Name             *string `json:"name,omitempty"`
-	StripeCustomerId *string `json:"stripeCustomerId,omitempty"`
-	UpdatedAt        *string `json:"updatedAt,omitempty"`
+	CreatedAt        string `json:"createdAt"`
+	Id               string `json:"id"`
+	Name             string `json:"name"`
+	StripeCustomerId string `json:"stripeCustomerId"`
+	UpdatedAt        string `json:"updatedAt"`
 }
 
 // AccountPageResult defines model for AccountPageResult.
@@ -45,15 +45,15 @@ type AddUserRoleReq struct {
 
 // Audit defines model for Audit.
 type Audit struct {
-	Action    *string `json:"action,omitempty"`
-	ActorId   *string `json:"actorId,omitempty"`
-	Data      *string `json:"data,omitempty"`
-	Id        *string `json:"id,omitempty"`
-	Message   *string `json:"message,omitempty"`
-	ObjEntity *string `json:"objEntity,omitempty"`
-	ObjId     *string `json:"objId,omitempty"`
-	ObjName   *string `json:"objName,omitempty"`
-	Timestamp *string `json:"timestamp,omitempty"`
+	Action    string `json:"action"`
+	ActorId   string `json:"actorId"`
+	Data      string `json:"data"`
+	Id        string `json:"id"`
+	Message   string `json:"message"`
+	ObjEntity string `json:"objEntity"`
+	ObjId     string `json:"objId"`
+	ObjName   string `json:"objName"`
+	Timestamp string `json:"timestamp"`
 }
 
 // AuditPageResult defines model for AuditPageResult.
@@ -72,21 +72,21 @@ type CheckoutRequest struct {
 
 // CheckoutResponse defines model for CheckoutResponse.
 type CheckoutResponse struct {
-	Url *string `json:"url,omitempty"`
+	Url string `json:"url"`
 }
 
 // Error defines model for Error.
 type Error struct {
-	Code    *string       `json:"code,omitempty"`
+	Code    string        `json:"code"`
 	Fields  *[]FieldError `json:"fields,omitempty"`
-	Message *string       `json:"message,omitempty"`
-	Status  *string       `json:"status,omitempty"`
+	Message string        `json:"message"`
+	Status  string        `json:"status"`
 }
 
 // FieldError defines model for FieldError.
 type FieldError struct {
 	Error *string `json:"error,omitempty"`
-	Field *string `json:"field,omitempty"`
+	Field string  `json:"field"`
 }
 
 // ForgotPasswordReq defines model for ForgotPasswordReq.
@@ -108,14 +108,14 @@ type Info struct {
 
 // InvoiceResponse defines model for InvoiceResponse.
 type InvoiceResponse struct {
-	AmountDue       *int64  `json:"amountDue,omitempty"`
-	AmountPaid      *int64  `json:"amountPaid,omitempty"`
-	CreatedAt       *string `json:"createdAt,omitempty"`
-	Currency        *string `json:"currency,omitempty"`
-	Id              *string `json:"id,omitempty"`
-	InvoiceUrl      *string `json:"invoiceUrl,omitempty"`
-	Status          *string `json:"status,omitempty"`
-	StripeInvoiceId *string `json:"stripeInvoiceId,omitempty"`
+	AmountDue       int64  `json:"amountDue"`
+	AmountPaid      int64  `json:"amountPaid"`
+	CreatedAt       string `json:"createdAt"`
+	Currency        string `json:"currency"`
+	Id              string `json:"id"`
+	InvoiceUrl      string `json:"invoiceUrl"`
+	Status          string `json:"status"`
+	StripeInvoiceId string `json:"stripeInvoiceId"`
 }
 
 // LoginReq defines model for LoginReq.
@@ -131,10 +131,10 @@ type LogoutReq struct {
 
 // Metadata defines model for Metadata.
 type Metadata struct {
-	HasMore    *bool   `json:"hasMore,omitempty"`
-	Limit      *int    `json:"limit,omitempty"`
-	NextCursor *string `json:"nextCursor,omitempty"`
-	PrevCursor *string `json:"prevCursor,omitempty"`
+	HasMore    bool   `json:"hasMore"`
+	Limit      int    `json:"limit"`
+	NextCursor string `json:"nextCursor"`
+	PrevCursor string `json:"prevCursor"`
 }
 
 // NewAccount defines model for NewAccount.
@@ -163,10 +163,10 @@ type NewUser struct {
 
 // Permission defines model for Permission.
 type Permission struct {
-	CreatedAt *string `json:"createdAt,omitempty"`
-	Id        *string `json:"id,omitempty"`
-	Name      *string `json:"name,omitempty"`
-	UpdatedAt *string `json:"updatedAt,omitempty"`
+	CreatedAt string `json:"createdAt"`
+	Id        string `json:"id"`
+	Name      string `json:"name"`
+	UpdatedAt string `json:"updatedAt"`
 }
 
 // PermissionPageResult defines model for PermissionPageResult.
@@ -183,7 +183,7 @@ type PortalRequest struct {
 
 // PortalResponse defines model for PortalResponse.
 type PortalResponse struct {
-	Url *string `json:"url,omitempty"`
+	Url string `json:"url"`
 }
 
 // RefreshTokenReq defines model for RefreshTokenReq.
@@ -201,10 +201,10 @@ type ResetPasswordReq struct {
 
 // Role defines model for Role.
 type Role struct {
-	CreatedAt *string `json:"createdAt,omitempty"`
-	Id        *string `json:"id,omitempty"`
-	Name      *string `json:"name,omitempty"`
-	UpdatedAt *string `json:"updatedAt,omitempty"`
+	CreatedAt string `json:"createdAt"`
+	Id        string `json:"id"`
+	Name      string `json:"name"`
+	UpdatedAt string `json:"updatedAt"`
 }
 
 // RolePageResult defines model for RolePageResult.
@@ -220,21 +220,21 @@ type Status struct {
 
 // SubscriptionResponse defines model for SubscriptionResponse.
 type SubscriptionResponse struct {
-	CancelAtPeriodEnd    *bool   `json:"cancelAtPeriodEnd,omitempty"`
-	CreatedAt            *string `json:"createdAt,omitempty"`
+	CancelAtPeriodEnd    bool    `json:"cancelAtPeriodEnd"`
+	CreatedAt            string  `json:"createdAt"`
 	CurrentPeriodEnd     *string `json:"currentPeriodEnd,omitempty"`
 	CurrentPeriodStart   *string `json:"currentPeriodStart,omitempty"`
-	Id                   *string `json:"id,omitempty"`
-	Status               *string `json:"status,omitempty"`
-	StripePriceId        *string `json:"stripePriceId,omitempty"`
-	StripeSubscriptionId *string `json:"stripeSubscriptionId,omitempty"`
+	Id                   string  `json:"id"`
+	Status               string  `json:"status"`
+	StripePriceId        string  `json:"stripePriceId"`
+	StripeSubscriptionId string  `json:"stripeSubscriptionId"`
 }
 
 // Token defines model for Token.
 type Token struct {
-	AccessToken  *string `json:"accessToken,omitempty"`
-	ExpiresIn    *int64  `json:"expiresIn,omitempty"`
-	RefreshToken *string `json:"refreshToken,omitempty"`
+	AccessToken  string `json:"accessToken"`
+	ExpiresIn    int64  `json:"expiresIn"`
+	RefreshToken string `json:"refreshToken"`
 }
 
 // UpdateAccount defines model for UpdateAccount.
@@ -284,8 +284,8 @@ type User struct {
 
 // UserPageResult defines model for UserPageResult.
 type UserPageResult struct {
-	Data     *[]User   `json:"data,omitempty"`
-	Metadata *Metadata `json:"metadata,omitempty"`
+	Data     []User   `json:"data"`
+	Metadata Metadata `json:"metadata"`
 }
 
 // ErrorResponse defines model for ErrorResponse.
