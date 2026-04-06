@@ -6,17 +6,16 @@ import (
 	"sort"
 	"testing"
 
+	"github.com/Housiadas/cerberus/internal/core/user"
+	"github.com/Housiadas/cerberus/internal/errs"
+	"github.com/Housiadas/cerberus/internal/testutil/apitest"
+	"github.com/Housiadas/cerberus/internal/testutil/dbtest"
+	"github.com/Housiadas/cerberus/internal/web/handler/openapi"
+	"github.com/Housiadas/cerberus/pkg/clock"
+	"github.com/Housiadas/cerberus/pkg/cursor"
 	"github.com/google/go-cmp/cmp"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-
-	"github.com/Housiadas/cerberus/internal/core/domain/user"
-	"github.com/Housiadas/cerberus/internal/usecase/user_usecase"
-	"github.com/Housiadas/cerberus/internal/utils/apitest"
-	"github.com/Housiadas/cerberus/internal/utils/dbtest"
-	"github.com/Housiadas/cerberus/internal/utils/errs"
-	"github.com/Housiadas/cerberus/pkg/clock"
-	"github.com/Housiadas/cerberus/pkg/cursor"
 )
 
 func Test_API_User_GetMe_200(t *testing.T) {
@@ -35,8 +34,8 @@ func Test_API_User_GetMe_200(t *testing.T) {
 			StatusCode:  http.StatusOK,
 			Method:      http.MethodGet,
 			AccessToken: &sd.Users[0].AccessToken.Token,
-			GotResp:     &user_usecase.User{},
-			ExpResp:     toAppUserPtr(sd.Users[0].User),
+			GotResp:     &openapi.User{},
+			ExpResp:     toUserResponsePtr(sd.Users[0].User),
 			AssertFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},
@@ -47,8 +46,8 @@ func Test_API_User_GetMe_200(t *testing.T) {
 			StatusCode:  http.StatusOK,
 			Method:      http.MethodGet,
 			AccessToken: &sd.Admins[0].AccessToken.Token,
-			GotResp:     &user_usecase.User{},
-			ExpResp:     toAppUserPtr(sd.Admins[0].User),
+			GotResp:     &openapi.User{},
+			ExpResp:     toUserResponsePtr(sd.Admins[0].User),
 			AssertFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},
@@ -97,14 +96,14 @@ func Test_API_User_UpdateMe_200(t *testing.T) {
 			Method:      http.MethodPut,
 			StatusCode:  http.StatusOK,
 			AccessToken: &sd.Users[0].AccessToken.Token,
-			Input: &user_usecase.UpdateMe{
+			Input: &openapi.UpdateMe{
 				Name:       dbtest.StringPointer("Updated Name"),
 				Email:      dbtest.StringPointer("updated@housi.com"),
 				Department: dbtest.StringPointer("Engineering"),
 			},
-			GotResp: &user_usecase.User{},
-			ExpResp: &user_usecase.User{
-				ID:         sd.Users[0].ID().String(),
+			GotResp: &openapi.User{},
+			ExpResp: &openapi.User{
+				Id:         sd.Users[0].ID().String(),
 				Name:       "Updated Name",
 				Email:      "updated@housi.com",
 				Department: "Engineering",
@@ -112,12 +111,12 @@ func Test_API_User_UpdateMe_200(t *testing.T) {
 				CreatedAt:  func() string { ct := sd.Users[0].CreatedAt(); return clock.Format(&ct) }(),
 			},
 			AssertFunc: func(got any, exp any) string {
-				gotResp, exists := got.(*user_usecase.User)
+				gotResp, exists := got.(*openapi.User)
 				if !exists {
 					return "error occurred"
 				}
 
-				expResp := exp.(*user_usecase.User)
+				expResp := exp.(*openapi.User)
 				expResp.UpdatedAt = gotResp.UpdatedAt
 
 				return cmp.Diff(gotResp, expResp)
@@ -144,7 +143,7 @@ func Test_API_User_UpdateMe_400(t *testing.T) {
 			Method:      http.MethodPut,
 			StatusCode:  http.StatusBadRequest,
 			AccessToken: &sd.Users[0].AccessToken.Token,
-			Input: &user_usecase.UpdateMe{
+			Input: &openapi.UpdateMe{
 				Email:           dbtest.StringPointer("bill@"),
 				PasswordConfirm: dbtest.StringPointer("jack"),
 			},
@@ -171,7 +170,7 @@ func Test_API_User_UpdateMe_401(t *testing.T) {
 			URL:        "/api/v1/users/me",
 			StatusCode: http.StatusUnauthorized,
 			Method:     http.MethodPut,
-			Input: &user_usecase.UpdateMe{
+			Input: &openapi.UpdateMe{
 				Name: dbtest.StringPointer("Test"),
 			},
 			GotResp: &errs.Error{},
@@ -213,9 +212,9 @@ func Test_API_User_Query_200(t *testing.T) {
 			StatusCode:  http.StatusOK,
 			Method:      http.MethodGet,
 			AccessToken: &sd.Admins[0].AccessToken.Token,
-			GotResp:     &cursor.Result[user_usecase.User]{},
-			ExpResp: &cursor.Result[user_usecase.User]{
-				Data: toAppUsers(usrs),
+			GotResp:     &cursor.Result[openapi.User]{},
+			ExpResp: &cursor.Result[openapi.User]{
+				Data: toUserResponses(usrs),
 				Metadata: cursor.Metadata{
 					HasMore: false,
 					Limit:   10,
@@ -246,8 +245,8 @@ func Test_API_User_Query_BY_ID_200(t *testing.T) {
 			StatusCode:  http.StatusOK,
 			Method:      http.MethodGet,
 			AccessToken: &sd.Users[0].AccessToken.Token,
-			GotResp:     &user_usecase.User{},
-			ExpResp:     toAppUserPtr(sd.Users[0].User),
+			GotResp:     &openapi.User{},
+			ExpResp:     toUserResponsePtr(sd.Users[0].User),
 			AssertFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},
@@ -344,28 +343,28 @@ func Test_API_User_Create_200(t *testing.T) {
 			Method:      http.MethodPost,
 			StatusCode:  http.StatusOK,
 			AccessToken: &sd.Admins[0].AccessToken.Token,
-			Input: &user_usecase.NewUser{
+			Input: &openapi.NewUser{
 				Name:            "Chris Housi",
 				Email:           "chris@housi.com",
-				Department:      "IT0",
+				Department:      dbtest.StringPointer("IT0"),
 				Password:        "123",
 				PasswordConfirm: "123",
 			},
-			GotResp: &user_usecase.User{},
-			ExpResp: &user_usecase.User{
+			GotResp: &openapi.User{},
+			ExpResp: &openapi.User{
 				Name:       "Chris Housi",
 				Email:      "chris@housi.com",
 				Department: "IT0",
 				Enabled:    true,
 			},
 			AssertFunc: func(got any, exp any) string {
-				gotResp, exists := got.(*user_usecase.User)
+				gotResp, exists := got.(*openapi.User)
 				if !exists {
 					return "error occurred"
 				}
 
-				expResp := exp.(*user_usecase.User)
-				expResp.ID = gotResp.ID
+				expResp := exp.(*openapi.User)
+				expResp.Id = gotResp.Id
 				expResp.CreatedAt = gotResp.CreatedAt
 				expResp.UpdatedAt = gotResp.UpdatedAt
 
@@ -397,9 +396,13 @@ func Test_API_User_Create_400(t *testing.T) {
 			URL:        "/api/v1/users",
 			Method:     http.MethodPost,
 			StatusCode: http.StatusUnauthorized,
-			Input:      &user_usecase.NewUser{},
+			Input:      &openapi.NewUser{},
 			GotResp:    &errs.Error{},
-			ExpResp:    errs.Errorf(errs.Unauthenticated, errs.CodeUnauthenticated, "expected authorization header format: Bearer <token>"),
+			ExpResp: errs.Errorf(
+				errs.Unauthenticated,
+				errs.CodeUnauthenticated,
+				"expected authorization header format: Bearer <token>",
+			),
 			AssertFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},
@@ -410,7 +413,7 @@ func Test_API_User_Create_400(t *testing.T) {
 			Method:      http.MethodPost,
 			StatusCode:  http.StatusBadRequest,
 			AccessToken: &sd.Admins[0].AccessToken.Token,
-			Input:       &user_usecase.NewUser{},
+			Input:       &openapi.NewUser{},
 			GotResp:     &errs.Error{},
 			ExpResp:     &errs.Error{},
 			AssertFunc: func(got any, exp any) string {
@@ -419,7 +422,7 @@ func Test_API_User_Create_400(t *testing.T) {
 					return "error occurred"
 				}
 
-				assert.Len(t, gotResp.Fields, 4)
+				assert.Len(t, gotResp.Fields, 3)
 				assert.Contains(t, gotResp.Fields[0].Field, "name")
 				return ""
 			},
@@ -430,15 +433,19 @@ func Test_API_User_Create_400(t *testing.T) {
 			Method:      http.MethodPost,
 			StatusCode:  http.StatusBadRequest,
 			AccessToken: &sd.Admins[0].AccessToken.Token,
-			Input: &user_usecase.NewUser{
+			Input: &openapi.NewUser{
 				Name:            "Bi",
 				Email:           "chris@housi.com",
-				Department:      "IT0",
+				Department:      dbtest.StringPointer("IT0"),
 				Password:        "123",
 				PasswordConfirm: "123",
 			},
 			GotResp: &errs.Error{},
-			ExpResp: errs.Errorf(errs.InvalidArgument, errs.CodeValidation, "validate: [{\"field\":\"name\",\"error\":\"invalid name value: \\\"Bi\\\"\"}]"),
+			ExpResp: errs.Errorf(
+				errs.InvalidArgument,
+				errs.CodeValidation,
+				"validate: [{\"field\":\"name\",\"error\":\"invalid name value: \\\"Bi\\\"\"}]",
+			),
 			AssertFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},
@@ -464,30 +471,30 @@ func Test_API_User_Update_200(t *testing.T) {
 			Method:      http.MethodPut,
 			StatusCode:  http.StatusOK,
 			AccessToken: &sd.Users[0].AccessToken.Token,
-			Input: &user_usecase.UpdateUser{
+			Input: &openapi.UpdateUser{
 				Name:            dbtest.StringPointer("Jack Housi"),
 				Email:           dbtest.StringPointer("chris@housi2.com"),
 				Department:      dbtest.StringPointer("IT0"),
 				Password:        dbtest.StringPointer("123"),
 				PasswordConfirm: dbtest.StringPointer("123"),
 			},
-			GotResp: &user_usecase.User{},
-			ExpResp: &user_usecase.User{
-				ID:         sd.Users[0].ID().String(),
+			GotResp: &openapi.User{},
+			ExpResp: &openapi.User{
+				Id:         sd.Users[0].ID().String(),
 				Name:       "Jack Housi",
 				Email:      "chris@housi2.com",
 				Department: "IT0",
 				Enabled:    true,
-				CreatedAt:  func() string { ; return clock.Format(new(sd.Users[0].CreatedAt())) }(),
-				UpdatedAt:  func() string { ; return clock.Format(new(sd.Users[0].UpdatedAt())) }(),
+				CreatedAt:  func() string { return clock.Format(new(sd.Users[0].CreatedAt())) }(),
+				UpdatedAt:  func() string { return clock.Format(new(sd.Users[0].UpdatedAt())) }(),
 			},
 			AssertFunc: func(got any, exp any) string {
-				gotResp, exists := got.(*user_usecase.User)
+				gotResp, exists := got.(*openapi.User)
 				if !exists {
 					return "error occurred"
 				}
 
-				expResp := exp.(*user_usecase.User)
+				expResp := exp.(*openapi.User)
 				gotResp.UpdatedAt = expResp.UpdatedAt
 
 				return cmp.Diff(gotResp, expResp)
@@ -518,7 +525,7 @@ func Test_API_User_Update_400(t *testing.T) {
 			Method:      http.MethodPut,
 			StatusCode:  http.StatusBadRequest,
 			AccessToken: &sd.Users[0].AccessToken.Token,
-			Input: &user_usecase.UpdateUser{
+			Input: &openapi.UpdateUser{
 				Email:           dbtest.StringPointer("bill@"),
 				PasswordConfirm: dbtest.StringPointer("jack"),
 			},

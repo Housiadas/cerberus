@@ -7,10 +7,6 @@ import (
 	"github.com/google/uuid"
 )
 
-type Generator interface {
-	Generate() (uuid.UUID, error)
-}
-
 type V7Generator struct{}
 
 // NewV7 creates a new V7 UUID generator.

@@ -7,12 +7,6 @@ import (
 	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
 )
 
-type Producer interface {
-	Produce(ctx context.Context, msg *kafka.Message) error
-	Flush(timeoutMs int) int
-	Close()
-}
-
 type ProducerConfig struct {
 	Brokers          string
 	SecurityProtocol string

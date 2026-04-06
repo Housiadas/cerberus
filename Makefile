@@ -96,17 +96,17 @@ go/rest/build:
 ## db/migrate/create name=$1: Create new migration files
 .PHONY: db/migrate/create
 db/migrate/create:
-	$(MIGRATE) create -seq -ext=.sql -dir=./database/migrations $(INPUT)
+	$(MIGRATE) create -seq -ext=.sql -dir=./migrations $(INPUT)
 
-## db/migrate/up: Apply all up database .migrations
+## db/migrate/up: Apply all up database migrations
 .PHONY: db/migrate/up
 db/migrate/up:
-	$(MIGRATE) -path=./.migrations -database=${MIGRATION_DB_DSN} up
+	$(MIGRATE) -path=./migrations -database=${MIGRATION_DB_DSN} up
 
-## db/migrate/down: Apply all down database .migrations (DROP Database)
+## db/migrate/down: Apply all down database migrations (DROP Database)
 .PHONY: db/migrate/down
 db/migrate/down:
-	$(MIGRATE) -path=./.migrations -database=${MIGRATION_DB_DSN} down
+	$(MIGRATE) -path=./migrations -database=${MIGRATION_DB_DSN} down
 
 ## ================ #
 ## Quality Control
@@ -309,7 +309,7 @@ generate:
 ## generate/api: Generate API code from OpenAPI spec
 .PHONY: generate/api
 generate/api:
-	go generate ./internal/app/handler/...
+	go generate ./internal/web/handler/...
 
 ## mockery: Generate mocks
 .PHONY: mockery

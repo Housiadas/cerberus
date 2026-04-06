@@ -7,16 +7,14 @@ import (
 	"sort"
 	"testing"
 
+	"github.com/Housiadas/cerberus/internal/core/permission"
+	"github.com/Housiadas/cerberus/internal/errs"
+	"github.com/Housiadas/cerberus/internal/testutil/apitest"
+	"github.com/Housiadas/cerberus/internal/testutil/dbtest"
+	"github.com/Housiadas/cerberus/internal/web/handler/openapi"
+	"github.com/Housiadas/cerberus/pkg/clock"
 	"github.com/google/go-cmp/cmp"
 	"github.com/stretchr/testify/require"
-
-	"github.com/Housiadas/cerberus/internal/core/service/permission_service"
-	"github.com/Housiadas/cerberus/internal/usecase/permission_usecase"
-	"github.com/Housiadas/cerberus/internal/utils/apitest"
-	"github.com/Housiadas/cerberus/internal/utils/dbtest"
-	"github.com/Housiadas/cerberus/internal/utils/errs"
-	"github.com/Housiadas/cerberus/pkg/clock"
-	"github.com/Housiadas/cerberus/pkg/cursor"
 )
 
 func Test_API_Permission_Query_200(t *testing.T) {
@@ -29,12 +27,17 @@ func Test_API_Permission_Query_200(t *testing.T) {
 	require.NoError(t, err)
 
 	ctx := context.Background()
-	perms, err := permission_service.TestSeedPermissions(ctx, 2, test.Core.Permission)
+	perms, err := permission.TestSeedPermissions(ctx, 2, test.Core.Permission)
 	require.NoError(t, err)
 
 	sort.Slice(perms, func(i, j int) bool {
 		return perms[i].ID().String() <= perms[j].ID().String()
 	})
+
+	expMd := openapi.Metadata{
+		HasMore: false,
+		Limit:   10,
+	}
 
 	table := []apitest.Table{
 		{
@@ -43,13 +46,10 @@ func Test_API_Permission_Query_200(t *testing.T) {
 			Method:      http.MethodGet,
 			StatusCode:  http.StatusOK,
 			AccessToken: &sd.Admins[0].AccessToken.Token,
-			GotResp:     &cursor.Result[permission_usecase.Permission]{},
-			ExpResp: &cursor.Result[permission_usecase.Permission]{
-				Data: toAppPermissions(perms),
-				Metadata: cursor.Metadata{
-					HasMore: false,
-					Limit:   10,
-				},
+			GotResp:     &openapi.PermissionPageResult{},
+			ExpResp: &openapi.PermissionPageResult{
+				Data:     new(toTestPermissions(perms)),
+				Metadata: &expMd,
 			},
 			AssertFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
@@ -103,21 +103,21 @@ func Test_API_Permission_Create_200(t *testing.T) {
 			Method:      http.MethodPost,
 			StatusCode:  http.StatusOK,
 			AccessToken: &sd.Admins[0].AccessToken.Token,
-			Input: &permission_usecase.NewPermission{
+			Input: &openapi.NewPermission{
 				Name: "document:read",
 			},
-			GotResp: &permission_usecase.Permission{},
-			ExpResp: &permission_usecase.Permission{
+			GotResp: &openapi.Permission{},
+			ExpResp: &openapi.Permission{
 				Name: "document:read",
 			},
 			AssertFunc: func(got any, exp any) string {
-				gotResp, exists := got.(*permission_usecase.Permission)
+				gotResp, exists := got.(*openapi.Permission)
 				if !exists {
 					return "error occurred"
 				}
 
-				expResp := exp.(*permission_usecase.Permission)
-				expResp.ID = gotResp.ID
+				expResp := exp.(*openapi.Permission)
+				expResp.Id = gotResp.Id
 				expResp.CreatedAt = gotResp.CreatedAt
 				expResp.UpdatedAt = gotResp.UpdatedAt
 
@@ -145,12 +145,12 @@ func Test_API_Permission_Create_400(t *testing.T) {
 			Method:      http.MethodPost,
 			StatusCode:  http.StatusBadRequest,
 			AccessToken: &sd.Admins[0].AccessToken.Token,
-			Input:       &permission_usecase.NewPermission{},
+			Input:       &openapi.NewPermission{},
 			GotResp:     &errs.Error{},
 			ExpResp: &errs.Error{
 				Status:  errs.InvalidArgument,
 				Code:    errs.CodeValidation,
-				Message: "validation error",
+				Message: `[{"field":"name","error":"name is required"}]`,
 				Fields:  []errs.FieldError{{Field: "name", Err: "name is required"}},
 			},
 			AssertFunc: func(got any, exp any) string {
@@ -162,7 +162,7 @@ func Test_API_Permission_Create_400(t *testing.T) {
 			URL:        "/api/v1/permissions",
 			Method:     http.MethodPost,
 			StatusCode: http.StatusUnauthorized,
-			Input:      &permission_usecase.NewPermission{Name: "document:read"},
+			Input:      &openapi.NewPermission{Name: "document:read"},
 			GotResp:    &errs.Error{},
 			ExpResp:    errs.Errorf(errs.Unauthenticated, errs.CodeUnauthenticated, "expected authorization header format: Bearer <token>"),
 			AssertFunc: func(got any, exp any) string {
@@ -190,7 +190,7 @@ func Test_API_Permission_Create_403(t *testing.T) {
 			Method:      http.MethodPost,
 			StatusCode:  http.StatusForbidden,
 			AccessToken: &sd.Users[0].AccessToken.Token,
-			Input:       &permission_usecase.NewPermission{Name: "document:read"},
+			Input:       &openapi.NewPermission{Name: "document:read"},
 			GotResp:     &errs.Error{},
 			ExpResp:     errs.Errorf(errs.PermissionDenied, errs.CodePermissionDenied, "permission denied"),
 			AssertFunc: func(got any, exp any) string {
@@ -212,7 +212,7 @@ func Test_API_Permission_Update_200(t *testing.T) {
 	require.NoError(t, err)
 
 	ctx := context.Background()
-	perms, err := permission_service.TestSeedPermissions(ctx, 1, test.Core.Permission)
+	perms, err := permission.TestSeedPermissions(ctx, 1, test.Core.Permission)
 	require.NoError(t, err)
 
 	table := []apitest.Table{
@@ -222,25 +222,25 @@ func Test_API_Permission_Update_200(t *testing.T) {
 			Method:      http.MethodPut,
 			StatusCode:  http.StatusOK,
 			AccessToken: &sd.Admins[0].AccessToken.Token,
-			Input: &permission_usecase.UpdatePermission{
+			Input: &openapi.UpdatePermission{
 				Name: dbtest.StringPointer("UpdatedPermission"),
 			},
-			GotResp: &permission_usecase.Permission{},
-			ExpResp: func() *permission_usecase.Permission {
-				return &permission_usecase.Permission{
-					ID:        perms[0].ID().String(),
+			GotResp: &openapi.Permission{},
+			ExpResp: func() *openapi.Permission {
+				return &openapi.Permission{
+					Id:        perms[0].ID().String(),
 					Name:      "UpdatedPermission",
 					CreatedAt: clock.Format(new(perms[0].CreatedAt())),
 					UpdatedAt: clock.Format(new(perms[0].UpdatedAt())),
 				}
 			}(),
 			AssertFunc: func(got any, exp any) string {
-				gotResp, exists := got.(*permission_usecase.Permission)
+				gotResp, exists := got.(*openapi.Permission)
 				if !exists {
 					return "error occurred"
 				}
 
-				expResp := exp.(*permission_usecase.Permission)
+				expResp := exp.(*openapi.Permission)
 				gotResp.UpdatedAt = expResp.UpdatedAt
 
 				return cmp.Diff(gotResp, expResp)
@@ -261,7 +261,7 @@ func Test_API_Permission_Update_403(t *testing.T) {
 	require.NoError(t, err)
 
 	ctx := context.Background()
-	perms, err := permission_service.TestSeedPermissions(ctx, 1, test.Core.Permission)
+	perms, err := permission.TestSeedPermissions(ctx, 1, test.Core.Permission)
 	require.NoError(t, err)
 
 	table := []apitest.Table{
@@ -271,7 +271,7 @@ func Test_API_Permission_Update_403(t *testing.T) {
 			Method:      http.MethodPut,
 			StatusCode:  http.StatusForbidden,
 			AccessToken: &sd.Users[0].AccessToken.Token,
-			Input: &permission_usecase.UpdatePermission{
+			Input: &openapi.UpdatePermission{
 				Name: dbtest.StringPointer("UpdatedPermission"),
 			},
 			GotResp: &errs.Error{},
@@ -295,7 +295,7 @@ func Test_API_Permission_Delete_204(t *testing.T) {
 	require.NoError(t, err)
 
 	ctx := context.Background()
-	perms, err := permission_service.TestSeedPermissions(ctx, 1, test.Core.Permission)
+	perms, err := permission.TestSeedPermissions(ctx, 1, test.Core.Permission)
 	require.NoError(t, err)
 
 	table := []apitest.Table{
@@ -321,7 +321,7 @@ func Test_API_Permission_Delete_403(t *testing.T) {
 	require.NoError(t, err)
 
 	ctx := context.Background()
-	perms, err := permission_service.TestSeedPermissions(ctx, 1, test.Core.Permission)
+	perms, err := permission.TestSeedPermissions(ctx, 1, test.Core.Permission)
 	require.NoError(t, err)
 
 	table := []apitest.Table{

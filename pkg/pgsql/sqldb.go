@@ -10,7 +10,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/Housiadas/cerberus/pkg/telemetry"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jmoiron/sqlx"
@@ -30,6 +29,10 @@ var (
 	ErrDBDuplicatedEntry = errors.New("duplicated entry")
 	ErrUndefinedTable    = errors.New("undefined table")
 )
+
+type logger interface {
+	Errorc(ctx context.Context, caller int, msg string, args ...any)
+}
 
 // Config is the required properties to use the database.
 type Config struct {
@@ -117,17 +120,11 @@ func StatusCheck(ctx context.Context, dbPool *sqlx.DB) error {
 	return fmt.Errorf("query row context error: %w", err)
 }
 
-// ExecContext is a helper function to execute a CUD operation with
-// logging and tracing.
-func ExecContext(ctx context.Context, log logger.Logger, db sqlx.ExtContext, query string) error {
-	return NamedExecContext(ctx, log, db, query, struct{}{})
-}
-
 // NamedExecContext is a helper function to execute a CRUD operation with
 // logging and tracing where field replacement is necessary.
 func NamedExecContext(
 	ctx context.Context,
-	log logger.Logger,
+	log logger,
 	db sqlx.ExtContext,
 	query string,
 	data any,
@@ -140,9 +137,9 @@ func NamedExecContext(
 		if err != nil {
 			switch data.(type) {
 			case struct{}:
-				log.Infoc(ctx, 6, "database.NamedExecContext", "query", q, "ERROR", err)
+				log.Errorc(ctx, 6, "database.NamedExecContext", "query", q, "ERROR", err)
 			default:
-				log.Infoc(ctx, 5, "database.NamedExecContext", "query", q, "ERROR", err)
+				log.Errorc(ctx, 5, "database.NamedExecContext", "query", q, "ERROR", err)
 			}
 		}
 	}()
@@ -152,8 +149,8 @@ func NamedExecContext(
 
 	_, err = sqlx.NamedExecContext(ctx, db, query, data)
 	if err != nil {
-		var pqerr *pgconn.PgError
-		if errors.As(err, &pqerr) {
+		pqerr, ok := errors.AsType[*pgconn.PgError](err)
+		if ok {
 			switch pqerr.Code {
 			case undefinedTable:
 				return ErrUndefinedTable
@@ -172,7 +169,7 @@ func NamedExecContext(
 // collection of data to be unmarshalled into a slice.
 func QuerySlice[T any](
 	ctx context.Context,
-	log *logger.Service,
+	log logger,
 	db sqlx.ExtContext,
 	query string,
 	dest *[]T,
@@ -185,7 +182,7 @@ func QuerySlice[T any](
 // necessary.
 func NamedQuerySlice[T any](
 	ctx context.Context,
-	log logger.Logger,
+	log logger,
 	db sqlx.ExtContext,
 	query string,
 	data any,
@@ -199,7 +196,7 @@ func NamedQuerySlice[T any](
 // is necessary. Use this if the query has an IN clause.
 func NamedQuerySliceUsingIn[T any](
 	ctx context.Context,
-	log *logger.Service,
+	log logger,
 	db sqlx.ExtContext,
 	query string,
 	data any,
@@ -211,7 +208,7 @@ func NamedQuerySliceUsingIn[T any](
 //nolint:cyclop
 func namedQuerySlice[T any](
 	ctx context.Context,
-	log logger.Logger,
+	log logger,
 	db sqlx.ExtContext,
 	query string,
 	data any,
@@ -224,7 +221,7 @@ func namedQuerySlice[T any](
 
 	defer func() {
 		if err != nil {
-			log.Infoc(ctx, 6, "database.NamedQuerySlice", "query", q, "ERROR", err)
+			log.Errorc(ctx, 6, "database.NamedQuerySlice", "query", q, "ERROR", err)
 		}
 	}()
 
@@ -260,8 +257,8 @@ func namedQuerySlice[T any](
 	}
 
 	if err != nil {
-		var pqerr *pgconn.PgError
-		if errors.As(err, &pqerr) && pqerr.Code == undefinedTable {
+		pqerr, ok := errors.AsType[*pgconn.PgError](err)
+		if ok && pqerr.Code == undefinedTable {
 			return ErrUndefinedTable
 		}
 
@@ -292,7 +289,7 @@ func namedQuerySlice[T any](
 // single value to be unmarshalled into a struct type where field replacement is necessary.
 func QueryStruct(
 	ctx context.Context,
-	log *logger.Service,
+	log logger,
 	db sqlx.ExtContext,
 	query string,
 	dest any,
@@ -304,7 +301,7 @@ func QueryStruct(
 // single value to be unmarshalled into a struct type where field replacement is necessary.
 func NamedQueryStruct(
 	ctx context.Context,
-	log logger.Logger,
+	log logger,
 	db sqlx.ExtContext,
 	query string,
 	data any,
@@ -318,7 +315,7 @@ func NamedQueryStruct(
 // is necessary. Use this if the query has an IN clause.
 func NamedQueryStructUsingIn(
 	ctx context.Context,
-	log logger.Logger,
+	log logger,
 	db sqlx.ExtContext,
 	query string,
 	data any,
@@ -330,7 +327,7 @@ func NamedQueryStructUsingIn(
 //nolint:cyclop
 func namedQueryStruct(
 	ctx context.Context,
-	log logger.Logger,
+	log logger,
 	db sqlx.ExtContext,
 	query string,
 	data any,
@@ -343,7 +340,7 @@ func namedQueryStruct(
 
 	defer func() {
 		if err != nil {
-			log.Infoc(ctx, 6, "database.NamedQuerySlice", "query", q, "ERROR", err)
+			log.Errorc(ctx, 6, "database.NamedQuerySlice", "query", q, "ERROR", err)
 		}
 	}()
 
@@ -375,8 +372,8 @@ func namedQueryStruct(
 	}
 
 	if err != nil {
-		var pqerr *pgconn.PgError
-		if errors.As(err, &pqerr) && pqerr.Code == undefinedTable {
+		pqerr, ok := errors.AsType[*pgconn.PgError](err)
+		if ok && pqerr.Code == undefinedTable {
 			return ErrUndefinedTable
 		}
 

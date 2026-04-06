@@ -1,0 +1,119 @@
+package middleware
+
+import (
+	"context"
+	"encoding/base64"
+	"net/http"
+	"net/mail"
+	"strings"
+
+	ctxPck "github.com/Housiadas/cerberus/internal/context"
+	errs2 "github.com/Housiadas/cerberus/internal/errs"
+	"github.com/Housiadas/cerberus/internal/web/handler/openapi"
+)
+
+// publicOperations lists operations that do not require authentication.
+var publicOperations = map[string]struct{}{
+	"AuthLogin":          {},
+	"AuthRegister":       {},
+	"AuthRefresh":        {},
+	"AuthForgotPassword": {},
+	"Readiness":          {},
+	"Liveness":           {},
+}
+
+// Authenticate applies bearer token authentication for protected operations.
+func (m *Middleware) Authenticate() openapi.StrictMiddlewareFunc {
+	return func(
+		f openapi.StrictHandlerFunc,
+		operationID string,
+	) openapi.StrictHandlerFunc {
+		if _, ok := publicOperations[operationID]; ok {
+			return f
+		}
+
+		return func(ctx context.Context, w http.ResponseWriter, r *http.Request, request any) (any, error) {
+			bearerToken := r.Header.Get("Authorization")
+			if !strings.HasPrefix(bearerToken, "Bearer ") {
+				return nil, errs2.New(
+					errs2.Unauthenticated,
+					errs2.CodeUnauthenticated,
+					ErrInvalidAuthHeader,
+				)
+			}
+
+			jwtUnverified := bearerToken[7:]
+
+			resp, err := m.useCase.auth.Validate(ctx, jwtUnverified)
+			if err != nil {
+				return nil, errs2.New(errs2.Unauthenticated, errs2.CodeUnauthenticated, err)
+			}
+
+			ctx = ctxPck.SetActorID(ctx, resp.Subject)
+
+			return f(ctx, w, r.WithContext(ctx), request)
+		}
+	}
+}
+
+// AuthenticateBasic processes basic authentication logic.
+// needs to be changed to openapi-codegen format.
+func (m *Middleware) AuthenticateBasic() func(next http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			ctx := r.Context()
+			authorizationHeader := r.Header.Get("Authorization")
+
+			email, pass, ok := parseBasicAuth(authorizationHeader)
+			if !ok {
+				err := errs2.New(
+					errs2.Unauthenticated,
+					errs2.CodeUnauthenticated,
+					ErrInvalidBasicAuth,
+				)
+				m.Error(w, err, http.StatusUnauthorized)
+
+				return
+			}
+
+			addr, parseErr := mail.ParseAddress(email)
+			if parseErr != nil {
+				m.Error(w, errs2.New(
+					errs2.Unauthenticated,
+					errs2.CodeUnauthenticated,
+					ErrInvalidBasicAuth,
+				), http.StatusUnauthorized)
+
+				return
+			}
+
+			_, err := m.useCase.user.Authenticate(ctx, *addr, pass)
+			if err != nil {
+				m.Error(w, err, http.StatusUnauthorized)
+
+				return
+			}
+
+			next.ServeHTTP(w, r.WithContext(ctx))
+		})
+	}
+}
+
+func parseBasicAuth(auth string) (string, string, bool) {
+	parts := strings.Split(auth, " ")
+	if len(parts) != 2 || parts[0] != "Basic" {
+		return "", "", false
+	}
+
+	c, err := base64.StdEncoding.DecodeString(parts[1])
+	if err != nil {
+		return "", "", false
+	}
+
+	username, password, ok := strings.Cut(string(c), ":")
+	if !ok {
+		return "", "", false
+	}
+
+	return username, password, true
+}

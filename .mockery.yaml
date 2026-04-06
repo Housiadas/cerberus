@@ -1,86 +1,113 @@
 all: false
 dir: '{{.InterfaceDir}}'
-filename: mock.go
+filename: mock_test.go
 force-file-write: true
 formatter: goimports
 generate: true
 include-auto-generated: false
 log-level: info
 structname: '{{.Mock}}{{.InterfaceName}}'
-pkgname: '{{.SrcPackageName}}'
+pkgname: '{{.SrcPackageName}}_test'
 recursive: false
 require-template-schema-exists: true
 template: testify
 template-schema: '{{.Template}}.schema.json'
 packages:
-  # core directory
-  github.com/Housiadas/cerberus/internal/core/domain/user:
+  # Core directory
+  github.com/Housiadas/cerberus/internal/core/account:
     config:
       all: true
-  github.com/Housiadas/cerberus/internal/core/domain/audit:
+  github.com/Housiadas/cerberus/internal/core/user:
     config:
       all: true
-  github.com/Housiadas/cerberus/internal/core/domain/role:
+    interfaces:
+      Storer:
+        config:
+          dir: internal/core/user/mocks
+          filename: mock_user.go
+          pkgname: usermocks
+  github.com/Housiadas/cerberus/internal/core/user/user_cache:
     config:
       all: true
-  github.com/Housiadas/cerberus/internal/core/domain/permission:
+  github.com/Housiadas/cerberus/internal/core/audit:
     config:
       all: true
-  github.com/Housiadas/cerberus/internal/core/domain/refresh_token:
+  github.com/Housiadas/cerberus/internal/core/role:
     config:
       all: true
-  github.com/Housiadas/cerberus/internal/core/domain/user_roles_permissions:
+    interfaces:
+      Storer:
+        config:
+          dir: internal/core/role/mocks
+          filename: mock_role.go
+          pkgname: rolemocks
+  github.com/Housiadas/cerberus/internal/core/role/role_cache:
     config:
       all: true
-  github.com/Housiadas/cerberus/internal/core/domain/user_roles:
+  github.com/Housiadas/cerberus/internal/core/permission:
     config:
       all: true
-  github.com/Housiadas/cerberus/internal/core/domain/role_permissions:
+    interfaces:
+      Storer:
+        config:
+          dir: internal/core/permission/mocks
+          filename: mock_permission.go
+          pkgname: permissionmocks
+  github.com/Housiadas/cerberus/internal/core/permission/permission_cache:
     config:
       all: true
-  github.com/Housiadas/cerberus/internal/core/domain/outbox:
+  github.com/Housiadas/cerberus/internal/core/refresh_token:
     config:
       all: true
-  github.com/Housiadas/cerberus/internal/core/domain/reset_token:
+  github.com/Housiadas/cerberus/internal/core/user_roles_permissions:
     config:
       all: true
-  github.com/Housiadas/cerberus/internal/core/domain/email_notification_outbox:
+  github.com/Housiadas/cerberus/internal/core/user_roles:
     config:
       all: true
-  github.com/Housiadas/cerberus/internal/core/domain/account:
+  github.com/Housiadas/cerberus/internal/core/role_permissions:
     config:
       all: true
-  github.com/Housiadas/cerberus/internal/core/domain/subscription:
+  github.com/Housiadas/cerberus/internal/core/outbox:
     config:
       all: true
-  github.com/Housiadas/cerberus/internal/core/domain/invoice:
+  github.com/Housiadas/cerberus/internal/core/reset_token:
     config:
       all: true
-  github.com/Housiadas/cerberus/internal/core/domain/payment:
+  github.com/Housiadas/cerberus/internal/core/email_notification_outbox:
     config:
       all: true
-  github.com/Housiadas/cerberus/internal/core/domain/refund:
+  github.com/Housiadas/cerberus/internal/core/subscription:
     config:
       all: true
-  github.com/Housiadas/cerberus/internal/core/domain/billing_address:
+  github.com/Housiadas/cerberus/internal/core/invoice:
     config:
       all: true
-  # pkg directory
-  github.com/Housiadas/cerberus/pkg/kafka:
+  github.com/Housiadas/cerberus/internal/core/payment:
     config:
       all: true
-  github.com/Housiadas/cerberus/pkg/clock:
+  github.com/Housiadas/cerberus/internal/core/refund:
     config:
       all: true
-  github.com/Housiadas/cerberus/pkg/hasher:
+  github.com/Housiadas/cerberus/internal/core/billing_address:
     config:
       all: true
-  github.com/Housiadas/cerberus/pkg/redis:
+  # sdk
+  github.com/Housiadas/cerberus/internal/eventbus:
     config:
       all: true
+  # relay
+  github.com/Housiadas/cerberus/internal/relay:
+    config:
+      all: true
+  github.com/Housiadas/cerberus/internal/distributed_storage:
+    config:
+      all: true
+  # pkg
   github.com/Housiadas/cerberus/pkg/logger:
-    config:
-      all: true
-  github.com/Housiadas/cerberus/pkg/uuidgen:
-    config:
-      all: true
+    interfaces:
+      Logger:
+        config:
+          dir: pkg/logger/mocks
+          filename: mock_logger.go
+          pkgname: loggermocks

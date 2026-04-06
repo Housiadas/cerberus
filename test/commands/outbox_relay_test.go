@@ -7,10 +7,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Housiadas/cerberus/internal/app/relay"
-	"github.com/Housiadas/cerberus/internal/app/repo/outbox_repo"
-	"github.com/Housiadas/cerberus/internal/core/domain/outbox"
-	"github.com/Housiadas/cerberus/internal/core/service/outbox_service"
+	"github.com/Housiadas/cerberus/internal/core/outbox"
+	"github.com/Housiadas/cerberus/internal/core/outbox/outbox_repo"
+	"github.com/Housiadas/cerberus/internal/relay"
 	"github.com/Housiadas/cerberus/pkg/clock"
 	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/Housiadas/cerberus/pkg/uuidgen"
@@ -38,7 +37,7 @@ func Test_OutboxRelay_ProcessesEntries(t *testing.T) {
 	outboxRepo := outbox_repo.NewStore(log, db)
 	uuidGen := uuidgen.NewV7()
 	clk := clock.NewClock()
-	outboxSvc := outbox_service.New(log, outboxRepo, uuidGen, clk)
+	outboxSvc := outbox.NewService(log, outboxRepo, uuidGen, clk)
 
 	// Insert test outbox entries directly via the service
 	ctx := context.Background()
@@ -114,7 +113,7 @@ func Test_OutboxRelay_RetriesFailedEntries(t *testing.T) {
 	outboxRepo := outbox_repo.NewStore(log, db)
 	uuidGen := uuidgen.NewV7()
 	clk := clock.NewClock()
-	outboxSvc := outbox_service.New(log, outboxRepo, uuidGen, clk)
+	outboxSvc := outbox.NewService(log, outboxRepo, uuidGen, clk)
 
 	ctx := context.Background()
 
@@ -163,7 +162,7 @@ func Test_OutboxRelay_MarkProcessed(t *testing.T) {
 	outboxRepo := outbox_repo.NewStore(log, db)
 	uuidGen := uuidgen.NewV7()
 	clk := clock.NewClock()
-	outboxSvc := outbox_service.New(log, outboxRepo, uuidGen, clk)
+	outboxSvc := outbox.NewService(log, outboxRepo, uuidGen, clk)
 
 	ctx := context.Background()
 

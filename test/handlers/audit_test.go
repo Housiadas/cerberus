@@ -3,16 +3,13 @@ package handlers_test
 import (
 	"net/http"
 	"sort"
-	"strings"
 	"testing"
 
+	errs2 "github.com/Housiadas/cerberus/internal/errs"
+	"github.com/Housiadas/cerberus/internal/testutil/apitest"
+	"github.com/Housiadas/cerberus/internal/web/handler/openapi"
 	"github.com/google/go-cmp/cmp"
 	"github.com/stretchr/testify/require"
-
-	"github.com/Housiadas/cerberus/internal/usecase/audit_usecase"
-	"github.com/Housiadas/cerberus/internal/utils/apitest"
-	"github.com/Housiadas/cerberus/internal/utils/errs"
-	"github.com/Housiadas/cerberus/pkg/cursor"
 )
 
 func Test_API_Audit_Query_200(t *testing.T) {
@@ -28,6 +25,11 @@ func Test_API_Audit_Query_200(t *testing.T) {
 		return sd.Admins[0].Audits[i].ObjName().String() <= sd.Admins[0].Audits[j].ObjName().String()
 	})
 
+	expMd := openapi.Metadata{
+		HasMore: false,
+		Limit:   10,
+	}
+
 	table := []apitest.Table{
 		{
 			Name:        "basic",
@@ -35,31 +37,17 @@ func Test_API_Audit_Query_200(t *testing.T) {
 			StatusCode:  http.StatusOK,
 			Method:      http.MethodGet,
 			AccessToken: &sd.Admins[0].AccessToken.Token,
-			GotResp:     &cursor.Result[audit_usecase.Audit]{},
-			ExpResp: &cursor.Result[audit_usecase.Audit]{
-				Metadata: cursor.Metadata{
-					HasMore: false,
-					Limit:   10,
-				},
-				Data: toAppAudits(sd.Admins[0].Audits),
+			GotResp:     &openapi.AuditPageResult{},
+			ExpResp: &openapi.AuditPageResult{
+				Metadata: &expMd,
+				Data:     new(toTestAudits(sd.Admins[0].Audits)),
 			},
 			AssertFunc: func(got any, exp any) string {
-				gotResp, exists := got.(*cursor.Result[audit_usecase.Audit])
+				gotResp, exists := got.(*openapi.AuditPageResult)
 				if !exists {
 					return "error occurred"
 				}
-
-				expResp := exp.(*cursor.Result[audit_usecase.Audit])
-
-				for i := range gotResp.Data {
-					if gotResp.Data[i].Timestamp == expResp.Data[i].Timestamp {
-						expResp.Data[i].Timestamp = gotResp.Data[i].Timestamp
-					}
-
-					gotResp.Data[i].Data = strings.ReplaceAll(gotResp.Data[i].Data, " ", "")
-					expResp.Data[i].Data = strings.ReplaceAll(expResp.Data[i].Data, " ", "")
-				}
-
+				expResp := exp.(*openapi.AuditPageResult)
 				return cmp.Diff(gotResp, expResp)
 			},
 		},
@@ -84,8 +72,8 @@ func Test_API_Audit_Query_400(t *testing.T) {
 			StatusCode:  http.StatusBadRequest,
 			Method:      http.MethodGet,
 			AccessToken: &sd.Admins[0].AccessToken.Token,
-			GotResp:     &errs.Error{},
-			ExpResp:     errs.Errorf(errs.InvalidArgument, errs.CodeValidation, "[{\"field\":\"obj_id\",\"error\":\"invalid UUID length: 3\"}]"),
+			GotResp:     &errs2.Error{},
+			ExpResp:     errs2.Errorf(errs2.InvalidArgument, errs2.CodeValidation, "[{\"field\":\"obj_id\",\"error\":\"invalid UUID length: 3\"}]"),
 			AssertFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},
@@ -96,8 +84,8 @@ func Test_API_Audit_Query_400(t *testing.T) {
 			StatusCode:  http.StatusBadRequest,
 			Method:      http.MethodGet,
 			AccessToken: &sd.Admins[0].AccessToken.Token,
-			GotResp:     &errs.Error{},
-			ExpResp:     errs.Errorf(errs.InvalidArgument, errs.CodeValidation, "[{\"field\":\"order\",\"error\":\"unknown order: ser_id\"}]"),
+			GotResp:     &errs2.Error{},
+			ExpResp:     errs2.Errorf(errs2.InvalidArgument, errs2.CodeValidation, "[{\"field\":\"order\",\"error\":\"unknown order: ser_id\"}]"),
 			AssertFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},
@@ -123,8 +111,8 @@ func Test_API_Audit_Query_403(t *testing.T) {
 			StatusCode:  http.StatusForbidden,
 			Method:      http.MethodGet,
 			AccessToken: &sd.Users[0].AccessToken.Token,
-			GotResp:     &errs.Error{},
-			ExpResp:     errs.Errorf(errs.PermissionDenied, errs.CodePermissionDenied, "permission denied"),
+			GotResp:     &errs2.Error{},
+			ExpResp:     errs2.Errorf(errs2.PermissionDenied, errs2.CodePermissionDenied, "permission denied"),
 			AssertFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},

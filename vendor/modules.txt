@@ -516,11 +516,7 @@ github.com/stretchr/testify/require
 # github.com/stripe/stripe-go/v82 v82.5.1
 ## explicit; go 1.18
 github.com/stripe/stripe-go/v82
-github.com/stripe/stripe-go/v82/billingportal/session
-github.com/stripe/stripe-go/v82/checkout/session
-github.com/stripe/stripe-go/v82/customer
 github.com/stripe/stripe-go/v82/form
-github.com/stripe/stripe-go/v82/subscription
 github.com/stripe/stripe-go/v82/webhook
 # github.com/subosito/gotenv v1.6.0
 ## explicit; go 1.18
@@ -809,7 +805,7 @@ google.golang.org/genproto/googleapis/api/httpbody
 ## explicit; go 1.25.0
 google.golang.org/genproto/googleapis/rpc/errdetails
 google.golang.org/genproto/googleapis/rpc/status
-# google.golang.org/grpc v1.79.2
+# google.golang.org/grpc v1.79.3
 ## explicit; go 1.24.0
 google.golang.org/grpc
 google.golang.org/grpc/attributes

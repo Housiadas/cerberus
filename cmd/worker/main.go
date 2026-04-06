@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/Housiadas/cerberus/internal/app/command"
+	command2 "github.com/Housiadas/cerberus/internal/command"
 	"github.com/Housiadas/cerberus/internal/config"
-	ctxPck "github.com/Housiadas/cerberus/internal/utils/context"
+	ctxPck "github.com/Housiadas/cerberus/internal/context"
 	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/Housiadas/cerberus/pkg/telemetry"
 )
@@ -18,7 +18,7 @@ var build = "develop"
 func main() {
 	err := run()
 	if err != nil {
-		if !errors.Is(err, command.ErrHelp) {
+		if !errors.Is(err, command2.ErrHelp) {
 			fmt.Println("msg", err)
 		}
 
@@ -72,7 +72,7 @@ func run() error {
 	// -------------------------------------------------------------------------
 	// Initialize commands
 	// -------------------------------------------------------------------------
-	cmd := command.New(command.Config{
+	cmd := command2.New(command2.Config{
 		DB:     cfg.DB,
 		Kafka:  cfg.Kafka,
 		Email:  cfg.Email,
@@ -88,9 +88,9 @@ func run() error {
 }
 
 // processCommands handles the execution of the commands specified on the command line.
-func processCommands(args []string, cmd *command.Command) error {
+func processCommands(args []string, cmd *command2.Command) error {
 	switch args[1] {
-	case command.UserAdd:
+	case command2.UserAdd:
 		name := args[2]
 		email := args[3]
 		password := args[4]
@@ -99,13 +99,13 @@ func processCommands(args []string, cmd *command.Command) error {
 		if err != nil {
 			return fmt.Errorf("adding user: %w", err)
 		}
-	case command.OutboxRelay:
+	case command2.OutboxRelay:
 		err := cmd.OutboxRelay()
 		if err != nil {
 			return fmt.Errorf("outbox relay: %w", err)
 		}
 
-	case command.EmailNotificationRelay:
+	case command2.EmailNotificationRelay:
 		err := cmd.EmailNotificationRelay()
 		if err != nil {
 			return fmt.Errorf("email notification relay: %w", err)
@@ -117,7 +117,7 @@ func processCommands(args []string, cmd *command.Command) error {
 		fmt.Println("email-notification-relay: start the email notification relay process")
 		fmt.Println("provide a command")
 
-		return command.ErrHelp
+		return command2.ErrHelp
 	}
 
 	return nil

@@ -6,26 +6,19 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-// Hasher defines the interface for password hashing operations.
-type Hasher interface {
-	Hash(password string) ([]byte, error)
-	Compare(hashedPassword []byte, password string) error
-}
-
-// BcryptHasher implements Hasher using bcrypt.
 type BcryptHasher struct {
 	cost int
 }
 
 // NewBcrypt creates a new bcrypt hasher with default cost.
-func NewBcrypt() Hasher {
+func NewBcrypt() *BcryptHasher {
 	return &BcryptHasher{
 		cost: bcrypt.DefaultCost,
 	}
 }
 
 // NewBcryptWithCost creates a bcrypt hasher with custom cost.
-func NewBcryptWithCost(cost int) Hasher {
+func NewBcryptWithCost(cost int) *BcryptHasher {
 	return &BcryptHasher{
 		cost: cost,
 	}

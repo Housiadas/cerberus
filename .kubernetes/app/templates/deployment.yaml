@@ -22,7 +22,7 @@ spec:
           command:
             - "migrate"
             - "-path"
-            - ".migrations"
+            - "migrations"
             - "-database"
             - "postgres://{{ .Values.env.db.user }}:{{ .Values.env.db.password }}@{{ .Values.env.db.host }}/{{ .Values.env.db.name }}?sslmode=disable"
             - "up"

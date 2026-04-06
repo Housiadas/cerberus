@@ -7,14 +7,13 @@ import (
 	"testing"
 	"time"
 
+	"github.com/Housiadas/cerberus/internal/core/email_notification_outbox"
+	"github.com/Housiadas/cerberus/internal/core/email_notification_outbox/email_notification_outbox_repo"
+	"github.com/Housiadas/cerberus/internal/relay"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/Housiadas/cerberus/internal/app/email_relay"
-	"github.com/Housiadas/cerberus/internal/app/repo/email_notification_outbox_repo"
-	"github.com/Housiadas/cerberus/internal/core/domain/email_notification_outbox"
-	"github.com/Housiadas/cerberus/internal/core/service/email_notification_outbox_service"
 	"github.com/Housiadas/cerberus/pkg/clock"
 	"github.com/Housiadas/cerberus/pkg/email"
 	"github.com/Housiadas/cerberus/pkg/logger"
@@ -35,7 +34,7 @@ func Test_EmailNotificationRelay_RetriesFailedEntries(t *testing.T) {
 	outboxRepo := email_notification_outbox_repo.NewStore(log, db)
 	uuidGen := uuidgen.NewV7()
 	clk := clock.NewClock()
-	outboxSvc := email_notification_outbox_service.New(log, outboxRepo, uuidGen, clk)
+	outboxSvc := email_notification_outbox.NewService(log, outboxRepo, uuidGen, clk)
 
 	payload, err := json.Marshal(map[string]string{
 		"subject": "Reset your password",
@@ -90,7 +89,7 @@ func Test_EmailNotificationRelay_MarkProcessed(t *testing.T) {
 	outboxRepo := email_notification_outbox_repo.NewStore(log, db)
 	uuidGen := uuidgen.NewV7()
 	clk := clock.NewClock()
-	outboxSvc := email_notification_outbox_service.New(log, outboxRepo, uuidGen, clk)
+	outboxSvc := email_notification_outbox.NewService(log, outboxRepo, uuidGen, clk)
 
 	payload, err := json.Marshal(map[string]string{
 		"subject": "Reset your password",
@@ -138,7 +137,7 @@ func Test_EmailNotificationRelay_ProcessesBatch_InvalidSMTP(t *testing.T) {
 	outboxRepo := email_notification_outbox_repo.NewStore(log, db)
 	uuidGen := uuidgen.NewV7()
 	clk := clock.NewClock()
-	outboxSvc := email_notification_outbox_service.New(log, outboxRepo, uuidGen, clk)
+	outboxSvc := email_notification_outbox.NewService(log, outboxRepo, uuidGen, clk)
 
 	payload, err := json.Marshal(map[string]string{
 		"subject": "Reset your password",
@@ -171,7 +170,7 @@ func Test_EmailNotificationRelay_ProcessesBatch_InvalidSMTP(t *testing.T) {
 		From:     "noreply@example.com",
 	})
 
-	relay := email_relay.New(log, outboxSvc, emailClient, 200*time.Millisecond, 100, 3)
+	relay := relay.NewEmailRelay(log, outboxSvc, emailClient, 200*time.Millisecond, 100, 3)
 
 	relayCtx, relayCancel := context.WithCancel(ctx)
 	done := make(chan struct{})

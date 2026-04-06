@@ -18,6 +18,3 @@ cover.out
 coverage.out
 filtered.out
 cover.html
-
-# claude
-.claude/settings.local.json

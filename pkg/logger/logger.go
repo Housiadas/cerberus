@@ -12,12 +12,6 @@ import (
 	"time"
 )
 
-// TraceIDFn represents a function that can return the trace id from the specified context.
-type TraceIDFn func(ctx context.Context) string
-
-// RequestIDFn represents a function that can return the request id from the specified context.
-type RequestIDFn func(ctx context.Context) string
-
 type Logger interface {
 	Debug(ctx context.Context, msg string, args ...any)
 	Debugc(ctx context.Context, caller int, msg string, args ...any)
@@ -28,6 +22,12 @@ type Logger interface {
 	Error(ctx context.Context, msg string, args ...any)
 	Errorc(ctx context.Context, caller int, msg string, args ...any)
 }
+
+// TraceIDFn represents a function that can return the trace id from the specified context.
+type TraceIDFn func(ctx context.Context) string
+
+// RequestIDFn represents a function that can return the request id from the specified context.
+type RequestIDFn func(ctx context.Context) string
 
 // Service represents a logger for logging information.
 type Service struct {
@@ -143,38 +143,6 @@ func (log *Service) Errorc(ctx context.Context, caller int, msg string, args ...
 	log.write(ctx, LevelError, caller, msg, args...)
 }
 
-func (log *Service) write(
-	ctx context.Context,
-	level Level,
-	caller int,
-	msg string,
-	args ...any,
-) {
-	slogLevel := slog.Level(level)
-
-	if !log.handler.Enabled(ctx, slogLevel) {
-		return
-	}
-
-	var pcs [1]uintptr
-
-	runtime.Callers(caller, pcs[:])
-
-	slogRec := slog.NewRecord(time.Now(), slogLevel, msg, pcs[0])
-
-	if log.traceIDFn != nil {
-		args = append(args, "trace_id", log.traceIDFn(ctx))
-	}
-
-	if log.requestIDFn != nil {
-		args = append(args, "request_id", log.requestIDFn(ctx))
-	}
-
-	slogRec.Add(args...)
-
-	log.handler.Handle(ctx, slogRec) //nolint:errcheck
-}
-
 func newLogger(
 	w io.Writer,
 	minLevel Level,
@@ -224,4 +192,36 @@ func newLogger(
 		traceIDFn:   traceID,
 		requestIDFn: requestID,
 	}
+}
+
+func (log *Service) write(
+	ctx context.Context,
+	level Level,
+	caller int,
+	msg string,
+	args ...any,
+) {
+	slogLevel := slog.Level(level)
+
+	if !log.handler.Enabled(ctx, slogLevel) {
+		return
+	}
+
+	var pcs [1]uintptr
+
+	runtime.Callers(caller, pcs[:])
+
+	slogRec := slog.NewRecord(time.Now(), slogLevel, msg, pcs[0])
+
+	if log.traceIDFn != nil {
+		args = append(args, "trace_id", log.traceIDFn(ctx))
+	}
+
+	if log.requestIDFn != nil {
+		args = append(args, "request_id", log.requestIDFn(ctx))
+	}
+
+	slogRec.Add(args...)
+
+	log.handler.Handle(ctx, slogRec) //nolint:errcheck
 }
