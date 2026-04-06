@@ -8,14 +8,13 @@ import (
 	"testing"
 
 	"github.com/Housiadas/cerberus/internal/core/permission"
-	errs2 "github.com/Housiadas/cerberus/internal/errs"
+	"github.com/Housiadas/cerberus/internal/errs"
 	"github.com/Housiadas/cerberus/internal/testutil/apitest"
 	"github.com/Housiadas/cerberus/internal/testutil/dbtest"
 	"github.com/Housiadas/cerberus/internal/web/handler/openapi"
+	"github.com/Housiadas/cerberus/pkg/clock"
 	"github.com/google/go-cmp/cmp"
 	"github.com/stretchr/testify/require"
-
-	"github.com/Housiadas/cerberus/pkg/clock"
 )
 
 func Test_API_Permission_Query_200(t *testing.T) {
@@ -35,7 +34,6 @@ func Test_API_Permission_Query_200(t *testing.T) {
 		return perms[i].ID().String() <= perms[j].ID().String()
 	})
 
-	expData := toTestPermissions(perms)
 	expMd := openapi.Metadata{
 		HasMore: false,
 		Limit:   10,
@@ -50,7 +48,7 @@ func Test_API_Permission_Query_200(t *testing.T) {
 			AccessToken: &sd.Admins[0].AccessToken.Token,
 			GotResp:     &openapi.PermissionPageResult{},
 			ExpResp: &openapi.PermissionPageResult{
-				Data:     &expData,
+				Data:     new(toTestPermissions(perms)),
 				Metadata: &expMd,
 			},
 			AssertFunc: func(got any, exp any) string {
@@ -78,8 +76,8 @@ func Test_API_Permission_Query_403(t *testing.T) {
 			Method:      http.MethodGet,
 			StatusCode:  http.StatusForbidden,
 			AccessToken: &sd.Users[0].AccessToken.Token,
-			GotResp:     &errs2.Error{},
-			ExpResp:     errs2.Errorf(errs2.PermissionDenied, errs2.CodePermissionDenied, "permission denied"),
+			GotResp:     &errs.Error{},
+			ExpResp:     errs.Errorf(errs.PermissionDenied, errs.CodePermissionDenied, "permission denied"),
 			AssertFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},
@@ -148,12 +146,12 @@ func Test_API_Permission_Create_400(t *testing.T) {
 			StatusCode:  http.StatusBadRequest,
 			AccessToken: &sd.Admins[0].AccessToken.Token,
 			Input:       &openapi.NewPermission{},
-			GotResp:     &errs2.Error{},
-			ExpResp: &errs2.Error{
-				Status:  errs2.InvalidArgument,
-				Code:    errs2.CodeValidation,
-				Message: "validation error",
-				Fields:  []errs2.FieldError{{Field: "name", Err: "name is required"}},
+			GotResp:     &errs.Error{},
+			ExpResp: &errs.Error{
+				Status:  errs.InvalidArgument,
+				Code:    errs.CodeValidation,
+				Message: `[{"field":"name","error":"name is required"}]`,
+				Fields:  []errs.FieldError{{Field: "name", Err: "name is required"}},
 			},
 			AssertFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
@@ -165,8 +163,8 @@ func Test_API_Permission_Create_400(t *testing.T) {
 			Method:     http.MethodPost,
 			StatusCode: http.StatusUnauthorized,
 			Input:      &openapi.NewPermission{Name: "document:read"},
-			GotResp:    &errs2.Error{},
-			ExpResp:    errs2.Errorf(errs2.Unauthenticated, errs2.CodeUnauthenticated, "expected authorization header format: Bearer <token>"),
+			GotResp:    &errs.Error{},
+			ExpResp:    errs.Errorf(errs.Unauthenticated, errs.CodeUnauthenticated, "expected authorization header format: Bearer <token>"),
 			AssertFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},
@@ -193,8 +191,8 @@ func Test_API_Permission_Create_403(t *testing.T) {
 			StatusCode:  http.StatusForbidden,
 			AccessToken: &sd.Users[0].AccessToken.Token,
 			Input:       &openapi.NewPermission{Name: "document:read"},
-			GotResp:     &errs2.Error{},
-			ExpResp:     errs2.Errorf(errs2.PermissionDenied, errs2.CodePermissionDenied, "permission denied"),
+			GotResp:     &errs.Error{},
+			ExpResp:     errs.Errorf(errs.PermissionDenied, errs.CodePermissionDenied, "permission denied"),
 			AssertFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},
@@ -276,8 +274,8 @@ func Test_API_Permission_Update_403(t *testing.T) {
 			Input: &openapi.UpdatePermission{
 				Name: dbtest.StringPointer("UpdatedPermission"),
 			},
-			GotResp: &errs2.Error{},
-			ExpResp: errs2.Errorf(errs2.PermissionDenied, errs2.CodePermissionDenied, "permission denied"),
+			GotResp: &errs.Error{},
+			ExpResp: errs.Errorf(errs.PermissionDenied, errs.CodePermissionDenied, "permission denied"),
 			AssertFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},
@@ -333,8 +331,8 @@ func Test_API_Permission_Delete_403(t *testing.T) {
 			Method:      http.MethodDelete,
 			StatusCode:  http.StatusForbidden,
 			AccessToken: &sd.Users[0].AccessToken.Token,
-			GotResp:     &errs2.Error{},
-			ExpResp:     errs2.Errorf(errs2.PermissionDenied, errs2.CodePermissionDenied, "permission denied"),
+			GotResp:     &errs.Error{},
+			ExpResp:     errs.Errorf(errs.PermissionDenied, errs.CodePermissionDenied, "permission denied"),
 			AssertFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},

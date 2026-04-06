@@ -152,7 +152,7 @@ func Test_API_Role_Create_400(t *testing.T) {
 			ExpResp: &errs2.Error{
 				Status:  errs2.InvalidArgument,
 				Code:    errs2.CodeValidation,
-				Message: "validation error",
+				Message: `[{"field":"name","error":"name is required"}]`,
 				Fields:  []errs2.FieldError{{Field: "name", Err: "name is required"}},
 			},
 			AssertFunc: func(got any, exp any) string {
