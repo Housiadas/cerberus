@@ -366,14 +366,14 @@ func (h *Handler) getUserByQueryID(ctx context.Context, userUUID uuid.UUID) (use
 func parseNewUser(body *openapi.NewUser) (user.NewUser, error) {
 	var fieldErrors errs.FieldErrors
 
-	addr, err := mail.ParseAddress(body.Email)
-	if err != nil {
-		fieldErrors.Add("email", err)
-	}
-
 	nme, err := name.Parse(body.Name)
 	if err != nil {
 		fieldErrors.Add("name", err)
+	}
+
+	addr, err := mail.ParseAddress(body.Email)
+	if err != nil {
+		fieldErrors.Add("email", err)
 	}
 
 	dept := name.Null{}

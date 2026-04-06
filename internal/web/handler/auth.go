@@ -16,6 +16,17 @@ func (h *Handler) AuthLogin(
 	ctx context.Context,
 	request openapi.AuthLoginRequestObject,
 ) (openapi.AuthLoginResponseObject, error) {
+	var fieldErrors errs.FieldErrors
+	if request.Body.Email == "" {
+		fieldErrors.Add("email", errors.New("email is required"))
+	}
+	if request.Body.Password == "" {
+		fieldErrors.Add("password", errors.New("password is required"))
+	}
+	if len(fieldErrors) > 0 {
+		return nil, fieldErrors.ToError()
+	}
+
 	token, err := h.svc.auth.Login(ctx, auth.LoginReq{
 		Email:    request.Body.Email,
 		Password: request.Body.Password,

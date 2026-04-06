@@ -2,6 +2,7 @@
 package errs
 
 import (
+	"errors"
 	"fmt"
 	"runtime"
 )
@@ -20,13 +21,19 @@ type Error struct {
 func New(status StatusCode, code string, err error) *Error {
 	pc, filename, line, _ := runtime.Caller(1)
 
-	return &Error{
+	e := &Error{
 		Status:   status,
 		Code:     code,
 		Message:  err.Error(),
 		FuncName: runtime.FuncForPC(pc).Name(),
 		FileName: fmt.Sprintf("%s:%d", filename, line),
 	}
+
+	if inner, ok := errors.AsType[*Error](err); ok {
+		e.Fields = inner.Fields
+	}
+
+	return e
 }
 
 // Errorf constructs an error based on an error message.

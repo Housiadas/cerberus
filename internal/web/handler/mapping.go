@@ -1,6 +1,9 @@
 package handler
 
 import (
+	"bytes"
+	"encoding/json"
+
 	"github.com/Housiadas/cerberus/internal/core/account"
 	"github.com/Housiadas/cerberus/internal/core/audit"
 	"github.com/Housiadas/cerberus/internal/core/auth"
@@ -92,10 +95,21 @@ func toOpenAPIAudit(a audit.Audit) openapi.Audit {
 		ObjName:   a.ObjName().String(),
 		ActorId:   a.ActorID().String(),
 		Action:    a.Action(),
-		Data:      string(a.Data()),
+		Data:      compactJSON(a.Data()),
 		Message:   a.Message(),
 		Timestamp: clock.Format(new(a.Timestamp())),
 	}
+}
+
+func compactJSON(data []byte) string {
+	if len(data) == 0 {
+		return ""
+	}
+	var buf bytes.Buffer
+	if err := json.Compact(&buf, data); err != nil {
+		return string(data)
+	}
+	return buf.String()
 }
 
 func toOpenAPIAudits(audits []audit.Audit) []openapi.Audit {

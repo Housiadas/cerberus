@@ -2,6 +2,7 @@ package handler
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/Housiadas/cerberus/internal/core/permission"
@@ -64,9 +65,13 @@ func (h *Handler) CreatePermission(
 	ctx context.Context,
 	request openapi.CreatePermissionRequestObject,
 ) (openapi.CreatePermissionResponseObject, error) {
+	if request.Body.Name == "" {
+		return nil, errs.NewFieldErrors("name", errors.New("name is required"))
+	}
+
 	nme, err := name.Parse(request.Body.Name)
 	if err != nil {
-		return nil, errs.New(errs.InvalidArgument, errs.CodeValidation, err)
+		return nil, errs.NewFieldErrors("name", err)
 	}
 
 	perm, err := h.svc.permission.Create(ctx, permission.NewPermission{Name: nme})

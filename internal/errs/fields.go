@@ -22,7 +22,12 @@ func NewFieldErrors(field string, err error) *Error {
 		},
 	}
 
-	return fe.ToError()
+	return &Error{
+		Status:  InvalidArgument,
+		Code:    CodeValidation,
+		Message: fe.Error(),
+		Fields:  fe,
+	}
 }
 
 // Add adds a field error to the collection.
@@ -35,7 +40,9 @@ func (fe *FieldErrors) Add(field string, err error) {
 
 // ToError converts the field errors to an Error.
 func (fe *FieldErrors) ToError() *Error {
-	return New(InvalidArgument, CodeValidation, fe)
+	err := New(InvalidArgument, CodeValidation, fe)
+	err.Fields = *fe
+	return err
 }
 
 // Error implements the error interface.
