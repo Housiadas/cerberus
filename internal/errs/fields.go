@@ -1,10 +1,10 @@
 package errs
 
-import (
-	"encoding/json"
-)
+import "encoding/json"
 
 // FieldErrors represents a collection of field errors.
+//
+
 type FieldErrors []FieldError
 
 // FieldError is used to indicate an error with a specific request field.
@@ -15,12 +15,7 @@ type FieldError struct {
 
 // NewFieldErrors creates a field error.
 func NewFieldErrors(field string, err error) *Error {
-	fe := FieldErrors{
-		{
-			Field: field,
-			Err:   err.Error(),
-		},
-	}
+	fe := FieldErrors{{Field: field, Err: err.Error()}}
 
 	return &Error{
 		Status:  InvalidArgument,
@@ -32,17 +27,17 @@ func NewFieldErrors(field string, err error) *Error {
 
 // Add adds a field error to the collection.
 func (fe *FieldErrors) Add(field string, err error) {
-	*fe = append(*fe, FieldError{
-		Field: field,
-		Err:   err.Error(),
-	})
+	*fe = append(*fe, FieldError{Field: field, Err: err.Error()})
 }
 
 // ToError converts the field errors to an Error.
 func (fe *FieldErrors) ToError() *Error {
-	err := New(InvalidArgument, CodeValidation, fe)
-	err.Fields = *fe
-	return err
+	return &Error{
+		Status:  InvalidArgument,
+		Code:    CodeValidation,
+		Message: fe.Error(),
+		Fields:  *fe,
+	}
 }
 
 // Error implements the error interface.
