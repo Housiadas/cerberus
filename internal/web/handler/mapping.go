@@ -107,6 +107,7 @@ func compactJSON(data []byte) string {
 	}
 
 	var buf bytes.Buffer
+
 	err := json.Compact(&buf, data)
 	if err != nil {
 		return string(data)

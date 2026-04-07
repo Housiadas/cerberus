@@ -18,11 +18,11 @@ func (h *Handler) AuthLogin(
 ) (openapi.AuthLoginResponseObject, error) {
 	var fieldErrors errs.FieldErrors
 	if request.Body.Email == "" {
-		fieldErrors.Add("email", errors.New("email is required"))
+		fieldErrors.Add("email", auth.ErrRequiredEmail)
 	}
 
 	if request.Body.Password == "" {
-		fieldErrors.Add("password", errors.New("password is required"))
+		fieldErrors.Add("password", auth.ErrRequiredPassword)
 	}
 
 	if len(fieldErrors) > 0 {

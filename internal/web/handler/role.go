@@ -2,7 +2,6 @@ package handler
 
 import (
 	"context"
-	"errors"
 	"fmt"
 
 	"github.com/Housiadas/cerberus/internal/core/role"
@@ -65,7 +64,7 @@ func (h *Handler) CreateRole(
 	request openapi.CreateRoleRequestObject,
 ) (openapi.CreateRoleResponseObject, error) {
 	if request.Body.Name == "" {
-		return nil, errs.NewFieldErrors("name", errors.New("name is required"))
+		return nil, errs.NewFieldErrors("name", role.ErrRequiredName)
 	}
 
 	nme, err := name.Parse(request.Body.Name)

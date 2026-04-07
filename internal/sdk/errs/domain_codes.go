@@ -36,9 +36,9 @@ const (
 	// CodeRoleNotFound represents a role not found error.
 	CodeRoleNotFound = "role.not_found"
 
-	// CodePermissionNotFound represents a permission not found error.
+	// CodePermissionNotFound represents a permission-not found error.
 	CodePermissionNotFound = "permission.not_found"
-	// CodePermissionDenied represents a permission denied error.
+	// CodePermissionDenied represents a permission-denied error.
 	CodePermissionDenied = "permission.denied"
 	// CodePermissionCheckErr represents a permission check error.
 	CodePermissionCheckErr = "permission.check_error"

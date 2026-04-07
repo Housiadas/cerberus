@@ -8,27 +8,23 @@ import (
 var ErrCodeNotExist = errors.New("err code does not exist")
 
 // StatusCode represents an HTTP status category in the system.
-type StatusCode struct {
-	value int
-}
+type StatusCode int
 
 // Value returns the integer value of the status code.
 func (sc *StatusCode) Value() int {
-	return sc.value
+	return int(*sc)
 }
 
 // String returns the string representation of the status code.
 func (sc *StatusCode) String() string {
-	return statusNames[*sc]
+	return statusTable[*sc].name
 }
 
 // UnmarshalText implement the unmarshal interface for JSON conversions.
 func (sc *StatusCode) UnmarshalText(data []byte) error {
-	name := string(data)
-
-	v, exists := statusNumbers[name]
-	if !exists {
-		return fmt.Errorf("%w: %q", ErrCodeNotExist, name)
+	v, ok := statusByName[string(data)]
+	if !ok {
+		return fmt.Errorf("%w: %q", ErrCodeNotExist, data)
 	}
 
 	*sc = v
@@ -42,6 +38,6 @@ func (sc *StatusCode) MarshalText() ([]byte, error) {
 }
 
 // Equal provides support for the go-cmp package and testing.
-func (sc *StatusCode) Equal(sc2 StatusCode) bool {
-	return sc.value == sc2.value
+func (sc *StatusCode) Equal(o StatusCode) bool {
+	return *sc == o
 }
