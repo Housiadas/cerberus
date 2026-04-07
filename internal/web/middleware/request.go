@@ -3,7 +3,7 @@ package middleware
 import (
 	"net/http"
 
-	ctxPck "github.com/Housiadas/cerberus/internal/context"
+	ctxPck "github.com/Housiadas/cerberus/internal/sdk/context"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/google/uuid"
 )

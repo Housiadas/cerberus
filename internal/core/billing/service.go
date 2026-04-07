@@ -10,7 +10,7 @@ import (
 	"github.com/Housiadas/cerberus/internal/core/account"
 	"github.com/Housiadas/cerberus/internal/core/invoice"
 	"github.com/Housiadas/cerberus/internal/core/subscription"
-	"github.com/Housiadas/cerberus/internal/errs"
+	errs "github.com/Housiadas/cerberus/internal/sdk/errs"
 	"github.com/Housiadas/cerberus/pkg/cursor"
 	stripepkg "github.com/Housiadas/cerberus/pkg/stripe"
 	"github.com/google/uuid"

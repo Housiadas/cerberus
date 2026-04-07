@@ -5,9 +5,9 @@ import (
 	"net/http"
 	"slices"
 
-	ctxPck "github.com/Housiadas/cerberus/internal/context"
 	"github.com/Housiadas/cerberus/internal/core/user_roles_permissions"
-	errs2 "github.com/Housiadas/cerberus/internal/errs"
+	ctxPck "github.com/Housiadas/cerberus/internal/sdk/context"
+	"github.com/Housiadas/cerberus/internal/sdk/errs"
 	"github.com/Housiadas/cerberus/internal/web/handler/openapi"
 	"github.com/google/uuid"
 )
@@ -50,9 +50,9 @@ func (m *Middleware) Permission() openapi.StrictMiddlewareFunc {
 
 			userUUID, parseErr := uuid.Parse(userID)
 			if parseErr != nil {
-				return nil, errs2.New(
-					errs2.Unauthenticated,
-					errs2.CodeUnauthenticated,
+				return nil, errs.New(
+					errs.Unauthenticated,
+					errs.CodeUnauthenticated,
 					parseErr,
 				)
 			}
@@ -65,9 +65,9 @@ func (m *Middleware) Permission() openapi.StrictMiddlewareFunc {
 			if err != nil {
 				m.log.Error(ctx, "error checking permissions", err)
 
-				return nil, errs2.New(
-					errs2.Internal,
-					errs2.CodePermissionCheckErr,
+				return nil, errs.New(
+					errs.Internal,
+					errs.CodePermissionCheckErr,
 					ErrCheckingPermission,
 				)
 			}
@@ -76,9 +76,9 @@ func (m *Middleware) Permission() openapi.StrictMiddlewareFunc {
 			if !ok {
 				m.log.Error(ctx, "error casting permissions", err)
 
-				return nil, errs2.New(
-					errs2.Internal,
-					errs2.CodePermissionCheckErr,
+				return nil, errs.New(
+					errs.Internal,
+					errs.CodePermissionCheckErr,
 					ErrCheckingPermission,
 				)
 			}
@@ -96,9 +96,9 @@ func (m *Middleware) Permission() openapi.StrictMiddlewareFunc {
 					"operation", operationID,
 				)
 
-				return nil, errs2.New(
-					errs2.PermissionDenied,
-					errs2.CodePermissionDenied,
+				return nil, errs.New(
+					errs.PermissionDenied,
+					errs.CodePermissionDenied,
 					ErrPermissionDenied,
 				)
 			}

@@ -5,10 +5,10 @@ import (
 	"errors"
 	"fmt"
 
-	ctxPck "github.com/Housiadas/cerberus/internal/context"
 	"github.com/Housiadas/cerberus/internal/core/auth"
 	"github.com/Housiadas/cerberus/internal/core/user"
-	"github.com/Housiadas/cerberus/internal/errs"
+	ctxPck "github.com/Housiadas/cerberus/internal/sdk/context"
+	errs "github.com/Housiadas/cerberus/internal/sdk/errs"
 	"github.com/Housiadas/cerberus/internal/web/handler/openapi"
 )
 
@@ -20,9 +20,11 @@ func (h *Handler) AuthLogin(
 	if request.Body.Email == "" {
 		fieldErrors.Add("email", errors.New("email is required"))
 	}
+
 	if request.Body.Password == "" {
 		fieldErrors.Add("password", errors.New("password is required"))
 	}
+
 	if len(fieldErrors) > 0 {
 		return nil, fieldErrors.ToError()
 	}

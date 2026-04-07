@@ -9,7 +9,7 @@ import (
 
 	"github.com/Housiadas/cerberus/internal/core/email_notification_outbox"
 	"github.com/Housiadas/cerberus/internal/core/email_notification_outbox/email_notification_outbox_repo"
-	"github.com/Housiadas/cerberus/internal/relay"
+	"github.com/Housiadas/cerberus/internal/sdk/relay"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

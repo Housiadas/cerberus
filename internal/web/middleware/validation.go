@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"reflect"
 
-	"github.com/Housiadas/cerberus/internal/errs"
-	"github.com/Housiadas/cerberus/internal/validation"
+	"github.com/Housiadas/cerberus/internal/sdk/errs"
+	"github.com/Housiadas/cerberus/internal/sdk/validation"
 	"github.com/Housiadas/cerberus/internal/web/handler/openapi"
 )
 

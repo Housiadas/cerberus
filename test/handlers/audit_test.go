@@ -5,8 +5,8 @@ import (
 	"sort"
 	"testing"
 
-	errs2 "github.com/Housiadas/cerberus/internal/errs"
-	"github.com/Housiadas/cerberus/internal/testutil/apitest"
+	"github.com/Housiadas/cerberus/internal/sdk/errs"
+	"github.com/Housiadas/cerberus/internal/sdk/testutil/apitest"
 	"github.com/Housiadas/cerberus/internal/web/handler/openapi"
 	"github.com/google/go-cmp/cmp"
 	"github.com/stretchr/testify/require"
@@ -72,8 +72,8 @@ func Test_API_Audit_Query_400(t *testing.T) {
 			StatusCode:  http.StatusBadRequest,
 			Method:      http.MethodGet,
 			AccessToken: &sd.Admins[0].AccessToken.Token,
-			GotResp:     &errs2.Error{},
-			ExpResp:     errs2.Errorf(errs2.InvalidArgument, errs2.CodeValidation, "[{\"field\":\"obj_id\",\"error\":\"invalid UUID length: 3\"}]"),
+			GotResp:     &errs.Error{},
+			ExpResp:     errs.Errorf(errs.InvalidArgument, errs.CodeValidation, "[{\"field\":\"obj_id\",\"error\":\"invalid UUID length: 3\"}]"),
 			AssertFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},
@@ -84,8 +84,8 @@ func Test_API_Audit_Query_400(t *testing.T) {
 			StatusCode:  http.StatusBadRequest,
 			Method:      http.MethodGet,
 			AccessToken: &sd.Admins[0].AccessToken.Token,
-			GotResp:     &errs2.Error{},
-			ExpResp:     errs2.Errorf(errs2.InvalidArgument, errs2.CodeValidation, "[{\"field\":\"order\",\"error\":\"unknown order: ser_id\"}]"),
+			GotResp:     &errs.Error{},
+			ExpResp:     errs.Errorf(errs.InvalidArgument, errs.CodeValidation, "[{\"field\":\"order\",\"error\":\"unknown order: ser_id\"}]"),
 			AssertFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},
@@ -111,8 +111,8 @@ func Test_API_Audit_Query_403(t *testing.T) {
 			StatusCode:  http.StatusForbidden,
 			Method:      http.MethodGet,
 			AccessToken: &sd.Users[0].AccessToken.Token,
-			GotResp:     &errs2.Error{},
-			ExpResp:     errs2.Errorf(errs2.PermissionDenied, errs2.CodePermissionDenied, "permission denied"),
+			GotResp:     &errs.Error{},
+			ExpResp:     errs.Errorf(errs.PermissionDenied, errs.CodePermissionDenied, "permission denied"),
 			AssertFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},

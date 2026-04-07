@@ -7,7 +7,7 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/Housiadas/cerberus/internal/errs"
+	"github.com/Housiadas/cerberus/internal/sdk/errs"
 	"github.com/go-playground/validator/v10"
 )
 

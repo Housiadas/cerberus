@@ -5,7 +5,7 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/Housiadas/cerberus/internal/errs"
+	"github.com/Housiadas/cerberus/internal/sdk/errs"
 )
 
 // RequestErrorHandler handles errors during request parsing (e.g. invalid JSON).

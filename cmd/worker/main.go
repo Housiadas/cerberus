@@ -8,7 +8,7 @@ import (
 
 	command2 "github.com/Housiadas/cerberus/internal/command"
 	"github.com/Housiadas/cerberus/internal/config"
-	ctxPck "github.com/Housiadas/cerberus/internal/context"
+	ctxPck "github.com/Housiadas/cerberus/internal/sdk/context"
 	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/Housiadas/cerberus/pkg/telemetry"
 )

@@ -5,7 +5,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/Housiadas/cerberus/internal/testutil/dbtest"
+	"github.com/Housiadas/cerberus/internal/sdk/testutil/dbtest"
 )
 
 var sc *dbtest.SharedContainer

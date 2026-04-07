@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	errs2 "github.com/Housiadas/cerberus/internal/errs"
+	"github.com/Housiadas/cerberus/internal/sdk/errs"
 )
 
 func (s *Service) RefreshAccessToken(
@@ -19,12 +19,12 @@ func (s *Service) RefreshAccessToken(
 	}
 
 	if rToken.Revoked() {
-		return Token{}, errs2.New(errs2.InvalidArgument, errs2.CodeInvalidToken, ErrInvalidToken)
+		return Token{}, errs.New(errs.InvalidArgument, errs.CodeInvalidToken, ErrInvalidToken)
 	}
 
 	// Check if the token has expired
 	if time.Now().UTC().After(rToken.ExpiresAt()) {
-		return Token{}, errs2.New(errs2.InvalidArgument, errs2.CodeExpiredToken, ErrExpiredToken)
+		return Token{}, errs.New(errs.InvalidArgument, errs.CodeExpiredToken, ErrExpiredToken)
 	}
 
 	// Get the user

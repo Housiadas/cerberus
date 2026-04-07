@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/Housiadas/cerberus/internal/core/outbox"
-	"github.com/Housiadas/cerberus/internal/relay"
+	"github.com/Housiadas/cerberus/internal/sdk/relay"
 	loggermocks "github.com/Housiadas/cerberus/pkg/logger/mocks"
 	ckafka "github.com/confluentinc/confluent-kafka-go/v2/kafka"
 	"github.com/google/uuid"

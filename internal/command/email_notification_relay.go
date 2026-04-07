@@ -10,7 +10,7 @@ import (
 
 	"github.com/Housiadas/cerberus/internal/core/email_notification_outbox"
 	"github.com/Housiadas/cerberus/internal/core/email_notification_outbox/email_notification_outbox_repo"
-	"github.com/Housiadas/cerberus/internal/relay"
+	"github.com/Housiadas/cerberus/internal/sdk/relay"
 	"github.com/Housiadas/cerberus/pkg/clock"
 	"github.com/Housiadas/cerberus/pkg/email"
 	"github.com/Housiadas/cerberus/pkg/pgsql"

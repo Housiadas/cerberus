@@ -20,7 +20,7 @@ import (
 	"github.com/Housiadas/cerberus/internal/core/user/user_repo"
 	"github.com/Housiadas/cerberus/internal/core/user_roles_permissions"
 	"github.com/Housiadas/cerberus/internal/core/user_roles_permissions/user_roles_permissions_repo"
-	"github.com/Housiadas/cerberus/internal/eventbus"
+	"github.com/Housiadas/cerberus/internal/sdk/eventbus"
 	"github.com/Housiadas/cerberus/pkg/clock"
 	"github.com/Housiadas/cerberus/pkg/hasher"
 	"github.com/Housiadas/cerberus/pkg/logger"

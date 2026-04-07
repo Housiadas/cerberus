@@ -42,6 +42,7 @@ func (fe *FieldErrors) Add(field string, err error) {
 func (fe *FieldErrors) ToError() *Error {
 	err := New(InvalidArgument, CodeValidation, fe)
 	err.Fields = *fe
+
 	return err
 }
 

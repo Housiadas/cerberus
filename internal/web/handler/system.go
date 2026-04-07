@@ -6,7 +6,7 @@ import (
 	"runtime"
 	"time"
 
-	"github.com/Housiadas/cerberus/internal/errs"
+	errs "github.com/Housiadas/cerberus/internal/sdk/errs"
 	"github.com/Housiadas/cerberus/internal/web/handler/openapi"
 	"github.com/Housiadas/cerberus/pkg/pgsql"
 )

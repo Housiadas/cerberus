@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/Housiadas/cerberus/internal/errs"
-	"github.com/Housiadas/cerberus/internal/testutil/apitest"
+	"github.com/Housiadas/cerberus/internal/sdk/errs"
+	"github.com/Housiadas/cerberus/internal/sdk/testutil/apitest"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 

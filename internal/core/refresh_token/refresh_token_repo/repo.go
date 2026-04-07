@@ -8,7 +8,7 @@ import (
 	"fmt"
 
 	"github.com/Housiadas/cerberus/internal/core/refresh_token"
-	"github.com/Housiadas/cerberus/internal/errs"
+	errs "github.com/Housiadas/cerberus/internal/sdk/errs"
 	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/Housiadas/cerberus/pkg/pgsql"
 	"github.com/jmoiron/sqlx"

@@ -5,10 +5,10 @@ package eventbus
 import (
 	"context"
 
-	ctxPck "github.com/Housiadas/cerberus/internal/context"
 	"github.com/Housiadas/cerberus/internal/core/audit"
 	"github.com/Housiadas/cerberus/internal/core/outbox"
-	"github.com/Housiadas/cerberus/internal/errs"
+	ctxPck "github.com/Housiadas/cerberus/internal/sdk/context"
+	errs "github.com/Housiadas/cerberus/internal/sdk/errs"
 	"github.com/Housiadas/cerberus/internal/types/event"
 	"github.com/google/uuid"
 )
