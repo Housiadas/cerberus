@@ -49,7 +49,7 @@ func getMigrationsDir() string {
 	}
 
 	basepath := filepath.Dir(file)
-	migrationsPath := filepath.Join(basepath, "../../../migrations")
+	migrationsPath := filepath.Join(basepath, "../../../../migrations")
 
 	return "file://" + migrationsPath
 }

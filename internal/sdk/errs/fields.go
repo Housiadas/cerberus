@@ -3,8 +3,6 @@ package errs
 import "encoding/json"
 
 // FieldErrors represents a collection of field errors.
-//
-
 type FieldErrors []FieldError
 
 // FieldError is used to indicate an error with a specific request field.
