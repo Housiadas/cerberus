@@ -5,10 +5,10 @@ import (
 	"errors"
 	"fmt"
 
-	ctxPck "github.com/Housiadas/cerberus/internal/context"
 	"github.com/Housiadas/cerberus/internal/core/auth"
 	"github.com/Housiadas/cerberus/internal/core/user"
-	"github.com/Housiadas/cerberus/internal/errs"
+	ctxPck "github.com/Housiadas/cerberus/internal/sdk/context"
+	errs "github.com/Housiadas/cerberus/internal/sdk/errs"
 	"github.com/Housiadas/cerberus/internal/web/handler/openapi"
 )
 

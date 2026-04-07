@@ -8,9 +8,9 @@ import (
 	"testing"
 
 	"github.com/Housiadas/cerberus/internal/core/permission"
-	"github.com/Housiadas/cerberus/internal/errs"
-	"github.com/Housiadas/cerberus/internal/testutil/apitest"
-	"github.com/Housiadas/cerberus/internal/testutil/dbtest"
+	errs "github.com/Housiadas/cerberus/internal/sdk/errs"
+	"github.com/Housiadas/cerberus/internal/sdk/testutil/apitest"
+	"github.com/Housiadas/cerberus/internal/sdk/testutil/dbtest"
 	"github.com/Housiadas/cerberus/internal/web/handler/openapi"
 	"github.com/Housiadas/cerberus/pkg/clock"
 	"github.com/google/go-cmp/cmp"

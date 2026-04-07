@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 
-	errs2 "github.com/Housiadas/cerberus/internal/errs"
+	"github.com/Housiadas/cerberus/internal/sdk/errs"
 	"github.com/golang-jwt/jwt/v5"
 )
 
@@ -16,11 +16,11 @@ func (s *Service) Validate(ctx context.Context, jwtUnverified string) (Claims, e
 	token, err := jwt.ParseWithClaims(jwtUnverified, &claims, func(token *jwt.Token) (any, error) {
 		// Validate the signing method
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, errs2.New(errs2.InvalidArgument, errs2.CodeInvalidToken, ErrInvalidToken)
+			return nil, errs.New(errs.InvalidArgument, errs.CodeInvalidToken, ErrInvalidToken)
 		}
 		// Only accept HS256
 		if token.Method.Alg() != jwt.SigningMethodHS256.Name {
-			return nil, errs2.New(errs2.InvalidArgument, errs2.CodeInvalidToken, ErrInvalidToken)
+			return nil, errs.New(errs.InvalidArgument, errs.CodeInvalidToken, ErrInvalidToken)
 		}
 
 		return s.secret, nil
@@ -34,7 +34,7 @@ func (s *Service) Validate(ctx context.Context, jwtUnverified string) (Claims, e
 	}
 
 	if !token.Valid {
-		return Claims{}, errs2.New(errs2.InvalidArgument, errs2.CodeInvalidToken, ErrInvalidToken)
+		return Claims{}, errs.New(errs.InvalidArgument, errs.CodeInvalidToken, ErrInvalidToken)
 	}
 
 	err = s.CheckExpiredToken(claims)
@@ -46,9 +46,9 @@ func (s *Service) Validate(ctx context.Context, jwtUnverified string) (Claims, e
 	err = s.isUserEnabled(ctx, claims)
 	if err != nil {
 		if errors.Is(err, ErrUserDisabled) {
-			return Claims{}, errs2.New(
-				errs2.Unauthenticated,
-				errs2.CodeUserDisabled,
+			return Claims{}, errs.New(
+				errs.Unauthenticated,
+				errs.CodeUserDisabled,
 				ErrUserDisabled,
 			)
 		}

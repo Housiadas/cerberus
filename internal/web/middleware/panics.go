@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"runtime/debug"
 
-	errs2 "github.com/Housiadas/cerberus/internal/errs"
+	"github.com/Housiadas/cerberus/internal/sdk/errs"
 )
 
 // Recoverer recovers from panics and converts the panic to an error,
@@ -18,9 +18,9 @@ func (m *Middleware) Recoverer() func(next http.Handler) http.Handler {
 			defer func() {
 				if rec := recover(); rec != nil {
 					trace := debug.Stack()
-					err := errs2.Errorf(
-						errs2.InternalOnlyLog,
-						errs2.CodePanic,
+					err := errs.Errorf(
+						errs.InternalOnlyLog,
+						errs.CodePanic,
 						"PANIC [%v] TRACE[%s]",
 						rec,
 						string(trace),

@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	errs2 "github.com/Housiadas/cerberus/internal/errs"
+	"github.com/Housiadas/cerberus/internal/sdk/errs"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 )
@@ -17,9 +17,9 @@ type AccessToken struct {
 func (s *Service) GenerateAccessToken(ctx context.Context, userID string) (AccessToken, error) {
 	userUUID, err := uuid.Parse(userID)
 	if err != nil {
-		return AccessToken{}, errs2.Errorf(
-			errs2.InvalidArgument,
-			errs2.CodeValidation,
+		return AccessToken{}, errs.Errorf(
+			errs.InvalidArgument,
+			errs.CodeValidation,
 			"could not parse uuid: %s",
 			err,
 		)
@@ -27,9 +27,9 @@ func (s *Service) GenerateAccessToken(ctx context.Context, userID string) (Acces
 
 	perms, err := s.userRolesPermissions.QueryPermissionsByUserID(ctx, userUUID)
 	if err != nil {
-		return AccessToken{}, errs2.Errorf(
-			errs2.Internal,
-			errs2.CodeInternal,
+		return AccessToken{}, errs.Errorf(
+			errs.Internal,
+			errs.CodeInternal,
 			"query permissions: %s",
 			err,
 		)
@@ -53,9 +53,9 @@ func (s *Service) GenerateAccessToken(ctx context.Context, userID string) (Acces
 
 	accessTokenID, genErr := uuid.NewV7()
 	if genErr != nil {
-		return AccessToken{}, errs2.Errorf(
-			errs2.Internal,
-			errs2.CodeInternal,
+		return AccessToken{}, errs.Errorf(
+			errs.Internal,
+			errs.CodeInternal,
 			"uuid v7: %s",
 			genErr,
 		)
@@ -78,9 +78,9 @@ func (s *Service) GenerateAccessToken(ctx context.Context, userID string) (Acces
 
 	accessTokenString, err := aToken.SignedString(s.secret)
 	if err != nil {
-		return AccessToken{}, errs2.Errorf(
-			errs2.InvalidArgument,
-			errs2.CodeInvalidToken,
+		return AccessToken{}, errs.Errorf(
+			errs.InvalidArgument,
+			errs.CodeInvalidToken,
 			"failed to sign access Token: %s",
 			err,
 		)
@@ -88,9 +88,9 @@ func (s *Service) GenerateAccessToken(ctx context.Context, userID string) (Acces
 
 	expirationDate, err := aToken.Claims.GetExpirationTime()
 	if err != nil {
-		return AccessToken{}, errs2.Errorf(
-			errs2.InvalidArgument,
-			errs2.CodeInvalidToken,
+		return AccessToken{}, errs.Errorf(
+			errs.InvalidArgument,
+			errs.CodeInvalidToken,
 			"expiration time: %s",
 			err,
 		)

@@ -6,7 +6,7 @@ import (
 	"net/mail"
 
 	"github.com/Housiadas/cerberus/internal/core/email_notification_outbox"
-	errs2 "github.com/Housiadas/cerberus/internal/errs"
+	"github.com/Housiadas/cerberus/internal/sdk/errs"
 	"github.com/Housiadas/cerberus/internal/types/event"
 )
 
@@ -22,7 +22,7 @@ type emailPayload struct {
 func (s *Service) ForgotPassword(ctx context.Context, req ForgotPasswordReq) error {
 	addr, err := mail.ParseAddress(req.Email)
 	if err != nil {
-		return errs2.NewFieldErrors("email", err)
+		return errs.NewFieldErrors("email", err)
 	}
 
 	usr, lookupErr := s.userService.QueryByEmail(ctx, *addr)
@@ -36,9 +36,9 @@ func (s *Service) ForgotPassword(ctx context.Context, req ForgotPasswordReq) err
 	txErr := s.tx.RunInTx(ctx, func(txCtx context.Context) error {
 		tkn, createErr := s.resetTokenSvc.Create(txCtx, usr.ID())
 		if createErr != nil {
-			return errs2.Errorf(
-				errs2.Internal,
-				errs2.CodeInternal,
+			return errs.Errorf(
+				errs.Internal,
+				errs.CodeInternal,
 				"create reset token: %s",
 				createErr,
 			)
@@ -61,9 +61,9 @@ func (s *Service) ForgotPassword(ctx context.Context, req ForgotPasswordReq) err
 			},
 		)
 		if createErr != nil {
-			return errs2.Errorf(
-				errs2.Internal,
-				errs2.CodeInternal,
+			return errs.Errorf(
+				errs.Internal,
+				errs.CodeInternal,
 				"email_outbox create: %s",
 				createErr,
 			)

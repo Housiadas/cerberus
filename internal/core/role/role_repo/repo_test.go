@@ -9,15 +9,15 @@ import (
 	"time"
 
 	"github.com/Housiadas/cerberus/internal/core/role/role_repo"
+	"github.com/Housiadas/cerberus/internal/sdk/eventbus"
+	"github.com/Housiadas/cerberus/internal/sdk/testutil/dbtest"
+	unitest2 "github.com/Housiadas/cerberus/internal/sdk/testutil/unitest"
 	"github.com/Housiadas/cerberus/internal/types/name"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/google/uuid"
 
 	"github.com/Housiadas/cerberus/internal/core/role"
-	"github.com/Housiadas/cerberus/internal/eventbus"
-	"github.com/Housiadas/cerberus/internal/testutil/dbtest"
-	"github.com/Housiadas/cerberus/internal/testutil/unitest"
 	"github.com/Housiadas/cerberus/pkg/cursor"
 	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/Housiadas/cerberus/pkg/pgsql"
@@ -43,22 +43,22 @@ func Test_Role(t *testing.T) {
 		t.Fatalf("Seeding error: %s", err)
 	}
 
-	unitest.Run(t, queryRole(roleService, sd), "query")
-	unitest.Run(t, createRole(roleService), "create")
-	unitest.Run(t, updateRole(roleService, sd), "update")
-	unitest.Run(t, deleteRole(roleService, sd), "delete")
+	unitest2.Run(t, queryRole(roleService, sd), "query")
+	unitest2.Run(t, createRole(roleService), "create")
+	unitest2.Run(t, updateRole(roleService, sd), "update")
+	unitest2.Run(t, deleteRole(roleService, sd), "delete")
 }
 
-func insertSeedData(service *role.Service) (unitest.SeedData, error) {
+func insertSeedData(service *role.Service) (unitest2.SeedData, error) {
 	ctx := context.Background()
 
 	roles, err := role.TestSeedRoles(ctx, 2, service)
 	if err != nil {
-		return unitest.SeedData{}, fmt.Errorf("seeding roles: %w", err)
+		return unitest2.SeedData{}, fmt.Errorf("seeding roles: %w", err)
 	}
 
-	sd := unitest.SeedData{
-		Roles: []unitest.Role{
+	sd := unitest2.SeedData{
+		Roles: []unitest2.Role{
 			{Role: roles[0]},
 			{Role: roles[1]},
 		},
@@ -67,7 +67,7 @@ func insertSeedData(service *role.Service) (unitest.SeedData, error) {
 	return sd, nil
 }
 
-func queryRole(service *role.Service, sd unitest.SeedData) []unitest.Table {
+func queryRole(service *role.Service, sd unitest2.SeedData) []unitest2.Table {
 	roles := make([]role.Role, 0, len(sd.Roles))
 	for _, r := range sd.Roles {
 		roles = append(roles, r.Role)
@@ -82,7 +82,7 @@ func queryRole(service *role.Service, sd unitest.SeedData) []unitest.Table {
 		cmpopts.EquateApproxTime(time.Second),
 	}
 
-	return []unitest.Table{
+	return []unitest2.Table{
 		{
 			Name:    "all",
 			ExpResp: roles,
@@ -134,8 +134,8 @@ func queryRole(service *role.Service, sd unitest.SeedData) []unitest.Table {
 	}
 }
 
-func createRole(service *role.Service) []unitest.Table {
-	return []unitest.Table{
+func createRole(service *role.Service) []unitest2.Table {
+	return []unitest2.Table{
 		{
 			Name: "basic",
 			ExpResp: role.New(
@@ -173,10 +173,10 @@ func createRole(service *role.Service) []unitest.Table {
 	}
 }
 
-func updateRole(service *role.Service, sd unitest.SeedData) []unitest.Table {
+func updateRole(service *role.Service, sd unitest2.SeedData) []unitest2.Table {
 	newName := name.MustParse("UpdatedRole")
 
-	return []unitest.Table{
+	return []unitest2.Table{
 		{
 			Name: "basic",
 			ExpResp: role.New(
@@ -213,8 +213,8 @@ func updateRole(service *role.Service, sd unitest.SeedData) []unitest.Table {
 	}
 }
 
-func deleteRole(service *role.Service, sd unitest.SeedData) []unitest.Table {
-	return []unitest.Table{
+func deleteRole(service *role.Service, sd unitest2.SeedData) []unitest2.Table {
+	return []unitest2.Table{
 		{
 			Name:    "role",
 			ExpResp: nil,

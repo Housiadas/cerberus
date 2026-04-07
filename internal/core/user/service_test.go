@@ -9,7 +9,7 @@ import (
 
 	"github.com/Housiadas/cerberus/internal/core/user"
 	usermocks "github.com/Housiadas/cerberus/internal/core/user/mocks"
-	"github.com/Housiadas/cerberus/internal/testutil/unitest"
+	"github.com/Housiadas/cerberus/internal/sdk/testutil/unitest"
 	"github.com/Housiadas/cerberus/internal/types/name"
 	"github.com/Housiadas/cerberus/internal/types/password"
 	"github.com/Housiadas/cerberus/pkg/cursor"

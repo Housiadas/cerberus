@@ -10,7 +10,7 @@ import (
 
 	"github.com/Housiadas/cerberus/internal/core/outbox"
 	"github.com/Housiadas/cerberus/internal/core/outbox/outbox_repo"
-	"github.com/Housiadas/cerberus/internal/relay"
+	"github.com/Housiadas/cerberus/internal/sdk/relay"
 	"github.com/Housiadas/cerberus/pkg/clock"
 	"github.com/Housiadas/cerberus/pkg/kafka"
 	"github.com/Housiadas/cerberus/pkg/pgsql"

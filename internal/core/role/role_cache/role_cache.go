@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/Housiadas/cerberus/internal/core/role"
-	"github.com/Housiadas/cerberus/internal/distributed_storage"
+	"github.com/Housiadas/cerberus/internal/sdk/distributed_storage"
 	"github.com/Housiadas/cerberus/pkg/cachemetrics"
 	"github.com/Housiadas/cerberus/pkg/cursor"
 	"github.com/Housiadas/cerberus/pkg/logger"

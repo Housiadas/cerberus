@@ -8,7 +8,7 @@ import (
 
 	"github.com/Housiadas/cerberus/internal/core/user"
 	"github.com/Housiadas/cerberus/internal/core/user/user_repo"
-	"github.com/Housiadas/cerberus/internal/eventbus"
+	"github.com/Housiadas/cerberus/internal/sdk/eventbus"
 	namePck "github.com/Housiadas/cerberus/internal/types/name"
 	"github.com/Housiadas/cerberus/internal/types/password"
 	"github.com/Housiadas/cerberus/pkg/clock"

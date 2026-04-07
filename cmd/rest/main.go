@@ -12,7 +12,7 @@ import (
 	"time"
 
 	"github.com/Housiadas/cerberus/internal/config"
-	ctxPck "github.com/Housiadas/cerberus/internal/context"
+	ctxPck "github.com/Housiadas/cerberus/internal/sdk/context"
 	"github.com/Housiadas/cerberus/internal/web/handler"
 	"github.com/Housiadas/cerberus/pkg/debug"
 	"github.com/Housiadas/cerberus/pkg/logger"

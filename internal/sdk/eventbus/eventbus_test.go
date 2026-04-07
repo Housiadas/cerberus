@@ -5,9 +5,9 @@ import (
 	"errors"
 	"testing"
 
-	ctxPck "github.com/Housiadas/cerberus/internal/context"
 	"github.com/Housiadas/cerberus/internal/core/audit"
-	"github.com/Housiadas/cerberus/internal/eventbus"
+	ctxPck "github.com/Housiadas/cerberus/internal/sdk/context"
+	"github.com/Housiadas/cerberus/internal/sdk/eventbus"
 	"github.com/Housiadas/cerberus/internal/types/entity"
 	"github.com/Housiadas/cerberus/internal/types/event"
 	"github.com/Housiadas/cerberus/internal/types/name"

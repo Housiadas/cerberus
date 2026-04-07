@@ -6,8 +6,8 @@ import (
 	"fmt"
 
 	"github.com/Housiadas/cerberus/internal/core/account"
-	"github.com/Housiadas/cerberus/internal/errs"
-	"github.com/Housiadas/cerberus/internal/pntr"
+	"github.com/Housiadas/cerberus/internal/sdk/errs"
+	"github.com/Housiadas/cerberus/internal/sdk/pntr"
 	"github.com/Housiadas/cerberus/internal/web/handler/openapi"
 	"github.com/Housiadas/cerberus/pkg/cursor"
 	"github.com/Housiadas/cerberus/pkg/order"

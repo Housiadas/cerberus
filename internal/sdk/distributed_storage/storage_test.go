@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Housiadas/cerberus/internal/distributed_storage"
+	"github.com/Housiadas/cerberus/internal/sdk/distributed_storage"
 	goRedis "github.com/redis/go-redis/v9"
 	"github.com/stretchr/testify/assert"
 )

@@ -7,8 +7,8 @@ import (
 	"net/mail"
 	"strings"
 
-	ctxPck "github.com/Housiadas/cerberus/internal/context"
-	errs2 "github.com/Housiadas/cerberus/internal/errs"
+	ctxPck "github.com/Housiadas/cerberus/internal/sdk/context"
+	"github.com/Housiadas/cerberus/internal/sdk/errs"
 	"github.com/Housiadas/cerberus/internal/web/handler/openapi"
 )
 
@@ -35,9 +35,9 @@ func (m *Middleware) Authenticate() openapi.StrictMiddlewareFunc {
 		return func(ctx context.Context, w http.ResponseWriter, r *http.Request, request any) (any, error) {
 			bearerToken := r.Header.Get("Authorization")
 			if !strings.HasPrefix(bearerToken, "Bearer ") {
-				return nil, errs2.New(
-					errs2.Unauthenticated,
-					errs2.CodeUnauthenticated,
+				return nil, errs.New(
+					errs.Unauthenticated,
+					errs.CodeUnauthenticated,
 					ErrInvalidAuthHeader,
 				)
 			}
@@ -46,7 +46,7 @@ func (m *Middleware) Authenticate() openapi.StrictMiddlewareFunc {
 
 			resp, err := m.useCase.auth.Validate(ctx, jwtUnverified)
 			if err != nil {
-				return nil, errs2.New(errs2.Unauthenticated, errs2.CodeUnauthenticated, err)
+				return nil, errs.New(errs.Unauthenticated, errs.CodeUnauthenticated, err)
 			}
 
 			ctx = ctxPck.SetActorID(ctx, resp.Subject)
@@ -66,9 +66,9 @@ func (m *Middleware) AuthenticateBasic() func(next http.Handler) http.Handler {
 
 			email, pass, ok := parseBasicAuth(authorizationHeader)
 			if !ok {
-				err := errs2.New(
-					errs2.Unauthenticated,
-					errs2.CodeUnauthenticated,
+				err := errs.New(
+					errs.Unauthenticated,
+					errs.CodeUnauthenticated,
 					ErrInvalidBasicAuth,
 				)
 				m.Error(w, err, http.StatusUnauthorized)
@@ -78,9 +78,9 @@ func (m *Middleware) AuthenticateBasic() func(next http.Handler) http.Handler {
 
 			addr, parseErr := mail.ParseAddress(email)
 			if parseErr != nil {
-				m.Error(w, errs2.New(
-					errs2.Unauthenticated,
-					errs2.CodeUnauthenticated,
+				m.Error(w, errs.New(
+					errs.Unauthenticated,
+					errs.CodeUnauthenticated,
 					ErrInvalidBasicAuth,
 				), http.StatusUnauthorized)
 

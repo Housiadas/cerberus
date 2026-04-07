@@ -8,9 +8,9 @@ import (
 	"time"
 
 	cfg "github.com/Housiadas/cerberus/internal/config"
-	"github.com/Housiadas/cerberus/internal/testutil/dbtest"
-	"github.com/Housiadas/cerberus/internal/testutil/kafkatest"
-	"github.com/Housiadas/cerberus/internal/testutil/redistest"
+	"github.com/Housiadas/cerberus/internal/sdk/testutil/dbtest"
+	"github.com/Housiadas/cerberus/internal/sdk/testutil/kafkatest"
+	"github.com/Housiadas/cerberus/internal/sdk/testutil/redistest"
 	"github.com/Housiadas/cerberus/internal/web/handler"
 	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/Housiadas/cerberus/pkg/telemetry"

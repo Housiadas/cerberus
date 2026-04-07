@@ -10,8 +10,9 @@ import (
 	"time"
 
 	"github.com/Housiadas/cerberus/internal/core/user/user_repo"
-	"github.com/Housiadas/cerberus/internal/testutil/dbtest"
-	"github.com/Housiadas/cerberus/internal/testutil/unitest"
+	"github.com/Housiadas/cerberus/internal/sdk/eventbus"
+	"github.com/Housiadas/cerberus/internal/sdk/testutil/dbtest"
+	unitest2 "github.com/Housiadas/cerberus/internal/sdk/testutil/unitest"
 	"github.com/Housiadas/cerberus/internal/types/name"
 	"github.com/Housiadas/cerberus/internal/types/password"
 	"github.com/google/go-cmp/cmp"
@@ -20,7 +21,6 @@ import (
 	"golang.org/x/crypto/bcrypt"
 
 	"github.com/Housiadas/cerberus/internal/core/user"
-	"github.com/Housiadas/cerberus/internal/eventbus"
 	"github.com/Housiadas/cerberus/pkg/clock"
 	"github.com/Housiadas/cerberus/pkg/cursor"
 	"github.com/Housiadas/cerberus/pkg/hasher"
@@ -66,34 +66,34 @@ func Test_User(t *testing.T) {
 		t.Fatalf("Seeding error: %s", err)
 	}
 
-	unitest.Run(t, queryUser(userService, sd), "query")
-	unitest.Run(t, createUser(userService), "create")
-	unitest.Run(t, updateUser(userService, sd), "update")
-	unitest.Run(t, deleteUser(userService, sd), "delete")
+	unitest2.Run(t, queryUser(userService, sd), "query")
+	unitest2.Run(t, createUser(userService), "create")
+	unitest2.Run(t, updateUser(userService, sd), "update")
+	unitest2.Run(t, deleteUser(userService, sd), "delete")
 }
 
 // =============================================================================
 
-func insertSeedData(service *user.Service) (unitest.SeedData, error) {
+func insertSeedData(service *user.Service) (unitest2.SeedData, error) {
 	ctx := context.Background()
 
 	usrs, err := user.TestSeedUsers(ctx, 2, service)
 	if err != nil {
-		return unitest.SeedData{}, fmt.Errorf("seeding users : %w", err)
+		return unitest2.SeedData{}, fmt.Errorf("seeding users : %w", err)
 	}
 
-	tu1 := unitest.User{
+	tu1 := unitest2.User{
 		User: usrs[0],
 	}
 
-	tu2 := unitest.User{
+	tu2 := unitest2.User{
 		User: usrs[1],
 	}
 
 	// -------------------------------------------------------------------------
 
-	sd := unitest.SeedData{
-		Users: []unitest.User{tu1, tu2},
+	sd := unitest2.SeedData{
+		Users: []unitest2.User{tu1, tu2},
 	}
 
 	return sd, nil
@@ -101,7 +101,7 @@ func insertSeedData(service *user.Service) (unitest.SeedData, error) {
 
 // =============================================================================
 
-func queryUser(service *user.Service, sd unitest.SeedData) []unitest.Table {
+func queryUser(service *user.Service, sd unitest2.SeedData) []unitest2.Table {
 	usrs := make([]user.User, 0, len(sd.Users))
 
 	for _, usr := range sd.Users {
@@ -117,7 +117,7 @@ func queryUser(service *user.Service, sd unitest.SeedData) []unitest.Table {
 		cmpopts.EquateApproxTime(time.Second),
 	}
 
-	table := []unitest.Table{
+	table := []unitest2.Table{
 		{
 			Name:    "all",
 			ExpResp: usrs,
@@ -171,10 +171,10 @@ func queryUser(service *user.Service, sd unitest.SeedData) []unitest.Table {
 	return table
 }
 
-func createUser(service *user.Service) []unitest.Table {
+func createUser(service *user.Service) []unitest2.Table {
 	email, _ := mail.ParseAddress("bill@ardanlabs.com")
 
-	table := []unitest.Table{
+	table := []unitest2.Table{
 		{
 			Name: "basic",
 			ExpResp: user.New(
@@ -237,10 +237,10 @@ func createUser(service *user.Service) []unitest.Table {
 	return table
 }
 
-func updateUser(service *user.Service, sd unitest.SeedData) []unitest.Table {
+func updateUser(service *user.Service, sd unitest2.SeedData) []unitest2.Table {
 	email, _ := mail.ParseAddress("jack@housi.com")
 
-	table := []unitest.Table{
+	table := []unitest2.Table{
 		{
 			Name: "basic",
 			ExpResp: user.New(
@@ -303,8 +303,8 @@ func updateUser(service *user.Service, sd unitest.SeedData) []unitest.Table {
 	return table
 }
 
-func deleteUser(service *user.Service, sd unitest.SeedData) []unitest.Table {
-	table := []unitest.Table{
+func deleteUser(service *user.Service, sd unitest2.SeedData) []unitest2.Table {
+	table := []unitest2.Table{
 		{
 			Name:    "user",
 			ExpResp: nil,

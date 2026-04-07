@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	errs2 "github.com/Housiadas/cerberus/internal/errs"
+	"github.com/Housiadas/cerberus/internal/sdk/errs"
 	"github.com/google/uuid"
 )
 
@@ -22,10 +22,10 @@ func (s *Service) Logout(ctx context.Context, userID string, req LogoutReq) erro
 	}
 
 	if rToken.UserID() != userUUID {
-		return errs2.New(
-			errs2.Unauthenticated,
-			errs2.CodeUnauthenticated,
-			errs2.Errorf(errs2.Unauthenticated, errs2.CodeUnauthenticated, "invalid user id"),
+		return errs.New(
+			errs.Unauthenticated,
+			errs.CodeUnauthenticated,
+			errs.Errorf(errs.Unauthenticated, errs.CodeUnauthenticated, "invalid user id"),
 		)
 	}
 

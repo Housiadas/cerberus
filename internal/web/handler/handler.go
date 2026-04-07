@@ -40,7 +40,7 @@ import (
 	"github.com/Housiadas/cerberus/internal/core/user_roles/user_roles_repo"
 	"github.com/Housiadas/cerberus/internal/core/user_roles_permissions"
 	"github.com/Housiadas/cerberus/internal/core/user_roles_permissions/user_roles_permissions_repo"
-	"github.com/Housiadas/cerberus/internal/eventbus"
+	"github.com/Housiadas/cerberus/internal/sdk/eventbus"
 	"github.com/Housiadas/cerberus/internal/web/handler/openapi"
 	"github.com/Housiadas/cerberus/internal/web/middleware"
 	"github.com/Housiadas/cerberus/pkg/clock"
