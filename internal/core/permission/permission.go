@@ -9,7 +9,10 @@ import (
 	"github.com/google/uuid"
 )
 
-var ErrNotFound = errors.New("permission not found")
+var (
+	ErrNotFound     = errors.New("permission not found")
+	ErrRequiredName = errors.New("name is required")
+)
 
 // Permission represents information about an individual permission of our system.
 type Permission struct {
