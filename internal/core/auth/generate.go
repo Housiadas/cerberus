@@ -2,7 +2,6 @@ package auth
 
 import (
 	"context"
-	"time"
 
 	"github.com/Housiadas/cerberus/internal/sdk/errs"
 	"github.com/golang-jwt/jwt/v5"
@@ -49,7 +48,7 @@ func (s *Service) GenerateAccessToken(ctx context.Context, userID string) (Acces
 	// iat (issued at time): Time at which the JWT was issued; can be used to determine age of the JWT
 	// jti (JWT ID): Unique identifier; can be used to prevent the JWT from being replayed
 	// (allows a Token to be used only once)
-	now := time.Now()
+	now := s.clock.Now()
 
 	accessTokenID, genErr := uuid.NewV7()
 	if genErr != nil {

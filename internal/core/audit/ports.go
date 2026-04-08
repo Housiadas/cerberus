@@ -2,10 +2,15 @@ package audit
 
 import (
 	"context"
+	"time"
 
 	"github.com/Housiadas/cerberus/pkg/cursor"
 	"github.com/Housiadas/cerberus/pkg/order"
 )
+
+type clock interface {
+	Now() time.Time
+}
 
 // Storer interface declares the behavior this package needs to persist and retrieve data.
 type Storer interface {

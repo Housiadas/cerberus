@@ -3,7 +3,6 @@ package role
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"github.com/Housiadas/cerberus/internal/core/audit"
 	"github.com/Housiadas/cerberus/internal/types/entity"
@@ -22,6 +21,7 @@ type Service struct {
 	uuidGen    generator
 	tx         transactor
 	dispatcher dispatcher
+	clock      clock
 }
 
 // NewService constructor.
@@ -31,6 +31,7 @@ func NewService(
 	uuidGen generator,
 	tx transactor,
 	dispatcher dispatcher,
+	clock clock,
 ) *Service {
 	return &Service{
 		log:        log,
@@ -38,27 +39,28 @@ func NewService(
 		uuidGen:    uuidGen,
 		tx:         tx,
 		dispatcher: dispatcher,
+		clock:      clock,
 	}
 }
 
 // Create adds a new Role to the system within a transaction
 // and dispatches a domain event.
-func (c *Service) Create(ctx context.Context, nr NewRole) (Role, error) {
-	id, err := c.uuidGen.Generate()
+func (s *Service) Create(ctx context.Context, nr NewRole) (Role, error) {
+	id, err := s.uuidGen.Generate()
 	if err != nil {
 		return Role{}, fmt.Errorf("role uuid generate: %w", err)
 	}
 
-	now := time.Now()
+	now := s.clock.Now()
 	rol := New(id, nr.Name, now, now, nil)
 
-	txErr := c.tx.RunInTx(ctx, func(txCtx context.Context) error {
-		err = c.storer.Create(txCtx, rol)
+	txErr := s.tx.RunInTx(ctx, func(txCtx context.Context) error {
+		err = s.storer.Create(txCtx, rol)
 		if err != nil {
 			return fmt.Errorf("create: %w", err)
 		}
 
-		return c.dispatcher.Dispatch(txCtx, newRoleEvent(rol, audit.ActionCreate))
+		return s.dispatcher.Dispatch(txCtx, newRoleEvent(rol, audit.ActionCreate))
 	})
 	if txErr != nil {
 		return Role{}, fmt.Errorf("create role: %w", txErr)
@@ -69,7 +71,7 @@ func (c *Service) Create(ctx context.Context, nr NewRole) (Role, error) {
 
 // Update modifies information about a Role within a transaction
 // and dispatches a domain event.
-func (c *Service) Update(
+func (s *Service) Update(
 	ctx context.Context,
 	rl Role,
 	uprole UpdateRole,
@@ -78,15 +80,15 @@ func (c *Service) Update(
 		rl = rl.WithName(*uprole.Name)
 	}
 
-	rl = rl.WithUpdatedAt(time.Now())
+	rl = rl.WithUpdatedAt(s.clock.Now())
 
-	txErr := c.tx.RunInTx(ctx, func(txCtx context.Context) error {
-		err := c.storer.Update(txCtx, rl)
+	txErr := s.tx.RunInTx(ctx, func(txCtx context.Context) error {
+		err := s.storer.Update(txCtx, rl)
 		if err != nil {
 			return fmt.Errorf("update: %w", err)
 		}
 
-		return c.dispatcher.Dispatch(txCtx, newRoleEvent(rl, audit.ActionUpdate))
+		return s.dispatcher.Dispatch(txCtx, newRoleEvent(rl, audit.ActionUpdate))
 	})
 	if txErr != nil {
 		return Role{}, fmt.Errorf("update role: %w", txErr)
@@ -97,14 +99,14 @@ func (c *Service) Update(
 
 // Delete removes the specified Role within a transaction
 // and dispatches a domain event.
-func (c *Service) Delete(ctx context.Context, rl Role) error {
-	txErr := c.tx.RunInTx(ctx, func(txCtx context.Context) error {
-		err := c.storer.Delete(txCtx, rl)
+func (s *Service) Delete(ctx context.Context, rl Role) error {
+	txErr := s.tx.RunInTx(ctx, func(txCtx context.Context) error {
+		err := s.storer.Delete(txCtx, rl)
 		if err != nil {
 			return fmt.Errorf("delete: %w", err)
 		}
 
-		return c.dispatcher.Dispatch(txCtx, newRoleEvent(rl, audit.ActionDelete))
+		return s.dispatcher.Dispatch(txCtx, newRoleEvent(rl, audit.ActionDelete))
 	})
 	if txErr != nil {
 		return fmt.Errorf("delete role: %w", txErr)
@@ -114,8 +116,8 @@ func (c *Service) Delete(ctx context.Context, rl Role) error {
 }
 
 // QueryByID finds the role by the specified ID.
-func (c *Service) QueryByID(ctx context.Context, roleID uuid.UUID) (Role, error) {
-	rl, err := c.storer.QueryByID(ctx, roleID)
+func (s *Service) QueryByID(ctx context.Context, roleID uuid.UUID) (Role, error) {
+	rl, err := s.storer.QueryByID(ctx, roleID)
 	if err != nil {
 		return Role{}, fmt.Errorf("query: roleID[%s]: %w", roleID, err)
 	}
@@ -124,13 +126,13 @@ func (c *Service) QueryByID(ctx context.Context, roleID uuid.UUID) (Role, error)
 }
 
 // Query retrieves a list of existing roles.
-func (c *Service) Query(
+func (s *Service) Query(
 	ctx context.Context,
 	filter QueryFilter,
 	orderBy order.By,
 	cur cursor.Cursor,
 ) ([]Role, error) {
-	roles, err := c.storer.Query(ctx, filter, orderBy, cur)
+	roles, err := s.storer.Query(ctx, filter, orderBy, cur)
 	if err != nil {
 		return nil, fmt.Errorf("role query: %w", err)
 	}

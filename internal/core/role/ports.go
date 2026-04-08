@@ -2,6 +2,7 @@ package role
 
 import (
 	"context"
+	"time"
 
 	"github.com/Housiadas/cerberus/internal/types/event"
 	"github.com/Housiadas/cerberus/pkg/cursor"
@@ -21,6 +22,10 @@ type dispatcher interface {
 // transactor defines the interface for transaction management.
 type transactor interface {
 	RunInTx(ctx context.Context, fn func(ctx context.Context) error) error
+}
+
+type clock interface {
+	Now() time.Time
 }
 
 // Storer interface declares the behavior this package needs to persist and retrieve data.

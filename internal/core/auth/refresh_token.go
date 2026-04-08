@@ -3,7 +3,6 @@ package auth
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"github.com/Housiadas/cerberus/internal/sdk/errs"
 )
@@ -23,7 +22,7 @@ func (s *Service) RefreshAccessToken(
 	}
 
 	// Check if the token has expired
-	if time.Now().UTC().After(rToken.ExpiresAt()) {
+	if s.clock.Now().UTC().After(rToken.ExpiresAt()) {
 		return Token{}, errs.New(errs.InvalidArgument, errs.CodeExpiredToken, ErrExpiredToken)
 	}
 

@@ -3,7 +3,6 @@ package permission
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"github.com/Housiadas/cerberus/internal/core/audit"
 	"github.com/Housiadas/cerberus/internal/types/entity"
@@ -14,20 +13,6 @@ import (
 	"github.com/google/uuid"
 )
 
-type generator interface {
-	Generate() (uuid.UUID, error)
-}
-
-// dispatcher defines the interface for domain event dispatching.
-type dispatcher interface {
-	Dispatch(ctx context.Context, ev event.DomainEvent) error
-}
-
-// transactor defines the interface for transaction management.
-type transactor interface {
-	RunInTx(ctx context.Context, fn func(ctx context.Context) error) error
-}
-
 // Service manages permission domain operations including persistence,
 // transaction management, and event dispatching.
 type Service struct {
@@ -36,6 +21,7 @@ type Service struct {
 	uuidGen    generator
 	tx         transactor
 	dispatcher dispatcher
+	clock      clock
 }
 
 // NewService constructor.
@@ -45,6 +31,7 @@ func NewService(
 	uuidGen generator,
 	tx transactor,
 	dispatcher dispatcher,
+	clock clock,
 ) *Service {
 	return &Service{
 		log:        log,
@@ -52,6 +39,7 @@ func NewService(
 		uuidGen:    uuidGen,
 		tx:         tx,
 		dispatcher: dispatcher,
+		clock:      clock,
 	}
 }
 
@@ -66,7 +54,7 @@ func (s *Service) Create(
 		return Permission{}, fmt.Errorf("permission uuid generate: %w", err)
 	}
 
-	now := time.Now()
+	now := s.clock.Now()
 	p := New(id, np.Name, now, now, nil)
 
 	txErr := s.tx.RunInTx(ctx, func(txCtx context.Context) error {
@@ -95,7 +83,7 @@ func (s *Service) Update(
 		p = p.WithName(*up.Name)
 	}
 
-	p = p.WithUpdatedAt(time.Now())
+	p = p.WithUpdatedAt(s.clock.Now())
 
 	txErr := s.tx.RunInTx(ctx, func(txCtx context.Context) error {
 		err := s.storer.Update(txCtx, p)

@@ -130,8 +130,8 @@ func New(ctx context.Context, cfg Config) *Handler {
 	permissionRepo := permission_repo.NewStore(cfg.Log, cfg.DB)
 	permissionCacheStore := permission_cache.NewStore(ctx, cfg.Log, permissionRepo, cfg.Redis)
 	userRolesPermissionsRepo := user_roles_permissions_repo.NewStore(cfg.Log, cfg.DB)
-	userRolesRepo := user_roles_repo.NewStore(cfg.Log, cfg.DB)
-	rolePermissionsRepo := role_permissions_repo.NewStore(cfg.Log, cfg.DB)
+	userRolesRepo := user_roles_repo.NewStore(cfg.Log, cfg.DB, clk)
+	rolePermissionsRepo := role_permissions_repo.NewStore(cfg.Log, cfg.DB, clk)
 	refreshTokenRepo := refresh_token_repo.NewStore(cfg.Log, cfg.DB)
 	resetTokenRepo := reset_token_repo.NewStore(cfg.Log, cfg.DB)
 	accountRepo := account_repo.NewStore(cfg.Log, cfg.DB)
@@ -139,7 +139,7 @@ func New(ctx context.Context, cfg Config) *Handler {
 	invoiceRepo := invoice_repo.NewStore(cfg.Log, cfg.DB)
 
 	// services
-	auditService := audit.NewService(cfg.Log, auditRepo)
+	auditService := audit.NewService(cfg.Log, auditRepo, clk)
 	outboxSvc := outbox.NewService(cfg.Log, outboxRepo, uuidGen, clk)
 	emailNotifOutboxSvc := email_notification_outbox.NewService(
 		cfg.Log,
@@ -153,13 +153,14 @@ func New(ctx context.Context, cfg Config) *Handler {
 	tx := pgsql.NewTransactor(cfg.Log, cfg.DB)
 
 	userService := user.NewService(cfg.Log, userCacheStore, uuidGen, clk, hash, tx, dispatcher)
-	roleService := role.NewService(cfg.Log, roleCacheStore, uuidGen, tx, dispatcher)
+	roleService := role.NewService(cfg.Log, roleCacheStore, uuidGen, tx, dispatcher, clk)
 	permissionService := permission.NewService(
 		cfg.Log,
 		permissionCacheStore,
 		uuidGen,
 		tx,
 		dispatcher,
+		clk,
 	)
 	refreshTokenService := refresh_token.NewService(cfg.Log, refreshTokenRepo, uuidGen, clk)
 	resetTokenService := reset_token.NewService(resetTokenRepo, uuidGen, clk)

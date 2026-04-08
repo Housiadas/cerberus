@@ -20,15 +20,28 @@ var (
 	rolePermissionRemoveSQL string
 )
 
+type clock interface {
+	Now() time.Time
+}
+
 // Store manages write operations on the role_permissions table.
 type Store struct {
-	log logger.Logger
-	db  *sqlx.DB
+	log   logger.Logger
+	db    *sqlx.DB
+	clock clock
 }
 
 // NewStore constructs the api for data access.
-func NewStore(log logger.Logger, db *sqlx.DB) *Store {
-	return &Store{log: log, db: db}
+func NewStore(
+	log logger.Logger,
+	db *sqlx.DB,
+	clock clock,
+) *Store {
+	return &Store{
+		log:   log,
+		db:    db,
+		clock: clock,
+	}
 }
 
 // Add inserts a role-permission relationship.
@@ -41,8 +54,8 @@ func (s *Store) Add(ctx context.Context, roleID uuid.UUID, permissionID uuid.UUI
 	}{
 		RoleID:       roleID,
 		PermissionID: permissionID,
-		CreatedAt:    time.Now().UTC(),
-		UpdatedAt:    time.Now().UTC(),
+		CreatedAt:    s.clock.Now().UTC(),
+		UpdatedAt:    s.clock.Now().UTC(),
 	}
 
 	err := pgsql.NamedExecContext(ctx, s.log, pgsql.Conn(ctx, s.db), rolePermissionAddSQL, data)
