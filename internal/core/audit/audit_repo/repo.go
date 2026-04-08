@@ -25,13 +25,13 @@ var (
 
 // Store manages the set of APIs for auditDB database access.
 type Store struct {
-	log *logger.Service
+	log logger.Logger
 	db  *sqlx.DB
 }
 
 // NewStore constructs the API for data access.
 func NewStore(
-	log *logger.Service,
+	log logger.Logger,
 	db *sqlx.DB,
 ) *Store {
 	return &Store{

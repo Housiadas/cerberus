@@ -20,14 +20,14 @@ type Config struct {
 	DB      config.DB
 	Kafka   config.Kafka
 	Email   config.Email
-	Log     *logger.Service
+	Log     logger.Logger
 	Tracer  trace.Tracer
 	Version config.Version
 }
 
 type Command struct {
 	db          pgsql.Config
-	log         *logger.Service
+	log         logger.Logger
 	tracer      trace.Tracer
 	kafka       config.Kafka
 	emailConfig email.Config

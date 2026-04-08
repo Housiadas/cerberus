@@ -29,12 +29,12 @@ var (
 
 // Store manages the set of APIs for billing address database access.
 type Store struct {
-	log *logger.Service
+	log logger.Logger
 	db  *sqlx.DB
 }
 
 // NewStore constructs the api for data access.
-func NewStore(log *logger.Service, db *sqlx.DB) *Store {
+func NewStore(log logger.Logger, db *sqlx.DB) *Store {
 	return &Store{
 		log: log,
 		db:  db,

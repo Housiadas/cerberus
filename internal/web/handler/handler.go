@@ -74,7 +74,7 @@ type Config struct {
 	Stripe            config.Stripe
 	DB                *sqlx.DB
 	Redis             redisClient
-	Log               *logger.Service
+	Log               logger.Logger
 	Tracer            trace.Tracer
 	Meter             metric.Meter
 	AccessTokenSecret []byte
@@ -86,7 +86,7 @@ type Handler struct {
 	serviceName string
 	build       string
 	db          *sqlx.DB
-	log         *logger.Service
+	log         logger.Logger
 	cors        config.CorsSettings
 	middleware  *middleware.Middleware
 	svc         services

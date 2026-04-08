@@ -8,7 +8,7 @@ import (
 	"errors"
 	"fmt"
 
-	permission2 "github.com/Housiadas/cerberus/internal/core/permission"
+	"github.com/Housiadas/cerberus/internal/core/permission"
 	"github.com/Housiadas/cerberus/pkg/cursor"
 	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/Housiadas/cerberus/pkg/order"
@@ -33,12 +33,12 @@ var (
 
 // Store manages the set of APIs for userDB database access.
 type Store struct {
-	log *logger.Service
+	log logger.Logger
 	db  *sqlx.DB
 }
 
 // NewStore constructs the api for data access.
-func NewStore(log *logger.Service, db *sqlx.DB) *Store {
+func NewStore(log logger.Logger, db *sqlx.DB) *Store {
 	return &Store{
 		log: log,
 		db:  db,
@@ -46,7 +46,7 @@ func NewStore(log *logger.Service, db *sqlx.DB) *Store {
 }
 
 // Create inserts a new permissionDB into the database.
-func (s *Store) Create(ctx context.Context, perm permission2.Permission) error {
+func (s *Store) Create(ctx context.Context, perm permission.Permission) error {
 	err := pgsql.NamedExecContext(
 		ctx,
 		s.log,
@@ -62,7 +62,7 @@ func (s *Store) Create(ctx context.Context, perm permission2.Permission) error {
 }
 
 // Update replaces a permissionDB document in the database.
-func (s *Store) Update(ctx context.Context, rl permission2.Permission) error {
+func (s *Store) Update(ctx context.Context, rl permission.Permission) error {
 	err := pgsql.NamedExecContext(
 		ctx,
 		s.log,
@@ -78,7 +78,7 @@ func (s *Store) Update(ctx context.Context, rl permission2.Permission) error {
 }
 
 // Delete removes a permissionDB from the database.
-func (s *Store) Delete(ctx context.Context, rl permission2.Permission) error {
+func (s *Store) Delete(ctx context.Context, rl permission.Permission) error {
 	err := pgsql.NamedExecContext(
 		ctx,
 		s.log,
@@ -97,7 +97,7 @@ func (s *Store) Delete(ctx context.Context, rl permission2.Permission) error {
 func (s *Store) QueryByID(
 	ctx context.Context,
 	permissionID uuid.UUID,
-) (permission2.Permission, error) {
+) (permission.Permission, error) {
 	data := struct {
 		ID string `db:"id"`
 	}{
@@ -116,10 +116,10 @@ func (s *Store) QueryByID(
 	)
 	if err != nil {
 		if errors.Is(err, pgsql.ErrDBNotFound) {
-			return permission2.Permission{}, fmt.Errorf("db: %w", permission2.ErrNotFound)
+			return permission.Permission{}, fmt.Errorf("db: %w", permission.ErrNotFound)
 		}
 
-		return permission2.Permission{}, fmt.Errorf("db: %w", err)
+		return permission.Permission{}, fmt.Errorf("db: %w", err)
 	}
 
 	return toPermissionDomain(dbPermission)
@@ -128,10 +128,10 @@ func (s *Store) QueryByID(
 // Query retrieves a list of existing permissions from the database.
 func (s *Store) Query(
 	ctx context.Context,
-	filter permission2.QueryFilter,
+	filter permission.QueryFilter,
 	orderBy order.By,
 	cur cursor.Cursor,
-) ([]permission2.Permission, error) {
+) ([]permission.Permission, error) {
 	data := map[string]any{
 		"limit": cur.Limit() + 1,
 	}

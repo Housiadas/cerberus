@@ -31,7 +31,7 @@ type Config struct {
 	FrontendURL                string
 	AccessTokenSecret          []byte
 	TX                         transactor
-	Log                        *logger.Service
+	Log                        logger.Logger
 	UserService                *user.Service
 	RefreshTokenService        *refresh_token.Service
 	ResetTokenService          *reset_token.Service
@@ -46,7 +46,7 @@ type Service struct {
 	secret                     []byte
 	frontendURL                string
 	parser                     *jwt.Parser
-	log                        *logger.Service
+	log                        logger.Logger
 	tx                         transactor
 	method                     jwt.SigningMethod
 	userService                *user.Service

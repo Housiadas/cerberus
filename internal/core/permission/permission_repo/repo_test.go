@@ -8,20 +8,19 @@ import (
 	"testing"
 	"time"
 
-	permission2 "github.com/Housiadas/cerberus/internal/core/permission"
+	"github.com/Housiadas/cerberus/internal/core/permission"
 	"github.com/Housiadas/cerberus/internal/core/permission/permission_repo"
 	"github.com/Housiadas/cerberus/internal/sdk/eventbus"
 	"github.com/Housiadas/cerberus/internal/sdk/testutil/dbtest"
-	unitest2 "github.com/Housiadas/cerberus/internal/sdk/testutil/unitest"
+	"github.com/Housiadas/cerberus/internal/sdk/testutil/unitest"
 	"github.com/Housiadas/cerberus/internal/types/name"
-	"github.com/google/go-cmp/cmp"
-	"github.com/google/go-cmp/cmp/cmpopts"
-	"github.com/google/uuid"
-
 	"github.com/Housiadas/cerberus/pkg/cursor"
 	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/Housiadas/cerberus/pkg/pgsql"
 	"github.com/Housiadas/cerberus/pkg/uuidgen"
+	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
+	"github.com/google/uuid"
 )
 
 func Test_Permission(t *testing.T) {
@@ -36,29 +35,29 @@ func Test_Permission(t *testing.T) {
 
 	uuidGen := uuidgen.NewV7()
 	tx := pgsql.NewTransactor(log, db)
-	permService := permission2.NewService(log, permission_repo.NewStore(log, db), uuidGen, tx, eventbus.NewNop())
+	permService := permission.NewService(log, permission_repo.NewStore(log, db), uuidGen, tx, eventbus.NewNop())
 
 	sd, err := insertSeedData(permService)
 	if err != nil {
 		t.Fatalf("Seeding error: %s", err)
 	}
 
-	unitest2.Run(t, queryPermission(permService, sd), "query")
-	unitest2.Run(t, createPermission(permService), "create")
-	unitest2.Run(t, updatePermission(permService, sd), "update")
-	unitest2.Run(t, deletePermission(permService, sd), "delete")
+	unitest.Run(t, queryPermission(permService, sd), "query")
+	unitest.Run(t, createPermission(permService), "create")
+	unitest.Run(t, updatePermission(permService, sd), "update")
+	unitest.Run(t, deletePermission(permService, sd), "delete")
 }
 
-func insertSeedData(service *permission2.Service) (unitest2.SeedData, error) {
+func insertSeedData(service *permission.Service) (unitest.SeedData, error) {
 	ctx := context.Background()
 
-	perms, err := permission2.TestSeedPermissions(ctx, 2, service)
+	perms, err := permission.TestSeedPermissions(ctx, 2, service)
 	if err != nil {
-		return unitest2.SeedData{}, fmt.Errorf("seeding permissions: %w", err)
+		return unitest.SeedData{}, fmt.Errorf("seeding permissions: %w", err)
 	}
 
-	sd := unitest2.SeedData{
-		Permissions: []unitest2.Permission{
+	sd := unitest.SeedData{
+		Permissions: []unitest.Permission{
 			{Permission: perms[0]},
 			{Permission: perms[1]},
 		},
@@ -67,8 +66,8 @@ func insertSeedData(service *permission2.Service) (unitest2.SeedData, error) {
 	return sd, nil
 }
 
-func queryPermission(service *permission2.Service, sd unitest2.SeedData) []unitest2.Table {
-	perms := make([]permission2.Permission, 0, len(sd.Permissions))
+func queryPermission(service *permission.Service, sd unitest.SeedData) []unitest.Table {
+	perms := make([]permission.Permission, 0, len(sd.Permissions))
 	for _, p := range sd.Permissions {
 		perms = append(perms, p.Permission)
 	}
@@ -78,20 +77,20 @@ func queryPermission(service *permission2.Service, sd unitest2.SeedData) []unite
 	})
 
 	permCmpOpts := []cmp.Option{
-		cmp.AllowUnexported(permission2.Permission{}),
+		cmp.AllowUnexported(permission.Permission{}),
 		cmpopts.EquateApproxTime(time.Second),
 	}
 
-	return []unitest2.Table{
+	return []unitest.Table{
 		{
 			Name:    "all",
 			ExpResp: perms,
 			ExcFunc: func(ctx context.Context) any {
-				filter := permission2.QueryFilter{
+				filter := permission.QueryFilter{
 					Name: dbtest.NamePointer("Permission"),
 				}
 
-				resp, err := service.Query(ctx, filter, permission2.GetDefaultOrderBy(), mustParseCursor("", "10"))
+				resp, err := service.Query(ctx, filter, permission.GetDefaultOrderBy(), mustParseCursor("", "10"))
 				if err != nil {
 					return err
 				}
@@ -99,12 +98,12 @@ func queryPermission(service *permission2.Service, sd unitest2.SeedData) []unite
 				return resp
 			},
 			CmpFunc: func(got any, exp any) string {
-				gotResp, exists := got.([]permission2.Permission)
+				gotResp, exists := got.([]permission.Permission)
 				if !exists {
 					return "error occurred"
 				}
 
-				expResp := exp.([]permission2.Permission)
+				expResp := exp.([]permission.Permission)
 
 				return cmp.Diff(gotResp, expResp, permCmpOpts...)
 			},
@@ -121,12 +120,12 @@ func queryPermission(service *permission2.Service, sd unitest2.SeedData) []unite
 				return resp
 			},
 			CmpFunc: func(got any, exp any) string {
-				gotResp, exists := got.(permission2.Permission)
+				gotResp, exists := got.(permission.Permission)
 				if !exists {
 					return "error occurred"
 				}
 
-				expResp := exp.(permission2.Permission)
+				expResp := exp.(permission.Permission)
 
 				return cmp.Diff(gotResp, expResp, permCmpOpts...)
 			},
@@ -134,11 +133,11 @@ func queryPermission(service *permission2.Service, sd unitest2.SeedData) []unite
 	}
 }
 
-func createPermission(service *permission2.Service) []unitest2.Table {
-	return []unitest2.Table{
+func createPermission(service *permission.Service) []unitest.Table {
+	return []unitest.Table{
 		{
 			Name: "basic",
-			ExpResp: permission2.New(
+			ExpResp: permission.New(
 				uuid.UUID{},
 				name.MustParse("TestPermission"),
 				time.Time{},
@@ -146,7 +145,7 @@ func createPermission(service *permission2.Service) []unitest2.Table {
 				nil,
 			),
 			ExcFunc: func(ctx context.Context) any {
-				np := permission2.NewPermission{
+				np := permission.NewPermission{
 					Name: name.MustParse("TestPermission"),
 				}
 
@@ -158,28 +157,28 @@ func createPermission(service *permission2.Service) []unitest2.Table {
 				return resp
 			},
 			CmpFunc: func(got any, exp any) string {
-				gotResp, exists := got.(permission2.Permission)
+				gotResp, exists := got.(permission.Permission)
 				if !exists {
 					return "error occurred"
 				}
 
-				expResp := exp.(permission2.Permission)
+				expResp := exp.(permission.Permission)
 
-				expResp = permission2.New(gotResp.ID(), expResp.Name(), gotResp.CreatedAt(), gotResp.UpdatedAt(), gotResp.DeletedAt())
+				expResp = permission.New(gotResp.ID(), expResp.Name(), gotResp.CreatedAt(), gotResp.UpdatedAt(), gotResp.DeletedAt())
 
-				return cmp.Diff(gotResp, expResp, cmp.AllowUnexported(permission2.Permission{}))
+				return cmp.Diff(gotResp, expResp, cmp.AllowUnexported(permission.Permission{}))
 			},
 		},
 	}
 }
 
-func updatePermission(service *permission2.Service, sd unitest2.SeedData) []unitest2.Table {
+func updatePermission(service *permission.Service, sd unitest.SeedData) []unitest.Table {
 	newName := name.MustParse("UpdatedPermission")
 
-	return []unitest2.Table{
+	return []unitest.Table{
 		{
 			Name: "basic",
-			ExpResp: permission2.New(
+			ExpResp: permission.New(
 				sd.Permissions[0].ID(),
 				newName,
 				sd.Permissions[0].CreatedAt(),
@@ -187,7 +186,7 @@ func updatePermission(service *permission2.Service, sd unitest2.SeedData) []unit
 				nil,
 			),
 			ExcFunc: func(ctx context.Context) any {
-				up := permission2.UpdatePermission{
+				up := permission.UpdatePermission{
 					Name: &newName,
 				}
 
@@ -199,22 +198,22 @@ func updatePermission(service *permission2.Service, sd unitest2.SeedData) []unit
 				return resp
 			},
 			CmpFunc: func(got any, exp any) string {
-				gotResp, exists := got.(permission2.Permission)
+				gotResp, exists := got.(permission.Permission)
 				if !exists {
 					return "error occurred"
 				}
 
-				expResp := exp.(permission2.Permission)
+				expResp := exp.(permission.Permission)
 				expResp = expResp.WithUpdatedAt(gotResp.UpdatedAt())
 
-				return cmp.Diff(gotResp, expResp, cmp.AllowUnexported(permission2.Permission{}), cmpopts.EquateApproxTime(time.Second))
+				return cmp.Diff(gotResp, expResp, cmp.AllowUnexported(permission.Permission{}), cmpopts.EquateApproxTime(time.Second))
 			},
 		},
 	}
 }
 
-func deletePermission(service *permission2.Service, sd unitest2.SeedData) []unitest2.Table {
-	return []unitest2.Table{
+func deletePermission(service *permission.Service, sd unitest.SeedData) []unitest.Table {
+	return []unitest.Table{
 		{
 			Name:    "permission",
 			ExpResp: nil,

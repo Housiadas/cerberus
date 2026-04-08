@@ -19,7 +19,7 @@ type Batcher struct {
 	flusher      Flusher
 	batchSize    int
 	flushTimeout time.Duration
-	log          *logger.Service
+	log          logger.Logger
 }
 
 // NewBatcher creates a new Batcher.
@@ -28,7 +28,7 @@ func NewBatcher(
 	flusher Flusher,
 	batchSize int,
 	timeout time.Duration,
-	log *logger.Service,
+	log logger.Logger,
 ) *Batcher {
 	return &Batcher{
 		storer:       storer,

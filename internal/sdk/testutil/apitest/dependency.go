@@ -47,7 +47,7 @@ type Core struct {
 }
 
 func newDependency(
-	log *logger.Service,
+	log logger.Logger,
 	db *sqlx.DB,
 	accessTokenSecret []byte,
 	serviceName string,
