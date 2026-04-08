@@ -14,20 +14,6 @@ import (
 	"github.com/google/uuid"
 )
 
-type generator interface {
-	Generate() (uuid.UUID, error)
-}
-
-// dispatcher defines the interface for domain event dispatching.
-type dispatcher interface {
-	Dispatch(ctx context.Context, ev event.DomainEvent) error
-}
-
-// transactor defines the interface for transaction management.
-type transactor interface {
-	RunInTx(ctx context.Context, fn func(ctx context.Context) error) error
-}
-
 // Service manages role domain operations including persistence,
 // transaction management, and event dispatching.
 type Service struct {

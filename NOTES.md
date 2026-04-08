@@ -28,13 +28,14 @@ MEDIUM Priority
 
 LOW Priority
 
-9. Large service constructors (user/service.go 7 params, auth/service.go 9 fields). Only auth uses a Config struct. Optional cleanup. Effort: M
+9. Large service constructors (user/service.go 7 params, auth/service.go 9 fields). 
+   Only auth uses a Config struct. Optional cleanup. Effort: M
 10. toXDB/toXDomain mapper boilerplate in every repo — candidate for go:generate. Effort: L
-11. No input validation in Create methods — services trust callers. Add domain constructors (NewAccount, NewRole). Effort: M
+11. No input validation in Create methods — services trust callers.
+    Add domain constructors (NewAccount, NewRole). Effort: M
 
 Quick wins (do first)
 
 - Inject clock in permission/role services (S)
 
 Want me to implement any of these? I'd suggest starting with the three quick wins in plan mode.  
-

@@ -10,14 +10,6 @@ import (
 
 const resetTokenTTL = 15 * time.Minute
 
-type generator interface {
-	Generate() (uuid.UUID, error)
-}
-
-type clock interface {
-	Now() time.Time
-}
-
 // Service manages the set of APIs for reset token access.
 type Service struct {
 	storer  Storer

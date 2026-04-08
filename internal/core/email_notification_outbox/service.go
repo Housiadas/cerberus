@@ -4,19 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"time"
 
 	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/google/uuid"
 )
-
-type generator interface {
-	Generate() (uuid.UUID, error)
-}
-
-type clock interface {
-	Now() time.Time
-}
 
 // Service manages the set of APIs for email notification outbox access.
 type Service struct {

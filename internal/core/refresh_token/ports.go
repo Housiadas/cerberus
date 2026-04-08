@@ -2,7 +2,18 @@ package refresh_token
 
 import (
 	"context"
+	"time"
+
+	"github.com/google/uuid"
 )
+
+type generator interface {
+	Generate() (uuid.UUID, error)
+}
+
+type clock interface {
+	Now() time.Time
+}
 
 // Storer interface declares the behavior this package needs to persist and retrieve data.
 type Storer interface {

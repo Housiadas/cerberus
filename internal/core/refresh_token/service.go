@@ -4,19 +4,9 @@ package refresh_token
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"github.com/Housiadas/cerberus/pkg/logger"
-	"github.com/google/uuid"
 )
-
-type generator interface {
-	Generate() (uuid.UUID, error)
-}
-
-type clock interface {
-	Now() time.Time
-}
 
 // Service manages the set of APIs for user access.
 type Service struct {
