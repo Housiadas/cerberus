@@ -2,7 +2,6 @@
 package role_repo
 
 import (
-	"bytes"
 	"context"
 	_ "embed"
 	"errors"
@@ -25,8 +24,6 @@ var (
 	roleUpdateSQL string
 	//go:embed query/role_delete.sql
 	roleDeleteSQL string
-	//go:embed query/role_query.sql
-	roleQuerySQL string
 	//go:embed query/role_query_by_id.sql
 	roleQueryByIDSQL string
 )
@@ -111,27 +108,31 @@ func (s *Store) Query(
 	orderBy order.By,
 	cur cursor.Cursor,
 ) ([]role.Role, error) {
-	data := map[string]any{
-		"limit": cur.Limit() + 1,
+	col, ok := orderByFields[orderBy.Field]
+	if !ok {
+		return nil, fmt.Errorf("%w: %s", ErrFieldNotExist, orderBy.Field)
 	}
 
-	buf := bytes.NewBufferString(roleQuerySQL)
-	applyFilter(filter, data, buf)
-	applyCursor(cur, orderBy, data, buf)
+	sb := pgsql.Builder.
+		Select("id", "name", "created_at", "updated_at").
+		From("roles").
+		Where(filterPredicates(filter)).
+		OrderBy(col+" "+orderBy.Direction, "id "+orderBy.Direction).
+		Limit(uint64(cur.Limit() + 1))
 
-	orderByClause, err := orderByClause(orderBy)
+	if cp := cursorPredicate(cur, orderBy); cp != nil {
+		sb = sb.Where(cp)
+	}
+
+	query, args, err := sb.ToSql()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("build query: %w", err)
 	}
-
-	buf.WriteString(orderByClause)
-	buf.WriteString(" FETCH NEXT :limit ROWS ONLY")
 
 	var dbRoles []roleDB
 
-	err = pgsql.NamedQuerySlice(ctx, s.log, pgsql.Conn(ctx, s.db), buf.String(), data, &dbRoles)
-	if err != nil {
-		return nil, fmt.Errorf("error query role in db: %w", err)
+	if err := pgsql.SelectSlice(ctx, s.log, pgsql.Conn(ctx, s.db), query, args, &dbRoles); err != nil {
+		return nil, fmt.Errorf("select slice: %w", err)
 	}
 
 	return toRolesDomain(dbRoles)

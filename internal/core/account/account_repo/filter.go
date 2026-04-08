@@ -1,57 +1,54 @@
 package account_repo
 
 import (
-	"bytes"
 	"fmt"
-	"strings"
 
 	"github.com/Housiadas/cerberus/internal/core/account"
 	"github.com/Housiadas/cerberus/pkg/cursor"
 	"github.com/Housiadas/cerberus/pkg/order"
+	sq "github.com/Masterminds/squirrel"
 )
 
-func applyCursor(cur cursor.Cursor, orderBy order.By, data map[string]any, buf *bytes.Buffer) {
+// orderByFields whitelists the domain order fields and maps them to their
+// underlying column. Squirrel does not escape ORDER BY, so the whitelist is
+// mandatory.
+var orderByFields = map[string]string{
+	account.OrderByID:   "id",
+	account.OrderByName: "name",
+}
+
+func filterPredicates(f account.QueryFilter) sq.Sqlizer {
+	preds := sq.And{sq.Eq{"deleted_at": nil}}
+
+	if f.ID != nil {
+		preds = append(preds, sq.Eq{"id": *f.ID})
+	}
+
+	if f.Name != nil {
+		preds = append(preds, sq.Like{"name": "%" + *f.Name + "%"})
+	}
+
+	if f.StripeCustomerID != nil {
+		preds = append(preds, sq.Eq{"stripe_customer_id": *f.StripeCustomerID})
+	}
+
+	return preds
+}
+
+func cursorPredicate(cur cursor.Cursor, orderBy order.By) sq.Sqlizer {
 	if !cur.HasCursor() {
-		return
+		return nil
 	}
 
-	by, exists := orderByFields[orderBy.Field]
-	if !exists {
-		return
+	col, ok := orderByFields[orderBy.Field]
+	if !ok {
+		return nil
 	}
-
-	data["cursor_value"] = cur.FieldValue()
-	data["cursor_id"] = cur.ID()
 
 	op := ">"
 	if orderBy.Direction == order.DESC {
 		op = "<"
 	}
 
-	fmt.Fprintf(buf, " AND (%s, id) %s (:cursor_value, :cursor_id)", by, op)
-}
-
-func applyFilter(filter account.QueryFilter, data map[string]any, buf *bytes.Buffer) {
-	wc := []string{"deleted_at IS NULL"}
-
-	if filter.ID != nil {
-		data["id"] = *filter.ID
-
-		wc = append(wc, "id = :id")
-	}
-
-	if filter.Name != nil {
-		data["name"] = fmt.Sprintf("%%%s%%", *filter.Name)
-
-		wc = append(wc, "name LIKE :name")
-	}
-
-	if filter.StripeCustomerID != nil {
-		data["stripe_customer_id"] = *filter.StripeCustomerID
-
-		wc = append(wc, "stripe_customer_id = :stripe_customer_id")
-	}
-
-	buf.WriteString(" WHERE ")
-	buf.WriteString(strings.Join(wc, " AND "))
+	return sq.Expr(fmt.Sprintf("(%s, id) %s (?, ?)", col, op), cur.FieldValue(), cur.ID())
 }

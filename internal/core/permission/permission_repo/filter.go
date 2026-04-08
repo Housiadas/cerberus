@@ -1,45 +1,46 @@
 package permission_repo
 
 import (
-	"bytes"
 	"fmt"
-	"strings"
 
 	"github.com/Housiadas/cerberus/internal/core/permission"
 	"github.com/Housiadas/cerberus/pkg/cursor"
 	"github.com/Housiadas/cerberus/pkg/order"
+	sq "github.com/Masterminds/squirrel"
 )
 
-func applyCursor(cur cursor.Cursor, orderBy order.By, data map[string]any, buf *bytes.Buffer) {
+// orderByFields whitelists the domain order fields and maps them to their
+// underlying column. Squirrel does not escape ORDER BY, so the whitelist is
+// mandatory.
+var orderByFields = map[string]string{
+	permission.OrderByID:   "id",
+	permission.OrderByName: "name",
+}
+
+func filterPredicates(f permission.QueryFilter) sq.Sqlizer {
+	preds := sq.And{sq.Eq{"deleted_at": nil}}
+
+	if f.Name != nil {
+		preds = append(preds, sq.Like{"name": "%" + f.Name.String() + "%"})
+	}
+
+	return preds
+}
+
+func cursorPredicate(cur cursor.Cursor, orderBy order.By) sq.Sqlizer {
 	if !cur.HasCursor() {
-		return
+		return nil
 	}
 
-	by, exists := getOrderByFields()[orderBy.Field]
-	if !exists {
-		return
+	col, ok := orderByFields[orderBy.Field]
+	if !ok {
+		return nil
 	}
-
-	data["cursor_value"] = cur.FieldValue()
-	data["cursor_id"] = cur.ID()
 
 	op := ">"
 	if orderBy.Direction == order.DESC {
 		op = "<"
 	}
 
-	fmt.Fprintf(buf, " AND (%s, id) %s (:cursor_value, :cursor_id)", by, op)
-}
-
-func applyFilter(filter permission.QueryFilter, data map[string]any, buf *bytes.Buffer) {
-	wc := []string{"deleted_at IS NULL"}
-
-	if filter.Name != nil {
-		data["name"] = fmt.Sprintf("%%%s%%", *filter.Name)
-
-		wc = append(wc, "name LIKE :name")
-	}
-
-	buf.WriteString(" WHERE ")
-	buf.WriteString(strings.Join(wc, " AND "))
+	return sq.Expr(fmt.Sprintf("(%s, id) %s (?, ?)", col, op), cur.FieldValue(), cur.ID())
 }

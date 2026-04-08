@@ -2,7 +2,6 @@
 package user_repo
 
 import (
-	"bytes"
 	"context"
 	_ "embed"
 	"errors"
@@ -26,8 +25,6 @@ var (
 	userUpdateSQL string
 	//go:embed query/user_delete.sql
 	userDeleteSQL string
-	//go:embed query/user_query.sql
-	userQuerySQL string
 	//go:embed query/user_query_by_id.sql
 	userQueryByIDSQL string
 	//go:embed query/user_query_by_email.sql
@@ -96,27 +93,35 @@ func (s *Store) Query(
 	orderBy order.By,
 	cur cursor.Cursor,
 ) ([]user.User, error) {
-	data := map[string]any{
-		"limit": cur.Limit() + 1,
+	col, ok := orderByFields[orderBy.Field]
+	if !ok {
+		return nil, fmt.Errorf("%w: %s", errOrderFieldNotFound, orderBy.Field)
 	}
 
-	buf := bytes.NewBufferString(userQuerySQL)
-	applyFilter(filter, data, buf)
-	applyCursor(cur, orderBy, data, buf)
+	sb := pgsql.Builder.
+		Select(
+			"id", "name", "email", "password_hash",
+			"department", "enabled", "account_id",
+			"created_at", "updated_at",
+		).
+		From("users").
+		Where(filterPredicates(filter)).
+		OrderBy(col+" "+orderBy.Direction, "id "+orderBy.Direction).
+		Limit(uint64(cur.Limit() + 1))
 
-	orderByClause, err := orderByClause(orderBy)
+	if cp := cursorPredicate(cur, orderBy); cp != nil {
+		sb = sb.Where(cp)
+	}
+
+	query, args, err := sb.ToSql()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("build query: %w", err)
 	}
-
-	buf.WriteString(orderByClause)
-	buf.WriteString(" FETCH NEXT :limit ROWS ONLY")
 
 	var dbUsrs []userDB
 
-	err = pgsql.NamedQuerySlice(ctx, s.log, pgsql.Conn(ctx, s.db), buf.String(), data, &dbUsrs)
-	if err != nil {
-		return nil, fmt.Errorf("named_query_slice: %w", err)
+	if err := pgsql.SelectSlice(ctx, s.log, pgsql.Conn(ctx, s.db), query, args, &dbUsrs); err != nil {
+		return nil, fmt.Errorf("select slice: %w", err)
 	}
 
 	return toUsersDomain(dbUsrs)

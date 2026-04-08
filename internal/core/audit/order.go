@@ -3,7 +3,7 @@ package audit
 // Set of fields that the results can be ordered by.
 const (
 	OrderByObjID     = "a"
-	OrderByObjDomain = "b"
+	OrderByObjEntity = "b"
 	OrderByObjName   = "c"
 	OrderByActorID   = "d"
 	OrderByAction    = "e"

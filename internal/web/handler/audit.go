@@ -90,7 +90,7 @@ func parseAuditFilter(
 	if objEntity != "" {
 		domain, err := entity.Parse(objEntity)
 		if err != nil {
-			fieldErrors.Add("obj_domain", err)
+			fieldErrors.Add("obj_entity", err)
 		} else {
 			filter.ObjEntity = &domain
 		}
@@ -150,7 +150,7 @@ func auditDefaultOrderBy() order.By {
 func auditOrderByFields() map[string]string {
 	return map[string]string{
 		"obj_id":     audit.OrderByObjID,
-		"obj_domain": audit.OrderByObjDomain,
+		"obj_entity": audit.OrderByObjEntity,
 		"obj_name":   audit.OrderByObjName,
 		"actor_id":   audit.OrderByActorID,
 		"action":     audit.OrderByAction,
@@ -162,7 +162,7 @@ func auditFieldExtractor(orderBy order.By) func(audit.Audit) any {
 		switch orderBy.Field {
 		case audit.OrderByObjID:
 			return a.ObjID().String()
-		case audit.OrderByObjDomain:
+		case audit.OrderByObjEntity:
 			return a.ObjEntity().String()
 		case audit.OrderByObjName:
 			return a.ObjName().String()

@@ -2,7 +2,6 @@
 package audit_repo
 
 import (
-	"bytes"
 	"context"
 	_ "embed"
 	"fmt"
@@ -15,13 +14,8 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-// queries.
-var (
-	//go:embed query/audit_create.sql
-	auditCreateSQL string
-	//go:embed query/audit_query.sql
-	auditQuerySQL string
-)
+//go:embed query/audit_create.sql
+var auditCreateSQL string
 
 // Store manages the set of APIs for auditDB database access.
 type Store struct {
@@ -59,27 +53,34 @@ func (s *Store) Query(
 	orderBy order.By,
 	cur cursor.Cursor,
 ) ([]audit.Audit, error) {
-	data := map[string]any{
-		"limit": cur.Limit() + 1,
+	col, ok := orderByFields[orderBy.Field]
+	if !ok {
+		return nil, fmt.Errorf("%w: %s", errOrderFieldNotFound, orderBy.Field)
 	}
 
-	buf := bytes.NewBufferString(auditQuerySQL)
-	applyFilter(filter, data, buf)
-	applyCursor(cur, orderBy, data, buf)
+	sb := pgsql.Builder.
+		Select(
+			"id", "obj_id", "obj_entity", "obj_name",
+			"actor_id", "action", "data", "message", "timestamp",
+		).
+		From("audit").
+		Where(filterPredicates(filter)).
+		OrderBy(col+" "+orderBy.Direction, "id "+orderBy.Direction).
+		Limit(uint64(cur.Limit() + 1))
 
-	orderByClause, err := orderByClause(orderBy)
+	if cp := cursorPredicate(cur, orderBy); cp != nil {
+		sb = sb.Where(cp)
+	}
+
+	query, args, err := sb.ToSql()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("build query: %w", err)
 	}
-
-	buf.WriteString(orderByClause)
-	buf.WriteString(" FETCH NEXT :limit ROWS ONLY")
 
 	var dbAudits []auditDB
 
-	err = pgsql.NamedQuerySlice(ctx, s.log, pgsql.Conn(ctx, s.db), buf.String(), data, &dbAudits)
-	if err != nil {
-		return nil, fmt.Errorf("namedqueryslice: %w", err)
+	if err := pgsql.SelectSlice(ctx, s.log, pgsql.Conn(ctx, s.db), query, args, &dbAudits); err != nil {
+		return nil, fmt.Errorf("select slice: %w", err)
 	}
 
 	return toBusAudits(dbAudits)

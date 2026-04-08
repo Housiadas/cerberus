@@ -2,7 +2,6 @@
 package permission_repo
 
 import (
-	"bytes"
 	"context"
 	_ "embed"
 	"errors"
@@ -25,8 +24,6 @@ var (
 	permissionUpdateSQL string
 	//go:embed query/permission_delete.sql
 	permissionDeleteSQL string
-	//go:embed query/permission_query.sql
-	permissionQuerySQL string
 	//go:embed query/permission_query_by_id.sql
 	permissionQueryByIDSQL string
 )
@@ -132,34 +129,31 @@ func (s *Store) Query(
 	orderBy order.By,
 	cur cursor.Cursor,
 ) ([]permission.Permission, error) {
-	data := map[string]any{
-		"limit": cur.Limit() + 1,
+	col, ok := orderByFields[orderBy.Field]
+	if !ok {
+		return nil, fmt.Errorf("%w: %s", errOrderFieldNotFound, orderBy.Field)
 	}
 
-	buf := bytes.NewBufferString(permissionQuerySQL)
-	applyFilter(filter, data, buf)
-	applyCursor(cur, orderBy, data, buf)
+	sb := pgsql.Builder.
+		Select("id", "name", "created_at", "updated_at").
+		From("permissions").
+		Where(filterPredicates(filter)).
+		OrderBy(col+" "+orderBy.Direction, "id "+orderBy.Direction).
+		Limit(uint64(cur.Limit() + 1))
 
-	orderByClause, err := orderByClause(orderBy)
+	if cp := cursorPredicate(cur, orderBy); cp != nil {
+		sb = sb.Where(cp)
+	}
+
+	query, args, err := sb.ToSql()
 	if err != nil {
-		return nil, fmt.Errorf("permission order issue: %w", err)
+		return nil, fmt.Errorf("build query: %w", err)
 	}
-
-	buf.WriteString(orderByClause)
-	buf.WriteString(" FETCH NEXT :limit ROWS ONLY")
 
 	var dbPermissions []permissionDB
 
-	err = pgsql.NamedQuerySlice(
-		ctx,
-		s.log,
-		pgsql.Conn(ctx, s.db),
-		buf.String(),
-		data,
-		&dbPermissions,
-	)
-	if err != nil {
-		return nil, fmt.Errorf("error query permission in db: %w", err)
+	if err := pgsql.SelectSlice(ctx, s.log, pgsql.Conn(ctx, s.db), query, args, &dbPermissions); err != nil {
+		return nil, fmt.Errorf("select slice: %w", err)
 	}
 
 	return toPermissionsDomain(dbPermissions)

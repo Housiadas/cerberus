@@ -2,7 +2,6 @@
 package user_roles_permissions_repo
 
 import (
-	"bytes"
 	"context"
 	_ "embed"
 	"fmt"
@@ -19,10 +18,6 @@ import (
 
 // queries.
 var (
-	//go:embed query/user_roles_permissions_query.sql
-	userRolesPermissionsQuerySQL string
-	//go:embed query/user_roles_permissions_count.sql
-	userHasPermissionSQL string
 	//go:embed query/user_permissions_by_user_id.sql
 	userPermissionsByUserIDSQL string
 )
@@ -51,27 +46,35 @@ func (s *Store) Query(
 	ob order.By,
 	cur cursor.Cursor,
 ) ([]user_roles_permissions.UserRolesPermissions, error) {
-	data := map[string]any{
-		"limit": cur.Limit() + 1,
+	col, ok := orderByFields[ob.Field]
+	if !ok {
+		return nil, fmt.Errorf("%w: %s", errOrderFieldNotFound, ob.Field)
 	}
 
-	buf := bytes.NewBufferString(userRolesPermissionsQuerySQL)
-	applyFilter(filter, data, buf)
-	applyCursor(cur, ob, data, buf)
+	sb := pgsql.Builder.
+		Select(
+			"user_id", "user_name", "user_email",
+			"role_id", "role_name",
+			"permission_id", "permission_name",
+		).
+		From("vw_user_roles_permissions").
+		Where(filterPredicates(filter)).
+		OrderBy(col+" "+ob.Direction, "user_id "+ob.Direction).
+		Limit(uint64(cur.Limit() + 1))
 
-	obc, err := orderByClause(ob)
+	if cp := cursorPredicate(cur, ob); cp != nil {
+		sb = sb.Where(cp)
+	}
+
+	query, args, err := sb.ToSql()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("build query: %w", err)
 	}
-
-	buf.WriteString(obc)
-	buf.WriteString(" FETCH NEXT :limit ROWS ONLY")
 
 	var dbRows []rowDB
 
-	err = pgsql.NamedQuerySlice(ctx, s.log, s.db, buf.String(), data, &dbRows)
-	if err != nil {
-		return nil, fmt.Errorf("db query user_roles_permissions: %w", err)
+	if err := pgsql.SelectSlice(ctx, s.log, s.db, query, args, &dbRows); err != nil {
+		return nil, fmt.Errorf("select slice: %w", err)
 	}
 
 	return toDomains(dbRows)
@@ -113,11 +116,6 @@ func (s *Store) HasPermission(
 	userID uuid.UUID,
 	permissionName string,
 ) (bool, error) {
-	data := map[string]any{
-		"user_id":         userID,
-		"permission_name": permissionName,
-	}
-
 	pName, err := name.Parse(permissionName)
 	if err != nil {
 		return false, fmt.Errorf("parse name: %w", err)
@@ -128,17 +126,26 @@ func (s *Store) HasPermission(
 		PermissionName: &pName,
 	}
 
-	buf := bytes.NewBufferString(userHasPermissionSQL)
-	applyFilter(filter, data, buf)
+	query, args, err := pgsql.Builder.
+		Select("COUNT(1) AS count").
+		From("vw_user_roles_permissions").
+		Where(filterPredicates(filter)).
+		ToSql()
+	if err != nil {
+		return false, fmt.Errorf("build query: %w", err)
+	}
 
-	var cnt struct {
+	var rows []struct {
 		Count int `db:"count"`
 	}
 
-	err = pgsql.NamedQueryStruct(ctx, s.log, s.db, buf.String(), data, &cnt)
-	if err != nil {
+	if err := pgsql.SelectSlice(ctx, s.log, s.db, query, args, &rows); err != nil {
 		return false, fmt.Errorf("db count has permissions: %w", err)
 	}
 
-	return cnt.Count >= 1, nil
+	if len(rows) == 0 {
+		return false, nil
+	}
+
+	return rows[0].Count >= 1, nil
 }

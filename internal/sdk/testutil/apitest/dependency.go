@@ -58,7 +58,7 @@ func newDependency(
 	uuidGen := uuidgen.NewV7()
 
 	// services
-	auditService := audit.NewService(log, audit_repo.NewStore(log, db))
+	auditService := audit.NewService(log, audit_repo.NewStore(log, db), clk)
 	outboxSvc := outbox.NewService(log, outbox_repo.NewStore(log, db), uuidGen, clk)
 
 	// event dispatcher and transactor (used by services for CUD operations)
@@ -73,13 +73,14 @@ func newDependency(
 		tx,
 		dispatcher,
 	)
-	roleService := role.NewService(log, role_repo.NewStore(log, db), uuidGen, tx, dispatcher)
+	roleService := role.NewService(log, role_repo.NewStore(log, db), uuidGen, tx, dispatcher, clk)
 	permissionService := permission.NewService(
 		log,
 		permission_repo.NewStore(log, db),
 		uuidGen,
 		tx,
 		dispatcher,
+		clk,
 	)
 	refreshTokenService := refresh_token.NewService(
 		log,

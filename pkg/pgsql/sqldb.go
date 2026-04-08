@@ -165,16 +165,62 @@ func NamedExecContext(
 	return nil
 }
 
-// QuerySlice is a helper function for executing queries that return a
-// collection of data to be unmarshalled into a slice.
-func QuerySlice[T any](
+// SelectSlice executes a query built with positional ($N) placeholders (e.g.
+// from squirrel) and scans the result set into dest.
+func SelectSlice[T any](
 	ctx context.Context,
 	log logger,
 	db sqlx.ExtContext,
 	query string,
+	args []any,
 	dest *[]T,
 ) error {
-	return namedQuerySlice(ctx, log, db, query, struct{}{}, dest, false)
+	var err error
+
+	defer func() {
+		if err != nil {
+			log.Errorc(ctx, 5,
+				"database.SelectSlice",
+				"query", query,
+				"args", args,
+				"ERROR", err,
+			)
+		}
+	}()
+
+	ctx, span := telemetry.AddSpan(
+		ctx,
+		"internal.api.pgsql.selectslice",
+		attribute.String("query", query),
+	)
+	defer span.End()
+
+	rows, err := db.QueryxContext(ctx, query, args...)
+	if err != nil {
+		pqerr, ok := errors.AsType[*pgconn.PgError](err)
+		if ok && pqerr.Code == undefinedTable {
+			return ErrUndefinedTable
+		}
+
+		return fmt.Errorf("pg error: %w", err)
+	}
+	defer rows.Close()
+
+	var slice []T
+
+	for rows.Next() {
+		v := new(T)
+
+		if err = rows.StructScan(v); err != nil {
+			return fmt.Errorf("struct scan error: %w", err)
+		}
+
+		slice = append(slice, *v)
+	}
+
+	*dest = slice
+
+	return nil
 }
 
 // NamedQuerySlice is a helper function for executing queries that return a
@@ -189,20 +235,6 @@ func NamedQuerySlice[T any](
 	dest *[]T,
 ) error {
 	return namedQuerySlice(ctx, log, db, query, data, dest, false)
-}
-
-// NamedQuerySliceUsingIn is a helper function for executing queries that return
-// a collection of data to be unmarshalled into a slice where field replacement
-// is necessary. Use this if the query has an IN clause.
-func NamedQuerySliceUsingIn[T any](
-	ctx context.Context,
-	log logger,
-	db sqlx.ExtContext,
-	query string,
-	data any,
-	dest *[]T,
-) error {
-	return namedQuerySlice(ctx, log, db, query, data, dest, true)
 }
 
 //nolint:cyclop
@@ -285,18 +317,6 @@ func namedQuerySlice[T any](
 	return nil
 }
 
-// QueryStruct is a helper function for executing queries that return a
-// single value to be unmarshalled into a struct type where field replacement is necessary.
-func QueryStruct(
-	ctx context.Context,
-	log logger,
-	db sqlx.ExtContext,
-	query string,
-	dest any,
-) error {
-	return namedQueryStruct(ctx, log, db, query, struct{}{}, dest, false)
-}
-
 // NamedQueryStruct is a helper function for executing queries that return a
 // single value to be unmarshalled into a struct type where field replacement is necessary.
 func NamedQueryStruct(
@@ -308,20 +328,6 @@ func NamedQueryStruct(
 	dest any,
 ) error {
 	return namedQueryStruct(ctx, log, db, query, data, dest, false)
-}
-
-// NamedQueryStructUsingIn is a helper function for executing queries that return
-// a single value to be unmarshalled into a struct type where field replacement
-// is necessary. Use this if the query has an IN clause.
-func NamedQueryStructUsingIn(
-	ctx context.Context,
-	log logger,
-	db sqlx.ExtContext,
-	query string,
-	data any,
-	dest any,
-) error {
-	return namedQueryStruct(ctx, log, db, query, data, dest, true)
 }
 
 //nolint:cyclop
