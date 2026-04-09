@@ -21,7 +21,7 @@ type auditDB struct {
 	Action    string             `db:"action"`
 	Data      types.NullJSONText `db:"data"`
 	Message   string             `db:"message"`
-	Timestamp time.Time          `db:"timestamp"`
+	CreatedAt time.Time          `db:"created_at"`
 }
 
 func toDBAudit(bus audit.Audit) auditDB {
@@ -34,7 +34,7 @@ func toDBAudit(bus audit.Audit) auditDB {
 		Action:    bus.Action(),
 		Data:      types.NullJSONText{JSONText: []byte(bus.Data()), Valid: true},
 		Message:   bus.Message(),
-		Timestamp: bus.Timestamp().UTC(),
+		CreatedAt: bus.Timestamp().UTC(),
 	}
 }
 
@@ -58,7 +58,7 @@ func toDomainAudit(db auditDB) (audit.Audit, error) {
 		db.Action,
 		json.RawMessage(db.Data.JSONText),
 		db.Message,
-		db.Timestamp.UTC(),
+		db.CreatedAt.UTC(),
 	), nil
 }
 

@@ -44,11 +44,11 @@ func filterPredicates(f audit.QueryFilter) sq.Sqlizer {
 	}
 
 	if f.Since != nil {
-		preds = append(preds, sq.GtOrEq{"timestamp": f.Since})
+		preds = append(preds, sq.GtOrEq{"created_at": f.Since})
 	}
 
 	if f.Until != nil {
-		preds = append(preds, sq.LtOrEq{"timestamp": f.Until})
+		preds = append(preds, sq.LtOrEq{"created_at": f.Until})
 	}
 
 	return preds

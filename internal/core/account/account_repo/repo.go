@@ -4,7 +4,6 @@ package account_repo
 import (
 	"context"
 	_ "embed"
-	"errors"
 	"fmt"
 
 	"github.com/Housiadas/cerberus/internal/core/account"
@@ -12,7 +11,6 @@ import (
 	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/Housiadas/cerberus/pkg/order"
 	"github.com/Housiadas/cerberus/pkg/pgsql"
-	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -43,54 +41,6 @@ func NewStore(
 		log: log,
 		db:  db,
 	}
-}
-
-// Create inserts a new account into the database.
-func (s *Store) Create(ctx context.Context, acc account.Account) error {
-	err := pgsql.NamedExecContext(
-		ctx,
-		s.log,
-		pgsql.Conn(ctx, s.db),
-		accountCreateSQL,
-		toAccountDB(acc),
-	)
-	if err != nil {
-		return fmt.Errorf("named_exec_context: %w", err)
-	}
-
-	return nil
-}
-
-// Update replaces an account document in the database.
-func (s *Store) Update(ctx context.Context, acc account.Account) error {
-	err := pgsql.NamedExecContext(
-		ctx,
-		s.log,
-		pgsql.Conn(ctx, s.db),
-		accountUpdateSQL,
-		toAccountDB(acc),
-	)
-	if err != nil {
-		return fmt.Errorf("named_exec_context: %w", err)
-	}
-
-	return nil
-}
-
-// Delete removes an account from the database.
-func (s *Store) Delete(ctx context.Context, acc account.Account) error {
-	err := pgsql.NamedExecContext(
-		ctx,
-		s.log,
-		pgsql.Conn(ctx, s.db),
-		accountDeleteSQL,
-		toAccountDB(acc),
-	)
-	if err != nil {
-		return fmt.Errorf("named_exec_context: %w", err)
-	}
-
-	return nil
 }
 
 // Query retrieves a list of existing accounts from the database.
@@ -129,33 +79,4 @@ func (s *Store) Query(
 	}
 
 	return toAccountsDomain(dbAccs), nil
-}
-
-// QueryByID gets the specified account from the database.
-func (s *Store) QueryByID(ctx context.Context, accountID uuid.UUID) (account.Account, error) {
-	data := struct {
-		ID string `db:"id"`
-	}{
-		ID: accountID.String(),
-	}
-
-	var dbAcc accountDB
-
-	err := pgsql.NamedQueryStruct(
-		ctx,
-		s.log,
-		pgsql.Conn(ctx, s.db),
-		accountQueryByIDSQL,
-		data,
-		&dbAcc,
-	)
-	if err != nil {
-		if errors.Is(err, pgsql.ErrDBNotFound) {
-			return account.Account{}, fmt.Errorf("db: %w", account.ErrNotFound)
-		}
-
-		return account.Account{}, fmt.Errorf("db: %w", err)
-	}
-
-	return toAccountDomain(dbAcc), nil
 }

@@ -12,11 +12,8 @@ import (
 	"github.com/Housiadas/cerberus/internal/core/audit"
 	"github.com/Housiadas/cerberus/internal/core/audit/audit_repo"
 	"github.com/Housiadas/cerberus/internal/core/auth"
-	"github.com/Housiadas/cerberus/internal/core/billing"
 	"github.com/Housiadas/cerberus/internal/core/email_notification_outbox"
 	"github.com/Housiadas/cerberus/internal/core/email_notification_outbox/email_notification_outbox_repo"
-	"github.com/Housiadas/cerberus/internal/core/invoice"
-	"github.com/Housiadas/cerberus/internal/core/invoice/invoice_repo"
 	"github.com/Housiadas/cerberus/internal/core/outbox"
 	"github.com/Housiadas/cerberus/internal/core/outbox/outbox_repo"
 	"github.com/Housiadas/cerberus/internal/core/permission"
@@ -31,8 +28,6 @@ import (
 	"github.com/Housiadas/cerberus/internal/core/role/role_repo"
 	"github.com/Housiadas/cerberus/internal/core/role_permissions"
 	"github.com/Housiadas/cerberus/internal/core/role_permissions/role_permissions_repo"
-	"github.com/Housiadas/cerberus/internal/core/subscription"
-	"github.com/Housiadas/cerberus/internal/core/subscription/subscription_repo"
 	"github.com/Housiadas/cerberus/internal/core/user"
 	"github.com/Housiadas/cerberus/internal/core/user/user_cache"
 	"github.com/Housiadas/cerberus/internal/core/user/user_repo"
@@ -47,7 +42,6 @@ import (
 	"github.com/Housiadas/cerberus/pkg/hasher"
 	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/Housiadas/cerberus/pkg/pgsql"
-	stripepkg "github.com/Housiadas/cerberus/pkg/stripe"
 	"github.com/Housiadas/cerberus/pkg/uuidgen"
 	"github.com/jmoiron/sqlx"
 	"github.com/redis/go-redis/v9"
@@ -103,7 +97,6 @@ type services struct {
 	userRoles            *user_roles.Service
 	rolePermissions      *role_permissions.Service
 	account              *account.Service
-	billing              *billing.Service
 }
 
 func New(ctx context.Context, cfg Config) *Handler {
@@ -113,11 +106,11 @@ func New(ctx context.Context, cfg Config) *Handler {
 	uuidGen := uuidgen.NewV7()
 
 	// http clients
-	stripeClient := stripepkg.New(stripepkg.Config{
-		WebhookSecret: cfg.Stripe.WebhookSecret,
-		SecretKey:     cfg.Stripe.SecretKey,
-		Log:           cfg.Log,
-	})
+	//stripeClient := stripepkg.New(stripepkg.Config{
+	//	WebhookSecret: cfg.Stripe.WebhookSecret,
+	//	SecretKey:     cfg.Stripe.SecretKey,
+	//	Log:           cfg.Log,
+	//})
 
 	// repos
 	auditRepo := audit_repo.NewStore(cfg.Log, cfg.DB)
@@ -135,8 +128,6 @@ func New(ctx context.Context, cfg Config) *Handler {
 	refreshTokenRepo := refresh_token_repo.NewStore(cfg.Log, cfg.DB)
 	resetTokenRepo := reset_token_repo.NewStore(cfg.Log, cfg.DB)
 	accountRepo := account_repo.NewStore(cfg.Log, cfg.DB)
-	subscriptionRepo := subscription_repo.NewStore(cfg.Log, cfg.DB)
-	invoiceRepo := invoice_repo.NewStore(cfg.Log, cfg.DB)
 
 	// services
 	auditService := audit.NewService(cfg.Log, auditRepo, clk)
@@ -171,8 +162,6 @@ func New(ctx context.Context, cfg Config) *Handler {
 		userRolesPermissionsRepo,
 	)
 	accountSvc := account.NewService(cfg.Log, accountRepo, uuidGen, clk, tx)
-	subscriptionSvc := subscription.NewService(cfg.Log, subscriptionRepo)
-	invoiceSvc := invoice.NewService(cfg.Log, invoiceRepo)
 
 	authService := auth.NewService(auth.Config{
 		Issuer:                     cfg.ServiceName,
@@ -187,10 +176,6 @@ func New(ctx context.Context, cfg Config) *Handler {
 		FrontendURL:                cfg.FrontendURL,
 		UserRolesPermissions:       userRolesPermissionsService,
 	})
-
-	billingService := billing.NewService(
-		stripeClient, accountSvc, subscriptionSvc, invoiceSvc, uuidGen, clk,
-	)
 
 	return &Handler{
 		serviceName: cfg.ServiceName,
@@ -216,7 +201,6 @@ func New(ctx context.Context, cfg Config) *Handler {
 			userRoles:            userRolesSvc,
 			rolePermissions:      rolePermsSvc,
 			account:              accountSvc,
-			billing:              billingService,
 		},
 	}
 }
