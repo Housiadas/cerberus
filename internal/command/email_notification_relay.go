@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/Housiadas/cerberus/internal/core/email_notification_outbox"
-	"github.com/Housiadas/cerberus/internal/core/email_notification_outbox/email_notification_outbox_repo"
 	"github.com/Housiadas/cerberus/internal/sdk/relay"
 	"github.com/Housiadas/cerberus/pkg/clock"
 	"github.com/Housiadas/cerberus/pkg/email"

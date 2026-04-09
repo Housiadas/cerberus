@@ -8,33 +8,21 @@ import (
 
 	"github.com/Housiadas/cerberus/internal/config"
 	"github.com/Housiadas/cerberus/internal/core/account"
-	"github.com/Housiadas/cerberus/internal/core/account/account_repo"
 	"github.com/Housiadas/cerberus/internal/core/audit"
-	"github.com/Housiadas/cerberus/internal/core/audit/audit_repo"
 	"github.com/Housiadas/cerberus/internal/core/auth"
 	"github.com/Housiadas/cerberus/internal/core/email_notification_outbox"
-	"github.com/Housiadas/cerberus/internal/core/email_notification_outbox/email_notification_outbox_repo"
 	"github.com/Housiadas/cerberus/internal/core/outbox"
-	"github.com/Housiadas/cerberus/internal/core/outbox/outbox_repo"
 	"github.com/Housiadas/cerberus/internal/core/permission"
 	"github.com/Housiadas/cerberus/internal/core/permission/permission_cache"
-	"github.com/Housiadas/cerberus/internal/core/permission/permission_repo"
 	"github.com/Housiadas/cerberus/internal/core/refresh_token"
-	"github.com/Housiadas/cerberus/internal/core/refresh_token/refresh_token_repo"
 	"github.com/Housiadas/cerberus/internal/core/reset_token"
-	"github.com/Housiadas/cerberus/internal/core/reset_token/reset_token_repo"
 	"github.com/Housiadas/cerberus/internal/core/role"
 	"github.com/Housiadas/cerberus/internal/core/role/role_cache"
-	"github.com/Housiadas/cerberus/internal/core/role/role_repo"
 	"github.com/Housiadas/cerberus/internal/core/role_permissions"
-	"github.com/Housiadas/cerberus/internal/core/role_permissions/role_permissions_repo"
 	"github.com/Housiadas/cerberus/internal/core/user"
 	"github.com/Housiadas/cerberus/internal/core/user/user_cache"
-	"github.com/Housiadas/cerberus/internal/core/user/user_repo"
 	"github.com/Housiadas/cerberus/internal/core/user_roles"
-	"github.com/Housiadas/cerberus/internal/core/user_roles/user_roles_repo"
 	"github.com/Housiadas/cerberus/internal/core/user_roles_permissions"
-	"github.com/Housiadas/cerberus/internal/core/user_roles_permissions/user_roles_permissions_repo"
 	"github.com/Housiadas/cerberus/internal/sdk/eventbus"
 	"github.com/Housiadas/cerberus/internal/web/handler/openapi"
 	"github.com/Housiadas/cerberus/internal/web/middleware"
@@ -43,6 +31,7 @@ import (
 	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/Housiadas/cerberus/pkg/pgsql"
 	"github.com/Housiadas/cerberus/pkg/uuidgen"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/jmoiron/sqlx"
 	"github.com/redis/go-redis/v9"
 	"go.opentelemetry.io/otel/metric"
@@ -66,7 +55,7 @@ type Config struct {
 	Build             string
 	Cors              config.CorsSettings
 	Stripe            config.Stripe
-	DB                *sqlx.DB
+	DB                *pgxpool.Pool
 	Redis             redisClient
 	Log               logger.Logger
 	Tracer            trace.Tracer

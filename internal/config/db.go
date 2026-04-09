@@ -1,14 +1,13 @@
 package config
 
 type DB struct {
+	Host                  string `validate:"required"`
+	Port                  uint16
+	Name                  string `validate:"required"`
 	User                  string `validate:"required"`
 	Password              string `validate:"required"`
-	Name                  string `validate:"required"`
-	Port                  string
-	Host                  string `validate:"required"`
-	MaxOpenConns          int
-	MaxIdleConns          int
-	ConnectionIdleTime    string
+	MinConns              int
+	MaxConns              int
 	DisableTLS            bool
 	PostgresImage         string
 	PostgresContainerName string

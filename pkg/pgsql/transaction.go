@@ -19,17 +19,6 @@ type txState struct {
 	done atomic.Bool
 }
 
-// Conn resolves a transaction from the context if present,
-// otherwise falls back to db.
-func Conn(ctx context.Context, db *sqlx.DB) sqlx.ExtContext {
-	st, ok := ctx.Value(ctxKey{}).(*txState)
-	if ok && !st.done.Load() {
-		return st.tx
-	}
-
-	return db
-}
-
 // Transactor provides transaction management by wrapping a database connection
 // and delegating to RunInTx.
 type Transactor struct {

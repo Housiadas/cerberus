@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/Housiadas/cerberus/internal/core/user"
-	"github.com/Housiadas/cerberus/internal/core/user/user_repo"
 	"github.com/Housiadas/cerberus/internal/sdk/eventbus"
 	namePck "github.com/Housiadas/cerberus/internal/types/name"
 	"github.com/Housiadas/cerberus/internal/types/password"

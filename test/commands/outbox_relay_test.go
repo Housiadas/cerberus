@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/Housiadas/cerberus/internal/core/outbox"
-	"github.com/Housiadas/cerberus/internal/core/outbox/outbox_repo"
 	"github.com/Housiadas/cerberus/internal/sdk/relay"
 	"github.com/Housiadas/cerberus/pkg/clock"
 	"github.com/Housiadas/cerberus/pkg/logger"

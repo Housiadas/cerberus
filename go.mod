@@ -5,6 +5,7 @@ go 1.26.2
 require (
 	github.com/Masterminds/squirrel v1.5.4
 	github.com/confluentinc/confluent-kafka-go/v2 v2.14.0
+	github.com/exaring/otelpgx v0.10.0
 	github.com/go-chi/chi/v5 v5.2.5
 	github.com/go-chi/cors v1.2.2
 	github.com/go-playground/validator/v10 v10.30.2
