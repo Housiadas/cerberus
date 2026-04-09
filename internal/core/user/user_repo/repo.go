@@ -120,7 +120,8 @@ func (s *Store) Query(
 
 	var dbUsrs []userDB
 
-	if err := pgsql.SelectSlice(ctx, s.log, pgsql.Conn(ctx, s.db), query, args, &dbUsrs); err != nil {
+	err = pgsql.SelectSlice(ctx, s.log, pgsql.Conn(ctx, s.db), query, args, &dbUsrs)
+	if err != nil {
 		return nil, fmt.Errorf("select slice: %w", err)
 	}
 

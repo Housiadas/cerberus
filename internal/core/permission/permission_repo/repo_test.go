@@ -14,6 +14,7 @@ import (
 	"github.com/Housiadas/cerberus/internal/sdk/testutil/dbtest"
 	"github.com/Housiadas/cerberus/internal/sdk/testutil/unitest"
 	"github.com/Housiadas/cerberus/internal/types/name"
+	"github.com/Housiadas/cerberus/pkg/clock"
 	"github.com/Housiadas/cerberus/pkg/cursor"
 	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/Housiadas/cerberus/pkg/pgsql"
@@ -33,9 +34,10 @@ func Test_Permission(t *testing.T) {
 	requestIDFn := func(context.Context) string { return "" }
 	log := logger.New(&buf, logger.LevelInfo, "TEST", traceIDFn, requestIDFn)
 
+	clk := clock.NewClock()
 	uuidGen := uuidgen.NewV7()
 	tx := pgsql.NewTransactor(log, db)
-	permService := permission.NewService(log, permission_repo.NewStore(log, db), uuidGen, tx, eventbus.NewNop())
+	permService := permission.NewService(log, permission_repo.NewStore(log, db), uuidGen, tx, eventbus.NewNop(), clk)
 
 	sd, err := insertSeedData(permService)
 	if err != nil {

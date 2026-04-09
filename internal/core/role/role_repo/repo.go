@@ -131,7 +131,14 @@ func (s *Store) Query(
 
 	var dbRoles []roleDB
 
-	if err := pgsql.SelectSlice(ctx, s.log, pgsql.Conn(ctx, s.db), query, args, &dbRoles); err != nil {
+	if err := pgsql.SelectSlice(
+		ctx,
+		s.log,
+		pgsql.Conn(ctx, s.db),
+		query,
+		args,
+		&dbRoles,
+	); err != nil {
 		return nil, fmt.Errorf("select slice: %w", err)
 	}
 

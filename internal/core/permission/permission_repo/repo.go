@@ -152,7 +152,8 @@ func (s *Store) Query(
 
 	var dbPermissions []permissionDB
 
-	if err := pgsql.SelectSlice(ctx, s.log, pgsql.Conn(ctx, s.db), query, args, &dbPermissions); err != nil {
+	err = pgsql.SelectSlice(ctx, s.log, pgsql.Conn(ctx, s.db), query, args, &dbPermissions)
+	if err != nil {
 		return nil, fmt.Errorf("select slice: %w", err)
 	}
 

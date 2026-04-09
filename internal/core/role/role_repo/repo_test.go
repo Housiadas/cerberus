@@ -13,6 +13,7 @@ import (
 	"github.com/Housiadas/cerberus/internal/sdk/testutil/dbtest"
 	unitest2 "github.com/Housiadas/cerberus/internal/sdk/testutil/unitest"
 	"github.com/Housiadas/cerberus/internal/types/name"
+	"github.com/Housiadas/cerberus/pkg/clock"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/google/uuid"
@@ -34,9 +35,10 @@ func Test_Role(t *testing.T) {
 	requestIDFn := func(context.Context) string { return "" }
 	log := logger.New(&buf, logger.LevelInfo, "TEST", traceIDFn, requestIDFn)
 
+	clk := clock.NewClock()
 	uuidGen := uuidgen.NewV7()
 	tx := pgsql.NewTransactor(log, db)
-	roleService := role.NewService(log, role_repo.NewStore(log, db), uuidGen, tx, eventbus.NewNop())
+	roleService := role.NewService(log, role_repo.NewStore(log, db), uuidGen, tx, eventbus.NewNop(), clk)
 
 	sd, err := insertSeedData(roleService)
 	if err != nil {

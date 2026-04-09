@@ -139,7 +139,8 @@ func (s *Store) HasPermission(
 		Count int `db:"count"`
 	}
 
-	if err := pgsql.SelectSlice(ctx, s.log, s.db, query, args, &rows); err != nil {
+	err = pgsql.SelectSlice(ctx, s.log, s.db, query, args, &rows)
+	if err != nil {
 		return false, fmt.Errorf("db count has permissions: %w", err)
 	}
 

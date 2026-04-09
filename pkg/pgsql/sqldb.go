@@ -211,7 +211,8 @@ func SelectSlice[T any](
 	for rows.Next() {
 		v := new(T)
 
-		if err = rows.StructScan(v); err != nil {
+		err = rows.StructScan(v)
+		if err != nil {
 			return fmt.Errorf("struct scan error: %w", err)
 		}
 
