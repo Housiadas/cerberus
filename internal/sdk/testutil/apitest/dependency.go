@@ -104,6 +104,7 @@ func newDependency(
 	authService := auth.NewService(auth.Config{
 		Issuer:                     serviceName,
 		AccessTokenSecret:          accessTokenSecret,
+		Clock:                      clk,
 		Log:                        log,
 		UserService:                userService,
 		RefreshTokenService:        refreshTokenService,

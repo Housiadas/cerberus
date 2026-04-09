@@ -177,6 +177,7 @@ func New(ctx context.Context, cfg Config) *Handler {
 	authService := auth.NewService(auth.Config{
 		Issuer:                     cfg.ServiceName,
 		AccessTokenSecret:          cfg.AccessTokenSecret,
+		Clock:                      clk,
 		Log:                        cfg.Log,
 		UserService:                userService,
 		RefreshTokenService:        refreshTokenService,
