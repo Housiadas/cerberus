@@ -36,8 +36,8 @@ type Store struct {
 	pool *pgxpool.Pool
 }
 
-// NewStorer creates a Store backed by the given pgx connection pool.
-func NewStorer(pool *pgxpool.Pool) *Store {
+// NewStore creates a Store backed by the given pgx connection pool.
+func NewStore(pool *pgxpool.Pool) *Store {
 	return &Store{
 		Queries: New(pool),
 		pool:    pool,

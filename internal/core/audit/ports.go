@@ -4,6 +4,7 @@ import (
 	"context"
 	"time"
 
+	db "github.com/Housiadas/cerberus/db/sqlc"
 	"github.com/Housiadas/cerberus/pkg/cursor"
 	"github.com/Housiadas/cerberus/pkg/order"
 )
@@ -12,13 +13,13 @@ type clock interface {
 	Now() time.Time
 }
 
-// Storer interface declares the behavior this package needs to persist and retrieve data.
-type Storer interface {
-	Create(ctx context.Context, audit Audit) error
-	Query(
+// store interface declares the behavior this package needs to persist and retrieve data.
+type storer interface {
+	CreateAudit(ctx context.Context, arg db.CreateAuditParams) (db.Audit, error)
+	QueryAudits(
 		ctx context.Context,
-		filter QueryFilter,
+		filter db.AuditQueryFilter,
 		orderBy order.By,
 		cur cursor.Cursor,
-	) ([]Audit, error)
+	) ([]db.Audit, error)
 }

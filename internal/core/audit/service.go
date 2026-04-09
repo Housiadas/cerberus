@@ -15,14 +15,14 @@ import (
 // Service manages the set of APIs for audit access.
 type Service struct {
 	log    logger.Logger
-	storer Storer
+	storer storer
 	clock  clock
 }
 
 // NewService constructs an audit business API for use.
 func NewService(
 	log logger.Logger,
-	storer Storer,
+	storer storer,
 	clock clock,
 ) *Service {
 	return &Service{
@@ -59,7 +59,7 @@ func (s *Service) Create(ctx context.Context, na NewAudit) (Audit, error) {
 		s.clock.Now(),
 	)
 
-	err = s.storer.Create(ctx, aud)
+	err = s.storer.CreateAudit(ctx, aud)
 	if err != nil {
 		return Audit{}, fmt.Errorf("create audit: %w", err)
 	}
@@ -77,7 +77,7 @@ func (s *Service) Query(
 	ctx, span := telemetry.AddSpan(ctx, "repo.audit.query")
 	defer span.End()
 
-	audits, err := s.storer.Query(ctx, filter, orderBy, cur)
+	audits, err := s.storer.QueryAudits(ctx, filter, orderBy, cur)
 	if err != nil {
 		return nil, fmt.Errorf("query audits: %w", err)
 	}
