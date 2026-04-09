@@ -14,6 +14,7 @@ import (
 	unitest2 "github.com/Housiadas/cerberus/internal/sdk/testutil/unitest"
 	"github.com/Housiadas/cerberus/internal/types/name"
 	"github.com/Housiadas/cerberus/pkg/clock"
+	"github.com/Housiadas/cerberus/pkg/order"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/google/uuid"
@@ -93,7 +94,12 @@ func queryRole(service *role.Service, sd unitest2.SeedData) []unitest2.Table {
 					Name: dbtest.NamePointer("Name"),
 				}
 
-				resp, err := service.Query(ctx, filter, role.GetDefaultOrderBy(), mustParseCursor("", "10"))
+				resp, err := service.Query(
+					ctx,
+					filter,
+					order.NewBy(role.OrderByID, order.ASC),
+					mustParseCursor("", "10"),
+				)
 				if err != nil {
 					return err
 				}

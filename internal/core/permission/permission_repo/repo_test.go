@@ -17,6 +17,7 @@ import (
 	"github.com/Housiadas/cerberus/pkg/clock"
 	"github.com/Housiadas/cerberus/pkg/cursor"
 	"github.com/Housiadas/cerberus/pkg/logger"
+	"github.com/Housiadas/cerberus/pkg/order"
 	"github.com/Housiadas/cerberus/pkg/pgsql"
 	"github.com/Housiadas/cerberus/pkg/uuidgen"
 	"github.com/google/go-cmp/cmp"
@@ -92,7 +93,12 @@ func queryPermission(service *permission.Service, sd unitest.SeedData) []unitest
 					Name: dbtest.NamePointer("Permission"),
 				}
 
-				resp, err := service.Query(ctx, filter, permission.GetDefaultOrderBy(), mustParseCursor("", "10"))
+				resp, err := service.Query(
+					ctx,
+					filter,
+					order.NewBy(permission.OrderByID, order.ASC),
+					mustParseCursor("", "10"),
+				)
 				if err != nil {
 					return err
 				}
