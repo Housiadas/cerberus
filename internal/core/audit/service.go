@@ -47,24 +47,14 @@ func (s *Service) Create(ctx context.Context, na NewAudit) (Audit, error) {
 		return Audit{}, fmt.Errorf("uuid: %w", err)
 	}
 
-	aud := New(
-		id,
-		na.ObjID,
-		na.ObjEntity,
-		na.ObjName,
-		na.ActorID,
-		na.Action,
-		jsonData,
-		na.Message,
-		s.clock.Now(),
-	)
+	params := toCreateAuditParams(id, na, jsonData, s.clock.Now())
 
-	err = s.storer.CreateAudit(ctx, aud)
+	dbAud, err := s.storer.CreateAudit(ctx, params)
 	if err != nil {
 		return Audit{}, fmt.Errorf("create audit: %w", err)
 	}
 
-	return aud, nil
+	return toDomainAudit(dbAud), nil
 }
 
 // Query retrieves a list of existing audit records.
@@ -77,10 +67,12 @@ func (s *Service) Query(
 	ctx, span := telemetry.AddSpan(ctx, "repo.audit.query")
 	defer span.End()
 
-	audits, err := s.storer.QueryAudits(ctx, filter, orderBy, cur)
+	dbFilter := toDBQueryFilter(filter)
+
+	dbAudits, err := s.storer.QueryAudits(ctx, dbFilter, orderBy, cur)
 	if err != nil {
 		return nil, fmt.Errorf("query audits: %w", err)
 	}
 
-	return audits, nil
+	return toDomainAudits(dbAudits), nil
 }
