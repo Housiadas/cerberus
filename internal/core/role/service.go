@@ -17,7 +17,7 @@ import (
 // transaction management, and event dispatching.
 type Service struct {
 	log        logger.Logger
-	storer     Storer
+	storer     storer
 	uuidGen    generator
 	tx         transactor
 	dispatcher dispatcher
@@ -27,7 +27,7 @@ type Service struct {
 // NewService constructor.
 func NewService(
 	log logger.Logger,
-	storer Storer,
+	storer storer,
 	uuidGen generator,
 	tx transactor,
 	dispatcher dispatcher,
@@ -52,21 +52,24 @@ func (s *Service) Create(ctx context.Context, nr NewRole) (Role, error) {
 	}
 
 	now := s.clock.Now()
-	rol := New(id, nr.Name, now, now, nil)
+	params := toCreateRoleParams(id, nr, now)
 
+	var created Role
 	txErr := s.tx.RunInTx(ctx, func(txCtx context.Context) error {
-		err = s.storer.Create(txCtx, rol)
+		dbRole, err := s.storer.CreateRole(txCtx, params)
 		if err != nil {
 			return fmt.Errorf("create: %w", err)
 		}
 
-		return s.dispatcher.Dispatch(txCtx, newRoleEvent(rol, audit.ActionCreate))
+		created = toDomainRole(dbRole)
+
+		return s.dispatcher.Dispatch(txCtx, newRoleEvent(created, audit.ActionCreate))
 	})
 	if txErr != nil {
 		return Role{}, fmt.Errorf("create role: %w", txErr)
 	}
 
-	return rol, nil
+	return created, nil
 }
 
 // Update modifies information about a Role within a transaction
@@ -82,26 +85,31 @@ func (s *Service) Update(
 
 	rl = rl.WithUpdatedAt(s.clock.Now())
 
+	params := toUpdateRoleParams(rl)
+
+	var updated Role
 	txErr := s.tx.RunInTx(ctx, func(txCtx context.Context) error {
-		err := s.storer.Update(txCtx, rl)
+		dbRole, err := s.storer.UpdateRole(txCtx, params)
 		if err != nil {
 			return fmt.Errorf("update: %w", err)
 		}
 
-		return s.dispatcher.Dispatch(txCtx, newRoleEvent(rl, audit.ActionUpdate))
+		updated = toDomainRole(dbRole)
+
+		return s.dispatcher.Dispatch(txCtx, newRoleEvent(updated, audit.ActionUpdate))
 	})
 	if txErr != nil {
 		return Role{}, fmt.Errorf("update role: %w", txErr)
 	}
 
-	return rl, nil
+	return updated, nil
 }
 
 // Delete removes the specified Role within a transaction
 // and dispatches a domain event.
 func (s *Service) Delete(ctx context.Context, rl Role) error {
 	txErr := s.tx.RunInTx(ctx, func(txCtx context.Context) error {
-		err := s.storer.Delete(txCtx, rl)
+		err := s.storer.DeleteRole(txCtx, rl.ID())
 		if err != nil {
 			return fmt.Errorf("delete: %w", err)
 		}
@@ -117,12 +125,12 @@ func (s *Service) Delete(ctx context.Context, rl Role) error {
 
 // QueryByID finds the role by the specified ID.
 func (s *Service) QueryByID(ctx context.Context, roleID uuid.UUID) (Role, error) {
-	rl, err := s.storer.QueryByID(ctx, roleID)
+	dbRole, err := s.storer.GetRoleByID(ctx, roleID)
 	if err != nil {
 		return Role{}, fmt.Errorf("query: roleID[%s]: %w", roleID, err)
 	}
 
-	return rl, nil
+	return toDomainRoleFromGetByID(dbRole), nil
 }
 
 // Query retrieves a list of existing roles.
@@ -132,12 +140,14 @@ func (s *Service) Query(
 	orderBy order.By,
 	cur cursor.Cursor,
 ) ([]Role, error) {
-	roles, err := s.storer.Query(ctx, filter, orderBy, cur)
+	dbFilter := toDBQueryFilter(filter)
+
+	dbRoles, err := s.storer.QueryRoles(ctx, dbFilter, orderBy, cur)
 	if err != nil {
 		return nil, fmt.Errorf("role query: %w", err)
 	}
 
-	return roles, nil
+	return toDomainRoles(dbRoles), nil
 }
 
 // newRoleEvent creates a DomainEvent for role operations.

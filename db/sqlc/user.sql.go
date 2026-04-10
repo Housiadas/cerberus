@@ -89,36 +89,15 @@ func (q *Queries) DeleteUser(ctx context.Context, id uuid.UUID) error {
 }
 
 const getUserByEmail = `-- name: GetUserByEmail :one
-SELECT
-    id,
-    account_id,
-    name,
-    email,
-    password_hash,
-    department,
-    enabled,
-    created_at,
-    updated_at
+SELECT id, account_id, name, email, password_hash, department, enabled, created_at, updated_at, deleted_at
 FROM users
 WHERE email = $1
 AND deleted_at IS NULL
 `
 
-type GetUserByEmailRow struct {
-	ID           uuid.UUID
-	AccountID    pgtype.UUID
-	Name         string
-	Email        string
-	PasswordHash string
-	Department   pgtype.Text
-	Enabled      bool
-	CreatedAt    pgtype.Timestamp
-	UpdatedAt    pgtype.Timestamp
-}
-
-func (q *Queries) GetUserByEmail(ctx context.Context, email string) (GetUserByEmailRow, error) {
+func (q *Queries) GetUserByEmail(ctx context.Context, email string) (User, error) {
 	row := q.db.QueryRow(ctx, getUserByEmail, email)
-	var i GetUserByEmailRow
+	var i User
 	err := row.Scan(
 		&i.ID,
 		&i.AccountID,
@@ -129,43 +108,21 @@ func (q *Queries) GetUserByEmail(ctx context.Context, email string) (GetUserByEm
 		&i.Enabled,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.DeletedAt,
 	)
 	return i, err
 }
 
 const getUserByID = `-- name: GetUserByID :one
-SELECT
-    id,
-    account_id,
-    name,
-    email,
-    password_hash,
-    department,
-    enabled,
-    account_id,
-    created_at,
-    updated_at
+SELECT id, account_id, name, email, password_hash, department, enabled, created_at, updated_at, deleted_at
 FROM users
 WHERE id = $1
 AND deleted_at IS NULL
 `
 
-type GetUserByIDRow struct {
-	ID           uuid.UUID
-	AccountID    pgtype.UUID
-	Name         string
-	Email        string
-	PasswordHash string
-	Department   pgtype.Text
-	Enabled      bool
-	AccountID_2  pgtype.UUID
-	CreatedAt    pgtype.Timestamp
-	UpdatedAt    pgtype.Timestamp
-}
-
-func (q *Queries) GetUserByID(ctx context.Context, id uuid.UUID) (GetUserByIDRow, error) {
+func (q *Queries) GetUserByID(ctx context.Context, id uuid.UUID) (User, error) {
 	row := q.db.QueryRow(ctx, getUserByID, id)
-	var i GetUserByIDRow
+	var i User
 	err := row.Scan(
 		&i.ID,
 		&i.AccountID,
@@ -174,9 +131,9 @@ func (q *Queries) GetUserByID(ctx context.Context, id uuid.UUID) (GetUserByIDRow
 		&i.PasswordHash,
 		&i.Department,
 		&i.Enabled,
-		&i.AccountID_2,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.DeletedAt,
 	)
 	return i, err
 }

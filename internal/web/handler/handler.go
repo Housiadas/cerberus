@@ -19,6 +19,7 @@ import (
 	"github.com/Housiadas/cerberus/internal/core/role"
 	"github.com/Housiadas/cerberus/internal/core/role_permissions"
 	"github.com/Housiadas/cerberus/internal/core/user"
+	"github.com/Housiadas/cerberus/internal/core/user/user_cache"
 	"github.com/Housiadas/cerberus/internal/core/user_roles"
 	"github.com/Housiadas/cerberus/internal/core/user_roles_permissions"
 	"github.com/Housiadas/cerberus/internal/sdk/eventbus"
@@ -84,7 +85,7 @@ type services struct {
 	account              *account.Service
 }
 
-func New(ctx context.Context, cfg Config) *Handler {
+func New(cfg Config) *Handler {
 	// utils
 	hash := hasher.NewBcrypt()
 	clk := clock.NewClock()
@@ -97,8 +98,11 @@ func New(ctx context.Context, cfg Config) *Handler {
 	//	Log:           cfg.Log,
 	//})
 
-	// db store
+	// db layer
 	store := db.NewStore(cfg.DB)
+
+	// cache layer
+	userCache := user_cache.NewStore(cfg.Log, store, cfg.Redis)
 
 	// services
 	auditService := audit.NewService(cfg.Log, store, clk)
@@ -114,7 +118,7 @@ func New(ctx context.Context, cfg Config) *Handler {
 	dispatcher := eventbus.New(outboxSvc, auditService)
 	//tx := pgsql.NewTransactor(cfg.Log, cfg.DB)
 
-	userService := user.NewService(cfg.Log, store, uuidGen, clk, hash, tx, dispatcher)
+	userService := user.NewService(cfg.Log, userCache, uuidGen, clk, hash, tx, dispatcher)
 	roleService := role.NewService(cfg.Log, store, uuidGen, tx, dispatcher, clk)
 	permissionService := permission.NewService(
 		cfg.Log,
@@ -154,7 +158,7 @@ func New(ctx context.Context, cfg Config) *Handler {
 		store:       store,
 		log:         cfg.Log,
 		cors:        cfg.Cors,
-		middleware: middleware.New(ctx, middleware.Config{
+		middleware: middleware.New(middleware.Config{
 			Log:                  cfg.Log,
 			Tracer:               cfg.Tracer,
 			Meter:                cfg.Meter,

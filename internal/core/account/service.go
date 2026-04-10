@@ -3,7 +3,6 @@ package account
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 
 	"github.com/Housiadas/cerberus/pkg/cursor"
@@ -14,7 +13,7 @@ import (
 
 type Service struct {
 	log     logger.Logger
-	storer  Storer
+	storer  storer
 	uuidGen generator
 	clock   clock
 	tx      transactor
@@ -23,7 +22,7 @@ type Service struct {
 // NewService constructs the service.
 func NewService(
 	log logger.Logger,
-	storer Storer,
+	storer storer,
 	uuidGen generator,
 	clock clock,
 	tx transactor,
@@ -45,16 +44,24 @@ func (s *Service) Create(ctx context.Context, na NewAccount) (Account, error) {
 	}
 
 	now := s.clock.Now()
-	acc := New(id, na.Name, sql.NullString{}, now, now, nil)
+	params := toCreateAccountParams(id, na, now)
 
+	var created Account
 	txErr := s.tx.RunInTx(ctx, func(txCtx context.Context) error {
-		return s.storer.Create(txCtx, acc)
+		dbAcc, err := s.storer.CreateAccount(txCtx, params)
+		if err != nil {
+			return err
+		}
+
+		created = toDomainAccount(dbAcc)
+
+		return nil
 	})
 	if txErr != nil {
 		return Account{}, fmt.Errorf("create account: %w", txErr)
 	}
 
-	return acc, nil
+	return created, nil
 }
 
 // Update modifies information about an account within a transaction.
@@ -73,14 +80,24 @@ func (s *Service) Update(
 
 	acc = acc.WithUpdatedAt(s.clock.Now())
 
+	params := toUpdateAccountParams(acc)
+
+	var updated Account
 	txErr := s.tx.RunInTx(ctx, func(txCtx context.Context) error {
-		return s.storer.Update(txCtx, acc)
+		dbAcc, err := s.storer.UpdateAccount(txCtx, params)
+		if err != nil {
+			return err
+		}
+
+		updated = toDomainAccount(dbAcc)
+
+		return nil
 	})
 	if txErr != nil {
 		return Account{}, fmt.Errorf("update account: %w", txErr)
 	}
 
-	return acc, nil
+	return updated, nil
 }
 
 // Query retrieves a list of existing accounts.
@@ -90,28 +107,30 @@ func (s *Service) Query(
 	orderBy order.By,
 	cur cursor.Cursor,
 ) ([]Account, error) {
-	accounts, err := s.storer.Query(ctx, filter, orderBy, cur)
+	dbFilter := toDBQueryFilter(filter)
+
+	dbAccounts, err := s.storer.QueryAccounts(ctx, dbFilter, orderBy, cur)
 	if err != nil {
 		return nil, fmt.Errorf("query: %w", err)
 	}
 
-	return accounts, nil
+	return toDomainAccounts(dbAccounts), nil
 }
 
 // QueryByID finds the account by the specified ID.
 func (s *Service) QueryByID(ctx context.Context, accountID uuid.UUID) (Account, error) {
-	acc, err := s.storer.QueryByID(ctx, accountID)
+	dbAcc, err := s.storer.GetAccountByID(ctx, accountID)
 	if err != nil {
 		return Account{}, fmt.Errorf("query: accountID[%s]: %w", accountID, err)
 	}
 
-	return acc, nil
+	return toDomainAccountFromGetByID(dbAcc), nil
 }
 
 // Delete removes the specified account within a transaction.
 func (s *Service) Delete(ctx context.Context, acc Account) error {
 	txErr := s.tx.RunInTx(ctx, func(txCtx context.Context) error {
-		return s.storer.Delete(txCtx, acc)
+		return s.storer.DeleteAccount(txCtx, acc.ID())
 	})
 	if txErr != nil {
 		return fmt.Errorf("delete account: %w", txErr)

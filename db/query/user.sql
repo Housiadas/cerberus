@@ -22,32 +22,13 @@ INSERT INTO users (
 ) RETURNING *;
 
 -- name: GetUserByID :one
-SELECT
-    id,
-    account_id,
-    name,
-    email,
-    password_hash,
-    department,
-    enabled,
-    account_id,
-    created_at,
-    updated_at
+SELECT *
 FROM users
 WHERE id = sqlc.arg(id)
 AND deleted_at IS NULL;
 
 -- name: GetUserByEmail :one
-SELECT
-    id,
-    account_id,
-    name,
-    email,
-    password_hash,
-    department,
-    enabled,
-    created_at,
-    updated_at
+SELECT *
 FROM users
 WHERE email = sqlc.arg(email)
 AND deleted_at IS NULL;

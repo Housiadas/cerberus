@@ -17,7 +17,7 @@ import (
 // transaction management, and event dispatching.
 type Service struct {
 	log        logger.Logger
-	storer     Storer
+	storer     storer
 	uuidGen    generator
 	tx         transactor
 	dispatcher dispatcher
@@ -27,7 +27,7 @@ type Service struct {
 // NewService constructor.
 func NewService(
 	log logger.Logger,
-	storer Storer,
+	storer storer,
 	uuidGen generator,
 	tx transactor,
 	dispatcher dispatcher,
@@ -55,21 +55,24 @@ func (s *Service) Create(
 	}
 
 	now := s.clock.Now()
-	p := New(id, np.Name, now, now, nil)
+	params := toCreatePermissionParams(id, np, now)
 
+	var created Permission
 	txErr := s.tx.RunInTx(ctx, func(txCtx context.Context) error {
-		err = s.storer.Create(txCtx, p)
+		dbPerm, err := s.storer.CreatePermission(txCtx, params)
 		if err != nil {
 			return fmt.Errorf("create: %w", err)
 		}
 
-		return s.dispatcher.Dispatch(txCtx, newPermissionEvent(p, audit.ActionCreate))
+		created = toDomainPermission(dbPerm)
+
+		return s.dispatcher.Dispatch(txCtx, newPermissionEvent(created, audit.ActionCreate))
 	})
 	if txErr != nil {
 		return Permission{}, fmt.Errorf("create permission: %w", txErr)
 	}
 
-	return p, nil
+	return created, nil
 }
 
 // Update modifies information about a Permission within a transaction
@@ -85,26 +88,31 @@ func (s *Service) Update(
 
 	p = p.WithUpdatedAt(s.clock.Now())
 
+	params := toUpdatePermissionParams(p)
+
+	var updated Permission
 	txErr := s.tx.RunInTx(ctx, func(txCtx context.Context) error {
-		err := s.storer.Update(txCtx, p)
+		dbPerm, err := s.storer.UpdatePermission(txCtx, params)
 		if err != nil {
 			return fmt.Errorf("update: %w", err)
 		}
 
-		return s.dispatcher.Dispatch(txCtx, newPermissionEvent(p, audit.ActionUpdate))
+		updated = toDomainPermission(dbPerm)
+
+		return s.dispatcher.Dispatch(txCtx, newPermissionEvent(updated, audit.ActionUpdate))
 	})
 	if txErr != nil {
 		return Permission{}, fmt.Errorf("update permission: %w", txErr)
 	}
 
-	return p, nil
+	return updated, nil
 }
 
 // Delete removes the specified Permission within a transaction
 // and dispatches a domain event.
 func (s *Service) Delete(ctx context.Context, p Permission) error {
 	txErr := s.tx.RunInTx(ctx, func(txCtx context.Context) error {
-		err := s.storer.Delete(txCtx, p)
+		err := s.storer.DeletePermission(txCtx, p.ID())
 		if err != nil {
 			return fmt.Errorf("delete: %w", err)
 		}
@@ -120,12 +128,12 @@ func (s *Service) Delete(ctx context.Context, p Permission) error {
 
 // QueryByID finds the permission by the specified ID.
 func (s *Service) QueryByID(ctx context.Context, id uuid.UUID) (Permission, error) {
-	p, err := s.storer.QueryByID(ctx, id)
+	dbPerm, err := s.storer.GetPermissionByID(ctx, id)
 	if err != nil {
 		return Permission{}, fmt.Errorf("query: permissionID[%s]: %w", id, err)
 	}
 
-	return p, nil
+	return toDomainPermissionFromGetByID(dbPerm), nil
 }
 
 // Query retrieves a list of existing permissions.
@@ -135,12 +143,14 @@ func (s *Service) Query(
 	orderBy order.By,
 	cur cursor.Cursor,
 ) ([]Permission, error) {
-	ps, err := s.storer.Query(ctx, filter, orderBy, cur)
+	dbFilter := toDBQueryFilter(filter)
+
+	dbPerms, err := s.storer.QueryPermissions(ctx, dbFilter, orderBy, cur)
 	if err != nil {
 		return nil, fmt.Errorf("permission query: %w", err)
 	}
 
-	return ps, nil
+	return toDomainPermissions(dbPerms), nil
 }
 
 // newPermissionEvent creates a DomainEvent for permission operations.

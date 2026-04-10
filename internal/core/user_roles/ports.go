@@ -3,8 +3,8 @@ package user_roles
 import (
 	"context"
 
+	db "github.com/Housiadas/cerberus/db/sqlc"
 	"github.com/Housiadas/cerberus/internal/types/event"
-	"github.com/google/uuid"
 )
 
 // dispatcher defines the interface for domain event dispatching.
@@ -17,8 +17,8 @@ type transactor interface {
 	RunInTx(ctx context.Context, fn func(ctx context.Context) error) error
 }
 
-// Storer interface declares the behavior this package needs to persist data.
-type Storer interface {
-	Add(ctx context.Context, userID uuid.UUID, roleID uuid.UUID) error
-	Remove(ctx context.Context, userID uuid.UUID, roleID uuid.UUID) error
+// storer interface declares the behavior this package needs to persist data.
+type storer interface {
+	CreateUserRole(ctx context.Context, arg db.CreateUserRoleParams) (db.UserRole, error)
+	DeleteUserRole(ctx context.Context, arg db.DeleteUserRoleParams) error
 }

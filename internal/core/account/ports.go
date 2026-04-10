@@ -4,6 +4,7 @@ import (
 	"context"
 	"time"
 
+	db "github.com/Housiadas/cerberus/db/sqlc"
 	"github.com/Housiadas/cerberus/pkg/cursor"
 	"github.com/Housiadas/cerberus/pkg/order"
 	"github.com/google/uuid"
@@ -22,16 +23,16 @@ type transactor interface {
 	RunInTx(ctx context.Context, fn func(ctx context.Context) error) error
 }
 
-// Storer interface declares the behavior this package needs to persist and retrieve data.
-type Storer interface {
-	Create(ctx context.Context, acc Account) error
-	Update(ctx context.Context, acc Account) error
-	Delete(ctx context.Context, acc Account) error
-	Query(
+// storer interface declares the behavior this package needs to persist and retrieve data.
+type storer interface {
+	CreateAccount(ctx context.Context, arg db.CreateAccountParams) (db.Account, error)
+	UpdateAccount(ctx context.Context, arg db.UpdateAccountParams) (db.Account, error)
+	DeleteAccount(ctx context.Context, id uuid.UUID) error
+	QueryAccounts(
 		ctx context.Context,
-		filter QueryFilter,
+		filter db.AccountQueryFilter,
 		orderBy order.By,
 		cur cursor.Cursor,
-	) ([]Account, error)
-	QueryByID(ctx context.Context, accountID uuid.UUID) (Account, error)
+	) ([]db.Account, error)
+	GetAccountByID(ctx context.Context, id uuid.UUID) (db.GetAccountByIDRow, error)
 }

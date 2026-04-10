@@ -2,9 +2,9 @@ package user
 
 import (
 	"context"
-	"net/mail"
 	"time"
 
+	db "github.com/Housiadas/cerberus/db/sqlc"
 	"github.com/Housiadas/cerberus/internal/types/event"
 	"github.com/Housiadas/cerberus/pkg/cursor"
 	"github.com/Housiadas/cerberus/pkg/order"
@@ -35,17 +35,17 @@ type transactor interface {
 	RunInTx(ctx context.Context, fn func(ctx context.Context) error) error
 }
 
-// Storer interface declares the behavior this package needs to persist and retrieve data.
-type Storer interface {
-	Create(ctx context.Context, usr User) error
-	Update(ctx context.Context, usr User) error
-	Delete(ctx context.Context, usr User) error
-	Query(
+// storer interface declares the behavior this package needs to persist and retrieve data.
+type storer interface {
+	CreateUser(ctx context.Context, arg db.CreateUserParams) (db.User, error)
+	UpdateUser(ctx context.Context, arg db.UpdateUserParams) (db.User, error)
+	DeleteUser(ctx context.Context, id uuid.UUID) error
+	QueryUsers(
 		ctx context.Context,
-		filter QueryFilter,
+		filter db.UserQueryFilter,
 		orderBy order.By,
 		cur cursor.Cursor,
-	) ([]User, error)
-	QueryByID(ctx context.Context, userID uuid.UUID) (User, error)
-	QueryByEmail(ctx context.Context, email mail.Address) (User, error)
+	) ([]db.User, error)
+	GetUserByID(ctx context.Context, id uuid.UUID) (db.GetUserByIDRow, error)
+	GetUserByEmail(ctx context.Context, email string) (db.GetUserByEmailRow, error)
 }

@@ -4,6 +4,7 @@ import (
 	"context"
 	"time"
 
+	db "github.com/Housiadas/cerberus/db/sqlc"
 	"github.com/Housiadas/cerberus/internal/types/event"
 	"github.com/Housiadas/cerberus/pkg/cursor"
 	"github.com/Housiadas/cerberus/pkg/order"
@@ -28,16 +29,16 @@ type clock interface {
 	Now() time.Time
 }
 
-// Storer interface declares the behavior this package needs to persist and retrieve data.
-type Storer interface {
-	Create(ctx context.Context, p Permission) error
-	Update(ctx context.Context, p Permission) error
-	Delete(ctx context.Context, p Permission) error
-	Query(
+// storer interface declares the behavior this package needs to persist and retrieve data.
+type storer interface {
+	CreatePermission(ctx context.Context, arg db.CreatePermissionParams) (db.Permission, error)
+	UpdatePermission(ctx context.Context, arg db.UpdatePermissionParams) (db.Permission, error)
+	DeletePermission(ctx context.Context, id uuid.UUID) error
+	QueryPermissions(
 		ctx context.Context,
-		filter QueryFilter,
+		filter db.PermissionQueryFilter,
 		orderBy order.By,
 		cur cursor.Cursor,
-	) ([]Permission, error)
-	QueryByID(ctx context.Context, permissionID uuid.UUID) (Permission, error)
+	) ([]db.Permission, error)
+	GetPermissionByID(ctx context.Context, id uuid.UUID) (db.GetPermissionByIDRow, error)
 }

@@ -20,40 +20,13 @@ packages:
   github.com/Housiadas/cerberus/internal/core/user:
     config:
       all: true
-    interfaces:
-      Storer:
-        config:
-          dir: internal/core/user/mocks
-          filename: mock_user.go
-          pkgname: usermocks
-  github.com/Housiadas/cerberus/internal/core/user/user_cache:
-    config:
-      all: true
   github.com/Housiadas/cerberus/internal/core/audit:
     config:
       all: true
   github.com/Housiadas/cerberus/internal/core/role:
     config:
       all: true
-    interfaces:
-      Storer:
-        config:
-          dir: internal/core/role/mocks
-          filename: mock_role.go
-          pkgname: rolemocks
-  github.com/Housiadas/cerberus/internal/core/role/role_cache:
-    config:
-      all: true
   github.com/Housiadas/cerberus/internal/core/permission:
-    config:
-      all: true
-    interfaces:
-      Storer:
-        config:
-          dir: internal/core/permission/mocks
-          filename: mock_permission.go
-          pkgname: permissionmocks
-  github.com/Housiadas/cerberus/internal/core/permission/permission_cache:
     config:
       all: true
   github.com/Housiadas/cerberus/internal/core/refresh_token:

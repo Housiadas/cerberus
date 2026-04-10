@@ -4,6 +4,7 @@ import (
 	"context"
 	"time"
 
+	db "github.com/Housiadas/cerberus/db/sqlc"
 	"github.com/Housiadas/cerberus/internal/types/event"
 	"github.com/Housiadas/cerberus/pkg/cursor"
 	"github.com/Housiadas/cerberus/pkg/order"
@@ -28,16 +29,16 @@ type clock interface {
 	Now() time.Time
 }
 
-// Storer interface declares the behavior this package needs to persist and retrieve data.
-type Storer interface {
-	Create(ctx context.Context, role Role) error
-	Update(ctx context.Context, role Role) error
-	Delete(ctx context.Context, role Role) error
-	Query(
+// storer interface declares the behavior this package needs to persist and retrieve data.
+type storer interface {
+	CreateRole(ctx context.Context, arg db.CreateRoleParams) (db.Role, error)
+	UpdateRole(ctx context.Context, arg db.UpdateRoleParams) (db.Role, error)
+	DeleteRole(ctx context.Context, id uuid.UUID) error
+	QueryRoles(
 		ctx context.Context,
-		filter QueryFilter,
+		filter db.RoleQueryFilter,
 		orderBy order.By,
 		cur cursor.Cursor,
-	) ([]Role, error)
-	QueryByID(ctx context.Context, userID uuid.UUID) (Role, error)
+	) ([]db.Role, error)
+	GetRoleByID(ctx context.Context, id uuid.UUID) (db.GetRoleByIDRow, error)
 }

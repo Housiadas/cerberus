@@ -19,7 +19,7 @@ import (
 // transaction management, and event dispatching.
 type Service struct {
 	log        logger.Logger
-	storer     Storer
+	storer     storer
 	uuidGen    generator
 	clock      clock
 	hasher     hasher
@@ -30,7 +30,7 @@ type Service struct {
 // NewService constructs the service.
 func NewService(
 	log logger.Logger,
-	storer Storer,
+	storer storer,
 	uuidGen generator,
 	clock clock,
 	hasher hasher,
@@ -88,22 +88,27 @@ func (c *Service) Create(ctx context.Context, nu NewUser) (User, error) {
 	now := c.clock.Now()
 	usr := New(id, nu.Name, nu.Email, hash, nu.Department, true, nil, now, now, nil)
 
+	params := toCreateUserParams(id, usr, now)
+
+	var created User
 	txErr := c.tx.RunInTx(ctx, func(txCtx context.Context) error {
-		err = c.storer.Create(txCtx, usr)
+		dbUsr, err := c.storer.CreateUser(txCtx, params)
 		if err != nil {
 			return fmt.Errorf("create: %w", err)
 		}
 
+		created = toDomainUser(dbUsr)
+
 		return c.dispatcher.Dispatch(
 			txCtx,
-			newUserEvent(usr, event.UserCreated, audit.ActionCreate),
+			newUserEvent(created, event.UserCreated, audit.ActionCreate),
 		)
 	})
 	if txErr != nil {
 		return User{}, fmt.Errorf("create user: %w", txErr)
 	}
 
-	return usr, nil
+	return created, nil
 }
 
 // Query retrieves a list of existing users.
@@ -113,32 +118,34 @@ func (c *Service) Query(
 	orderBy order.By,
 	cur cursor.Cursor,
 ) ([]User, error) {
-	users, err := c.storer.Query(ctx, filter, orderBy, cur)
+	dbFilter := toDBQueryFilter(filter)
+
+	dbUsers, err := c.storer.QueryUsers(ctx, dbFilter, orderBy, cur)
 	if err != nil {
 		return nil, fmt.Errorf("query: %w", err)
 	}
 
-	return users, nil
+	return toDomainUsers(dbUsers), nil
 }
 
 // QueryByID finds the user by the specified ID.
 func (c *Service) QueryByID(ctx context.Context, userID uuid.UUID) (User, error) {
-	usr, err := c.storer.QueryByID(ctx, userID)
+	dbUsr, err := c.storer.GetUserByID(ctx, userID)
 	if err != nil {
 		return User{}, fmt.Errorf("query: userID[%s]: %w", userID, err)
 	}
 
-	return usr, nil
+	return toDomainUserFromGetByID(dbUsr), nil
 }
 
 // QueryByEmail finds the user by a specified user email.
 func (c *Service) QueryByEmail(ctx context.Context, email mail.Address) (User, error) {
-	usr, err := c.storer.QueryByEmail(ctx, email)
+	dbUsr, err := c.storer.GetUserByEmail(ctx, email.Address)
 	if err != nil {
 		return User{}, fmt.Errorf("query: email[%s]: %w", email, err)
 	}
 
-	return usr, nil
+	return toDomainUserFromGetByEmail(dbUsr), nil
 }
 
 // Update modifies information about a user.User within a transaction
@@ -175,29 +182,34 @@ func (c *Service) Update(
 
 	usr = usr.WithUpdatedAt(c.clock.Now())
 
+	params := toUpdateUserParams(usr)
+
+	var updated User
 	txErr := c.tx.RunInTx(ctx, func(txCtx context.Context) error {
-		err := c.storer.Update(txCtx, usr)
+		dbUsr, err := c.storer.UpdateUser(txCtx, params)
 		if err != nil {
 			return fmt.Errorf("update: %w", err)
 		}
 
+		updated = toDomainUser(dbUsr)
+
 		return c.dispatcher.Dispatch(
 			txCtx,
-			newUserEvent(usr, event.UserUpdated, audit.ActionUpdate),
+			newUserEvent(updated, event.UserUpdated, audit.ActionUpdate),
 		)
 	})
 	if txErr != nil {
 		return User{}, fmt.Errorf("update user: %w", txErr)
 	}
 
-	return usr, nil
+	return updated, nil
 }
 
 // Delete removes the specified user within a transaction
 // and dispatches a UserDeleted domain event.
 func (c *Service) Delete(ctx context.Context, usr User) error {
 	txErr := c.tx.RunInTx(ctx, func(txCtx context.Context) error {
-		err := c.storer.Delete(txCtx, usr)
+		err := c.storer.DeleteUser(txCtx, usr.ID())
 		if err != nil {
 			return fmt.Errorf("delete: %w", err)
 		}
