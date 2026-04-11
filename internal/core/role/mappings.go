@@ -62,13 +62,3 @@ func toDomainRoles(dbRoles []db.Role) []Role {
 
 	return roles
 }
-
-func toDomainRoleFromGetByID(r db.GetRoleByIDRow) Role {
-	return New(
-		r.ID,
-		name.MustParse(r.Name),
-		r.CreatedAt.Time,
-		r.UpdatedAt.Time,
-		nil,
-	)
-}

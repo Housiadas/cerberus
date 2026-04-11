@@ -40,5 +40,5 @@ type storer interface {
 		orderBy order.By,
 		cur cursor.Cursor,
 	) ([]db.Role, error)
-	GetRoleByID(ctx context.Context, id uuid.UUID) (db.GetRoleByIDRow, error)
+	GetRoleByID(ctx context.Context, id uuid.UUID) (db.Role, error)
 }

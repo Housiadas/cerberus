@@ -66,14 +66,13 @@ packages:
     config:
       all: true
   # sdk
-  github.com/Housiadas/cerberus/internal/eventbus:
+  github.com/Housiadas/cerberus/internal/sdk/eventbus:
     config:
       all: true
-  # relay
-  github.com/Housiadas/cerberus/internal/relay:
+  github.com/Housiadas/cerberus/internal/sdk/relay:
     config:
       all: true
-  github.com/Housiadas/cerberus/internal/distributed_storage:
+  github.com/Housiadas/cerberus/internal/sdk/distributed_storage:
     config:
       all: true
   # pkg

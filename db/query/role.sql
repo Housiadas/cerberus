@@ -18,11 +18,7 @@ WHERE id = sqlc.arg(id)
 AND deleted_at IS NULL;
 
 -- name: GetRoleByID :one
-SELECT
-    id,
-    name,
-    created_at,
-    updated_at
+SELECT *
 FROM roles
 WHERE id = sqlc.arg(id)
 AND deleted_at IS NULL;

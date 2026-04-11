@@ -62,13 +62,3 @@ func toDomainPermissions(dbPerms []db.Permission) []Permission {
 
 	return perms
 }
-
-func toDomainPermissionFromGetByID(p db.GetPermissionByIDRow) Permission {
-	return New(
-		p.ID,
-		name.MustParse(p.Name),
-		p.CreatedAt.Time,
-		p.UpdatedAt.Time,
-		nil,
-	)
-}

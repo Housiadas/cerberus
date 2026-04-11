@@ -40,5 +40,5 @@ type storer interface {
 		orderBy order.By,
 		cur cursor.Cursor,
 	) ([]db.Permission, error)
-	GetPermissionByID(ctx context.Context, id uuid.UUID) (db.GetPermissionByIDRow, error)
+	GetPermissionByID(ctx context.Context, id uuid.UUID) (db.Permission, error)
 }

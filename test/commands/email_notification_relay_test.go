@@ -7,9 +7,11 @@ import (
 	"testing"
 	"time"
 
+	db "github.com/Housiadas/cerberus/db/sqlc"
 	"github.com/Housiadas/cerberus/internal/core/email_notification_outbox"
 	"github.com/Housiadas/cerberus/internal/sdk/relay"
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -22,18 +24,22 @@ import (
 func Test_EmailNotificationRelay_RetriesFailedEntries(t *testing.T) {
 	t.Parallel()
 
-	db := sc.NewDB(t)
+	dbPool := sc.NewDB(t)
 	ctx := context.Background()
 
 	var buf bytes.Buffer
 	traceIDFn := func(context.Context) string { return "" }
 	requestIDFn := func(context.Context) string { return "" }
 	log := logger.New(&buf, logger.LevelInfo, "TEST", traceIDFn, requestIDFn)
-
-	outboxRepo := email_notification_outbox_repo.NewStore(log, db)
+	store := db.NewStore(dbPool)
 	uuidGen := uuidgen.NewV7()
 	clk := clock.NewClock()
-	outboxSvc := email_notification_outbox.NewService(log, outboxRepo, uuidGen, clk)
+	outboxSvc := email_notification_outbox.NewService(
+		log,
+		store,
+		uuidGen,
+		clk,
+	)
 
 	payload, err := json.Marshal(map[string]string{
 		"subject": "Reset your password",
@@ -54,7 +60,13 @@ func Test_EmailNotificationRelay_RetriesFailedEntries(t *testing.T) {
 		nil,
 	)
 
-	err = outboxRepo.Create(ctx, entry)
+	_, err = store.CreateNotificationOutbox(ctx, db.CreateNotificationOutboxParams{
+		ID:        uuid.UUID{},
+		EventType: "",
+		ToEmail:   "",
+		Payload:   nil,
+		CreatedAt: pgtype.Timestamp{},
+	})
 	require.NoError(t, err)
 
 	// Verify entry is initially queryable

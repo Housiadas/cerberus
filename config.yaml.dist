@@ -17,7 +17,7 @@ db:
   port: "5432"
   host: "localhost:5432"
   minConns: "25"
-  maxConns: "50"
+  maxConns: "100"
   disableTLS: true
   postgresImage: "postgres:17.5"
   postgresContainerName: "db-container"

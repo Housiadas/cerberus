@@ -18,11 +18,7 @@ WHERE id = sqlc.arg(id)
 AND deleted_at IS NULL;
 
 -- name: GetPermissionByID :one
-SELECT
-    id,
-    name,
-    created_at,
-    updated_at
+SELECT *
 FROM permissions
 WHERE id = sqlc.arg(id)
 AND deleted_at IS NULL;

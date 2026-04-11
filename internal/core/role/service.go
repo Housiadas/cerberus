@@ -130,7 +130,7 @@ func (s *Service) QueryByID(ctx context.Context, roleID uuid.UUID) (Role, error)
 		return Role{}, fmt.Errorf("query: roleID[%s]: %w", roleID, err)
 	}
 
-	return toDomainRoleFromGetByID(dbRole), nil
+	return toDomainRole(dbRole), nil
 }
 
 // Query retrieves a list of existing roles.

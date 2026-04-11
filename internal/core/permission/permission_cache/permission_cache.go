@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/Housiadas/cerberus/internal/core/permission"
+	db "github.com/Housiadas/cerberus/db/sqlc"
 	"github.com/Housiadas/cerberus/internal/sdk/distributed_storage"
 	"github.com/Housiadas/cerberus/pkg/cachemetrics"
 	"github.com/Housiadas/cerberus/pkg/cursor"
@@ -34,23 +34,35 @@ type redisClient interface {
 	Pipeline() redisPck.Pipeliner
 }
 
+type storer interface {
+	CreatePermission(ctx context.Context, arg db.CreatePermissionParams) (db.Permission, error)
+	UpdatePermission(ctx context.Context, arg db.UpdatePermissionParams) (db.Permission, error)
+	DeletePermission(ctx context.Context, id uuid.UUID) error
+	QueryPermissions(
+		ctx context.Context,
+		filter db.PermissionQueryFilter,
+		orderBy order.By,
+		cur cursor.Cursor,
+	) ([]db.Permission, error)
+	GetPermissionByID(ctx context.Context, id uuid.UUID) (db.Permission, error)
+}
+
 // Store manages the set of APIs for permission data and caching.
 type Store struct {
-	storer permission.Storer
+	storer storer
 	log    logger.Logger
-	cache  *sturdyc.Client[permission.Permission]
+	cache  *sturdyc.Client[db.Permission]
 }
 
 // NewStore constructs the api for data and caching access.
 func NewStore(
-	ctx context.Context,
 	log logger.Logger,
-	storer permission.Storer,
+	storer storer,
 	red redisClient,
 ) *Store {
 	recorder, err := cachemetrics.NewMeterRecorder(cacheName)
 	if err != nil {
-		log.Error(ctx, "error initializing permission cache metrics", err)
+		log.Error(context.Background(), "error initializing permission cache metrics", err)
 	}
 
 	ds := distributed_storage.New(red, ttl)
@@ -63,7 +75,7 @@ func NewStore(
 	return &Store{
 		log:    log,
 		storer: storer,
-		cache: sturdyc.New[permission.Permission](
+		cache: sturdyc.New[db.Permission](
 			capacity,
 			numShards,
 			ttl,
@@ -72,48 +84,54 @@ func NewStore(
 	}
 }
 
-// Create inserts a new permission into the database.
-func (s *Store) Create(ctx context.Context, p permission.Permission) error {
-	err := s.storer.Create(ctx, p)
+// CreatePermission inserts a new permission into the database.
+func (s *Store) CreatePermission(
+	ctx context.Context,
+	arg db.CreatePermissionParams,
+) (db.Permission, error) {
+	dbPermission, err := s.storer.CreatePermission(ctx, arg)
 	if err != nil {
-		return fmt.Errorf("permission cache create: %w", err)
+		return db.Permission{}, fmt.Errorf("permission cache create: %w", err)
 	}
 
-	return nil
+	return dbPermission, nil
 }
 
-// Update modifies an existing permission in the database and invalidates the cache.
-func (s *Store) Update(ctx context.Context, p permission.Permission) error {
-	err := s.storer.Update(ctx, p)
+// UpdatePermission modifies an existing permission in the database and invalidates the cache.
+func (s *Store) UpdatePermission(
+	ctx context.Context,
+	arg db.UpdatePermissionParams,
+) (db.Permission, error) {
+	dbPermission, err := s.storer.UpdatePermission(ctx, arg)
 	if err != nil {
-		return fmt.Errorf("permission cache update: %w", err)
+		return db.Permission{}, fmt.Errorf("permission cache update: %w", err)
 	}
 
-	s.cache.Delete(p.ID().String())
+	s.cache.Delete(dbPermission.ID.String())
 
-	return nil
+	return dbPermission, nil
 }
 
-// Delete removes a permission from the database and invalidates the cache.
-func (s *Store) Delete(ctx context.Context, p permission.Permission) error {
-	err := s.storer.Delete(ctx, p)
+// DeletePermission removes a permission from the database and invalidates the cache.
+func (s *Store) DeletePermission(ctx context.Context, id uuid.UUID) error {
+	err := s.storer.DeletePermission(ctx, id)
 	if err != nil {
 		return fmt.Errorf("permission cache delete: %w", err)
 	}
 
-	s.cache.Delete(p.ID().String())
+	s.cache.Delete(id.String())
 
 	return nil
 }
 
-// Query retrieves a list of existing permissions from the database.
-func (s *Store) Query(
+// QueryPermissions retrieves a list of existing permissions from the database.
+func (s *Store) QueryPermissions(
 	ctx context.Context,
-	filter permission.QueryFilter,
+	filter db.PermissionQueryFilter,
 	orderBy order.By,
 	cur cursor.Cursor,
-) ([]permission.Permission, error) {
-	perms, err := s.storer.Query(ctx, filter, orderBy, cur)
+) ([]db.Permission, error) {
+	perms, err := s.storer.QueryPermissions(ctx, filter, orderBy, cur)
 	if err != nil {
 		return nil, fmt.Errorf("permission cache query: %w", err)
 	}
@@ -121,20 +139,20 @@ func (s *Store) Query(
 	return perms, nil
 }
 
-// QueryByID gets the specified permission, checking L1 -> L2 -> DB.
-func (s *Store) QueryByID(
+// GetPermissionByID gets the specified permission, checking L1 -> L2 -> DB.
+func (s *Store) GetPermissionByID(
 	ctx context.Context,
-	permissionID uuid.UUID,
-) (permission.Permission, error) {
+	id uuid.UUID,
+) (db.Permission, error) {
 	p, err := s.cache.GetOrFetch(
 		ctx,
-		permissionID.String(),
-		func(ctx context.Context) (permission.Permission, error) {
-			return s.storer.QueryByID(ctx, permissionID)
+		id.String(),
+		func(ctx context.Context) (db.Permission, error) {
+			return s.storer.GetPermissionByID(ctx, id)
 		},
 	)
 	if err != nil {
-		return permission.Permission{}, fmt.Errorf("permission cache query by id: %w", err)
+		return db.Permission{}, fmt.Errorf("permission cache query by id: %w", err)
 	}
 
 	return p, nil

@@ -64,31 +64,21 @@ func (q *Queries) DeleteRole(ctx context.Context, id uuid.UUID) error {
 }
 
 const getRoleByID = `-- name: GetRoleByID :one
-SELECT
-    id,
-    name,
-    created_at,
-    updated_at
+SELECT id, name, created_at, updated_at, deleted_at
 FROM roles
 WHERE id = $1
 AND deleted_at IS NULL
 `
 
-type GetRoleByIDRow struct {
-	ID        uuid.UUID
-	Name      string
-	CreatedAt pgtype.Timestamp
-	UpdatedAt pgtype.Timestamp
-}
-
-func (q *Queries) GetRoleByID(ctx context.Context, id uuid.UUID) (GetRoleByIDRow, error) {
+func (q *Queries) GetRoleByID(ctx context.Context, id uuid.UUID) (Role, error) {
 	row := q.db.QueryRow(ctx, getRoleByID, id)
-	var i GetRoleByIDRow
+	var i Role
 	err := row.Scan(
 		&i.ID,
 		&i.Name,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.DeletedAt,
 	)
 	return i, err
 }

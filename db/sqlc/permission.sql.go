@@ -64,31 +64,21 @@ func (q *Queries) DeletePermission(ctx context.Context, id uuid.UUID) error {
 }
 
 const getPermissionByID = `-- name: GetPermissionByID :one
-SELECT
-    id,
-    name,
-    created_at,
-    updated_at
+SELECT id, name, created_at, updated_at, deleted_at
 FROM permissions
 WHERE id = $1
 AND deleted_at IS NULL
 `
 
-type GetPermissionByIDRow struct {
-	ID        uuid.UUID
-	Name      string
-	CreatedAt pgtype.Timestamp
-	UpdatedAt pgtype.Timestamp
-}
-
-func (q *Queries) GetPermissionByID(ctx context.Context, id uuid.UUID) (GetPermissionByIDRow, error) {
+func (q *Queries) GetPermissionByID(ctx context.Context, id uuid.UUID) (Permission, error) {
 	row := q.db.QueryRow(ctx, getPermissionByID, id)
-	var i GetPermissionByIDRow
+	var i Permission
 	err := row.Scan(
 		&i.ID,
 		&i.Name,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.DeletedAt,
 	)
 	return i, err
 }

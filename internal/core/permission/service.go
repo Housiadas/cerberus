@@ -133,7 +133,7 @@ func (s *Service) QueryByID(ctx context.Context, id uuid.UUID) (Permission, erro
 		return Permission{}, fmt.Errorf("query: permissionID[%s]: %w", id, err)
 	}
 
-	return toDomainPermissionFromGetByID(dbPerm), nil
+	return toDomainPermission(dbPerm), nil
 }
 
 // Query retrieves a list of existing permissions.
