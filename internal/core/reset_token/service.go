@@ -12,14 +12,14 @@ const resetTokenTTL = 15 * time.Minute
 
 // Service manages the set of APIs for reset token access.
 type Service struct {
-	storer  Storer
+	storer  storer
 	uuidGen generator
 	clock   clock
 }
 
 // NewService constructs the service.
 func NewService(
-	storer Storer,
+	storer storer,
 	uuidGen generator,
 	clock clock,
 ) *Service {
@@ -52,27 +52,29 @@ func (s *Service) Create(ctx context.Context, userID uuid.UUID) (ResetToken, err
 		false,
 	)
 
-	err = s.storer.Create(ctx, tkn)
+	params := toCreateResetTokenParams(tkn)
+
+	dbToken, err := s.storer.CreateResetToken(ctx, params)
 	if err != nil {
 		return ResetToken{}, fmt.Errorf("create: %w", err)
 	}
 
-	return tkn, nil
+	return toDomainResetToken(dbToken), nil
 }
 
 // QueryByToken retrieves a reset token by its token string.
 func (s *Service) QueryByToken(ctx context.Context, token string) (ResetToken, error) {
-	tkn, err := s.storer.QueryByToken(ctx, token)
+	dbToken, err := s.storer.GetResetTokenByToken(ctx, token)
 	if err != nil {
 		return ResetToken{}, fmt.Errorf("query by token: %w", err)
 	}
 
-	return tkn, nil
+	return toDomainResetToken(dbToken), nil
 }
 
 // Delete removes the specified reset token.
 func (s *Service) Delete(ctx context.Context, tkn ResetToken) error {
-	err := s.storer.Delete(ctx, tkn)
+	err := s.storer.DeleteResetToken(ctx, tkn.ID())
 	if err != nil {
 		return fmt.Errorf("delete: %w", err)
 	}

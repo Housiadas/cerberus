@@ -4,6 +4,7 @@ import (
 	"context"
 	"time"
 
+	db "github.com/Housiadas/cerberus/db/sqlc"
 	"github.com/google/uuid"
 )
 
@@ -15,10 +16,10 @@ type clock interface {
 	Now() time.Time
 }
 
-// Storer interface declares the behavior this package needs to persist and retrieve data.
-type Storer interface {
-	Create(ctx context.Context, o Outbox) error
-	QueryUnprocessed(ctx context.Context, limit int, maxRetries int) ([]Outbox, error)
-	MarkProcessed(ctx context.Context, ids []uuid.UUID, processedAt time.Time) error
-	IncrementRetryCount(ctx context.Context, ids []uuid.UUID) error
+// storer interface declares the behavior this package needs to persist and retrieve data.
+type storer interface {
+	CreateOutbox(ctx context.Context, arg db.CreateOutboxParams) (db.Outbox, error)
+	GetUnprocessedOutbox(ctx context.Context, arg db.GetUnprocessedOutboxParams) ([]db.Outbox, error)
+	MarkProcessedOutbox(ctx context.Context, arg db.MarkProcessedOutboxParams) error
+	IncrementRetryOutbox(ctx context.Context, ids uuid.UUID) error
 }

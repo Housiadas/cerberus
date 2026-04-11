@@ -90,7 +90,8 @@ func Open(ctx context.Context, cfg Config) (*pgxpool.Pool, error) {
 // Status pings the database and is intended for readiness probes. It returns
 // nil when the pool can serve queries.
 func (s *Store) Status(ctx context.Context) error {
-	if err := s.pool.Ping(ctx); err != nil {
+	err := s.pool.Ping(ctx)
+	if err != nil {
 		return fmt.Errorf("ping database: %w", err)
 	}
 

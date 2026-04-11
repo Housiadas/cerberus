@@ -4,6 +4,7 @@ import (
 	"context"
 	"time"
 
+	db "github.com/Housiadas/cerberus/db/sqlc"
 	"github.com/google/uuid"
 )
 
@@ -15,9 +16,9 @@ type clock interface {
 	Now() time.Time
 }
 
-// Storer declares the behavior this package needs to persist and retrieve data.
-type Storer interface {
-	Create(ctx context.Context, token ResetToken) error
-	Delete(ctx context.Context, token ResetToken) error
-	QueryByToken(ctx context.Context, token string) (ResetToken, error)
+// storer declares the behavior this package needs to persist and retrieve data.
+type storer interface {
+	CreateResetToken(ctx context.Context, arg db.CreateResetTokenParams) (db.ResetToken, error)
+	DeleteResetToken(ctx context.Context, id uuid.UUID) error
+	GetResetTokenByToken(ctx context.Context, token string) (db.ResetToken, error)
 }

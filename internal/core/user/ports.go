@@ -46,6 +46,6 @@ type storer interface {
 		orderBy order.By,
 		cur cursor.Cursor,
 	) ([]db.User, error)
-	GetUserByID(ctx context.Context, id uuid.UUID) (db.GetUserByIDRow, error)
-	GetUserByEmail(ctx context.Context, email string) (db.GetUserByEmailRow, error)
+	GetUserByID(ctx context.Context, id uuid.UUID) (db.User, error)
+	GetUserByEmail(ctx context.Context, email string) (db.User, error)
 }

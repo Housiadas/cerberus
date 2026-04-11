@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"os"
 
-	command2 "github.com/Housiadas/cerberus/internal/command"
+	command "github.com/Housiadas/cerberus/internal/command"
 	"github.com/Housiadas/cerberus/internal/config"
 	ctxPck "github.com/Housiadas/cerberus/internal/sdk/context"
 	"github.com/Housiadas/cerberus/pkg/logger"
@@ -18,7 +18,7 @@ var build = "develop"
 func main() {
 	err := run()
 	if err != nil {
-		if !errors.Is(err, command2.ErrHelp) {
+		if !errors.Is(err, command.ErrHelp) {
 			fmt.Println("msg", err)
 		}
 
@@ -72,7 +72,7 @@ func run() error {
 	// -------------------------------------------------------------------------
 	// Initialize commands
 	// -------------------------------------------------------------------------
-	cmd := command2.New(command2.Config{
+	cmd := command.New(command.Config{
 		DB:     cfg.DB,
 		Kafka:  cfg.Kafka,
 		Email:  cfg.Email,
@@ -88,9 +88,9 @@ func run() error {
 }
 
 // processCommands handles the execution of the commands specified on the command line.
-func processCommands(args []string, cmd *command2.Command) error {
+func processCommands(args []string, cmd *command.Command) error {
 	switch args[1] {
-	case command2.UserAdd:
+	case command.UserAdd:
 		name := args[2]
 		email := args[3]
 		password := args[4]
@@ -99,13 +99,13 @@ func processCommands(args []string, cmd *command2.Command) error {
 		if err != nil {
 			return fmt.Errorf("adding user: %w", err)
 		}
-	case command2.OutboxRelay:
+	case command.OutboxRelay:
 		err := cmd.OutboxRelay()
 		if err != nil {
 			return fmt.Errorf("outbox relay: %w", err)
 		}
 
-	case command2.EmailNotificationRelay:
+	case command.EmailNotificationRelay:
 		err := cmd.EmailNotificationRelay()
 		if err != nil {
 			return fmt.Errorf("email notification relay: %w", err)
@@ -117,7 +117,7 @@ func processCommands(args []string, cmd *command2.Command) error {
 		fmt.Println("email-notification-relay: start the email notification relay process")
 		fmt.Println("provide a command")
 
-		return command2.ErrHelp
+		return command.ErrHelp
 	}
 
 	return nil

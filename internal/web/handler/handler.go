@@ -100,6 +100,7 @@ func New(cfg Config) *Handler {
 
 	// db layer
 	store := db.NewStore(cfg.DB)
+	tx := db.NewTransactor(cfg.Log, cfg.DB)
 
 	// cache layer
 	userCache := user_cache.NewStore(cfg.Log, store, cfg.Redis)
@@ -116,7 +117,6 @@ func New(cfg Config) *Handler {
 
 	// event dispatcher and transaction beginner (used by services for CUD operations)
 	dispatcher := eventbus.New(outboxSvc, auditService)
-	//tx := pgsql.NewTransactor(cfg.Log, cfg.DB)
 
 	userService := user.NewService(cfg.Log, userCache, uuidGen, clk, hash, tx, dispatcher)
 	roleService := role.NewService(cfg.Log, store, uuidGen, tx, dispatcher, clk)

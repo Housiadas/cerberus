@@ -16,12 +16,12 @@ func insertAuthSeedData(test *apitest.Test) (apitest.SeedData, error) {
 		return apitest.SeedData{}, fmt.Errorf("seeding users : %w", err)
 	}
 
-	tkn1, err := test.Auth.GenerateAccessToken(ctx, usrs[0].ID().String())
+	tkn1, err := test.Core.Auth.GenerateAccessToken(ctx, usrs[0].ID().String())
 	if err != nil {
 		return apitest.SeedData{}, fmt.Errorf("seeding token : %w", err)
 	}
 
-	tkn2, err := test.Auth.GenerateAccessToken(ctx, usrs[1].ID().String())
+	tkn2, err := test.Core.Auth.GenerateAccessToken(ctx, usrs[1].ID().String())
 	if err != nil {
 		return apitest.SeedData{}, fmt.Errorf("seeding token : %w", err)
 	}

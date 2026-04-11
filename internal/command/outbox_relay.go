@@ -8,11 +8,11 @@ import (
 	"syscall"
 	"time"
 
+	db "github.com/Housiadas/cerberus/db/sqlc"
 	"github.com/Housiadas/cerberus/internal/core/outbox"
 	"github.com/Housiadas/cerberus/internal/sdk/relay"
 	"github.com/Housiadas/cerberus/pkg/clock"
 	"github.com/Housiadas/cerberus/pkg/kafka"
-	"github.com/Housiadas/cerberus/pkg/pgsql"
 	"github.com/Housiadas/cerberus/pkg/telemetry"
 	"github.com/Housiadas/cerberus/pkg/uuidgen"
 )
@@ -25,11 +25,24 @@ const (
 // OutboxRelay starts the outbox relay process that polls the outbox table
 // and publishes events to Kafka.
 func (cmd *Command) OutboxRelay() error {
-	db, err := pgsql.Open(cmd.db)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	// inject tracing to ctx
+	ctx = telemetry.InjectTracing(ctx, cmd.tracer)
+
+	shutdown := make(chan os.Signal, 1)
+	signal.Notify(shutdown, syscall.SIGINT, syscall.SIGTERM)
+
+	done := make(chan struct{})
+
+	dbPool, err := db.Open(context.Background(), cmd.db)
 	if err != nil {
 		return fmt.Errorf("connect database: %w", err)
 	}
-	defer db.Close()
+	defer dbPool.Close()
+
+	store := db.NewStore(dbPool)
 
 	kafkaProducer, err := kafka.NewProducer(kafka.ProducerConfig{
 		Brokers:          cmd.kafka.Brokers,
@@ -43,9 +56,7 @@ func (cmd *Command) OutboxRelay() error {
 	}
 	defer kafkaProducer.Close()
 
-	outboxRepo := outbox_repo.NewStore(cmd.log, db)
-	outboxSvc := outbox.NewService(cmd.log, outboxRepo, uuidgen.NewV7(), clock.NewClock())
-
+	outboxSvc := outbox.NewService(cmd.log, store, uuidgen.NewV7(), clock.NewClock())
 	outboxRelay := relay.New(
 		cmd.log,
 		outboxSvc,
@@ -54,17 +65,6 @@ func (cmd *Command) OutboxRelay() error {
 		batchSize,
 		maxRetries,
 	)
-
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
-	// inject tracing to ctx
-	ctx = telemetry.InjectTracing(ctx, cmd.tracer)
-
-	shutdown := make(chan os.Signal, 1)
-	signal.Notify(shutdown, syscall.SIGINT, syscall.SIGTERM)
-
-	done := make(chan struct{})
 
 	go func() {
 		outboxRelay.Start(ctx)

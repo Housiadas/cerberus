@@ -5,14 +5,16 @@ import (
 	"encoding/json"
 	"fmt"
 
+	db "github.com/Housiadas/cerberus/db/sqlc"
 	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 // Service manages the set of APIs for outbox access.
 type Service struct {
 	log     logger.Logger
-	storer  Storer
+	storer  storer
 	uuidGen generator
 	clock   clock
 }
@@ -20,7 +22,7 @@ type Service struct {
 // NewService constructs the service.
 func NewService(
 	log logger.Logger,
-	storer Storer,
+	storer storer,
 	uuidGen generator,
 	clock clock,
 ) *Service {
@@ -45,9 +47,9 @@ func (s *Service) Create(ctx context.Context, no NewOutbox) error {
 	}
 
 	now := s.clock.Now()
-	o := New(id, no.EventType, no.AggregateID, no.Topic, payload, 0, now, nil)
+	params := toCreateOutboxParams(id, no, payload, now)
 
-	err = s.storer.Create(ctx, o)
+	_, err = s.storer.CreateOutbox(ctx, params)
 	if err != nil {
 		return fmt.Errorf("create: %w", err)
 	}
@@ -62,19 +64,26 @@ func (s *Service) QueryUnprocessed(
 	limit int,
 	maxRetries int,
 ) ([]Outbox, error) {
-	entries, err := s.storer.QueryUnprocessed(ctx, limit, maxRetries)
+	params := db.GetUnprocessedOutboxParams{
+		Limit:      int32(limit),
+		MaxRetries: int32(maxRetries),
+	}
+
+	dbEntries, err := s.storer.GetUnprocessedOutbox(ctx, params)
 	if err != nil {
 		return nil, fmt.Errorf("query unprocessed: %w", err)
 	}
 
-	return entries, nil
+	return toDomainOutboxes(dbEntries), nil
 }
 
 // IncrementRetryCount increments the retry count for the given outbox entry IDs.
 func (s *Service) IncrementRetryCount(ctx context.Context, ids []uuid.UUID) error {
-	err := s.storer.IncrementRetryCount(ctx, ids)
-	if err != nil {
-		return fmt.Errorf("increment retry count: %w", err)
+	for _, id := range ids {
+		err := s.storer.IncrementRetryOutbox(ctx, id)
+		if err != nil {
+			return fmt.Errorf("increment retry count: %w", err)
+		}
 	}
 
 	return nil
@@ -84,7 +93,12 @@ func (s *Service) IncrementRetryCount(ctx context.Context, ids []uuid.UUID) erro
 func (s *Service) MarkProcessed(ctx context.Context, ids []uuid.UUID) error {
 	now := s.clock.Now()
 
-	err := s.storer.MarkProcessed(ctx, ids, now)
+	params := db.MarkProcessedOutboxParams{
+		ProcessedAt: pgtype.Timestamp{Time: now, Valid: true},
+		Ids:         ids,
+	}
+
+	err := s.storer.MarkProcessedOutbox(ctx, params)
 	if err != nil {
 		return fmt.Errorf("mark processed: %w", err)
 	}

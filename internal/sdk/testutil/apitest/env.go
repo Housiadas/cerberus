@@ -90,7 +90,7 @@ func (e *Env) StartTest(t *testing.T, testName string) (*Test, error) {
 	t.Helper()
 
 	// Fresh DB for this test (drops on t.Cleanup)
-	db := e.pgShared.NewDB(t)
+	dbPool := e.pgShared.NewDB(t)
 
 	// Logger
 	var buf bytes.Buffer
@@ -117,7 +117,7 @@ func (e *Env) StartTest(t *testing.T, testName string) (*Test, error) {
 		ServiceName:       serviceName,
 		Build:             "Test",
 		Cors:              cfg.CorsSettings{},
-		DB:                db,
+		DB:                dbPool,
 		Redis:             e.redisClient,
 		Log:               log,
 		Tracer:            tel.TracerProvider().Tracer(serviceName),
@@ -126,7 +126,7 @@ func (e *Env) StartTest(t *testing.T, testName string) (*Test, error) {
 	})
 
 	// dependency injection
-	dep := newDependency(log, db, accessTokenSecret, serviceName)
+	dep := newDependency(log, dbPool, accessTokenSecret, serviceName)
 
 	t.Cleanup(func() {
 		t.Logf(
@@ -137,5 +137,9 @@ func (e *Env) StartTest(t *testing.T, testName string) (*Test, error) {
 		)
 	})
 
-	return New(db, h.Routes(), dep.Core, dep.Auth), nil
+	return New(
+		dbPool,
+		h.Routes(),
+		dep.Core,
+	), nil
 }

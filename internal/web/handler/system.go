@@ -8,7 +8,6 @@ import (
 
 	errs "github.com/Housiadas/cerberus/internal/sdk/errs"
 	"github.com/Housiadas/cerberus/internal/web/handler/openapi"
-	"github.com/Housiadas/cerberus/pkg/pgsql"
 )
 
 func (h *Handler) Readiness(
@@ -18,7 +17,7 @@ func (h *Handler) Readiness(
 	ctx, cancel := context.WithTimeout(ctx, time.Second)
 	defer cancel()
 
-	err := pgsql.StatusCheck(ctx, h.db)
+	err := h.store.Status(ctx)
 	if err != nil {
 		h.log.Error(ctx, "readiness failure", "ERROR", err)
 

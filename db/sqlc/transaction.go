@@ -1,4 +1,4 @@
-package pgsql
+package db
 
 import (
 	"context"
@@ -7,7 +7,9 @@ import (
 	"fmt"
 	"sync/atomic"
 
-	"github.com/jmoiron/sqlx"
+	"github.com/Housiadas/cerberus/pkg/logger"
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 // ctxKey is an unexported type used as a context key for transactions.
@@ -15,22 +17,25 @@ type ctxKey struct{}
 
 // txState wraps a transaction with a done flag to prevent double-commit/rollback.
 type txState struct {
-	tx   *sqlx.Tx
+	tx   *pgx.Tx
 	done atomic.Bool
 }
 
 // Transactor provides transaction management by wrapping a database connection
 // and delegating to RunInTx.
 type Transactor struct {
-	log logger
-	db  *sqlx.DB
+	log  logger.Logger
+	pool *pgxpool.Pool
 }
 
 // NewTransactor constructs a Transactor.
-func NewTransactor(log logger, db *sqlx.DB) *Transactor {
+func NewTransactor(
+	log logger.Logger,
+	pool *pgxpool.Pool,
+) *Transactor {
 	return &Transactor{
-		log: log,
-		db:  db,
+		log:  log,
+		pool: pool,
 	}
 }
 
@@ -39,12 +44,12 @@ func NewTransactor(log logger, db *sqlx.DB) *Transactor {
 // the transaction is rolled back.
 func (t *Transactor) RunInTx(ctx context.Context, fn func(ctx context.Context) error) error {
 	// begin a transaction
-	sqlxTx, err := t.db.Beginx()
+	tx, err := t.pool.Begin(ctx)
 	if err != nil {
 		return fmt.Errorf("begin transaction: %w", err)
 	}
 
-	st := &txState{tx: sqlxTx}
+	st := &txState{tx: &tx}
 
 	defer func() {
 		// check atomic flag to prevent double-commit/rollback
@@ -52,9 +57,12 @@ func (t *Transactor) RunInTx(ctx context.Context, fn func(ctx context.Context) e
 			return
 		}
 
-		rollbackErr := sqlxTx.Rollback()
+		rollbackErr := tx.Rollback(ctx)
 		if rollbackErr != nil && !errors.Is(rollbackErr, sql.ErrTxDone) {
-			t.log.Errorc(ctx, 5, "pgsql.RunInTx", "rollback error", rollbackErr)
+			t.log.Errorc(ctx, 5,
+				"pgsql.RunInTx",
+				"rollback error", rollbackErr,
+			)
 		}
 	}()
 
@@ -70,7 +78,7 @@ func (t *Transactor) RunInTx(ctx context.Context, fn func(ctx context.Context) e
 	st.done.Store(true)
 
 	// commit the transaction
-	commitErr := sqlxTx.Commit()
+	commitErr := tx.Commit(ctx)
 	if commitErr != nil {
 		return fmt.Errorf("commit transaction: %w", commitErr)
 	}
