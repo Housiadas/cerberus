@@ -99,46 +99,6 @@ func toDomainUsers(dbUsers []db.User) []User {
 	return users
 }
 
-func toDomainUserFromGetByID(u db.GetUserByIDRow) User {
-	var accountID *uuid.UUID
-	if u.AccountID.Valid {
-		accountID = (*uuid.UUID)(&u.AccountID.Bytes)
-	}
-
-	return New(
-		u.ID,
-		name.MustParse(u.Name),
-		mail.Address{Address: u.Email},
-		[]byte(u.PasswordHash),
-		toNullName(u.Department),
-		u.Enabled,
-		accountID,
-		u.CreatedAt.Time,
-		u.UpdatedAt.Time,
-		nil,
-	)
-}
-
-func toDomainUserFromGetByEmail(u db.GetUserByEmailRow) User {
-	var accountID *uuid.UUID
-	if u.AccountID.Valid {
-		accountID = (*uuid.UUID)(&u.AccountID.Bytes)
-	}
-
-	return New(
-		u.ID,
-		name.MustParse(u.Name),
-		mail.Address{Address: u.Email},
-		[]byte(u.PasswordHash),
-		toNullName(u.Department),
-		u.Enabled,
-		accountID,
-		u.CreatedAt.Time,
-		u.UpdatedAt.Time,
-		nil,
-	)
-}
-
 func toNullName(t pgtype.Text) name.Null {
 	if !t.Valid {
 		return name.Null{}

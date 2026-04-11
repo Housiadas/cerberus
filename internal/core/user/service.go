@@ -135,7 +135,7 @@ func (c *Service) QueryByID(ctx context.Context, userID uuid.UUID) (User, error)
 		return User{}, fmt.Errorf("query: userID[%s]: %w", userID, err)
 	}
 
-	return toDomainUserFromGetByID(dbUsr), nil
+	return toDomainUser(dbUsr), nil
 }
 
 // QueryByEmail finds the user by a specified user email.
@@ -145,7 +145,7 @@ func (c *Service) QueryByEmail(ctx context.Context, email mail.Address) (User, e
 		return User{}, fmt.Errorf("query: email[%s]: %w", email, err)
 	}
 
-	return toDomainUserFromGetByEmail(dbUsr), nil
+	return toDomainUser(dbUsr), nil
 }
 
 // Update modifies information about a user.User within a transaction
