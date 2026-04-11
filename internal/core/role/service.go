@@ -55,6 +55,7 @@ func (s *Service) Create(ctx context.Context, nr NewRole) (Role, error) {
 	params := toCreateRoleParams(id, nr, now)
 
 	var created Role
+
 	txErr := s.tx.RunInTx(ctx, func(txCtx context.Context) error {
 		dbRole, err := s.storer.CreateRole(txCtx, params)
 		if err != nil {
@@ -88,6 +89,7 @@ func (s *Service) Update(
 	params := toUpdateRoleParams(rl)
 
 	var updated Role
+
 	txErr := s.tx.RunInTx(ctx, func(txCtx context.Context) error {
 		dbRole, err := s.storer.UpdateRole(txCtx, params)
 		if err != nil {

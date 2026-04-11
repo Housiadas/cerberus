@@ -73,6 +73,7 @@ func (s *Store) QueryUsers(
 
 	users, err := pgx.CollectRows(rows, func(row pgx.CollectableRow) (User, error) {
 		var u User
+
 		err := row.Scan(
 			&u.ID,
 			&u.AccountID,
@@ -85,7 +86,11 @@ func (s *Store) QueryUsers(
 			&u.UpdatedAt,
 			&u.DeletedAt,
 		)
-		return u, err
+		if err != nil {
+			return u, fmt.Errorf("scan row: %w", err)
+		}
+
+		return u, nil
 	})
 	if err != nil {
 		return nil, fmt.Errorf("collect rows: %w", err)

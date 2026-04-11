@@ -47,10 +47,11 @@ func (s *Service) Create(ctx context.Context, na NewAccount) (Account, error) {
 	params := toCreateAccountParams(id, na, now)
 
 	var created Account
+
 	txErr := s.tx.RunInTx(ctx, func(txCtx context.Context) error {
 		dbAcc, err := s.storer.CreateAccount(txCtx, params)
 		if err != nil {
-			return err
+			return fmt.Errorf("storer create account: %w", err)
 		}
 
 		created = toDomainAccount(dbAcc)
@@ -83,10 +84,11 @@ func (s *Service) Update(
 	params := toUpdateAccountParams(acc)
 
 	var updated Account
+
 	txErr := s.tx.RunInTx(ctx, func(txCtx context.Context) error {
 		dbAcc, err := s.storer.UpdateAccount(txCtx, params)
 		if err != nil {
-			return err
+			return fmt.Errorf("storer update account: %w", err)
 		}
 
 		updated = toDomainAccount(dbAcc)

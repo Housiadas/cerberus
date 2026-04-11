@@ -113,7 +113,7 @@ func (e *Env) StartTest(t *testing.T, testName string) (*Test, error) {
 	// Build handler
 	serviceName := "Test Service Name"
 	accessTokenSecret := []byte("test-256-bit-access-secret")
-	h := handler.New(handler.Config{
+	h := handler.New(ctx, handler.Config{
 		ServiceName:       serviceName,
 		Build:             "Test",
 		Cors:              cfg.CorsSettings{},

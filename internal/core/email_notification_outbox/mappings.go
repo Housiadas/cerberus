@@ -40,7 +40,9 @@ func toDomainEmailNotificationOutbox(o db.EmailNotificationOutbox) EmailNotifica
 	)
 }
 
-func toDomainEmailNotificationOutboxes(dbEntries []db.EmailNotificationOutbox) []EmailNotificationOutbox {
+func toDomainEmailNotificationOutboxes(
+	dbEntries []db.EmailNotificationOutbox,
+) []EmailNotificationOutbox {
 	entries := make([]EmailNotificationOutbox, len(dbEntries))
 	for i, o := range dbEntries {
 		entries[i] = toDomainEmailNotificationOutbox(o)

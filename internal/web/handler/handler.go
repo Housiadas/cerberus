@@ -14,9 +14,11 @@ import (
 	"github.com/Housiadas/cerberus/internal/core/email_notification_outbox"
 	"github.com/Housiadas/cerberus/internal/core/outbox"
 	"github.com/Housiadas/cerberus/internal/core/permission"
+	"github.com/Housiadas/cerberus/internal/core/permission/permission_cache"
 	"github.com/Housiadas/cerberus/internal/core/refresh_token"
 	"github.com/Housiadas/cerberus/internal/core/reset_token"
 	"github.com/Housiadas/cerberus/internal/core/role"
+	"github.com/Housiadas/cerberus/internal/core/role/role_cache"
 	"github.com/Housiadas/cerberus/internal/core/role_permissions"
 	"github.com/Housiadas/cerberus/internal/core/user"
 	"github.com/Housiadas/cerberus/internal/core/user/user_cache"
@@ -85,25 +87,27 @@ type services struct {
 	account              *account.Service
 }
 
-func New(cfg Config) *Handler {
+func New(ctx context.Context, cfg Config) *Handler {
 	// utils
 	hash := hasher.NewBcrypt()
 	clk := clock.NewClock()
 	uuidGen := uuidgen.NewV7()
 
 	// http clients
-	//stripeClient := stripepkg.New(stripepkg.Config{
+	// stripeClient := stripepkg.New(stripepkg.Config{
 	//	WebhookSecret: cfg.Stripe.WebhookSecret,
 	//	SecretKey:     cfg.Stripe.SecretKey,
 	//	Log:           cfg.Log,
-	//})
+	// })
 
 	// db layer
 	store := db.NewStore(cfg.DB)
 	tx := db.NewTransactor(cfg.Log, cfg.DB)
 
 	// cache layer
-	userCache := user_cache.NewStore(cfg.Log, store, cfg.Redis)
+	userCache := user_cache.NewStore(ctx, cfg.Log, store, cfg.Redis)
+	roleCache := role_cache.NewStore(ctx, cfg.Log, store, cfg.Redis)
+	permissionCache := permission_cache.NewStore(ctx, cfg.Log, store, cfg.Redis)
 
 	// services
 	auditService := audit.NewService(cfg.Log, store, clk)
@@ -119,10 +123,10 @@ func New(cfg Config) *Handler {
 	dispatcher := eventbus.New(outboxSvc, auditService)
 
 	userService := user.NewService(cfg.Log, userCache, uuidGen, clk, hash, tx, dispatcher)
-	roleService := role.NewService(cfg.Log, store, uuidGen, tx, dispatcher, clk)
+	roleService := role.NewService(cfg.Log, roleCache, uuidGen, tx, dispatcher, clk)
 	permissionService := permission.NewService(
 		cfg.Log,
-		store,
+		permissionCache,
 		uuidGen,
 		tx,
 		dispatcher,

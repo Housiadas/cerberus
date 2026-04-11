@@ -25,5 +25,6 @@ func ErrorCode(err error) string {
 	if pgErr, ok := errors.AsType[*pgconn.PgError](err); ok {
 		return pgErr.Code
 	}
+
 	return ""
 }

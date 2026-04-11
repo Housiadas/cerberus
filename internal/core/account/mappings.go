@@ -20,10 +20,13 @@ func toCreateAccountParams(id uuid.UUID, na NewAccount, now time.Time) db.Create
 
 func toUpdateAccountParams(acc Account) db.UpdateAccountParams {
 	return db.UpdateAccountParams{
-		ID:               acc.ID(),
-		Name:             pgtype.Text{String: acc.Name(), Valid: true},
-		StripeCustomerID: pgtype.Text{String: acc.StripeCustomerID().String, Valid: acc.StripeCustomerID().Valid},
-		UpdatedAt:        pgtype.Timestamp{Time: acc.UpdatedAt(), Valid: true},
+		ID:   acc.ID(),
+		Name: pgtype.Text{String: acc.Name(), Valid: true},
+		StripeCustomerID: pgtype.Text{
+			String: acc.StripeCustomerID().String,
+			Valid:  acc.StripeCustomerID().Valid,
+		},
+		UpdatedAt: pgtype.Timestamp{Time: acc.UpdatedAt(), Valid: true},
 	}
 }
 

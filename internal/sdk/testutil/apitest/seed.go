@@ -53,7 +53,6 @@ func SeedPermission(
 		CreatedAt: pgtype.Timestamp{Time: now, Valid: true},
 		UpdatedAt: pgtype.Timestamp{Time: now, Valid: true},
 	})
-
 	if err != nil {
 		return uuid.UUID{}, fmt.Errorf("seed permission: name[%s]: %w", name, err)
 	}

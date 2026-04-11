@@ -19,6 +19,9 @@ type transactor interface {
 
 // storer interface declares the behavior this package needs to persist data.
 type storer interface {
-	CreateRolePermission(ctx context.Context, arg db.CreateRolePermissionParams) (db.RolePermission, error)
+	CreateRolePermission(
+		ctx context.Context,
+		arg db.CreateRolePermissionParams,
+	) (db.RolePermission, error)
 	DeleteRolePermission(ctx context.Context, arg db.DeleteRolePermissionParams) error
 }

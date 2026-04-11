@@ -78,6 +78,7 @@ func (s *Store) QueryAudits(
 
 	audits, err := pgx.CollectRows(rows, func(row pgx.CollectableRow) (Audit, error) {
 		var a Audit
+
 		err := row.Scan(
 			&a.ID,
 			&a.ObjID,
@@ -89,7 +90,11 @@ func (s *Store) QueryAudits(
 			&a.Message,
 			&a.CreatedAt,
 		)
-		return a, err
+		if err != nil {
+			return a, fmt.Errorf("scan row: %w", err)
+		}
+
+		return a, nil
 	})
 	if err != nil {
 		return nil, fmt.Errorf("collect rows: %w", err)

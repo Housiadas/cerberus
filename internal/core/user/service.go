@@ -91,6 +91,7 @@ func (c *Service) Create(ctx context.Context, nu NewUser) (User, error) {
 	params := toCreateUserParams(id, usr, now)
 
 	var created User
+
 	txErr := c.tx.RunInTx(ctx, func(txCtx context.Context) error {
 		dbUsr, err := c.storer.CreateUser(txCtx, params)
 		if err != nil {
@@ -185,6 +186,7 @@ func (c *Service) Update(
 	params := toUpdateUserParams(usr)
 
 	var updated User
+
 	txErr := c.tx.RunInTx(ctx, func(txCtx context.Context) error {
 		dbUsr, err := c.storer.UpdateUser(txCtx, params)
 		if err != nil {

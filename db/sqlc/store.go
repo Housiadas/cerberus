@@ -33,6 +33,7 @@ type Config struct {
 // queries hit the same connection — pool by default, pgx.Tx after WithTx.
 type Store struct {
 	*Queries
+
 	pool *pgxpool.Pool
 }
 

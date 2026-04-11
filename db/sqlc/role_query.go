@@ -1,4 +1,4 @@
-package db
+package db //nolint:dupl // role and permission queries are structurally similar but type-distinct
 
 import (
 	"context"
@@ -64,6 +64,7 @@ func (s *Store) QueryRoles(
 
 	roles, err := pgx.CollectRows(rows, func(row pgx.CollectableRow) (Role, error) {
 		var r Role
+
 		err := row.Scan(
 			&r.ID,
 			&r.Name,
@@ -71,7 +72,11 @@ func (s *Store) QueryRoles(
 			&r.UpdatedAt,
 			&r.DeletedAt,
 		)
-		return r, err
+		if err != nil {
+			return r, fmt.Errorf("scan row: %w", err)
+		}
+
+		return r, nil
 	})
 	if err != nil {
 		return nil, fmt.Errorf("collect rows: %w", err)

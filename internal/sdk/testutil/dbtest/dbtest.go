@@ -125,12 +125,12 @@ func (sc *SharedContainer) NewDB(t *testing.T) *pgxpool.Pool {
 	require.NoError(t, err)
 
 	// Open connection
-	dbConnUrl, err := pgxpool.ParseConfig(testURL)
+	dbConnURL, err := pgxpool.ParseConfig(testURL)
 	if err != nil {
 		t.Fatalf("parse db config url %s: %s", dbName, err)
 	}
 
-	dbPool, err := pgxpool.NewWithConfig(ctx, dbConnUrl)
+	dbPool, err := pgxpool.NewWithConfig(ctx, dbConnURL)
 	if err != nil {
 		t.Fatalf("create db pool %s: %s", dbName, err)
 	}

@@ -49,6 +49,7 @@ func (s *Service) Remove(ctx context.Context, userID uuid.UUID, roleID uuid.UUID
 func (s *Service) modify(ctx context.Context, userID, roleID uuid.UUID, action string) error {
 	txErr := s.tx.RunInTx(ctx, func(txCtx context.Context) error {
 		var opErr error
+
 		if action == audit.ActionAssign {
 			params := toCreateUserRoleParams(userID, roleID)
 			_, opErr = s.storer.CreateUserRole(txCtx, params)

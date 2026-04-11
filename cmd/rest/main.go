@@ -158,7 +158,7 @@ func run(ctx context.Context, log *logger.Service) error {
 	log.Info(ctx, "startup", "status", "Rest server starting")
 
 	// Initialize handler
-	h := handler.New(handler.Config{
+	h := handler.New(ctx, handler.Config{
 		ServiceName:       cfg.App.Name,
 		Build:             build,
 		Cors:              cfg.Cors,

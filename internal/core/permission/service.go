@@ -58,6 +58,7 @@ func (s *Service) Create(
 	params := toCreatePermissionParams(id, np, now)
 
 	var created Permission
+
 	txErr := s.tx.RunInTx(ctx, func(txCtx context.Context) error {
 		dbPerm, err := s.storer.CreatePermission(txCtx, params)
 		if err != nil {
@@ -91,6 +92,7 @@ func (s *Service) Update(
 	params := toUpdatePermissionParams(p)
 
 	var updated Permission
+
 	txErr := s.tx.RunInTx(ctx, func(txCtx context.Context) error {
 		dbPerm, err := s.storer.UpdatePermission(txCtx, params)
 		if err != nil {

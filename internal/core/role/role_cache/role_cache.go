@@ -56,13 +56,14 @@ type Store struct {
 
 // NewStore constructs the api for data and caching access.
 func NewStore(
+	ctx context.Context,
 	log logger.Logger,
 	storer storer,
 	red redisClient,
 ) *Store {
 	recorder, err := cachemetrics.NewMeterRecorder(cacheName)
 	if err != nil {
-		log.Error(context.Background(), "error initializing role cache metrics", err)
+		log.Error(ctx, "error initializing role cache metrics", err)
 	}
 
 	ds := distributed_storage.New(red, ttl)

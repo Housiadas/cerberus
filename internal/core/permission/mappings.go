@@ -9,7 +9,11 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-func toCreatePermissionParams(id uuid.UUID, np NewPermission, now time.Time) db.CreatePermissionParams {
+func toCreatePermissionParams(
+	id uuid.UUID,
+	np NewPermission,
+	now time.Time,
+) db.CreatePermissionParams {
 	return db.CreatePermissionParams{
 		ID:        id,
 		Name:      np.Name.String(),
