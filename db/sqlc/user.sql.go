@@ -144,9 +144,10 @@ SET
     name = COALESCE($1, name),
     email = COALESCE($2, email),
     password_hash = COALESCE($3, password_hash),
-    enabled = COALESCE($4, enabled),
-    updated_at = COALESCE($5, updated_at)
-WHERE id = $6
+    department = COALESCE($4, department),
+    enabled = COALESCE($5, enabled),
+    updated_at = COALESCE($6, updated_at)
+WHERE id = $7
 RETURNING id, account_id, name, email, password_hash, department, enabled, created_at, updated_at, deleted_at
 `
 
@@ -154,6 +155,7 @@ type UpdateUserParams struct {
 	Name         pgtype.Text
 	Email        pgtype.Text
 	PasswordHash pgtype.Text
+	Department   pgtype.Text
 	Enabled      pgtype.Bool
 	UpdatedAt    pgtype.Timestamp
 	ID           uuid.UUID
@@ -164,6 +166,7 @@ func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (User, e
 		arg.Name,
 		arg.Email,
 		arg.PasswordHash,
+		arg.Department,
 		arg.Enabled,
 		arg.UpdatedAt,
 		arg.ID,

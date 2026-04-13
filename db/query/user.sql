@@ -39,6 +39,7 @@ SET
     name = COALESCE(sqlc.narg(name), name),
     email = COALESCE(sqlc.narg(email), email),
     password_hash = COALESCE(sqlc.narg(password_hash), password_hash),
+    department = COALESCE(sqlc.narg(department), department),
     enabled = COALESCE(sqlc.narg(enabled), enabled),
     updated_at = COALESCE(sqlc.narg(updated_at), updated_at)
 WHERE id = sqlc.arg(id)

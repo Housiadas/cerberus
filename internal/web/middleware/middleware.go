@@ -50,8 +50,8 @@ type useCase struct {
 	userRolesPermissions *user_roles_permissions.Service
 }
 
-func New(cfg Config) *Middleware {
-	middlewareMetrics := initOTelMetrics(context.Background(), cfg.Meter, cfg.Log)
+func New(ctx context.Context, cfg Config) *Middleware {
+	middlewareMetrics := initOTelMetrics(ctx, cfg.Meter, cfg.Log)
 
 	return &Middleware{
 		useCase: useCase{

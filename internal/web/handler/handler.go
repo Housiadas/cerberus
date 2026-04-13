@@ -136,10 +136,7 @@ func New(ctx context.Context, cfg Config) *Handler {
 	resetTokenService := reset_token.NewService(store, uuidGen, clk)
 	userRolesSvc := user_roles.NewService(cfg.Log, store, tx, dispatcher)
 	rolePermsSvc := role_permissions.NewService(cfg.Log, store, tx, dispatcher)
-	userRolesPermissionsService := user_roles_permissions.NewService(
-		cfg.Log,
-		store,
-	)
+	userRolesPermissionsService := user_roles_permissions.NewService(cfg.Log, store)
 	accountSvc := account.NewService(cfg.Log, store, uuidGen, clk, tx)
 
 	authService := auth.NewService(auth.Config{
@@ -162,7 +159,7 @@ func New(ctx context.Context, cfg Config) *Handler {
 		store:       store,
 		log:         cfg.Log,
 		cors:        cfg.Cors,
-		middleware: middleware.New(middleware.Config{
+		middleware: middleware.New(ctx, middleware.Config{
 			Log:                  cfg.Log,
 			Tracer:               cfg.Tracer,
 			Meter:                cfg.Meter,

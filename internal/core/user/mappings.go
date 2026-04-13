@@ -42,8 +42,12 @@ func toUpdateUserParams(usr User) db.UpdateUserParams {
 		Name:         pgtype.Text{String: usr.Name().String(), Valid: true},
 		Email:        pgtype.Text{String: usr.Email().Address, Valid: true},
 		PasswordHash: pgtype.Text{String: string(usr.PasswordHash()), Valid: true},
-		Enabled:      pgtype.Bool{Bool: usr.Enabled(), Valid: true},
-		UpdatedAt:    pgtype.Timestamp{Time: usr.UpdatedAt(), Valid: true},
+		Department: pgtype.Text{
+			String: usr.Department().String(),
+			Valid:  usr.Department().Valid(),
+		},
+		Enabled:   pgtype.Bool{Bool: usr.Enabled(), Valid: true},
+		UpdatedAt: pgtype.Timestamp{Time: usr.UpdatedAt(), Valid: true},
 	}
 }
 

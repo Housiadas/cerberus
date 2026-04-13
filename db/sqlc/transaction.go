@@ -42,7 +42,10 @@ func NewTransactor(
 // RunInTx begins a transaction, injects it into the context, and passes
 // the enriched context to fn. If fn returns an error or the commit fails,
 // the transaction is rolled back.
-func (t *Transactor) RunInTx(ctx context.Context, fn func(ctx context.Context) error) error {
+func (t *Transactor) RunInTx(
+	ctx context.Context,
+	fn func(ctx context.Context) error,
+) error {
 	// begin a transaction
 	tx, err := t.pool.Begin(ctx)
 	if err != nil {
