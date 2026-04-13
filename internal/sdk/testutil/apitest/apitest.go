@@ -7,24 +7,26 @@ import (
 	"github.com/Housiadas/cerberus/internal/core/audit"
 	"github.com/Housiadas/cerberus/internal/core/auth"
 	"github.com/Housiadas/cerberus/internal/core/user"
-	"github.com/jmoiron/sqlx"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 // Test contains functions for executing an integration test.
 type Test struct {
-	DB   *sqlx.DB
+	DB   *pgxpool.Pool
 	Mux  http.Handler
-	Auth *auth.Service
 	Core *Core
 }
 
 // New constructs a Test value for running api tests.
-func New(db *sqlx.DB, mux http.Handler, c *Core, authSvc *auth.Service) *Test {
+func New(
+	db *pgxpool.Pool,
+	mux http.Handler,
+	c *Core,
+) *Test {
 	return &Test{
 		DB:   db,
 		Mux:  mux,
 		Core: c,
-		Auth: authSvc,
 	}
 }
 

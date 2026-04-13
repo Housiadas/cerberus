@@ -2,24 +2,12 @@ package apitest
 
 import (
 	"context"
-	_ "embed"
 	"fmt"
 	"time"
 
+	db "github.com/Housiadas/cerberus/db/sqlc"
 	"github.com/google/uuid"
-	"github.com/jmoiron/sqlx"
-)
-
-// queries.
-var (
-	//go:embed query/seed_role.sql
-	seedRoleSQL string
-	//go:embed query/seed_user_role.sql
-	seedUserRoleSQL string
-	//go:embed query/seed_permission.sql
-	seedPermissionSQL string
-	//go:embed query/seed_role_permission.sql
-	seedRolePermissionSQL string
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 // SeedData represents users for api tests.
@@ -29,36 +17,63 @@ type SeedData struct {
 }
 
 // SeedRole inserts a role into the database and returns its generated UUID.
-func SeedRole(ctx context.Context, db *sqlx.DB, name string) (uuid.UUID, error) {
+func SeedRole(
+	ctx context.Context,
+	store *db.Store,
+	name string,
+) (uuid.UUID, error) {
 	id := uuid.New()
 	now := time.Now()
 
-	_, err := db.ExecContext(ctx, seedRoleSQL, id, name, now, now)
+	rol, err := store.CreateRole(ctx, db.CreateRoleParams{
+		ID:        id,
+		Name:      name,
+		CreatedAt: pgtype.Timestamp{Time: now, Valid: true},
+		UpdatedAt: pgtype.Timestamp{Time: now, Valid: true},
+	})
 	if err != nil {
 		return uuid.UUID{}, fmt.Errorf("seed role: name[%s]: %w", name, err)
 	}
 
-	return id, nil
+	return rol.ID, nil
 }
 
 // SeedPermission inserts a permission into the database and returns its generated UUID.
-func SeedPermission(ctx context.Context, db *sqlx.DB, name string) (uuid.UUID, error) {
+func SeedPermission(
+	ctx context.Context,
+	store *db.Store,
+	name string,
+) (uuid.UUID, error) {
 	id := uuid.New()
 	now := time.Now()
 
-	_, err := db.ExecContext(ctx, seedPermissionSQL, id, name, now, now)
+	perm, err := store.CreatePermission(ctx, db.CreatePermissionParams{
+		ID:        id,
+		Name:      name,
+		CreatedAt: pgtype.Timestamp{Time: now, Valid: true},
+		UpdatedAt: pgtype.Timestamp{Time: now, Valid: true},
+	})
 	if err != nil {
 		return uuid.UUID{}, fmt.Errorf("seed permission: name[%s]: %w", name, err)
 	}
 
-	return id, nil
+	return perm.ID, nil
 }
 
 // SeedRolePermission inserts a role_permission association into the database.
-func SeedRolePermission(ctx context.Context, db *sqlx.DB, roleID, permissionID uuid.UUID) error {
+func SeedRolePermission(
+	ctx context.Context,
+	store *db.Store,
+	roleID, permissionID uuid.UUID,
+) error {
 	now := time.Now()
 
-	_, err := db.ExecContext(ctx, seedRolePermissionSQL, roleID, permissionID, now, now)
+	_, err := store.CreateRolePermission(ctx, db.CreateRolePermissionParams{
+		RoleID:       roleID,
+		PermissionID: permissionID,
+		CreatedAt:    pgtype.Timestamp{Time: now, Valid: true},
+		UpdatedAt:    pgtype.Timestamp{Time: now, Valid: true},
+	})
 	if err != nil {
 		return fmt.Errorf(
 			"seed role_permission: roleID[%s] permissionID[%s]: %w",
@@ -72,12 +87,26 @@ func SeedRolePermission(ctx context.Context, db *sqlx.DB, roleID, permissionID u
 }
 
 // SeedUserRole inserts a user_role association into the database.
-func SeedUserRole(ctx context.Context, db *sqlx.DB, userID, roleID uuid.UUID) error {
+func SeedUserRole(
+	ctx context.Context,
+	store *db.Store,
+	userID, roleID uuid.UUID,
+) error {
 	now := time.Now()
 
-	_, err := db.ExecContext(ctx, seedUserRoleSQL, userID, roleID, now, now)
+	_, err := store.CreateUserRole(ctx, db.CreateUserRoleParams{
+		UserID:    userID,
+		RoleID:    roleID,
+		CreatedAt: pgtype.Timestamp{Time: now, Valid: true},
+		UpdatedAt: pgtype.Timestamp{Time: now, Valid: true},
+	})
 	if err != nil {
-		return fmt.Errorf("seed user_role: userID[%s] roleID[%s]: %w", userID, roleID, err)
+		return fmt.Errorf(
+			"seed user_role: userID[%s] roleID[%s]: %w",
+			userID,
+			roleID,
+			err,
+		)
 	}
 
 	return nil

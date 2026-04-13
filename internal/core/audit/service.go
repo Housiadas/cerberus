@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"time"
 
 	"github.com/Housiadas/cerberus/pkg/cursor"
 	"github.com/Housiadas/cerberus/pkg/logger"
@@ -16,22 +15,25 @@ import (
 // Service manages the set of APIs for audit access.
 type Service struct {
 	log    logger.Logger
-	storer Storer
+	storer storer
+	clock  clock
 }
 
 // NewService constructs an audit business API for use.
 func NewService(
 	log logger.Logger,
-	storer Storer,
+	storer storer,
+	clock clock,
 ) *Service {
 	return &Service{
 		log:    log,
 		storer: storer,
+		clock:  clock,
 	}
 }
 
 // Create adds a new audit record to the system.
-func (b *Service) Create(ctx context.Context, na NewAudit) (Audit, error) {
+func (s *Service) Create(ctx context.Context, na NewAudit) (Audit, error) {
 	ctx, span := telemetry.AddSpan(ctx, "business.auditbus.create")
 	defer span.End()
 
@@ -45,28 +47,18 @@ func (b *Service) Create(ctx context.Context, na NewAudit) (Audit, error) {
 		return Audit{}, fmt.Errorf("uuid: %w", err)
 	}
 
-	aud := New(
-		id,
-		na.ObjID,
-		na.ObjEntity,
-		na.ObjName,
-		na.ActorID,
-		na.Action,
-		jsonData,
-		na.Message,
-		time.Now(),
-	)
+	params := toCreateAuditParams(id, na, jsonData, s.clock.Now())
 
-	err = b.storer.Create(ctx, aud)
+	dbAud, err := s.storer.CreateAudit(ctx, params)
 	if err != nil {
 		return Audit{}, fmt.Errorf("create audit: %w", err)
 	}
 
-	return aud, nil
+	return toDomainAudit(dbAud), nil
 }
 
 // Query retrieves a list of existing audit records.
-func (b *Service) Query(
+func (s *Service) Query(
 	ctx context.Context,
 	filter QueryFilter,
 	orderBy order.By,
@@ -75,10 +67,12 @@ func (b *Service) Query(
 	ctx, span := telemetry.AddSpan(ctx, "repo.audit.query")
 	defer span.End()
 
-	audits, err := b.storer.Query(ctx, filter, orderBy, cur)
+	dbFilter := toDBQueryFilter(filter)
+
+	dbAudits, err := s.storer.QueryAudits(ctx, dbFilter, orderBy, cur)
 	if err != nil {
 		return nil, fmt.Errorf("query audits: %w", err)
 	}
 
-	return audits, nil
+	return toDomainAudits(dbAudits), nil
 }

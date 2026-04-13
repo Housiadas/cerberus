@@ -6,14 +6,13 @@ import (
 	"net/mail"
 	"time"
 
+	db "github.com/Housiadas/cerberus/db/sqlc"
 	"github.com/Housiadas/cerberus/internal/core/user"
-	"github.com/Housiadas/cerberus/internal/core/user/user_repo"
 	"github.com/Housiadas/cerberus/internal/sdk/eventbus"
 	namePck "github.com/Housiadas/cerberus/internal/types/name"
 	"github.com/Housiadas/cerberus/internal/types/password"
 	"github.com/Housiadas/cerberus/pkg/clock"
 	"github.com/Housiadas/cerberus/pkg/hasher"
-	"github.com/Housiadas/cerberus/pkg/pgsql"
 	"github.com/Housiadas/cerberus/pkg/uuidgen"
 )
 
@@ -25,11 +24,14 @@ func (cmd *Command) UserAdd(name, email, pass string) error {
 		return ErrHelp
 	}
 
-	db, err := pgsql.Open(cmd.db)
+	dbPool, err := db.Open(context.Background(), cmd.db)
 	if err != nil {
 		return fmt.Errorf("connect database: %w", err)
 	}
-	defer db.Close()
+	defer dbPool.Close()
+
+	store := db.NewStore(dbPool)
+	tx := db.NewTransactor(cmd.log, dbPool)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -37,10 +39,10 @@ func (cmd *Command) UserAdd(name, email, pass string) error {
 	hash := hasher.NewBcrypt()
 	clk := clock.NewClock()
 	uuidGen := uuidgen.NewV7()
-	tx := pgsql.NewTransactor(cmd.log, db)
+
 	userBus := user.NewService(
 		cmd.log,
-		user_repo.NewStore(cmd.log, db),
+		store,
 		uuidGen,
 		clk,
 		hash,

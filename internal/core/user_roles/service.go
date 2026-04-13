@@ -13,20 +13,10 @@ import (
 	"github.com/google/uuid"
 )
 
-// dispatcher defines the interface for domain event dispatching.
-type dispatcher interface {
-	Dispatch(ctx context.Context, ev event.DomainEvent) error
-}
-
-// transactor defines the interface for transaction management.
-type transactor interface {
-	RunInTx(ctx context.Context, fn func(ctx context.Context) error) error
-}
-
 // Service manages user role assignments.
 type Service struct {
 	log        logger.Logger
-	storer     Storer
+	storer     storer
 	tx         transactor
 	dispatcher dispatcher
 }
@@ -34,7 +24,7 @@ type Service struct {
 // NewService constructs a business API for use.
 func NewService(
 	log logger.Logger,
-	storer Storer,
+	storer storer,
 	tx transactor,
 	dispatcher dispatcher,
 ) *Service {
@@ -59,10 +49,13 @@ func (s *Service) Remove(ctx context.Context, userID uuid.UUID, roleID uuid.UUID
 func (s *Service) modify(ctx context.Context, userID, roleID uuid.UUID, action string) error {
 	txErr := s.tx.RunInTx(ctx, func(txCtx context.Context) error {
 		var opErr error
+
 		if action == audit.ActionAssign {
-			opErr = s.storer.Add(txCtx, userID, roleID)
+			params := toCreateUserRoleParams(userID, roleID)
+			_, opErr = s.storer.CreateUserRole(txCtx, params)
 		} else {
-			opErr = s.storer.Remove(txCtx, userID, roleID)
+			params := toDeleteUserRoleParams(userID, roleID)
+			opErr = s.storer.DeleteUserRole(txCtx, params)
 		}
 
 		if opErr != nil {

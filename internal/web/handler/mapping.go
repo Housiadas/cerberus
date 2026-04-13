@@ -1,9 +1,6 @@
 package handler
 
 import (
-	"bytes"
-	"encoding/json"
-
 	"github.com/Housiadas/cerberus/internal/core/account"
 	"github.com/Housiadas/cerberus/internal/core/audit"
 	"github.com/Housiadas/cerberus/internal/core/auth"
@@ -11,6 +8,7 @@ import (
 	"github.com/Housiadas/cerberus/internal/core/permission"
 	"github.com/Housiadas/cerberus/internal/core/role"
 	"github.com/Housiadas/cerberus/internal/core/user"
+	"github.com/Housiadas/cerberus/internal/sdk/jsonutil"
 	"github.com/Housiadas/cerberus/internal/web/handler/openapi"
 	"github.com/Housiadas/cerberus/pkg/clock"
 	"github.com/Housiadas/cerberus/pkg/cursor"
@@ -95,25 +93,10 @@ func toOpenAPIAudit(a audit.Audit) openapi.Audit {
 		ObjName:   a.ObjName().String(),
 		ActorId:   a.ActorID().String(),
 		Action:    a.Action(),
-		Data:      compactJSON(a.Data()),
+		Data:      jsonutil.Compact(a.Data()),
 		Message:   a.Message(),
 		Timestamp: clock.Format(new(a.Timestamp())),
 	}
-}
-
-func compactJSON(data []byte) string {
-	if len(data) == 0 {
-		return ""
-	}
-
-	var buf bytes.Buffer
-
-	err := json.Compact(&buf, data)
-	if err != nil {
-		return string(data)
-	}
-
-	return buf.String()
 }
 
 func toOpenAPIAudits(audits []audit.Audit) []openapi.Audit {

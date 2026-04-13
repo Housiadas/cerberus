@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	db "github.com/Housiadas/cerberus/db/sqlc"
 	"github.com/Housiadas/cerberus/internal/core/user"
 	"github.com/Housiadas/cerberus/internal/sdk/testutil/apitest"
 )
@@ -11,57 +12,59 @@ import (
 func insertRoleSeedData(test *apitest.Test) (apitest.SeedData, error) {
 	ctx := context.Background()
 
+	store := db.NewStore(test.DB)
+
 	usrs, err := user.TestSeedUsers(ctx, 2, test.Core.User)
 	if err != nil {
 		return apitest.SeedData{}, fmt.Errorf("seeding users: %w", err)
 	}
 
-	adminRoleID, err := apitest.SeedRole(ctx, test.DB, "admin")
+	adminRoleID, err := apitest.SeedRole(ctx, store, "admin")
 	if err != nil {
 		return apitest.SeedData{}, fmt.Errorf("seeding admin role: %w", err)
 	}
 
 	for _, permName := range []string{"role:read:all", "role:write", "role:delete", "user:read", "user:write"} {
-		pid, seedErr := apitest.SeedPermission(ctx, test.DB, permName)
+		pid, seedErr := apitest.SeedPermission(ctx, store, permName)
 		if seedErr != nil {
 			return apitest.SeedData{}, fmt.Errorf("seeding permission %s: %w", permName, seedErr)
 		}
 
-		if seedErr = apitest.SeedRolePermission(ctx, test.DB, adminRoleID, pid); seedErr != nil {
+		if seedErr = apitest.SeedRolePermission(ctx, store, adminRoleID, pid); seedErr != nil {
 			return apitest.SeedData{}, fmt.Errorf("seeding admin role permission %s: %w", permName, seedErr)
 		}
 	}
 
-	userRoleID, err := apitest.SeedRole(ctx, test.DB, "user")
+	userRoleID, err := apitest.SeedRole(ctx, store, "user")
 	if err != nil {
 		return apitest.SeedData{}, fmt.Errorf("seeding user role: %w", err)
 	}
 
 	for _, permName := range []string{"user:read:user", "user:write:user"} {
-		pid, seedErr := apitest.SeedPermission(ctx, test.DB, permName)
+		pid, seedErr := apitest.SeedPermission(ctx, store, permName)
 		if seedErr != nil {
 			return apitest.SeedData{}, fmt.Errorf("seeding permission %s: %w", permName, seedErr)
 		}
 
-		if seedErr = apitest.SeedRolePermission(ctx, test.DB, userRoleID, pid); seedErr != nil {
+		if seedErr = apitest.SeedRolePermission(ctx, store, userRoleID, pid); seedErr != nil {
 			return apitest.SeedData{}, fmt.Errorf("seeding user role permission %s: %w", permName, seedErr)
 		}
 	}
 
-	if err = apitest.SeedUserRole(ctx, test.DB, usrs[0].ID(), adminRoleID); err != nil {
+	if err = apitest.SeedUserRole(ctx, store, usrs[0].ID(), adminRoleID); err != nil {
 		return apitest.SeedData{}, fmt.Errorf("seeding admin user role: %w", err)
 	}
 
-	if err = apitest.SeedUserRole(ctx, test.DB, usrs[1].ID(), userRoleID); err != nil {
+	if err = apitest.SeedUserRole(ctx, store, usrs[1].ID(), userRoleID); err != nil {
 		return apitest.SeedData{}, fmt.Errorf("seeding regular user role: %w", err)
 	}
 
-	tkn1, err := test.Auth.GenerateAccessToken(ctx, usrs[0].ID().String())
+	tkn1, err := test.Core.Auth.GenerateAccessToken(ctx, usrs[0].ID().String())
 	if err != nil {
 		return apitest.SeedData{}, fmt.Errorf("seeding token: %w", err)
 	}
 
-	tkn2, err := test.Auth.GenerateAccessToken(ctx, usrs[1].ID().String())
+	tkn2, err := test.Core.Auth.GenerateAccessToken(ctx, usrs[1].ID().String())
 	if err != nil {
 		return apitest.SeedData{}, fmt.Errorf("seeding token: %w", err)
 	}

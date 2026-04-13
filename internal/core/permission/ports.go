@@ -2,22 +2,43 @@ package permission
 
 import (
 	"context"
+	"time"
 
+	db "github.com/Housiadas/cerberus/db/sqlc"
+	"github.com/Housiadas/cerberus/internal/types/event"
 	"github.com/Housiadas/cerberus/pkg/cursor"
 	"github.com/Housiadas/cerberus/pkg/order"
 	"github.com/google/uuid"
 )
 
-// Storer interface declares the behavior this package needs to persist and retrieve data.
-type Storer interface {
-	Create(ctx context.Context, p Permission) error
-	Update(ctx context.Context, p Permission) error
-	Delete(ctx context.Context, p Permission) error
-	Query(
+type generator interface {
+	Generate() (uuid.UUID, error)
+}
+
+// dispatcher defines the interface for domain event dispatching.
+type dispatcher interface {
+	Dispatch(ctx context.Context, ev event.DomainEvent) error
+}
+
+// transactor defines the interface for transaction management.
+type transactor interface {
+	RunInTx(ctx context.Context, fn func(ctx context.Context) error) error
+}
+
+type clock interface {
+	Now() time.Time
+}
+
+// storer interface declares the behavior this package needs to persist and retrieve data.
+type storer interface {
+	CreatePermission(ctx context.Context, arg db.CreatePermissionParams) (db.Permission, error)
+	UpdatePermission(ctx context.Context, arg db.UpdatePermissionParams) (db.Permission, error)
+	DeletePermission(ctx context.Context, id uuid.UUID) error
+	QueryPermissions(
 		ctx context.Context,
-		filter QueryFilter,
+		filter db.PermissionQueryFilter,
 		orderBy order.By,
 		cur cursor.Cursor,
-	) ([]Permission, error)
-	QueryByID(ctx context.Context, permissionID uuid.UUID) (Permission, error)
+	) ([]db.Permission, error)
+	GetPermissionByID(ctx context.Context, id uuid.UUID) (db.Permission, error)
 }

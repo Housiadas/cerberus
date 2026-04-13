@@ -8,12 +8,11 @@ import (
 	"syscall"
 	"time"
 
+	db "github.com/Housiadas/cerberus/db/sqlc"
 	"github.com/Housiadas/cerberus/internal/core/email_notification_outbox"
-	"github.com/Housiadas/cerberus/internal/core/email_notification_outbox/email_notification_outbox_repo"
 	"github.com/Housiadas/cerberus/internal/sdk/relay"
 	"github.com/Housiadas/cerberus/pkg/clock"
 	"github.com/Housiadas/cerberus/pkg/email"
-	"github.com/Housiadas/cerberus/pkg/pgsql"
 	"github.com/Housiadas/cerberus/pkg/telemetry"
 	"github.com/Housiadas/cerberus/pkg/uuidgen"
 )
@@ -26,17 +25,28 @@ const (
 // EmailNotificationRelay starts the email notification relay process that polls
 // the email_notification_outbox table and sends emails via SMTP.
 func (cmd *Command) EmailNotificationRelay() error {
-	db, err := pgsql.Open(cmd.db)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	ctx = telemetry.InjectTracing(ctx, cmd.tracer)
+
+	shutdown := make(chan os.Signal, 1)
+	signal.Notify(shutdown, syscall.SIGINT, syscall.SIGTERM)
+
+	done := make(chan struct{})
+
+	dbPool, err := db.Open(context.Background(), cmd.db)
 	if err != nil {
 		return fmt.Errorf("connect database: %w", err)
 	}
-	defer db.Close()
+	defer dbPool.Close()
+
+	store := db.NewStore(dbPool)
 
 	emailClient := email.New(cmd.emailConfig)
 
-	emailOutboxRepo := email_notification_outbox_repo.NewStore(cmd.log, db)
 	emailOutboxSvc := email_notification_outbox.NewService(
-		cmd.log, emailOutboxRepo, uuidgen.NewV7(), clock.NewClock(),
+		cmd.log, store, uuidgen.NewV7(), clock.NewClock(),
 	)
 
 	emailRelay := relay.NewEmailRelay(
@@ -47,16 +57,6 @@ func (cmd *Command) EmailNotificationRelay() error {
 		emailBatchSize,
 		emailMaxRetries,
 	)
-
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
-	ctx = telemetry.InjectTracing(ctx, cmd.tracer)
-
-	shutdown := make(chan os.Signal, 1)
-	signal.Notify(shutdown, syscall.SIGINT, syscall.SIGTERM)
-
-	done := make(chan struct{})
 
 	go func() {
 		emailRelay.Start(ctx)

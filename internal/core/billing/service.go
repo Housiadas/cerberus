@@ -17,14 +17,6 @@ import (
 	"github.com/stripe/stripe-go/v82"
 )
 
-type generator interface {
-	Generate() (uuid.UUID, error)
-}
-
-type clock interface {
-	Now() time.Time
-}
-
 // Service manages the set of APIs for billing operations.
 type Service struct {
 	stripeClient    *stripepkg.Client

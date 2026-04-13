@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/jmoiron/sqlx"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/stretchr/testify/require"
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/modules/postgres"
@@ -100,8 +100,8 @@ func NewSharedContainer(ctx context.Context, t tHelper) *SharedContainer {
 }
 
 // NewDB creates a fresh database within the shared container, runs migrations,
-// and returns a connected *sqlx.DB. The database is dropped on t.Cleanup.
-func (sc *SharedContainer) NewDB(t *testing.T) *sqlx.DB {
+// and returns. The database is dropped on t.Cleanup.
+func (sc *SharedContainer) NewDB(t *testing.T) *pgxpool.Pool {
 	t.Helper()
 
 	ctx := context.Background()
@@ -125,13 +125,18 @@ func (sc *SharedContainer) NewDB(t *testing.T) *sqlx.DB {
 	require.NoError(t, err)
 
 	// Open connection
-	db, err := sqlx.Open("pgx", testURL)
+	dbConnURL, err := pgxpool.ParseConfig(testURL)
 	if err != nil {
-		t.Fatalf("open test db %s: %s", dbName, err)
+		t.Fatalf("parse db config url %s: %s", dbName, err)
+	}
+
+	dbPool, err := pgxpool.NewWithConfig(ctx, dbConnURL)
+	if err != nil {
+		t.Fatalf("create db pool %s: %s", dbName, err)
 	}
 
 	t.Cleanup(func() {
-		db.Close()
+		dbPool.Close()
 
 		// adminDB at the end
 		defer adminDB.Close()
@@ -147,7 +152,7 @@ func (sc *SharedContainer) NewDB(t *testing.T) *sqlx.DB {
 		_, _ = adminDB.ExecContext(context.Background(), "DROP DATABASE IF EXISTS "+dbName)
 	})
 
-	return db
+	return dbPool
 }
 
 func testDBName() string {

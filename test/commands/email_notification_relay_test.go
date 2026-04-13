@@ -3,27 +3,26 @@ package commands_test
 import (
 	"bytes"
 	"context"
-	"encoding/json"
 	"testing"
 	"time"
 
+	db "github.com/Housiadas/cerberus/db/sqlc"
 	"github.com/Housiadas/cerberus/internal/core/email_notification_outbox"
-	"github.com/Housiadas/cerberus/internal/core/email_notification_outbox/email_notification_outbox_repo"
 	"github.com/Housiadas/cerberus/internal/sdk/relay"
-	"github.com/google/uuid"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-
 	"github.com/Housiadas/cerberus/pkg/clock"
 	"github.com/Housiadas/cerberus/pkg/email"
 	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/Housiadas/cerberus/pkg/uuidgen"
+	"github.com/google/uuid"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func Test_EmailNotificationRelay_RetriesFailedEntries(t *testing.T) {
 	t.Parallel()
 
-	db := sc.NewDB(t)
+	pool := sc.NewDB(t)
+	store := db.NewStore(pool)
 	ctx := context.Background()
 
 	var buf bytes.Buffer
@@ -31,31 +30,18 @@ func Test_EmailNotificationRelay_RetriesFailedEntries(t *testing.T) {
 	requestIDFn := func(context.Context) string { return "" }
 	log := logger.New(&buf, logger.LevelInfo, "TEST", traceIDFn, requestIDFn)
 
-	outboxRepo := email_notification_outbox_repo.NewStore(log, db)
 	uuidGen := uuidgen.NewV7()
 	clk := clock.NewClock()
-	outboxSvc := email_notification_outbox.NewService(log, outboxRepo, uuidGen, clk)
+	outboxSvc := email_notification_outbox.NewService(log, store, uuidGen, clk)
 
-	payload, err := json.Marshal(map[string]string{
-		"subject": "Reset your password",
-		"body":    "Click here to reset your password.",
+	err := outboxSvc.Create(ctx, email_notification_outbox.NewEmailNotificationOutbox{
+		EventType: "password.reset.requested",
+		ToEmail:   "test@example.com",
+		Payload: map[string]string{
+			"subject": "Reset your password",
+			"body":    "Click here to reset your password.",
+		},
 	})
-	require.NoError(t, err)
-
-	id, err := uuidGen.Generate()
-	require.NoError(t, err)
-
-	entry := email_notification_outbox.New(
-		id,
-		"password.reset.requested",
-		"test@example.com",
-		payload,
-		0,
-		time.Now().UTC(),
-		nil,
-	)
-
-	err = outboxRepo.Create(ctx, entry)
 	require.NoError(t, err)
 
 	// Verify entry is initially queryable
@@ -63,9 +49,12 @@ func Test_EmailNotificationRelay_RetriesFailedEntries(t *testing.T) {
 	require.NoError(t, err)
 	assert.Len(t, unprocessed, 1)
 
+	// Get the ID of the created entry
+	entryID := unprocessed[0].ID()
+
 	// Increment retry count to max (3)
 	for i := 0; i < 3; i++ {
-		err = outboxSvc.IncrementRetryCount(ctx, []uuid.UUID{id})
+		err = outboxSvc.IncrementRetryCount(ctx, []uuid.UUID{entryID})
 		require.NoError(t, err)
 	}
 
@@ -78,7 +67,8 @@ func Test_EmailNotificationRelay_RetriesFailedEntries(t *testing.T) {
 func Test_EmailNotificationRelay_MarkProcessed(t *testing.T) {
 	t.Parallel()
 
-	db := sc.NewDB(t)
+	pool := sc.NewDB(t)
+	store := db.NewStore(pool)
 	ctx := context.Background()
 
 	var buf bytes.Buffer
@@ -86,39 +76,32 @@ func Test_EmailNotificationRelay_MarkProcessed(t *testing.T) {
 	requestIDFn := func(context.Context) string { return "" }
 	log := logger.New(&buf, logger.LevelInfo, "TEST", traceIDFn, requestIDFn)
 
-	outboxRepo := email_notification_outbox_repo.NewStore(log, db)
 	uuidGen := uuidgen.NewV7()
 	clk := clock.NewClock()
-	outboxSvc := email_notification_outbox.NewService(log, outboxRepo, uuidGen, clk)
+	outboxSvc := email_notification_outbox.NewService(log, store, uuidGen, clk)
 
-	payload, err := json.Marshal(map[string]string{
-		"subject": "Reset your password",
-		"body":    "Click here to reset your password.",
+	err := outboxSvc.Create(ctx, email_notification_outbox.NewEmailNotificationOutbox{
+		EventType: "password.reset.requested",
+		ToEmail:   "mark@example.com",
+		Payload: map[string]string{
+			"subject": "Reset your password",
+			"body":    "Click here to reset your password.",
+		},
 	})
 	require.NoError(t, err)
 
-	id, err := uuidGen.Generate()
+	// Get the ID of the created entry
+	unprocessed, err := outboxSvc.QueryUnprocessed(ctx, 100, 3)
 	require.NoError(t, err)
-
-	entry := email_notification_outbox.New(
-		id,
-		"password.reset.requested",
-		"mark@example.com",
-		payload,
-		0,
-		time.Now().UTC(),
-		nil,
-	)
-
-	err = outboxRepo.Create(ctx, entry)
-	require.NoError(t, err)
+	require.Len(t, unprocessed, 1)
+	entryID := unprocessed[0].ID()
 
 	// Mark as processed
-	err = outboxSvc.MarkProcessed(ctx, []uuid.UUID{id})
+	err = outboxSvc.MarkProcessed(ctx, []uuid.UUID{entryID})
 	require.NoError(t, err)
 
 	// Should no longer appear in unprocessed
-	unprocessed, err := outboxSvc.QueryUnprocessed(ctx, 100, 3)
+	unprocessed, err = outboxSvc.QueryUnprocessed(ctx, 100, 3)
 	require.NoError(t, err)
 	assert.Len(t, unprocessed, 0, "processed entry should not appear in unprocessed query")
 }
@@ -126,7 +109,8 @@ func Test_EmailNotificationRelay_MarkProcessed(t *testing.T) {
 func Test_EmailNotificationRelay_ProcessesBatch_InvalidSMTP(t *testing.T) {
 	t.Parallel()
 
-	db := sc.NewDB(t)
+	pool := sc.NewDB(t)
+	store := db.NewStore(pool)
 	ctx := context.Background()
 
 	var buf bytes.Buffer
@@ -134,31 +118,18 @@ func Test_EmailNotificationRelay_ProcessesBatch_InvalidSMTP(t *testing.T) {
 	requestIDFn := func(context.Context) string { return "" }
 	log := logger.New(&buf, logger.LevelInfo, "TEST", traceIDFn, requestIDFn)
 
-	outboxRepo := email_notification_outbox_repo.NewStore(log, db)
 	uuidGen := uuidgen.NewV7()
 	clk := clock.NewClock()
-	outboxSvc := email_notification_outbox.NewService(log, outboxRepo, uuidGen, clk)
+	outboxSvc := email_notification_outbox.NewService(log, store, uuidGen, clk)
 
-	payload, err := json.Marshal(map[string]string{
-		"subject": "Reset your password",
-		"body":    "Click here to reset your password.",
+	err := outboxSvc.Create(ctx, email_notification_outbox.NewEmailNotificationOutbox{
+		EventType: "password.reset.requested",
+		ToEmail:   "fail@example.com",
+		Payload: map[string]string{
+			"subject": "Reset your password",
+			"body":    "Click here to reset your password.",
+		},
 	})
-	require.NoError(t, err)
-
-	id, err := uuidGen.Generate()
-	require.NoError(t, err)
-
-	entry := email_notification_outbox.New(
-		id,
-		"password.reset.requested",
-		"fail@example.com",
-		payload,
-		0,
-		time.Now().UTC(),
-		nil,
-	)
-
-	err = outboxRepo.Create(ctx, entry)
 	require.NoError(t, err)
 
 	// Use an email client pointing to an invalid SMTP server so sends will fail
@@ -170,13 +141,13 @@ func Test_EmailNotificationRelay_ProcessesBatch_InvalidSMTP(t *testing.T) {
 		From:     "noreply@example.com",
 	})
 
-	relay := relay.NewEmailRelay(log, outboxSvc, emailClient, 200*time.Millisecond, 100, 3)
+	emailRelay := relay.NewEmailRelay(log, outboxSvc, emailClient, 200*time.Millisecond, 100, 3)
 
 	relayCtx, relayCancel := context.WithCancel(ctx)
 	done := make(chan struct{})
 
 	go func() {
-		relay.Start(relayCtx)
+		emailRelay.Start(relayCtx)
 		close(done)
 	}()
 

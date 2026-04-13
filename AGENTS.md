@@ -72,6 +72,7 @@ Always check the skills and make sure you are using the idiomatic Go patterns.
 
 ## Verification 
 
+- Run `make sqlc` to generate sql code
 - Run `make mockery` to generate mocks for interfaces
 - Run `make lint` to run linters and check for code style errors
 - Run `make test` to run all the tests

@@ -3,12 +3,11 @@ package commands_test
 import (
 	"bytes"
 	"context"
-	"encoding/json"
 	"testing"
 	"time"
 
+	db "github.com/Housiadas/cerberus/db/sqlc"
 	"github.com/Housiadas/cerberus/internal/core/outbox"
-	"github.com/Housiadas/cerberus/internal/core/outbox/outbox_repo"
 	"github.com/Housiadas/cerberus/internal/sdk/relay"
 	"github.com/Housiadas/cerberus/pkg/clock"
 	"github.com/Housiadas/cerberus/pkg/logger"
@@ -21,50 +20,36 @@ import (
 func Test_OutboxRelay_ProcessesEntries(t *testing.T) {
 	t.Parallel()
 
-	db := sc.NewDB(t)
+	pool := sc.NewDB(t)
+	store := db.NewStore(pool)
 
 	var buf bytes.Buffer
-	traceIDFn := func(context.Context) string {
-		return ""
-	}
-	requestIDFn := func(context.Context) string {
-		return ""
-	}
+	traceIDFn := func(context.Context) string { return "" }
+	requestIDFn := func(context.Context) string { return "" }
 	log := logger.New(&buf, logger.LevelInfo, "TEST", traceIDFn, requestIDFn)
 
 	kafkaProducer := sharedKafka
 
-	outboxRepo := outbox_repo.NewStore(log, db)
 	uuidGen := uuidgen.NewV7()
 	clk := clock.NewClock()
-	outboxSvc := outbox.NewService(log, outboxRepo, uuidGen, clk)
+	outboxSvc := outbox.NewService(log, store, uuidGen, clk)
 
-	// Insert test outbox entries directly via the service
 	ctx := context.Background()
 
-	aggregateID1 := uuid.New()
-	aggregateID2 := uuid.New()
-
-	payload1, err := json.Marshal(map[string]string{"action": "created", "name": "test-user-1"})
+	err := outboxSvc.Create(ctx, outbox.NewOutbox{
+		EventType:   "user.created",
+		AggregateID: uuid.New(),
+		Topic:       "user-events",
+		Payload:     map[string]string{"action": "created", "name": "test-user-1"},
+	})
 	require.NoError(t, err)
 
-	payload2, err := json.Marshal(map[string]string{"action": "updated", "name": "test-user-2"})
-	require.NoError(t, err)
-
-	// Insert entries directly into DB via repo
-	now := time.Now().UTC()
-	id1, err := uuidGen.Generate()
-	require.NoError(t, err)
-	id2, err := uuidGen.Generate()
-	require.NoError(t, err)
-
-	entry1 := outbox.New(id1, "user.created", aggregateID1, "user-events", payload1, 0, now, nil)
-	entry2 := outbox.New(id2, "user.updated", aggregateID2, "user-events", payload2, 0, now, nil)
-
-	err = outboxRepo.Create(ctx, entry1)
-	require.NoError(t, err)
-
-	err = outboxRepo.Create(ctx, entry2)
+	err = outboxSvc.Create(ctx, outbox.NewOutbox{
+		EventType:   "user.updated",
+		AggregateID: uuid.New(),
+		Topic:       "user-events",
+		Payload:     map[string]string{"action": "updated", "name": "test-user-2"},
+	})
 	require.NoError(t, err)
 
 	// Verify entries are unprocessed
@@ -99,33 +84,26 @@ func Test_OutboxRelay_ProcessesEntries(t *testing.T) {
 func Test_OutboxRelay_RetriesFailedEntries(t *testing.T) {
 	t.Parallel()
 
-	db := sc.NewDB(t)
+	pool := sc.NewDB(t)
+	store := db.NewStore(pool)
 
 	var buf bytes.Buffer
-	traceIDFn := func(context.Context) string {
-		return ""
-	}
-	requestIDFn := func(context.Context) string {
-		return ""
-	}
+	traceIDFn := func(context.Context) string { return "" }
+	requestIDFn := func(context.Context) string { return "" }
 	log := logger.New(&buf, logger.LevelInfo, "TEST", traceIDFn, requestIDFn)
 
-	outboxRepo := outbox_repo.NewStore(log, db)
 	uuidGen := uuidgen.NewV7()
 	clk := clock.NewClock()
-	outboxSvc := outbox.NewService(log, outboxRepo, uuidGen, clk)
+	outboxSvc := outbox.NewService(log, store, uuidGen, clk)
 
 	ctx := context.Background()
 
-	id1, err := uuidGen.Generate()
-	require.NoError(t, err)
-
-	payload, err := json.Marshal(map[string]string{"action": "created"})
-	require.NoError(t, err)
-
-	entry := outbox.New(id1, "user.created", uuid.New(), "user-events", payload, 0, time.Now().UTC(), nil)
-
-	err = outboxRepo.Create(ctx, entry)
+	err := outboxSvc.Create(ctx, outbox.NewOutbox{
+		EventType:   "user.created",
+		AggregateID: uuid.New(),
+		Topic:       "user-events",
+		Payload:     map[string]string{"action": "created"},
+	})
 	require.NoError(t, err)
 
 	// Verify entry is queryable with maxRetries=3
@@ -133,9 +111,12 @@ func Test_OutboxRelay_RetriesFailedEntries(t *testing.T) {
 	require.NoError(t, err)
 	assert.Len(t, unprocessed, 1)
 
+	// Get the ID of the created entry
+	entryID := unprocessed[0].ID()
+
 	// Increment retry count 3 times to reach the threshold
 	for i := 0; i < 3; i++ {
-		err = outboxSvc.IncrementRetryCount(ctx, []uuid.UUID{id1})
+		err = outboxSvc.IncrementRetryCount(ctx, []uuid.UUID{entryID})
 		require.NoError(t, err)
 	}
 
@@ -148,41 +129,40 @@ func Test_OutboxRelay_RetriesFailedEntries(t *testing.T) {
 func Test_OutboxRelay_MarkProcessed(t *testing.T) {
 	t.Parallel()
 
-	db := sc.NewDB(t)
+	pool := sc.NewDB(t)
+	store := db.NewStore(pool)
 
 	var buf bytes.Buffer
-	traceIDFn := func(context.Context) string {
-		return ""
-	}
-	requestIDFn := func(context.Context) string {
-		return ""
-	}
+	traceIDFn := func(context.Context) string { return "" }
+	requestIDFn := func(context.Context) string { return "" }
 	log := logger.New(&buf, logger.LevelInfo, "TEST", traceIDFn, requestIDFn)
 
-	outboxRepo := outbox_repo.NewStore(log, db)
 	uuidGen := uuidgen.NewV7()
 	clk := clock.NewClock()
-	outboxSvc := outbox.NewService(log, outboxRepo, uuidGen, clk)
+	outboxSvc := outbox.NewService(log, store, uuidGen, clk)
 
 	ctx := context.Background()
 
-	id1, err := uuidGen.Generate()
+	err := outboxSvc.Create(ctx, outbox.NewOutbox{
+		EventType:   "user.deleted",
+		AggregateID: uuid.New(),
+		Topic:       "user-events",
+		Payload:     map[string]string{"action": "deleted"},
+	})
 	require.NoError(t, err)
 
-	payload, err := json.Marshal(map[string]string{"action": "deleted"})
+	// Get the ID of the created entry
+	unprocessed, err := outboxSvc.QueryUnprocessed(ctx, 100, 3)
 	require.NoError(t, err)
-
-	entry := outbox.New(id1, "user.deleted", uuid.New(), "user-events", payload, 0, time.Now().UTC(), nil)
-
-	err = outboxRepo.Create(ctx, entry)
-	require.NoError(t, err)
+	require.Len(t, unprocessed, 1)
+	entryID := unprocessed[0].ID()
 
 	// Mark as processed
-	err = outboxSvc.MarkProcessed(ctx, []uuid.UUID{id1})
+	err = outboxSvc.MarkProcessed(ctx, []uuid.UUID{entryID})
 	require.NoError(t, err)
 
 	// Verify it no longer appears in unprocessed
-	unprocessed, err := outboxSvc.QueryUnprocessed(ctx, 100, 3)
+	unprocessed, err = outboxSvc.QueryUnprocessed(ctx, 100, 3)
 	require.NoError(t, err)
 	assert.Len(t, unprocessed, 0, "processed entry should not appear in unprocessed query")
 }

@@ -4,24 +4,17 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"time"
 
+	db "github.com/Housiadas/cerberus/db/sqlc"
 	"github.com/Housiadas/cerberus/pkg/logger"
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
 )
-
-type generator interface {
-	Generate() (uuid.UUID, error)
-}
-
-type clock interface {
-	Now() time.Time
-}
 
 // Service manages the set of APIs for email notification outbox access.
 type Service struct {
 	log     logger.Logger
-	storer  Storer
+	storer  storer
 	uuidGen generator
 	clock   clock
 }
@@ -29,7 +22,7 @@ type Service struct {
 // NewService constructs the service.
 func NewService(
 	log logger.Logger,
-	storer Storer,
+	storer storer,
 	uuidGen generator,
 	clock clock,
 ) *Service {
@@ -57,9 +50,9 @@ func (s *Service) Create(
 	}
 
 	now := s.clock.Now()
-	e := New(id, no.EventType, no.ToEmail, payload, 0, now, nil)
+	params := toCreateNotificationOutboxParams(id, no, payload, now)
 
-	err = s.storer.Create(ctx, e)
+	_, err = s.storer.CreateNotificationOutbox(ctx, params)
 	if err != nil {
 		return fmt.Errorf("create: %w", err)
 	}
@@ -73,17 +66,22 @@ func (s *Service) QueryUnprocessed(
 	limit int,
 	maxRetries int,
 ) ([]EmailNotificationOutbox, error) {
-	entries, err := s.storer.QueryUnprocessed(ctx, limit, maxRetries)
+	params := db.GetUnprocessedNotificationOutboxParams{
+		Limit:      int32(limit),
+		MaxRetries: int32(maxRetries),
+	}
+
+	dbEntries, err := s.storer.GetUnprocessedNotificationOutbox(ctx, params)
 	if err != nil {
 		return nil, fmt.Errorf("query unprocessed: %w", err)
 	}
 
-	return entries, nil
+	return toDomainEmailNotificationOutboxes(dbEntries), nil
 }
 
 // IncrementRetryCount increments the retry count for the given email outbox entry IDs.
 func (s *Service) IncrementRetryCount(ctx context.Context, ids []uuid.UUID) error {
-	err := s.storer.IncrementRetryCount(ctx, ids)
+	err := s.storer.IncrementRetryNotificationOutbox(ctx, ids)
 	if err != nil {
 		return fmt.Errorf("increment retry count: %w", err)
 	}
@@ -95,7 +93,12 @@ func (s *Service) IncrementRetryCount(ctx context.Context, ids []uuid.UUID) erro
 func (s *Service) MarkProcessed(ctx context.Context, ids []uuid.UUID) error {
 	now := s.clock.Now()
 
-	err := s.storer.MarkProcessed(ctx, ids, now)
+	params := db.MarkProcessedNotificationOutboxParams{
+		ProcessedAt: pgtype.Timestamp{Time: now, Valid: true},
+		Ids:         ids,
+	}
+
+	err := s.storer.MarkProcessedNotificationOutbox(ctx, params)
 	if err != nil {
 		return fmt.Errorf("mark processed: %w", err)
 	}

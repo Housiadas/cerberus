@@ -11,7 +11,7 @@ type Config struct {
 	DBUser                string
 	DBPassword            string
 	DBName                string
-	DBPort                string
+	DBPort                uint16
 	PostgresImage         string
 	PostgresContainerName string
 }

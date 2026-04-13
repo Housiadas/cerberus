@@ -19,7 +19,7 @@ type Audit struct {
 	action    string
 	data      json.RawMessage
 	message   string
-	timestamp time.Time
+	createdAt time.Time
 }
 
 // New constructs an Audit from its individual fields.
@@ -32,7 +32,7 @@ func New(
 	action string,
 	data json.RawMessage,
 	message string,
-	timestamp time.Time,
+	createdAt time.Time,
 ) Audit {
 	return Audit{
 		id:        id,
@@ -43,7 +43,7 @@ func New(
 		action:    action,
 		data:      data,
 		message:   message,
-		timestamp: timestamp,
+		createdAt: createdAt,
 	}
 }
 
@@ -72,7 +72,7 @@ func (a Audit) Data() json.RawMessage { return a.data }
 func (a Audit) Message() string { return a.message }
 
 // Timestamp returns the audit timestamp.
-func (a Audit) Timestamp() time.Time { return a.timestamp }
+func (a Audit) Timestamp() time.Time { return a.createdAt }
 
 // NewAudit represents the information needed to create a new audit record.
 type NewAudit struct {

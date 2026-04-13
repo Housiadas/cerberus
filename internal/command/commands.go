@@ -3,10 +3,10 @@
 package command
 
 import (
+	db "github.com/Housiadas/cerberus/db/sqlc"
 	"github.com/Housiadas/cerberus/internal/config"
 	"github.com/Housiadas/cerberus/pkg/email"
 	"github.com/Housiadas/cerberus/pkg/logger"
-	"github.com/Housiadas/cerberus/pkg/pgsql"
 	"go.opentelemetry.io/otel/trace"
 )
 
@@ -20,14 +20,14 @@ type Config struct {
 	DB      config.DB
 	Kafka   config.Kafka
 	Email   config.Email
-	Log     *logger.Service
+	Log     logger.Logger
 	Tracer  trace.Tracer
 	Version config.Version
 }
 
 type Command struct {
-	db          pgsql.Config
-	log         *logger.Service
+	db          db.Config
+	log         logger.Logger
 	tracer      trace.Tracer
 	kafka       config.Kafka
 	emailConfig email.Config
@@ -36,14 +36,14 @@ type Command struct {
 
 func New(cfg Config) *Command {
 	return &Command{
-		db: pgsql.Config{
-			User:         cfg.DB.User,
-			Password:     cfg.DB.Password,
-			Host:         cfg.DB.Host,
-			Name:         cfg.DB.Name,
-			MaxIdleConns: cfg.DB.MaxIdleConns,
-			MaxOpenConns: cfg.DB.MaxOpenConns,
-			DisableTLS:   cfg.DB.DisableTLS,
+		db: db.Config{
+			User:       cfg.DB.User,
+			Password:   cfg.DB.Password,
+			Host:       cfg.DB.Host,
+			Name:       cfg.DB.Name,
+			MinConns:   cfg.DB.MinConns,
+			MaxConns:   cfg.DB.MaxConns,
+			DisableTLS: cfg.DB.DisableTLS,
 		},
 		log:   cfg.Log,
 		kafka: cfg.Kafka,

@@ -9,8 +9,8 @@ import (
 
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/postgres"
-	_ "github.com/golang-migrate/migrate/v4/source/file" // This is for golang-migrate
-	_ "github.com/jackc/pgx/v5/stdlib"                   // This is for golang-migrate sqlx driver
+	_ "github.com/golang-migrate/migrate/v4/source/file" // for migrate
+	_ "github.com/jackc/pgx/v5/stdlib"                   // for the driver
 )
 
 func migration(dbURL string) error {
@@ -49,7 +49,7 @@ func getMigrationsDir() string {
 	}
 
 	basepath := filepath.Dir(file)
-	migrationsPath := filepath.Join(basepath, "../../../../migrations")
+	migrationsPath := filepath.Join(basepath, "../../../../db/migrations")
 
 	return "file://" + migrationsPath
 }

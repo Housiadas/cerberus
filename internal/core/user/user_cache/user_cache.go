@@ -4,10 +4,9 @@ package user_cache
 import (
 	"context"
 	"fmt"
-	"net/mail"
 	"time"
 
-	"github.com/Housiadas/cerberus/internal/core/user"
+	db "github.com/Housiadas/cerberus/db/sqlc"
 	"github.com/Housiadas/cerberus/internal/sdk/distributed_storage"
 	"github.com/Housiadas/cerberus/pkg/cachemetrics"
 	"github.com/Housiadas/cerberus/pkg/cursor"
@@ -35,18 +34,33 @@ type redisClient interface {
 	Pipeline() redis.Pipeliner
 }
 
+// storer interface declares the behavior this package needs to persist and retrieve data.
+type storer interface {
+	CreateUser(ctx context.Context, arg db.CreateUserParams) (db.User, error)
+	UpdateUser(ctx context.Context, arg db.UpdateUserParams) (db.User, error)
+	DeleteUser(ctx context.Context, id uuid.UUID) error
+	QueryUsers(
+		ctx context.Context,
+		filter db.UserQueryFilter,
+		orderBy order.By,
+		cur cursor.Cursor,
+	) ([]db.User, error)
+	GetUserByID(ctx context.Context, id uuid.UUID) (db.User, error)
+	GetUserByEmail(ctx context.Context, email string) (db.User, error)
+}
+
 // Store manages the set of APIs for user data and caching.
 type Store struct {
-	storer user.Storer
+	storer storer
 	log    logger.Logger
-	cache  *sturdyc.Client[user.User]
+	cache  *sturdyc.Client[db.User]
 }
 
 // NewStore constructs the api for data and caching access.
 func NewStore(
 	ctx context.Context,
 	log logger.Logger,
-	storer user.Storer,
+	storer storer,
 	red redisClient,
 ) *Store {
 	// Wire up OTel metrics. Errors are non-fatal: the cache works without metrics.
@@ -65,54 +79,59 @@ func NewStore(
 	return &Store{
 		log:    log,
 		storer: storer,
-		cache:  sturdyc.New[user.User](capacity, numShards, ttl, evictionPercentage, opts...),
+		cache:  sturdyc.New[db.User](capacity, numShards, ttl, evictionPercentage, opts...),
 	}
 }
 
-// Create inserts a new user into the database.
-func (s *Store) Create(ctx context.Context, usr user.User) error {
-	err := s.storer.Create(ctx, usr)
+// CreateUser inserts a new user into the database.
+func (s *Store) CreateUser(ctx context.Context, arg db.CreateUserParams) (db.User, error) {
+	dbUser, err := s.storer.CreateUser(ctx, arg)
 	if err != nil {
-		return fmt.Errorf("user cache create: %w", err)
+		return db.User{}, fmt.Errorf("user cache create: %w", err)
 	}
 
-	return nil
+	return dbUser, nil
 }
 
-// Update modifies an existing user in the database and invalidates the cache.
-func (s *Store) Update(ctx context.Context, usr user.User) error {
-	err := s.storer.Update(ctx, usr)
+// UpdateUser modifies an existing user in the database and invalidates the cache.
+func (s *Store) UpdateUser(ctx context.Context, arg db.UpdateUserParams) (db.User, error) {
+	dbUser, err := s.storer.UpdateUser(ctx, arg)
 	if err != nil {
-		return fmt.Errorf("user cache update: %w", err)
+		return db.User{}, fmt.Errorf("user cache update: %w", err)
 	}
 
-	s.cache.Delete(usr.ID().String())
-	s.cache.Delete(usr.Email().Address)
+	s.cache.Delete(dbUser.ID.String())
+	s.cache.Delete(dbUser.Email)
 
-	return nil
+	return dbUser, nil
 }
 
-// Delete removes a user from the database and invalidates the cache.
-func (s *Store) Delete(ctx context.Context, usr user.User) error {
-	err := s.storer.Delete(ctx, usr)
+// DeleteUser removes a user from the database and invalidates the cache.
+func (s *Store) DeleteUser(ctx context.Context, id uuid.UUID) error {
+	dbUser, err := s.GetUserByID(ctx, id)
+	if err != nil {
+		return fmt.Errorf("user not found cache delete: %w", err)
+	}
+
+	err = s.storer.DeleteUser(ctx, id)
 	if err != nil {
 		return fmt.Errorf("user cache delete: %w", err)
 	}
 
-	s.cache.Delete(usr.ID().String())
-	s.cache.Delete(usr.Email().Address)
+	s.cache.Delete(dbUser.ID.String())
+	s.cache.Delete(dbUser.Email)
 
 	return nil
 }
 
-// Query retrieves a list of existing users from the database.
-func (s *Store) Query(
+// QueryUsers retrieves a list of existing users from the database.
+func (s *Store) QueryUsers(
 	ctx context.Context,
-	filter user.QueryFilter,
+	filter db.UserQueryFilter,
 	orderBy order.By,
 	cur cursor.Cursor,
-) ([]user.User, error) {
-	users, err := s.storer.Query(ctx, filter, orderBy, cur)
+) ([]db.User, error) {
+	users, err := s.storer.QueryUsers(ctx, filter, orderBy, cur)
 	if err != nil {
 		return nil, fmt.Errorf("user cache query: %w", err)
 	}
@@ -120,33 +139,39 @@ func (s *Store) Query(
 	return users, nil
 }
 
-// QueryByID gets the specified user, checking L1 -> L2 -> DB.
-func (s *Store) QueryByID(ctx context.Context, userID uuid.UUID) (user.User, error) {
+// GetUserByID gets the specified user, checking L1 -> L2 -> DB.
+func (s *Store) GetUserByID(
+	ctx context.Context,
+	id uuid.UUID,
+) (db.User, error) {
 	usr, err := s.cache.GetOrFetch(
 		ctx,
-		userID.String(),
-		func(ctx context.Context) (user.User, error) {
-			return s.storer.QueryByID(ctx, userID)
+		id.String(),
+		func(ctx context.Context) (db.User, error) {
+			return s.storer.GetUserByID(ctx, id)
 		},
 	)
 	if err != nil {
-		return user.User{}, fmt.Errorf("user cache query by id: %w", err)
+		return db.User{}, fmt.Errorf("user cache query by id: %w", err)
 	}
 
 	return usr, nil
 }
 
-// QueryByEmail gets the specified user by email, checking L1 -> L2 -> DB.
-func (s *Store) QueryByEmail(ctx context.Context, email mail.Address) (user.User, error) {
+// GetUserByEmail gets the specified user by email, checking L1 -> L2 -> DB.
+func (s *Store) GetUserByEmail(
+	ctx context.Context,
+	email string,
+) (db.User, error) {
 	usr, err := s.cache.GetOrFetch(
 		ctx,
-		email.Address,
-		func(ctx context.Context) (user.User, error) {
-			return s.storer.QueryByEmail(ctx, email)
+		email,
+		func(ctx context.Context) (db.User, error) {
+			return s.storer.GetUserByEmail(ctx, email)
 		},
 	)
 	if err != nil {
-		return user.User{}, fmt.Errorf("user cache query by email: %w", err)
+		return db.User{}, fmt.Errorf("user cache query by email: %w", err)
 	}
 
 	return usr, nil

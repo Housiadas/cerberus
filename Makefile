@@ -96,17 +96,17 @@ go/rest/build:
 ## db/migrate/create name=$1: Create new migration files
 .PHONY: db/migrate/create
 db/migrate/create:
-	$(MIGRATE) create -seq -ext=.sql -dir=./migrations $(INPUT)
+	$(MIGRATE) create -seq -ext=.sql -dir=./db/migrations $(INPUT)
 
 ## db/migrate/up: Apply all up database migrations
 .PHONY: db/migrate/up
 db/migrate/up:
-	$(MIGRATE) -path=./migrations -database=${MIGRATION_DB_DSN} up
+	$(MIGRATE) -path=./db/migrations -database=${MIGRATION_DB_DSN} up
 
 ## db/migrate/down: Apply all down database migrations (DROP Database)
 .PHONY: db/migrate/down
 db/migrate/down:
-	$(MIGRATE) -path=./migrations -database=${MIGRATION_DB_DSN} down
+	$(MIGRATE) -path=./db/migrations -database=${MIGRATION_DB_DSN} down
 
 ## ================ #
 ## Quality Control
@@ -318,6 +318,14 @@ mockery:
 	-v "$(shell pwd)":/src \
 	-w /src \
 	vektra/mockery:3.7
+
+## sqlc: Generate sql code
+.PHONY: sqlc
+sqlc:
+	docker run --rm \
+	-v $(PWD):/src \
+	-w /src \
+	sqlc/sqlc:latest generate
 
 ## metrics: See metrics
 .PHONY: metrics

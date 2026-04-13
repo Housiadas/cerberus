@@ -20,6 +20,10 @@ const (
 	refreshTokenTTL = 7 * 24 * time.Hour
 )
 
+type clock interface {
+	Now() time.Time
+}
+
 // transactor defines the interface for transaction management.
 type transactor interface {
 	RunInTx(ctx context.Context, fn func(ctx context.Context) error) error
@@ -30,8 +34,9 @@ type Config struct {
 	Issuer                     string
 	FrontendURL                string
 	AccessTokenSecret          []byte
+	Clock                      clock
 	TX                         transactor
-	Log                        *logger.Service
+	Log                        logger.Logger
 	UserService                *user.Service
 	RefreshTokenService        *refresh_token.Service
 	ResetTokenService          *reset_token.Service
@@ -45,8 +50,9 @@ type Service struct {
 	issuer                     string
 	secret                     []byte
 	frontendURL                string
+	clock                      clock
 	parser                     *jwt.Parser
-	log                        *logger.Service
+	log                        logger.Logger
 	tx                         transactor
 	method                     jwt.SigningMethod
 	userService                *user.Service
@@ -79,6 +85,7 @@ func NewService(cfg Config) *Service {
 		issuer:      cfg.Issuer,
 		frontendURL: cfg.FrontendURL,
 		secret:      cfg.AccessTokenSecret,
+		clock:       cfg.Clock,
 		method:      jwt.GetSigningMethod(jwt.SigningMethodHS256.Name),
 		parser: jwt.NewParser(
 			jwt.WithValidMethods([]string{jwt.SigningMethodHS256.Name}),
@@ -99,7 +106,7 @@ func (s *Service) Issuer() string {
 // CheckExpiredToken validates the expiration claim of a JWT.
 func (s *Service) CheckExpiredToken(claims Claims) error {
 	expiredAt := claims.ExpiresAt
-	if time.Now().Unix() > expiredAt.Unix() {
+	if s.clock.Now().Unix() > expiredAt.Unix() {
 		return ErrExpiredToken
 	}
 

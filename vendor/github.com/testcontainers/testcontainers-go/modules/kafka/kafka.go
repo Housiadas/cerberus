@@ -50,7 +50,8 @@ func Run(ctx context.Context, img string, opts ...testcontainers.ContainerCustom
 		return nil, err
 	}
 
-	moduleOpts := []testcontainers.ContainerCustomizer{
+	moduleOpts := make([]testcontainers.ContainerCustomizer, 0, 5+len(opts)+1)
+	moduleOpts = append(moduleOpts,
 		testcontainers.WithExposedPorts(string(publicPort)),
 		testcontainers.WithEnv(map[string]string{
 			// envVars {
@@ -89,7 +90,7 @@ func Run(ctx context.Context, img string, opts ...testcontainers.ContainerCustom
 				},
 			},
 		}),
-	}
+	)
 
 	moduleOpts = append(moduleOpts, opts...)
 
@@ -217,6 +218,11 @@ func validateKRaftVersion(fqName string) error {
 	// semver requires the version to start with a "v"
 	if !strings.HasPrefix(version, "v") {
 		version = "v" + version
+	}
+
+	// remove the architecture suffix
+	if strings.HasSuffix(version, ".amd64") || strings.HasSuffix(version, ".arm64") {
+		return fmt.Errorf("invalid image tag %q: architecture suffixes like .arm64 or .amd64 are not valid semver; please use a multi-architecture image instead", version)
 	}
 
 	if semver.Compare(version, "v7.4.0") < 0 { // version < v7.4.0

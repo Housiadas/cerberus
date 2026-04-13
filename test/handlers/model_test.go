@@ -5,6 +5,7 @@ import (
 	"github.com/Housiadas/cerberus/internal/core/permission"
 	"github.com/Housiadas/cerberus/internal/core/role"
 	"github.com/Housiadas/cerberus/internal/core/user"
+	"github.com/Housiadas/cerberus/internal/sdk/jsonutil"
 	"github.com/Housiadas/cerberus/internal/web/handler/openapi"
 	"github.com/Housiadas/cerberus/pkg/clock"
 )
@@ -17,7 +18,7 @@ func toTestAudit(a audit.Audit) openapi.Audit {
 		ObjName:   a.ObjName().String(),
 		ActorId:   a.ActorID().String(),
 		Action:    a.Action(),
-		Data:      string(a.Data()),
+		Data:      jsonutil.Compact(a.Data()),
 		Message:   a.Message(),
 		Timestamp: clock.Format(new(a.Timestamp())),
 	}

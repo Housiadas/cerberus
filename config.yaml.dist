@@ -16,9 +16,8 @@ db:
   name: "housi_db"
   port: "5432"
   host: "localhost:5432"
-  maxOpenConnections: "25"
-  maxIdleConnections: "25"
-  connectionIdleTime: "30s"
+  minConns: "25"
+  maxConns: "100"
   disableTLS: true
   postgresImage: "postgres:17.5"
   postgresContainerName: "db-container"

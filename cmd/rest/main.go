@@ -11,12 +11,12 @@ import (
 	"syscall"
 	"time"
 
+	db "github.com/Housiadas/cerberus/db/sqlc"
 	"github.com/Housiadas/cerberus/internal/config"
 	ctxPck "github.com/Housiadas/cerberus/internal/sdk/context"
 	"github.com/Housiadas/cerberus/internal/web/handler"
 	"github.com/Housiadas/cerberus/pkg/debug"
 	"github.com/Housiadas/cerberus/pkg/logger"
-	"github.com/Housiadas/cerberus/pkg/pgsql"
 	"github.com/Housiadas/cerberus/pkg/telemetry"
 	"github.com/Housiadas/cerberus/pkg/vault"
 	_ "github.com/jackc/pgx/v5/stdlib"
@@ -78,23 +78,34 @@ func run(ctx context.Context, log *logger.Service) error {
 	expvar.NewString("build").Set(cfg.App.Version.Build)
 
 	// -------------------------------------------------------------------------
+	// Initialize Telemetry
+	// -------------------------------------------------------------------------
+	tel, err := initTelemetry(ctx, cfg, log)
+	if err != nil {
+		return fmt.Errorf("initializing telemetry: %w", err)
+	}
+
+	defer tel.Shutdown(ctx) //nolint:errcheck
+
+	// -------------------------------------------------------------------------
 	// Initialize Database
 	// -------------------------------------------------------------------------
 	log.Info(ctx, "startup", "status", "initializing database", "host port", cfg.DB.Host)
 
-	db, err := pgsql.Open(pgsql.Config{
-		User:         cfg.DB.User,
-		Password:     cfg.DB.Password,
-		Host:         cfg.DB.Host,
-		Name:         cfg.DB.Name,
-		MaxIdleConns: cfg.DB.MaxIdleConns,
-		MaxOpenConns: cfg.DB.MaxOpenConns,
-		DisableTLS:   cfg.DB.DisableTLS,
+	dbPool, err := db.Open(ctx, db.Config{
+		User:       cfg.DB.User,
+		Password:   cfg.DB.Password,
+		Host:       cfg.DB.Host,
+		Name:       cfg.DB.Name,
+		Port:       cfg.DB.Port,
+		MinConns:   cfg.DB.MinConns,
+		MaxConns:   cfg.DB.MaxConns,
+		DisableTLS: cfg.DB.DisableTLS,
 	})
 	if err != nil {
 		return fmt.Errorf("connecting to db: %w", err)
 	}
-	defer db.Close()
+	defer dbPool.Close()
 
 	// -------------------------------------------------------------------------
 	// Initialize Redis
@@ -106,16 +117,6 @@ func run(ctx context.Context, log *logger.Service) error {
 		return fmt.Errorf("initializing redis: %w", err)
 	}
 	defer redClose()
-
-	// -------------------------------------------------------------------------
-	// Initialize Telemetry
-	// -------------------------------------------------------------------------
-	tel, err := initTelemetry(ctx, cfg, log)
-	if err != nil {
-		return fmt.Errorf("initializing telemetry: %w", err)
-	}
-
-	defer tel.Shutdown(ctx) //nolint:errcheck
 
 	// -------------------------------------------------------------------------
 	// Initialize Vault Client
@@ -161,7 +162,7 @@ func run(ctx context.Context, log *logger.Service) error {
 		ServiceName:       cfg.App.Name,
 		Build:             build,
 		Cors:              cfg.Cors,
-		DB:                db,
+		DB:                dbPool,
 		Redis:             redisClient,
 		Log:               log,
 		Tracer:            tel.TracerProvider().Tracer(cfg.App.Name),

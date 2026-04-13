@@ -38,7 +38,7 @@ type ConsumerConfig struct {
 // ConsumerClient is a Kafka consumer with a worker pool and batcher.
 type ConsumerClient struct {
 	consumer     *kafka.Consumer
-	log          *logger.Service
+	log          logger.Logger
 	workers      int
 	batchSize    int
 	flushTimeout time.Duration
@@ -46,7 +46,7 @@ type ConsumerClient struct {
 }
 
 // NewConsumer creates a new ConsumerClient.
-func NewConsumer(log *logger.Service, cfg ConsumerConfig) (*ConsumerClient, error) {
+func NewConsumer(log logger.Logger, cfg ConsumerConfig) (*ConsumerClient, error) {
 	if cfg.Workers <= 0 {
 		cfg.Workers = defaultWorkers
 	}
