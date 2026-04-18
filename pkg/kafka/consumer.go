@@ -101,6 +101,16 @@ func (c *ConsumerClient) Subscribe(topic string) error {
 	return nil
 }
 
+// SubscribeTopics subscribes to the given Kafka topics
+func (c *ConsumerClient) SubscribeTopics(topics []string) error {
+	err := c.consumer.SubscribeTopics(topics, nil)
+	if err != nil {
+		return fmt.Errorf("kafka subscribe topics error: %w", err)
+	}
+
+	return nil
+}
+
 // Consume starts the worker pool and batcher.
 // It blocks until the context is canceled or a fatal error occurs.
 func (c *ConsumerClient) Consume(

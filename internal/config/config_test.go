@@ -9,11 +9,12 @@ import (
 
 func validConfig() Config {
 	return Config{
-		App:   App{Name: "cerberus"},
-		Rest:  Rest{API: ":8080"},
-		DB:    DB{Host: "localhost", User: "user", Password: "pass", Name: "cerberus"},
-		Redis: Redis{Host: "localhost:6379"},
-		Vault: Vault{Address: "http://vault:8200", Token: "root"},
+		App:           App{Name: "cerberus"},
+		Rest:          Rest{API: ":8080"},
+		DB:            DB{Host: "localhost", User: "user", Password: "pass", Name: "cerberus"},
+		Redis:         Redis{Host: "localhost:6379"},
+		Vault:         Vault{Address: "http://vault:8200", Token: "root"},
+		Elasticsearch: Elasticsearch{Hosts: "localhost:9200", Password: "secret"},
 	}
 }
 

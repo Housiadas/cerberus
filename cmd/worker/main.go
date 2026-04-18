@@ -73,11 +73,12 @@ func run() error {
 	// Initialize commands
 	// -------------------------------------------------------------------------
 	cmd := command.New(command.Config{
-		DB:     cfg.DB,
-		Kafka:  cfg.Kafka,
-		Email:  cfg.Email,
-		Log:    log,
-		Tracer: tracer,
+		DB:            cfg.DB,
+		Kafka:         cfg.Kafka,
+		Email:         cfg.Email,
+		Elasticsearch: cfg.Elasticsearch,
+		Log:           log,
+		Tracer:        tracer,
 		Version: config.Version{
 			Description: "Worker",
 			Build:       build,
@@ -111,10 +112,17 @@ func processCommands(args []string, cmd *command.Command) error {
 			return fmt.Errorf("email notification relay: %w", err)
 		}
 
+	case command.ElasticSearchIndexer:
+		err := cmd.Indexer()
+		if err != nil {
+			return fmt.Errorf("indexer: %w", err)
+		}
+
 	default:
 		fmt.Println("useradd:                  add a new user to the database")
 		fmt.Println("outbox-relay:             start the outbox relay process")
 		fmt.Println("email-notification-relay: start the email notification relay process")
+		fmt.Println("elasticsearch-indexer:    start the elasticsearch indexer process")
 		fmt.Println("provide a command")
 
 		return command.ErrHelp

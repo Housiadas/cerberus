@@ -39,7 +39,8 @@ func NewBatcher(
 	}
 }
 
-// Run reads from processedCh and flushes batches. It returns when processedCh is closed.
+// Run reads from processedCh and flushes batches.
+// It returns when processedCh is closed.
 func (b *Batcher) Run(ctx context.Context, processedCh <-chan *kafka.Message) error {
 	ticker := time.NewTicker(b.flushTimeout)
 	defer ticker.Stop()
