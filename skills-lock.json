@@ -6,10 +6,20 @@
       "sourceType": "github",
       "computedHash": "d31e234f0c90694a670222cdd1dafa853e051d7066beda389f1097c22dadd461"
     },
+    "golang-concurrency": {
+      "source": "samber/cc-skills-golang",
+      "sourceType": "github",
+      "computedHash": "956e09e5533a5b2b33255ca1542fed48394b4b49d7a8c6bad28bd1ec4b930d25"
+    },
     "golang-database": {
       "source": "samber/cc-skills-golang",
       "sourceType": "github",
       "computedHash": "16a982a8e40660486d662049f391f4c6ddba8166c56af7d59757b7d09e0c876c"
+    },
+    "golang-error-handling": {
+      "source": "samber/cc-skills-golang",
+      "sourceType": "github",
+      "computedHash": "4c0d3f294044d3287ba183d2c06ac5381b99ef74d0b4c5485583c7e5505cdf5a"
     },
     "golang-patterns": {
       "source": "affaan-m/everything-claude-code",
