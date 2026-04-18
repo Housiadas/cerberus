@@ -54,15 +54,6 @@ func toDomainAccount(a db.Account) Account {
 	)
 }
 
-func toDomainAccounts(dbAccounts []db.Account) []Account {
-	accounts := make([]Account, len(dbAccounts))
-	for i, a := range dbAccounts {
-		accounts[i] = toDomainAccount(a)
-	}
-
-	return accounts
-}
-
 func toDomainAccountFromGetByID(a db.GetAccountByIDRow) Account {
 	return New(
 		a.ID,

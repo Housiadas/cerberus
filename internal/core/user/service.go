@@ -11,6 +11,7 @@ import (
 	"github.com/Housiadas/cerberus/internal/types/event"
 	"github.com/Housiadas/cerberus/pkg/cursor"
 	"github.com/Housiadas/cerberus/pkg/logger"
+	"github.com/Housiadas/cerberus/pkg/mapper"
 	"github.com/Housiadas/cerberus/pkg/order"
 	"github.com/google/uuid"
 )
@@ -126,7 +127,7 @@ func (c *Service) Query(
 		return nil, fmt.Errorf("query: %w", err)
 	}
 
-	return toDomainUsers(dbUsers), nil
+	return mapper.MapSlice(dbUsers, toDomainUser), nil
 }
 
 // QueryByID finds the user by the specified ID.

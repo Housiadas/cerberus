@@ -94,15 +94,6 @@ func toDomainUser(u db.User) User {
 	)
 }
 
-func toDomainUsers(dbUsers []db.User) []User {
-	users := make([]User, len(dbUsers))
-	for i, u := range dbUsers {
-		users[i] = toDomainUser(u)
-	}
-
-	return users
-}
-
 func toNullName(t pgtype.Text) name.Null {
 	if !t.Valid {
 		return name.Null{}

@@ -39,14 +39,3 @@ func toDomainEmailNotificationOutbox(o db.EmailNotificationOutbox) EmailNotifica
 		processedAt,
 	)
 }
-
-func toDomainEmailNotificationOutboxes(
-	dbEntries []db.EmailNotificationOutbox,
-) []EmailNotificationOutbox {
-	entries := make([]EmailNotificationOutbox, len(dbEntries))
-	for i, o := range dbEntries {
-		entries[i] = toDomainEmailNotificationOutbox(o)
-	}
-
-	return entries
-}

@@ -6,6 +6,11 @@
       "sourceType": "github",
       "computedHash": "d31e234f0c90694a670222cdd1dafa853e051d7066beda389f1097c22dadd461"
     },
+    "golang-database": {
+      "source": "samber/cc-skills-golang",
+      "sourceType": "github",
+      "computedHash": "16a982a8e40660486d662049f391f4c6ddba8166c56af7d59757b7d09e0c876c"
+    },
     "golang-patterns": {
       "source": "affaan-m/everything-claude-code",
       "sourceType": "github",

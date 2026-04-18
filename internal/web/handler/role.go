@@ -10,6 +10,7 @@ import (
 	"github.com/Housiadas/cerberus/internal/types/name"
 	"github.com/Housiadas/cerberus/internal/web/handler/openapi"
 	"github.com/Housiadas/cerberus/pkg/cursor"
+	"github.com/Housiadas/cerberus/pkg/mapper"
 	"github.com/Housiadas/cerberus/pkg/order"
 	"github.com/google/uuid"
 )
@@ -54,7 +55,7 @@ func (h *Handler) ListRoles(
 	)
 
 	return openapi.ListRoles200JSONResponse{
-		Data:     new(toOpenAPIRoles(result.Data)),
+		Data:     new(mapper.MapSlice(result.Data, toOpenAPIRole)),
 		Metadata: new(toOpenAPIMetadata(result.Metadata)),
 	}, nil
 }

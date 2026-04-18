@@ -39,15 +39,6 @@ func toOpenAPIRole(r role.Role) openapi.Role {
 	}
 }
 
-func toOpenAPIRoles(roles []role.Role) []openapi.Role {
-	out := make([]openapi.Role, len(roles))
-	for i, r := range roles {
-		out[i] = toOpenAPIRole(r)
-	}
-
-	return out
-}
-
 func toOpenAPIPermission(p permission.Permission) openapi.Permission {
 	return openapi.Permission{
 		Id:        p.ID().String(),
@@ -55,15 +46,6 @@ func toOpenAPIPermission(p permission.Permission) openapi.Permission {
 		CreatedAt: clock.Format(new(p.CreatedAt())),
 		UpdatedAt: clock.Format(new(p.UpdatedAt())),
 	}
-}
-
-func toOpenAPIPermissions(perms []permission.Permission) []openapi.Permission {
-	out := make([]openapi.Permission, len(perms))
-	for i, p := range perms {
-		out[i] = toOpenAPIPermission(p)
-	}
-
-	return out
 }
 
 func toOpenAPIAccount(acc account.Account) openapi.Account {
@@ -74,15 +56,6 @@ func toOpenAPIAccount(acc account.Account) openapi.Account {
 		CreatedAt:        clock.Format(new(acc.CreatedAt())),
 		UpdatedAt:        clock.Format(new(acc.UpdatedAt())),
 	}
-}
-
-func toOpenAPIAccounts(accs []account.Account) []openapi.Account {
-	out := make([]openapi.Account, len(accs))
-	for i, acc := range accs {
-		out[i] = toOpenAPIAccount(acc)
-	}
-
-	return out
 }
 
 func toOpenAPIAudit(a audit.Audit) openapi.Audit {
@@ -97,15 +70,6 @@ func toOpenAPIAudit(a audit.Audit) openapi.Audit {
 		Message:   a.Message(),
 		Timestamp: clock.Format(new(a.Timestamp())),
 	}
-}
-
-func toOpenAPIAudits(audits []audit.Audit) []openapi.Audit {
-	out := make([]openapi.Audit, len(audits))
-	for i, a := range audits {
-		out[i] = toOpenAPIAudit(a)
-	}
-
-	return out
 }
 
 func toOpenAPIToken(t auth.Token) openapi.Token {
@@ -150,17 +114,6 @@ func toOpenAPISubscriptionResponse(r billing.SubscriptionResponse) openapi.Subsc
 	}
 }
 
-func toOpenAPISubscriptionResponses(
-	subs []billing.SubscriptionResponse,
-) []openapi.SubscriptionResponse {
-	out := make([]openapi.SubscriptionResponse, len(subs))
-	for i, s := range subs {
-		out[i] = toOpenAPISubscriptionResponse(s)
-	}
-
-	return out
-}
-
 func toOpenAPIInvoiceResponse(r billing.InvoiceResponse) openapi.InvoiceResponse {
 	return openapi.InvoiceResponse{
 		Id:              r.ID,
@@ -172,13 +125,4 @@ func toOpenAPIInvoiceResponse(r billing.InvoiceResponse) openapi.InvoiceResponse
 		InvoiceUrl:      r.InvoiceURL,
 		CreatedAt:       r.CreatedAt,
 	}
-}
-
-func toOpenAPIInvoiceResponses(invs []billing.InvoiceResponse) []openapi.InvoiceResponse {
-	out := make([]openapi.InvoiceResponse, len(invs))
-	for i, inv := range invs {
-		out[i] = toOpenAPIInvoiceResponse(inv)
-	}
-
-	return out
 }

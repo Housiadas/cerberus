@@ -7,6 +7,7 @@ import (
 
 	db "github.com/Housiadas/cerberus/db/sqlc"
 	"github.com/Housiadas/cerberus/pkg/logger"
+	"github.com/Housiadas/cerberus/pkg/mapper"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 )
@@ -76,7 +77,7 @@ func (s *Service) QueryUnprocessed(
 		return nil, fmt.Errorf("query unprocessed: %w", err)
 	}
 
-	return toDomainEmailNotificationOutboxes(dbEntries), nil
+	return mapper.MapSlice(dbEntries, toDomainEmailNotificationOutbox), nil
 }
 
 // IncrementRetryCount increments the retry count for the given email outbox entry IDs.

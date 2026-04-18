@@ -9,6 +9,7 @@ import (
 	"github.com/Housiadas/cerberus/internal/types/event"
 	"github.com/Housiadas/cerberus/pkg/cursor"
 	"github.com/Housiadas/cerberus/pkg/logger"
+	"github.com/Housiadas/cerberus/pkg/mapper"
 	"github.com/Housiadas/cerberus/pkg/order"
 	"github.com/google/uuid"
 )
@@ -149,7 +150,7 @@ func (s *Service) Query(
 		return nil, fmt.Errorf("role query: %w", err)
 	}
 
-	return toDomainRoles(dbRoles), nil
+	return mapper.MapSlice(dbRoles, toDomainRole), nil
 }
 
 // newRoleEvent creates a DomainEvent for role operations.
