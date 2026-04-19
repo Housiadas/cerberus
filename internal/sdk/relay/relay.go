@@ -115,6 +115,9 @@ func (r *Relay) processBatch(ctx context.Context) {
 			},
 			Key:   []byte(entry.AggregateID().String()),
 			Value: entry.Payload(),
+			Headers: []ckafka.Header{
+				{Key: "event-type", Value: []byte(entry.EventType())},
+			},
 		}
 
 		err := r.producer.Produce(ctx, msg)

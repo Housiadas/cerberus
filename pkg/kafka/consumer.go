@@ -22,7 +22,7 @@ type Handler func(ctx context.Context, msg *kafka.Message) error
 // Flusher is called with a batch of successfully processed messages.
 type Flusher func(ctx context.Context, msgs []*kafka.Message) error
 
-// ConsumerConfig holds configuration for ConsumerClient.
+// ConsumerConfig holds configuration for Consumer.
 type ConsumerConfig struct {
 	Brokers          string
 	GroupID          string
@@ -35,8 +35,8 @@ type ConsumerConfig struct {
 	BufferSize       int
 }
 
-// ConsumerClient is a Kafka consumer with a worker pool and batcher.
-type ConsumerClient struct {
+// Consumer is a Kafka consumer with a worker pool and batcher.
+type Consumer struct {
 	consumer     *kafka.Consumer
 	log          logger.Logger
 	workers      int
@@ -45,8 +45,8 @@ type ConsumerClient struct {
 	bufferSize   int
 }
 
-// NewConsumer creates a new ConsumerClient.
-func NewConsumer(log logger.Logger, cfg ConsumerConfig) (*ConsumerClient, error) {
+// NewConsumer creates a new Consumer.
+func NewConsumer(log logger.Logger, cfg ConsumerConfig) (*Consumer, error) {
 	if cfg.Workers <= 0 {
 		cfg.Workers = defaultWorkers
 	}
@@ -67,16 +67,17 @@ func NewConsumer(log logger.Logger, cfg ConsumerConfig) (*ConsumerClient, error)
 		"bootstrap.servers":        cfg.Brokers,
 		"group.id":                 cfg.GroupID,
 		"broker.address.family":    cfg.AddressFamily,
+		"security.protocol":        cfg.SecurityProtocol,
 		"session.timeout.ms":       cfg.SessionTimeout,
 		"auto.offset.reset":        "earliest",
 		"enable.auto.commit":       true,
-		"enable.auto.offset.store": false,
+		"enable.auto.offset.store": false, // offsets are stored manually after batch flush
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to create consumer: %w", err)
 	}
 
-	return &ConsumerClient{
+	return &Consumer{
 		consumer:     consumer,
 		log:          log,
 		workers:      cfg.Workers,
@@ -87,12 +88,12 @@ func NewConsumer(log logger.Logger, cfg ConsumerConfig) (*ConsumerClient, error)
 }
 
 // Close shuts down the underlying Kafka consumer.
-func (c *ConsumerClient) Close() {
+func (c *Consumer) Close() {
 	c.consumer.Close()
 }
 
 // Subscribe subscribes to the given Kafka topic.
-func (c *ConsumerClient) Subscribe(topic string) error {
+func (c *Consumer) Subscribe(topic string) error {
 	err := c.consumer.Subscribe(topic, nil)
 	if err != nil {
 		return fmt.Errorf("kafka subscribe error: %w", err)
@@ -101,16 +102,36 @@ func (c *ConsumerClient) Subscribe(topic string) error {
 	return nil
 }
 
-// Consume starts the worker pool and batcher.
+// SubscribeTopics subscribes to the given Kafka topics
+func (c *Consumer) SubscribeTopics(topics []string) error {
+	err := c.consumer.SubscribeTopics(topics, nil)
+	if err != nil {
+		return fmt.Errorf("kafka subscribe topics error: %w", err)
+	}
+
+	return nil
+}
+
+// Consume starts the pipeline: poller → workers → batcher.
 // It blocks until the context is canceled or a fatal error occurs.
-func (c *ConsumerClient) Consume(
+//
+// Shutdown order: poller stops → msgCh closes → workers drain and exit →
+// processedCh closes → batcher flushes remaining and exits.
+func (c *Consumer) Consume(
 	ctx context.Context,
 	handler Handler,
 	flusher Flusher,
 ) error {
+	// Pipeline channels:
+	// msgCh: raw messages from Kafka poller → worker pool
+	// processedCh: successfully handled messages from workers → batcher
 	msgCh := make(chan *kafka.Message, c.bufferSize)
 	processedCh := make(chan *kafka.Message, c.bufferSize)
 
+	// Stage 1: Worker pool each worker reads from msgCh, calls handler,
+	// and forwards successfully processed messages to processedCh.
+	// Failed messages are logged and skipped (not forwarded), so their
+	// offsets won't be committed, and they will be re-delivered.
 	var wg sync.WaitGroup
 	for range c.workers {
 		wg.Go(func() {
@@ -118,6 +139,9 @@ func (c *ConsumerClient) Consume(
 		})
 	}
 
+	// Stage 2: Batcher — collects processed messages and flushes them in
+	// bulk via flusher. After a successful flush, offsets are stored so
+	// auto-commit can pick them up (at-least-once delivery guarantee).
 	batcher := NewBatcher(c.consumer, flusher, c.batchSize, c.flushTimeout, c.log)
 
 	batchErrCh := make(chan error, 1)
@@ -126,12 +150,19 @@ func (c *ConsumerClient) Consume(
 		batchErrCh <- batcher.Run(ctx, processedCh)
 	}()
 
+	// Stage 0: Poller — polls Kafka for events and dispatches messages to msgCh.
+	// Blocks until ctx is canceled or a fatal Kafka error occurs.
 	pollErr := c.runPoller(ctx, msgCh)
-	close(msgCh)
 
+	// Graceful shutdown in pipeline order:
+	// 1. close(msgCh)    — signals workers there are no more messages
+	// 2. wg.Wait()       — waits for workers to finish in-flight handling
+	// 3. close(processedCh) — signals batcher to flush remaining and exit
+	close(msgCh)
 	wg.Wait()
 	close(processedCh)
 
+	// Wait for batcher to finish its final flush.
 	batchErr := <-batchErrCh
 
 	if pollErr != nil {
@@ -141,7 +172,10 @@ func (c *ConsumerClient) Consume(
 	return batchErr
 }
 
-func (c *ConsumerClient) runPoller(
+// runPoller continuously polls Kafka for events.
+// Poll(200) blocks up to 100ms per call; the select on ctx.Done()
+// between polls ensures we react to cancellation promptly.
+func (c *Consumer) runPoller(
 	ctx context.Context,
 	msgCh chan<- *kafka.Message,
 ) error {
@@ -159,15 +193,20 @@ func (c *ConsumerClient) runPoller(
 	}
 }
 
-func (c *ConsumerClient) handleEvent(
+// handleEvent dispatches a single Kafka event.
+// Messages are sent to msgCh for worker processing.
+// Fatal errors stop the consumer; retriable errors are logged and skipped.
+func (c *Consumer) handleEvent(
 	ctx context.Context,
 	ev kafka.Event,
 	msgCh chan<- *kafka.Message,
 ) error {
 	switch event := ev.(type) {
 	case nil:
-		// no event
+		// Poll timeout expired with no event — this is normal.
 	case *kafka.Message:
+		// Forward a message to the worker pool. If the context is canceled
+		// while msgCh is full, we exit instead of blocking forever.
 		select {
 		case msgCh <- event:
 		case <-ctx.Done():
@@ -186,7 +225,11 @@ func (c *ConsumerClient) handleEvent(
 	return nil
 }
 
-func (c *ConsumerClient) runWorker(
+// runWorker processes messages from msgCh one at a time.
+// Successfully handled messages are forwarded to processedCh for batching.
+// On handler error the message is skipped — its offset won't be stored,
+// so Kafka will re-deliver it on the next consumer startup.
+func (c *Consumer) runWorker(
 	ctx context.Context,
 	msgCh <-chan *kafka.Message,
 	processedCh chan<- *kafka.Message,

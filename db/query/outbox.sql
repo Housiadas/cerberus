@@ -31,3 +31,8 @@ WHERE retry_count < sqlc.arg(max_retries)
 AND processed_at IS NULL
 ORDER BY created_at
 LIMIT $1;
+
+-- name: DeleteProcessedOutbox :execrows
+DELETE FROM outbox
+WHERE processed_at IS NOT NULL
+  AND processed_at < @before::timestamp;

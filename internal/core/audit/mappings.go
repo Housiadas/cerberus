@@ -44,15 +44,6 @@ func toDomainAudit(a db.Audit) Audit {
 	)
 }
 
-func toDomainAudits(dbAudits []db.Audit) []Audit {
-	audits := make([]Audit, len(dbAudits))
-	for i, a := range dbAudits {
-		audits[i] = toDomainAudit(a)
-	}
-
-	return audits
-}
-
 // toDBQueryFilter converts domain QueryFilter to db.AuditQueryFilter.
 func toDBQueryFilter(f QueryFilter) db.AuditQueryFilter {
 	dbf := db.AuditQueryFilter{

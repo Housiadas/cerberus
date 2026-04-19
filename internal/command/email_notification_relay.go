@@ -2,6 +2,7 @@ package command
 
 import (
 	"context"
+	"flag"
 	"fmt"
 	"os"
 	"os/signal"
@@ -22,9 +23,29 @@ const (
 	emailMaxRetries = 3
 )
 
-// EmailNotificationRelay starts the email notification relay process that polls
+// EmailNotificationRelayRunner implements Runner for the email-notification-relay command.
+type EmailNotificationRelayRunner struct {
+	cmd *Command
+}
+
+func NewEmailNotificationRelayRunner(cmd *Command) *EmailNotificationRelayRunner {
+	return &EmailNotificationRelayRunner{cmd: cmd}
+}
+
+func (r *EmailNotificationRelayRunner) Name() string {
+	return EmailNotificationRelay
+}
+func (r *EmailNotificationRelayRunner) Description() string {
+	return "Start the email notification relay process"
+}
+func (r *EmailNotificationRelayRunner) SetupFlags(_ *flag.FlagSet) {}
+func (r *EmailNotificationRelayRunner) Run() error {
+	return r.cmd.emailNotificationRelay()
+}
+
+// emailNotificationRelay starts the email notification relay process that polls
 // the email_notification_outbox table and sends emails via SMTP.
-func (cmd *Command) EmailNotificationRelay() error {
+func (cmd *Command) emailNotificationRelay() error {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 

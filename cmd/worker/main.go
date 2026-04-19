@@ -3,10 +3,11 @@ package main
 import (
 	"context"
 	"errors"
+	"flag"
 	"fmt"
 	"os"
 
-	command "github.com/Housiadas/cerberus/internal/command"
+	"github.com/Housiadas/cerberus/internal/command"
 	"github.com/Housiadas/cerberus/internal/config"
 	ctxPck "github.com/Housiadas/cerberus/internal/sdk/context"
 	"github.com/Housiadas/cerberus/pkg/logger"
@@ -73,11 +74,12 @@ func run() error {
 	// Initialize commands
 	// -------------------------------------------------------------------------
 	cmd := command.New(command.Config{
-		DB:     cfg.DB,
-		Kafka:  cfg.Kafka,
-		Email:  cfg.Email,
-		Log:    log,
-		Tracer: tracer,
+		DB:            cfg.DB,
+		Kafka:         cfg.Kafka,
+		Email:         cfg.Email,
+		Elasticsearch: cfg.Elasticsearch,
+		Log:           log,
+		Tracer:        tracer,
 		Version: config.Version{
 			Description: "Worker",
 			Build:       build,
@@ -89,36 +91,25 @@ func run() error {
 
 // processCommands handles the execution of the commands specified on the command line.
 func processCommands(args []string, cmd *command.Command) error {
-	switch args[1] {
-	case command.UserAdd:
-		name := args[2]
-		email := args[3]
-		password := args[4]
-
-		err := cmd.UserAdd(name, email, password)
-		if err != nil {
-			return fmt.Errorf("adding user: %w", err)
-		}
-	case command.OutboxRelay:
-		err := cmd.OutboxRelay()
-		if err != nil {
-			return fmt.Errorf("outbox relay: %w", err)
-		}
-
-	case command.EmailNotificationRelay:
-		err := cmd.EmailNotificationRelay()
-		if err != nil {
-			return fmt.Errorf("email notification relay: %w", err)
-		}
-
-	default:
-		fmt.Println("useradd:                  add a new user to the database")
-		fmt.Println("outbox-relay:             start the outbox relay process")
-		fmt.Println("email-notification-relay: start the email notification relay process")
-		fmt.Println("provide a command")
-
+	if len(args) < 2 {
+		cmd.PrintUsage()
 		return command.ErrHelp
 	}
 
-	return nil
+	registry := cmd.Registry()
+	runner, ok := registry[args[1]]
+	if !ok {
+		cmd.PrintUsage()
+		return command.ErrHelp
+	}
+
+	fs := flag.NewFlagSet(runner.Name(), flag.ContinueOnError)
+	runner.SetupFlags(fs)
+
+	err := fs.Parse(args[2:])
+	if err != nil {
+		return fmt.Errorf("parsing %s flags: %w", runner.Name(), err)
+	}
+
+	return runner.Run()
 }

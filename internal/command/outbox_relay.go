@@ -2,6 +2,7 @@ package command
 
 import (
 	"context"
+	"flag"
 	"fmt"
 	"os"
 	"os/signal"
@@ -22,9 +23,23 @@ const (
 	maxRetries = 3
 )
 
-// OutboxRelay starts the outbox relay process that polls the outbox table
+// OutboxRelayRunner implements Runner for the outbox-relay command.
+type OutboxRelayRunner struct {
+	cmd *Command
+}
+
+func NewOutboxRelayRunner(cmd *Command) *OutboxRelayRunner {
+	return &OutboxRelayRunner{cmd: cmd}
+}
+
+func (r *OutboxRelayRunner) Name() string               { return OutboxRelay }
+func (r *OutboxRelayRunner) Description() string        { return "Start the outbox relay process" }
+func (r *OutboxRelayRunner) SetupFlags(_ *flag.FlagSet) {}
+func (r *OutboxRelayRunner) Run() error                 { return r.cmd.outboxRelay() }
+
+// outboxRelay starts the outbox relay process that polls the outbox table
 // and publishes events to Kafka.
-func (cmd *Command) OutboxRelay() error {
+func (cmd *Command) outboxRelay() error {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 

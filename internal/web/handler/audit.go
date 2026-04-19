@@ -11,6 +11,7 @@ import (
 	"github.com/Housiadas/cerberus/internal/types/name"
 	"github.com/Housiadas/cerberus/internal/web/handler/openapi"
 	"github.com/Housiadas/cerberus/pkg/cursor"
+	"github.com/Housiadas/cerberus/pkg/mapper"
 	"github.com/Housiadas/cerberus/pkg/order"
 	"github.com/google/uuid"
 )
@@ -60,7 +61,7 @@ func (h *Handler) ListAudits(
 	)
 
 	return openapi.ListAudits200JSONResponse{
-		Data:     new(toOpenAPIAudits(result.Data)),
+		Data:     new(mapper.MapSlice(result.Data, toOpenAPIAudit)),
 		Metadata: new(toOpenAPIMetadata(result.Metadata)),
 	}, nil
 }

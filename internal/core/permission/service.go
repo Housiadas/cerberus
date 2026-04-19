@@ -9,6 +9,7 @@ import (
 	"github.com/Housiadas/cerberus/internal/types/event"
 	"github.com/Housiadas/cerberus/pkg/cursor"
 	"github.com/Housiadas/cerberus/pkg/logger"
+	"github.com/Housiadas/cerberus/pkg/mapper"
 	"github.com/Housiadas/cerberus/pkg/order"
 	"github.com/google/uuid"
 )
@@ -152,7 +153,7 @@ func (s *Service) Query(
 		return nil, fmt.Errorf("permission query: %w", err)
 	}
 
-	return toDomainPermissions(dbPerms), nil
+	return mapper.MapSlice(dbPerms, toDomainPermission), nil
 }
 
 // newPermissionEvent creates a DomainEvent for permission operations.

@@ -5,6 +5,7 @@ import (
 
 	"github.com/Housiadas/cerberus/internal/core/billing"
 	"github.com/Housiadas/cerberus/internal/web/handler/openapi"
+	"github.com/Housiadas/cerberus/pkg/mapper"
 )
 
 func (h *Handler) CreateCheckoutSession(
@@ -30,7 +31,7 @@ func (h *Handler) ListSubscriptions(
 	_ openapi.ListSubscriptionsRequestObject,
 ) (openapi.ListSubscriptionsResponseObject, error) {
 	return openapi.ListSubscriptions200JSONResponse(
-		toOpenAPISubscriptionResponses([]billing.SubscriptionResponse{}),
+		mapper.MapSlice([]billing.SubscriptionResponse{}, toOpenAPISubscriptionResponse),
 	), nil
 }
 
@@ -39,6 +40,6 @@ func (h *Handler) ListInvoices(
 	_ openapi.ListInvoicesRequestObject,
 ) (openapi.ListInvoicesResponseObject, error) {
 	return openapi.ListInvoices200JSONResponse(
-		toOpenAPIInvoiceResponses([]billing.InvoiceResponse{}),
+		mapper.MapSlice([]billing.InvoiceResponse{}, toOpenAPIInvoiceResponse),
 	), nil
 }

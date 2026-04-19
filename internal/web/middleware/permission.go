@@ -17,6 +17,7 @@ import (
 var operationPermissions = map[string]string{
 	"GetUser":              "user:read",
 	"ListUsers":            "user:read:all",
+	"SearchUsers":          "user:read:all",
 	"CreateUser":           "user:write",
 	"UpdateUser":           "user:write",
 	"DeleteUser":           "user:delete",

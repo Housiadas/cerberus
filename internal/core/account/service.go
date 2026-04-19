@@ -7,6 +7,7 @@ import (
 
 	"github.com/Housiadas/cerberus/pkg/cursor"
 	"github.com/Housiadas/cerberus/pkg/logger"
+	"github.com/Housiadas/cerberus/pkg/mapper"
 	"github.com/Housiadas/cerberus/pkg/order"
 	"github.com/google/uuid"
 )
@@ -116,7 +117,7 @@ func (s *Service) Query(
 		return nil, fmt.Errorf("query: %w", err)
 	}
 
-	return toDomainAccounts(dbAccounts), nil
+	return mapper.MapSlice(dbAccounts, toDomainAccount), nil
 }
 
 // QueryByID finds the account by the specified ID.

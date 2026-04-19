@@ -7,6 +7,7 @@ import (
 
 	"github.com/Housiadas/cerberus/pkg/cursor"
 	"github.com/Housiadas/cerberus/pkg/logger"
+	"github.com/Housiadas/cerberus/pkg/mapper"
 	"github.com/Housiadas/cerberus/pkg/order"
 	"github.com/Housiadas/cerberus/pkg/telemetry"
 	"github.com/google/uuid"
@@ -74,5 +75,5 @@ func (s *Service) Query(
 		return nil, fmt.Errorf("query audits: %w", err)
 	}
 
-	return toDomainAudits(dbAudits), nil
+	return mapper.MapSlice(dbAudits, toDomainAudit), nil
 }

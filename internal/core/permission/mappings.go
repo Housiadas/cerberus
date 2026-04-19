@@ -57,12 +57,3 @@ func toDomainPermission(p db.Permission) Permission {
 		deletedAt,
 	)
 }
-
-func toDomainPermissions(dbPerms []db.Permission) []Permission {
-	perms := make([]Permission, len(dbPerms))
-	for i, p := range dbPerms {
-		perms[i] = toDomainPermission(p)
-	}
-
-	return perms
-}

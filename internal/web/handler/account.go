@@ -10,6 +10,7 @@ import (
 	"github.com/Housiadas/cerberus/internal/sdk/pntr"
 	"github.com/Housiadas/cerberus/internal/web/handler/openapi"
 	"github.com/Housiadas/cerberus/pkg/cursor"
+	"github.com/Housiadas/cerberus/pkg/mapper"
 	"github.com/Housiadas/cerberus/pkg/order"
 	"github.com/google/uuid"
 )
@@ -69,7 +70,7 @@ func (h *Handler) ListAccounts(
 	)
 
 	return openapi.ListAccounts200JSONResponse{
-		Data:     new(toOpenAPIAccounts(result.Data)),
+		Data:     new(mapper.MapSlice(result.Data, toOpenAPIAccount)),
 		Metadata: new(toOpenAPIMetadata(result.Metadata)),
 	}, nil
 }

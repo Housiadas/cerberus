@@ -289,6 +289,64 @@ paths:
         default:
           $ref: '#/components/responses/ErrorResponse'
 
+  /api/v1/users/search:
+    get:
+      operationId: searchUsers
+      tags: [Users]
+      summary: Search users
+      description: Full-text search users via Elasticsearch
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: q
+          in: query
+          description: Free-text search query (matches name)
+          schema:
+            type: string
+        - name: email
+          in: query
+          schema:
+            type: string
+        - name: department
+          in: query
+          schema:
+            type: string
+        - name: enabled
+          in: query
+          schema:
+            type: string
+        - name: start_created_date
+          in: query
+          schema:
+            type: string
+        - name: end_created_date
+          in: query
+          schema:
+            type: string
+        - name: sort
+          in: query
+          description: "Sort field and direction (e.g., name.keyword:asc, createdAt:desc)"
+          schema:
+            type: string
+        - name: limit
+          in: query
+          schema:
+            type: string
+        - name: search_after
+          in: query
+          description: Opaque pagination token from previous response
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Search results
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserSearchResult'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
   /api/v1/users/{user_id}:
     parameters:
       - name: user_id
@@ -1134,6 +1192,30 @@ components:
             $ref: '#/components/schemas/User'
         metadata:
           $ref: '#/components/schemas/Metadata'
+
+    UserSearchResult:
+      type: object
+      required: [data, metadata]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/User'
+        metadata:
+          $ref: '#/components/schemas/SearchMetadata'
+
+    SearchMetadata:
+      type: object
+      required: [totalHits, limit, hasMore]
+      properties:
+        totalHits:
+          type: integer
+        limit:
+          type: integer
+        hasMore:
+          type: boolean
+        searchAfter:
+          type: string
 
     # ---- User Roles / Role Permissions ----
     AddUserRoleReq:

@@ -41,12 +41,3 @@ func toDomainOutbox(o db.Outbox) Outbox {
 		processedAt,
 	)
 }
-
-func toDomainOutboxes(dbOutboxes []db.Outbox) []Outbox {
-	outboxes := make([]Outbox, len(dbOutboxes))
-	for i, o := range dbOutboxes {
-		outboxes[i] = toDomainOutbox(o)
-	}
-
-	return outboxes
-}

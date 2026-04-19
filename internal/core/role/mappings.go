@@ -53,12 +53,3 @@ func toDomainRole(r db.Role) Role {
 		deletedAt,
 	)
 }
-
-func toDomainRoles(dbRoles []db.Role) []Role {
-	roles := make([]Role, len(dbRoles))
-	for i, r := range dbRoles {
-		roles[i] = toDomainRole(r)
-	}
-
-	return roles
-}

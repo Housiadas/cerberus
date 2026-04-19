@@ -101,7 +101,7 @@ func (c Cursor) FieldValue() string {
 	return c.fieldValue
 }
 
-// ID returns the tie-breaking row ID from the cursor.
+// ID returns the tiebreaking row ID from the cursor.
 func (c Cursor) ID() string {
 	return c.id
 }

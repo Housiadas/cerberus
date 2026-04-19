@@ -14,6 +14,8 @@ import (
 	db "github.com/Housiadas/cerberus/db/sqlc"
 	"github.com/Housiadas/cerberus/internal/config"
 	ctxPck "github.com/Housiadas/cerberus/internal/sdk/context"
+	"github.com/Housiadas/cerberus/internal/sdk/elasticsearch"
+	"github.com/Housiadas/cerberus/internal/sdk/host"
 	"github.com/Housiadas/cerberus/internal/web/handler"
 	"github.com/Housiadas/cerberus/pkg/debug"
 	"github.com/Housiadas/cerberus/pkg/logger"
@@ -119,6 +121,27 @@ func run(ctx context.Context, log *logger.Service) error {
 	defer redClose()
 
 	// -------------------------------------------------------------------------
+	// Initialize Elasticsearch
+	// -------------------------------------------------------------------------
+	log.Info(ctx,
+		"startup",
+		"status", "initializing elasticsearch",
+		"hosts", cfg.Elasticsearch.Hosts,
+	)
+
+	esClient, err := elasticsearch.New(log, elasticsearch.Config{
+		Addresses: host.ParseHosts(cfg.Elasticsearch.Hosts),
+		Username:  cfg.Elasticsearch.Username,
+		Password:  cfg.Elasticsearch.Password,
+	})
+	if err != nil {
+		log.Error(ctx,
+			"elasticsearch unavailable, search disabled",
+			"msg", err,
+		)
+	}
+
+	// -------------------------------------------------------------------------
 	// Initialize Vault Client
 	// -------------------------------------------------------------------------
 	jwtSecret, err := initVault(ctx, cfg)
@@ -170,6 +193,7 @@ func run(ctx context.Context, log *logger.Service) error {
 		AccessTokenSecret: jwtSecret,
 		FrontendURL:       cfg.App.FrontendURL,
 		Stripe:            cfg.Stripe,
+		ES:                esClient,
 	})
 
 	api := http.Server{

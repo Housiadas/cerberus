@@ -57,6 +57,20 @@ func (q *Queries) CreateNotificationOutbox(ctx context.Context, arg CreateNotifi
 	return i, err
 }
 
+const deleteProcessedNotificationOutbox = `-- name: DeleteProcessedNotificationOutbox :execrows
+DELETE FROM email_notification_outbox
+WHERE processed_at IS NOT NULL
+  AND processed_at < $1::timestamp
+`
+
+func (q *Queries) DeleteProcessedNotificationOutbox(ctx context.Context, before pgtype.Timestamp) (int64, error) {
+	result, err := q.db.Exec(ctx, deleteProcessedNotificationOutbox, before)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
+}
+
 const getUnprocessedNotificationOutbox = `-- name: GetUnprocessedNotificationOutbox :many
 SELECT id, event_type, to_email, payload, retry_count, created_at, processed_at FROM email_notification_outbox
 WHERE

@@ -39,8 +39,13 @@ func NewBatcher(
 	}
 }
 
-// Run reads from processedCh and flushes batches. It returns when processedCh is closed.
-func (b *Batcher) Run(ctx context.Context, processedCh <-chan *kafka.Message) error {
+// Run reads from processedCh and flushes batches either when the batch
+// reaches batchSize or when flushTimeout fires, whichever comes first.
+// It returns when processedCh is closed, flushing any remaining messages.
+func (b *Batcher) Run(
+	ctx context.Context,
+	processedCh <-chan *kafka.Message,
+) error {
 	ticker := time.NewTicker(b.flushTimeout)
 	defer ticker.Stop()
 
@@ -65,7 +70,7 @@ func (b *Batcher) Run(ctx context.Context, processedCh <-chan *kafka.Message) er
 					return err
 				}
 
-				batch = batch[:0]
+				batch = batch[:0] // reset to zero
 			}
 
 		case <-ticker.C:
@@ -75,13 +80,16 @@ func (b *Batcher) Run(ctx context.Context, processedCh <-chan *kafka.Message) er
 					return err
 				}
 
-				batch = batch[:0]
+				batch = batch[:0] // reset to zero
 			}
 		}
 	}
 }
 
-func (b *Batcher) flush(ctx context.Context, batch []*kafka.Message) error {
+func (b *Batcher) flush(
+	ctx context.Context,
+	batch []*kafka.Message,
+) error {
 	err := b.flusher(ctx, batch)
 	if err != nil {
 		return fmt.Errorf("batcher: flush error: %w", err)

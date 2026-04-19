@@ -30,6 +30,10 @@ redis:
   db: 0
   redisImage: "redis:7.4"
   redisContainerName: "redis-container"
+elasticsearch:
+  hosts: "localhost:9200"
+  username: "elastic"
+  password: "secret123"
 kafka:
   brokers: "localhost:9092"
   addressFamily: "v4"
