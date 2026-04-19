@@ -101,7 +101,7 @@ func (cmd *Command) Indexer() error {
 		)
 
 		wg.Add(1)
-		go func(c *kafka.ConsumerClient, sh indexer.StreamIndexHandler) {
+		go func(c *kafka.Consumer, sh indexer.StreamIndexHandler) {
 			defer func() {
 				c.Close()
 				wg.Done()
