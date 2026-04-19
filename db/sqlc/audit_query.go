@@ -61,7 +61,7 @@ func (s *Store) QueryAudits(
 		OrderBy(col+" "+orderBy.Direction, "id "+orderBy.Direction).
 		Limit(uint64(cur.Limit() + 1))
 
-	if cp := auditCursorPredicate(cur, orderBy, col); cp != nil {
+	if cp := cursorPredicate(cur, orderBy, col); cp != nil {
 		sb = sb.Where(cp)
 	}
 
@@ -135,17 +135,4 @@ func auditFilterPredicates(f AuditQueryFilter) sq.Sqlizer {
 	}
 
 	return preds
-}
-
-func auditCursorPredicate(cur cursor.Cursor, orderBy order.By, col string) sq.Sqlizer {
-	if !cur.HasCursor() {
-		return nil
-	}
-
-	op := ">"
-	if orderBy.Direction == order.DESC {
-		op = "<"
-	}
-
-	return sq.Expr(fmt.Sprintf("(%s, id) %s (?, ?)", col, op), cur.FieldValue(), cur.ID())
 }

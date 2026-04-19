@@ -5,6 +5,8 @@ import (
 	"crypto/tls"
 	"fmt"
 
+	"github.com/Housiadas/cerberus/pkg/cursor"
+	"github.com/Housiadas/cerberus/pkg/order"
 	sq "github.com/Masterminds/squirrel"
 	"github.com/exaring/otelpgx"
 	"github.com/jackc/pgx/v5"
@@ -86,6 +88,21 @@ func Open(ctx context.Context, cfg Config) (*pgxpool.Pool, error) {
 	}
 
 	return pool, nil
+}
+
+// cursorPredicate builds the keyset pagination WHERE clause for cursor-based queries.
+// It returns nil when no cursor is present (i.e. the first page).
+func cursorPredicate(cur cursor.Cursor, orderBy order.By, col string) sq.Sqlizer {
+	if !cur.HasCursor() {
+		return nil
+	}
+
+	op := ">"
+	if orderBy.Direction == order.DESC {
+		op = "<"
+	}
+
+	return sq.Expr(fmt.Sprintf("(%s, id) %s (?, ?)", col, op), cur.FieldValue(), cur.ID())
 }
 
 // Status pings the database and is intended for readiness probes. It returns

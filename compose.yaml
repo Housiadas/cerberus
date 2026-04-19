@@ -88,7 +88,7 @@ services:
       - ELASTIC_USERNAME=elastic
       - ELASTIC_PASSWORD=secret123
     ports:
-      - 9200:9200
+      - "9200:9200"
     volumes:
       - elasticsearch_data:/usr/share/elasticsearch/data
     networks:
