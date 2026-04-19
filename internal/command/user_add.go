@@ -2,6 +2,7 @@ package command
 
 import (
 	"context"
+	"flag"
 	"fmt"
 	"net/mail"
 	"time"
@@ -16,14 +17,37 @@ import (
 	"github.com/Housiadas/cerberus/pkg/uuidgen"
 )
 
-// UserAdd adds new users into the database.
-func (cmd *Command) UserAdd(name, email, pass string) error {
-	if name == "" || email == "" || pass == "" {
-		fmt.Println("help: useradd <name> <email> <password>")
+// UserAddRunner implements Runner for the user-add command.
+type UserAddRunner struct {
+	cmd      *Command
+	name     string
+	email    string
+	password string
+}
 
-		return ErrHelp
+func NewUserAddRunner(cmd *Command) *UserAddRunner {
+	return &UserAddRunner{cmd: cmd}
+}
+
+func (r *UserAddRunner) Name() string        { return UserAdd }
+func (r *UserAddRunner) Description() string { return "Add a new user to the database" }
+
+func (r *UserAddRunner) SetupFlags(fs *flag.FlagSet) {
+	fs.StringVar(&r.name, "name", "", "user's name (required)")
+	fs.StringVar(&r.email, "email", "", "user's email (required)")
+	fs.StringVar(&r.password, "password", "", "user's password (required)")
+}
+
+func (r *UserAddRunner) Run() error {
+	if r.name == "" || r.email == "" || r.password == "" {
+		return fmt.Errorf("user-add requires -name, -email, and -password flags")
 	}
 
+	return r.cmd.userAdd(r.name, r.email, r.password)
+}
+
+// userAdd adds new users into the database.
+func (cmd *Command) userAdd(name, email, pass string) error {
 	dbPool, err := db.Open(context.Background(), cmd.db)
 	if err != nil {
 		return fmt.Errorf("connect database: %w", err)

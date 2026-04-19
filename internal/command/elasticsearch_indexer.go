@@ -2,6 +2,7 @@ package command
 
 import (
 	"context"
+	"flag"
 	"fmt"
 	"os"
 	"os/signal"
@@ -21,10 +22,24 @@ const (
 	indexerGroupID   = "cerberus-indexer"
 )
 
+// IndexerRunner implements Runner for the elasticsearch-indexer command.
+type IndexerRunner struct {
+	cmd *Command
+}
+
+func NewIndexerRunner(cmd *Command) *IndexerRunner {
+	return &IndexerRunner{cmd: cmd}
+}
+
+func (r *IndexerRunner) Name() string               { return ElasticSearchIndexer }
+func (r *IndexerRunner) Description() string        { return "Start the Elasticsearch indexer process" }
+func (r *IndexerRunner) SetupFlags(_ *flag.FlagSet) {}
+func (r *IndexerRunner) Run() error                 { return r.cmd.indexer() }
+
 // Indexer starts the Elasticsearch indexer process that consumes Kafka messages
 // and indexes data into Elasticsearch. Each registered handler consumes its own
 // topic with a dedicated Kafka consumer.
-func (cmd *Command) Indexer() error {
+func (cmd *Command) indexer() error {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 

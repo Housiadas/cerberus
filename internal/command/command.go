@@ -3,6 +3,9 @@
 package command
 
 import (
+	"flag"
+	"fmt"
+
 	db "github.com/Housiadas/cerberus/db/sqlc"
 	"github.com/Housiadas/cerberus/internal/config"
 	"github.com/Housiadas/cerberus/pkg/email"
@@ -16,6 +19,14 @@ const (
 	EmailNotificationRelay = "email-notification-relay"
 	ElasticSearchIndexer   = "elasticsearch-indexer"
 )
+
+// Runner defines the interface that all worker commands must implement.
+type Runner interface {
+	Name() string
+	Description() string
+	SetupFlags(fs *flag.FlagSet)
+	Run() error
+}
 
 type Config struct {
 	DB            config.DB
@@ -63,5 +74,38 @@ func New(cfg Config) *Command {
 			Build:       cfg.Version.Build,
 			Description: cfg.Version.Description,
 		},
+	}
+}
+
+// Registry returns the command registry.
+func (cmd *Command) Registry() map[string]Runner {
+	// get all available runners
+	runners := cmd.Runners()
+
+	registry := make(map[string]Runner, len(runners))
+	for _, r := range runners {
+		registry[r.Name()] = r
+	}
+
+	return registry
+}
+
+func (cmd *Command) PrintUsage() {
+	fmt.Println("Usage: worker <command> [flags]")
+	fmt.Println()
+	fmt.Println("Commands:")
+	runners := cmd.Runners()
+	for _, r := range runners {
+		fmt.Printf("  %-26s %s\n", r.Name(), r.Description())
+	}
+}
+
+// Runners return all available command runners.
+func (cmd *Command) Runners() []Runner {
+	return []Runner{
+		NewUserAddRunner(cmd),
+		NewOutboxRelayRunner(cmd),
+		NewEmailNotificationRelayRunner(cmd),
+		NewIndexerRunner(cmd),
 	}
 }
