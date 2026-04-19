@@ -13,7 +13,14 @@ CREATE TABLE outbox
     PRIMARY KEY (id)
 );
 
-CREATE INDEX idx_outbox_unprocessed ON outbox (created_at) WHERE processed_at IS NULL;
+CREATE INDEX idx_outbox_unprocessed
+    ON outbox (created_at)
+    WHERE processed_at IS NULL;
+
+-- Description: Add partial indexes on processed_at for outbox cleanup queries
+CREATE INDEX idx_outbox_processed
+    ON outbox (processed_at)
+    WHERE processed_at IS NOT NULL;
 
 CREATE TABLE email_notification_outbox
 (
@@ -31,3 +38,7 @@ CREATE TABLE email_notification_outbox
 CREATE INDEX idx_email_notification_outbox_unprocessed
     ON email_notification_outbox (created_at)
     WHERE processed_at IS NULL;
+
+CREATE INDEX idx_email_notification_outbox_processed
+    ON email_notification_outbox (processed_at)
+    WHERE processed_at IS NOT NULL;

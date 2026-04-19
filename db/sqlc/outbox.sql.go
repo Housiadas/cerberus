@@ -62,6 +62,20 @@ func (q *Queries) CreateOutbox(ctx context.Context, arg CreateOutboxParams) (Out
 	return i, err
 }
 
+const deleteProcessedOutbox = `-- name: DeleteProcessedOutbox :execrows
+DELETE FROM outbox
+WHERE processed_at IS NOT NULL
+  AND processed_at < $1::timestamp
+`
+
+func (q *Queries) DeleteProcessedOutbox(ctx context.Context, before pgtype.Timestamp) (int64, error) {
+	result, err := q.db.Exec(ctx, deleteProcessedOutbox, before)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
+}
+
 const getUnprocessedOutbox = `-- name: GetUnprocessedOutbox :many
 SELECT id, event_type, aggregate_id, topic, payload, retry_count, created_at, processed_at FROM outbox
 WHERE retry_count < $2

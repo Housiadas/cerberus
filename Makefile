@@ -89,6 +89,11 @@ go/rest/build:
 	cd cm/rest & \
 	go build -ldflags=${LINKER_FLAGS} -o=./rest-api
 
+## go/cron/run: Run cron job locally (usage: make go/cron/run INPUT=outbox-cleanup)
+.PHONY: go/cron/run
+go/cron/run:
+	go run cmd/cron/main.go $(INPUT)
+
 ## ========== #
 ## Database
 ## ========== #
