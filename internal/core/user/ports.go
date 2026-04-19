@@ -5,6 +5,7 @@ import (
 	"time"
 
 	db "github.com/Housiadas/cerberus/db/sqlc"
+	"github.com/Housiadas/cerberus/internal/core/user/user_search"
 	"github.com/Housiadas/cerberus/internal/types/event"
 	"github.com/Housiadas/cerberus/pkg/cursor"
 	"github.com/Housiadas/cerberus/pkg/order"
@@ -33,6 +34,17 @@ type dispatcher interface {
 // transactor defines the interface for transaction management.
 type transactor interface {
 	RunInTx(ctx context.Context, fn func(ctx context.Context) error) error
+}
+
+// searcher defines the interface for Elasticsearch search operations.
+type searcher interface {
+	SearchUsers(
+		ctx context.Context,
+		filter user_search.SearchFilter,
+		sort string,
+		limit int,
+		searchAfter string,
+	) (user_search.SearchResult, error)
 }
 
 // storer interface declares the behavior this package needs to persist and retrieve data.

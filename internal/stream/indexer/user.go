@@ -11,8 +11,6 @@ import (
 	ckafka "github.com/confluentinc/confluent-kafka-go/v2/kafka"
 )
 
-const userIndex = "users-index"
-
 // UserIndexHandler handles user events from Kafka and indexes them into Elasticsearch.
 type UserIndexHandler struct {
 	log logger.Logger
@@ -28,7 +26,7 @@ func NewUserHandler(log logger.Logger, es *elasticsearch.Client) *UserIndexHandl
 }
 
 func (h *UserIndexHandler) Topic() string        { return event.UserTopic }
-func (h *UserIndexHandler) IndexName() string    { return userIndex }
+func (h *UserIndexHandler) IndexName() string    { return elasticsearch.UserIndex }
 func (h *UserIndexHandler) IndexMapping() string { return elasticsearch.UserMapping }
 
 // Handle validates a single Kafka message. Only known event types pass through

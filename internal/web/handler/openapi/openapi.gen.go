@@ -213,6 +213,14 @@ type RolePageResult struct {
 	Metadata *Metadata `json:"metadata,omitempty"`
 }
 
+// SearchMetadata defines model for SearchMetadata.
+type SearchMetadata struct {
+	HasMore     bool    `json:"hasMore"`
+	Limit       int     `json:"limit"`
+	SearchAfter *string `json:"searchAfter,omitempty"`
+	TotalHits   int     `json:"totalHits"`
+}
+
 // Status defines model for Status.
 type Status struct {
 	Status string `json:"status"`
@@ -288,6 +296,12 @@ type UserPageResult struct {
 	Metadata Metadata `json:"metadata"`
 }
 
+// UserSearchResult defines model for UserSearchResult.
+type UserSearchResult struct {
+	Data     []User         `json:"data"`
+	Metadata SearchMetadata `json:"metadata"`
+}
+
 // ErrorResponse defines model for ErrorResponse.
 type ErrorResponse = Error
 
@@ -357,6 +371,24 @@ type ListUsersParams struct {
 	Email            *string `form:"email,omitempty" json:"email,omitempty"`
 	StartCreatedDate *string `form:"start_created_date,omitempty" json:"start_created_date,omitempty"`
 	EndCreatedDate   *string `form:"end_created_date,omitempty" json:"end_created_date,omitempty"`
+}
+
+// SearchUsersParams defines parameters for SearchUsers.
+type SearchUsersParams struct {
+	// Q Free-text search query (matches name)
+	Q                *string `form:"q,omitempty" json:"q,omitempty"`
+	Email            *string `form:"email,omitempty" json:"email,omitempty"`
+	Department       *string `form:"department,omitempty" json:"department,omitempty"`
+	Enabled          *string `form:"enabled,omitempty" json:"enabled,omitempty"`
+	StartCreatedDate *string `form:"start_created_date,omitempty" json:"start_created_date,omitempty"`
+	EndCreatedDate   *string `form:"end_created_date,omitempty" json:"end_created_date,omitempty"`
+
+	// Sort Sort field and direction (e.g., name.keyword:asc, createdAt:desc)
+	Sort  *string `form:"sort,omitempty" json:"sort,omitempty"`
+	Limit *string `form:"limit,omitempty" json:"limit,omitempty"`
+
+	// SearchAfter Opaque pagination token from previous response
+	SearchAfter *string `form:"search_after,omitempty" json:"search_after,omitempty"`
 }
 
 // DeleteUserRoleParams defines parameters for DeleteUserRole.
@@ -519,6 +551,9 @@ type ServerInterface interface {
 	// Update current user
 	// (PUT /api/v1/users/me)
 	UpdateMe(w http.ResponseWriter, r *http.Request)
+	// Search users
+	// (GET /api/v1/users/search)
+	SearchUsers(w http.ResponseWriter, r *http.Request, params SearchUsersParams)
 	// Delete user
 	// (DELETE /api/v1/users/{user_id})
 	DeleteUser(w http.ResponseWriter, r *http.Request, userId string)
@@ -726,6 +761,12 @@ func (_ Unimplemented) GetMe(w http.ResponseWriter, r *http.Request) {
 // Update current user
 // (PUT /api/v1/users/me)
 func (_ Unimplemented) UpdateMe(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// Search users
+// (GET /api/v1/users/search)
+func (_ Unimplemented) SearchUsers(w http.ResponseWriter, r *http.Request, params SearchUsersParams) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -1802,6 +1843,103 @@ func (siw *ServerInterfaceWrapper) UpdateMe(w http.ResponseWriter, r *http.Reque
 	handler.ServeHTTP(w, r)
 }
 
+// SearchUsers operation middleware
+func (siw *ServerInterfaceWrapper) SearchUsers(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, BearerAuthScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params SearchUsersParams
+
+	// ------------- Optional query parameter "q" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "q", r.URL.Query(), &params.Q, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "q", Err: err})
+		return
+	}
+
+	// ------------- Optional query parameter "email" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "email", r.URL.Query(), &params.Email, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "email", Err: err})
+		return
+	}
+
+	// ------------- Optional query parameter "department" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "department", r.URL.Query(), &params.Department, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "department", Err: err})
+		return
+	}
+
+	// ------------- Optional query parameter "enabled" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "enabled", r.URL.Query(), &params.Enabled, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "enabled", Err: err})
+		return
+	}
+
+	// ------------- Optional query parameter "start_created_date" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "start_created_date", r.URL.Query(), &params.StartCreatedDate, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "start_created_date", Err: err})
+		return
+	}
+
+	// ------------- Optional query parameter "end_created_date" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "end_created_date", r.URL.Query(), &params.EndCreatedDate, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "end_created_date", Err: err})
+		return
+	}
+
+	// ------------- Optional query parameter "sort" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "sort", r.URL.Query(), &params.Sort, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "sort", Err: err})
+		return
+	}
+
+	// ------------- Optional query parameter "limit" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "limit", r.URL.Query(), &params.Limit, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "limit", Err: err})
+		return
+	}
+
+	// ------------- Optional query parameter "search_after" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "search_after", r.URL.Query(), &params.SearchAfter, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "search_after", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.SearchUsers(w, r, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 // DeleteUser operation middleware
 func (siw *ServerInterfaceWrapper) DeleteUser(w http.ResponseWriter, r *http.Request) {
 
@@ -2219,6 +2357,9 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	})
 	r.Group(func(r chi.Router) {
 		r.Put(options.BaseURL+"/api/v1/users/me", wrapper.UpdateMe)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/v1/users/search", wrapper.SearchUsers)
 	})
 	r.Group(func(r chi.Router) {
 		r.Delete(options.BaseURL+"/api/v1/users/{user_id}", wrapper.DeleteUser)
@@ -3116,6 +3257,35 @@ func (response UpdateMedefaultJSONResponse) VisitUpdateMeResponse(w http.Respons
 	return json.NewEncoder(w).Encode(response.Body)
 }
 
+type SearchUsersRequestObject struct {
+	Params SearchUsersParams
+}
+
+type SearchUsersResponseObject interface {
+	VisitSearchUsersResponse(w http.ResponseWriter) error
+}
+
+type SearchUsers200JSONResponse UserSearchResult
+
+func (response SearchUsers200JSONResponse) VisitSearchUsersResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type SearchUsersdefaultJSONResponse struct {
+	Body       Error
+	StatusCode int
+}
+
+func (response SearchUsersdefaultJSONResponse) VisitSearchUsersResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+
+	return json.NewEncoder(w).Encode(response.Body)
+}
+
 type DeleteUserRequestObject struct {
 	UserId string `json:"user_id"`
 }
@@ -3437,6 +3607,9 @@ type StrictServerInterface interface {
 	// Update current user
 	// (PUT /api/v1/users/me)
 	UpdateMe(ctx context.Context, request UpdateMeRequestObject) (UpdateMeResponseObject, error)
+	// Search users
+	// (GET /api/v1/users/search)
+	SearchUsers(ctx context.Context, request SearchUsersRequestObject) (SearchUsersResponseObject, error)
 	// Delete user
 	// (DELETE /api/v1/users/{user_id})
 	DeleteUser(ctx context.Context, request DeleteUserRequestObject) (DeleteUserResponseObject, error)
@@ -4357,6 +4530,32 @@ func (sh *strictHandler) UpdateMe(w http.ResponseWriter, r *http.Request) {
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
 	} else if validResponse, ok := response.(UpdateMeResponseObject); ok {
 		if err := validResponse.VisitUpdateMeResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// SearchUsers operation middleware
+func (sh *strictHandler) SearchUsers(w http.ResponseWriter, r *http.Request, params SearchUsersParams) {
+	var request SearchUsersRequestObject
+
+	request.Params = params
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.SearchUsers(ctx, request.(SearchUsersRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "SearchUsers")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(SearchUsersResponseObject); ok {
+		if err := validResponse.VisitSearchUsersResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {

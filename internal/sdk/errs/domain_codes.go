@@ -45,4 +45,7 @@ const (
 
 	// CodeAccountNotFound represents an account not found error.
 	CodeAccountNotFound = "account.not_found"
+
+	// CodeSearchUnavailable represents a search service unavailable error.
+	CodeSearchUnavailable = "search.unavailable"
 )

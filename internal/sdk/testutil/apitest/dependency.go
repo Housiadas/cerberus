@@ -67,6 +67,7 @@ func newDependency(
 		hash,
 		tx,
 		dispatcher,
+		nil,
 	)
 	roleService := role.NewService(log, store, uuidGen, tx, dispatcher, clk)
 	permissionService := permission.NewService(

@@ -6,6 +6,11 @@
       "sourceType": "github",
       "computedHash": "d31e234f0c90694a670222cdd1dafa853e051d7066beda389f1097c22dadd461"
     },
+    "golang-code-style": {
+      "source": "samber/cc-skills-golang",
+      "sourceType": "github",
+      "computedHash": "e3341069649f8d2dad56efba400508e553061d9b3238336cdf89ad3f07ad42e1"
+    },
     "golang-concurrency": {
       "source": "samber/cc-skills-golang",
       "sourceType": "github",
@@ -15,6 +20,11 @@
       "source": "samber/cc-skills-golang",
       "sourceType": "github",
       "computedHash": "16a982a8e40660486d662049f391f4c6ddba8166c56af7d59757b7d09e0c876c"
+    },
+    "golang-design-patterns": {
+      "source": "samber/cc-skills-golang",
+      "sourceType": "github",
+      "computedHash": "40e05dfa2916cd801f894151d587a93a6969117bf44d8a767e48b2952380adf7"
     },
     "golang-error-handling": {
       "source": "samber/cc-skills-golang",
@@ -30,6 +40,16 @@
       "source": "jeffallan/claude-skills",
       "sourceType": "github",
       "computedHash": "c90a0798a12ea2d9191508439ec3191dd96713310615260ebe82ec5a09a4a434"
+    },
+    "golang-stretchr-testify": {
+      "source": "samber/cc-skills-golang",
+      "sourceType": "github",
+      "computedHash": "4fc8ddbe9d903c61c83a02f9b70d1d9ac40a07337ba7376365b4893dab2d06ba"
+    },
+    "golang-testing": {
+      "source": "samber/cc-skills-golang",
+      "sourceType": "github",
+      "computedHash": "1b1774d5a127d5851392b072147ced5129babf13bff75429819a5d10b696cca2"
     }
   }
 }

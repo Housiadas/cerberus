@@ -7,6 +7,7 @@ import (
 	"net/mail"
 
 	"github.com/Housiadas/cerberus/internal/core/audit"
+	"github.com/Housiadas/cerberus/internal/core/user/user_search"
 	"github.com/Housiadas/cerberus/internal/types/entity"
 	"github.com/Housiadas/cerberus/internal/types/event"
 	"github.com/Housiadas/cerberus/pkg/cursor"
@@ -21,6 +22,7 @@ import (
 type Service struct {
 	log        logger.Logger
 	storer     storer
+	searcher   searcher
 	uuidGen    generator
 	clock      clock
 	hasher     hasher
@@ -37,10 +39,12 @@ func NewService(
 	hasher hasher,
 	tx transactor,
 	dispatcher dispatcher,
+	searcher searcher,
 ) *Service {
 	return &Service{
 		log:        log,
 		storer:     storer,
+		searcher:   searcher,
 		uuidGen:    uuidGen,
 		clock:      clock,
 		hasher:     hasher,
@@ -128,6 +132,41 @@ func (c *Service) Query(
 	}
 
 	return mapper.MapSlice(dbUsers, toDomainUser), nil
+}
+
+// Search executes a full-text search against Elasticsearch.
+func (c *Service) Search(
+	ctx context.Context,
+	filter user_search.SearchFilter,
+	sort string,
+	limit int,
+	searchAfter string,
+) (SearchResult, error) {
+	if c.searcher == nil {
+		return SearchResult{}, ErrSearchUnavailable
+	}
+
+	result, err := c.searcher.SearchUsers(ctx, filter, sort, limit, searchAfter)
+	if err != nil {
+		return SearchResult{}, fmt.Errorf("search: %w", err)
+	}
+
+	users := make([]User, 0, len(result.Users))
+	for _, doc := range result.Users {
+		u, mErr := toUserFromDoc(doc)
+		if mErr != nil {
+			c.log.Error(ctx, "mapping search result", "error", mErr)
+			continue
+		}
+		users = append(users, u)
+	}
+
+	return SearchResult{
+		Users:       users,
+		TotalHits:   result.TotalHits,
+		HasMore:     result.HasMore,
+		SearchAfter: result.SearchAfter,
+	}, nil
 }
 
 // QueryByID finds the user by the specified ID.

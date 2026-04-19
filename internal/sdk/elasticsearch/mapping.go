@@ -1,5 +1,8 @@
 package elasticsearch
 
+// UserIndex is the Elasticsearch index name for user documents.
+const UserIndex = "users-index"
+
 // UserMapping defines the Elasticsearch index mapping for user documents.
 const UserMapping = `{
   "mappings": {

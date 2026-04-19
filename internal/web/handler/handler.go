@@ -22,8 +22,10 @@ import (
 	"github.com/Housiadas/cerberus/internal/core/role_permissions"
 	"github.com/Housiadas/cerberus/internal/core/user"
 	"github.com/Housiadas/cerberus/internal/core/user/user_cache"
+	"github.com/Housiadas/cerberus/internal/core/user/user_search"
 	"github.com/Housiadas/cerberus/internal/core/user_roles"
 	"github.com/Housiadas/cerberus/internal/core/user_roles_permissions"
+	"github.com/Housiadas/cerberus/internal/sdk/elasticsearch"
 	"github.com/Housiadas/cerberus/internal/sdk/eventbus"
 	"github.com/Housiadas/cerberus/internal/web/handler/openapi"
 	"github.com/Housiadas/cerberus/internal/web/middleware"
@@ -61,6 +63,7 @@ type Config struct {
 	Meter             metric.Meter
 	AccessTokenSecret []byte
 	FrontendURL       string
+	ES                *elasticsearch.Client
 }
 
 // Handler contains all the mandatory systems required by Handler.
@@ -109,6 +112,9 @@ func New(ctx context.Context, cfg Config) *Handler {
 	roleCache := role_cache.NewStore(ctx, cfg.Log, store, cfg.Redis)
 	permissionCache := permission_cache.NewStore(ctx, cfg.Log, store, cfg.Redis)
 
+	// search layer
+	userSearchStore := user_search.NewStore(cfg.Log, cfg.ES)
+
 	// services
 	auditService := audit.NewService(cfg.Log, store, clk)
 	outboxSvc := outbox.NewService(cfg.Log, store, uuidGen, clk)
@@ -122,7 +128,16 @@ func New(ctx context.Context, cfg Config) *Handler {
 	// event dispatcher and transaction beginner (used by services for CUD operations)
 	dispatcher := eventbus.New(outboxSvc, auditService)
 
-	userService := user.NewService(cfg.Log, userCache, uuidGen, clk, hash, tx, dispatcher)
+	userService := user.NewService(
+		cfg.Log,
+		userCache,
+		uuidGen,
+		clk,
+		hash,
+		tx,
+		dispatcher,
+		userSearchStore,
+	)
 	roleService := role.NewService(cfg.Log, roleCache, uuidGen, tx, dispatcher, clk)
 	permissionService := permission.NewService(
 		cfg.Log,

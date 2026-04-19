@@ -17,6 +17,7 @@ var (
 	ErrNotFound              = errors.New("user not found")
 	ErrUniqueEmail           = errors.New("email is not unique")
 	ErrAuthenticationFailure = errors.New("authentication failed")
+	ErrSearchUnavailable     = errors.New("search is not available")
 )
 
 // User represents information about an individual user.
@@ -180,6 +181,14 @@ type UpdateUser struct {
 	Department *name.Null
 	Password   *password.Password
 	Enabled    *bool
+}
+
+// SearchResult holds the search results and pagination metadata.
+type SearchResult struct {
+	Users       []User
+	TotalHits   int
+	HasMore     bool
+	SearchAfter string
 }
 
 // QueryFilter holds the available fields a query can be filtered on.

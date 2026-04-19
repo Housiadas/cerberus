@@ -48,6 +48,7 @@ func (cmd *Command) UserAdd(name, email, pass string) error {
 		hash,
 		tx,
 		eventbus.NewNop(),
+		nil,
 	)
 
 	addr, err := mail.ParseAddress(email)
